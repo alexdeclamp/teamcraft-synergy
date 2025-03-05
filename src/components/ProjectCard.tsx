@@ -34,6 +34,7 @@ export interface ProjectCardProps {
   updatedAt: string;
   status: 'active' | 'archived' | 'completed';
   memberCount: number;
+  isOwner?: boolean; // Added isOwner property with optional flag
   className?: string;
 }
 
@@ -45,6 +46,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   updatedAt,
   status,
   memberCount,
+  isOwner,
   className,
 }) => {
   const statusColors = {
