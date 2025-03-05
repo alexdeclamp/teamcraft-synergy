@@ -40,6 +40,70 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const findUserByEmail = async (email: string) => {
+    // First attempt: direct lookup in profiles with case-insensitive matching
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .or(`email.ilike.${email},email.eq.${email}`)
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('Error querying profiles:', profileError);
+    }
+    
+    if (profileData?.id) {
+      console.log('User found in profiles table:', profileData.id);
+      
+      // If email is missing in the profile, update it
+      if (!profileData.email) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ email: email })
+          .eq('id', profileData.id);
+        
+        if (updateError) {
+          console.error('Error updating profile email:', updateError);
+        } else {
+          console.log('Updated missing email in profile');
+        }
+      }
+      
+      return profileData.id;
+    }
+    
+    // Second attempt: try fetching all profiles and manually search
+    const { data: allProfiles } = await supabase
+      .from('profiles')
+      .select('id, email');
+      
+    // Find a profile where the email matches (case insensitive)
+    const matchingProfile = allProfiles?.find(
+      (profile) => profile.email && profile.email.toLowerCase() === email.toLowerCase()
+    );
+    
+    if (matchingProfile) {
+      console.log('Found user through manual search:', matchingProfile.id);
+      return matchingProfile.id;
+    }
+    
+    // Third attempt: try to trigger a sign-up which will fail if user exists
+    try {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: email,
+        password: `temp${Math.random().toString(36).substring(2, 15)}`, // Random password
+      });
+      
+      if (signUpError && signUpError.message.includes('already registered')) {
+        console.log('User exists but could not find profile, may need manual linking');
+      }
+    } catch (e) {
+      console.error('Error in alternative lookup:', e);
+    }
+    
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -52,67 +116,15 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
     setError(null);
     
     try {
-      // First try to find user in auth table directly (admin-only API)
-      // Since we can't query auth.users directly through the client,
-      // we'll try to find the user in profiles first
-      
-      // 1. Check if the user exists in profiles
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .or(`email.ilike.${email},email.eq.${email}`)
-        .maybeSingle();
-
-      if (profileError) {
-        console.error('Error querying profiles:', profileError);
-      }
-      
-      let userId = profileData?.id;
-      
-      // If we couldn't find the user by email in profiles, try a workaround
-      // We'll attempt to sign them up (which will fail if they exist)
-      // and then catch the error which often contains the existing user's ID
-      if (!userId) {
-        console.log('User not found in profiles table, trying alternative lookup');
-        
-        try {
-          // Try to get user via signUp - this will fail with "User already registered"
-          // if the email exists, which is what we want
-          const { error: signUpError } = await supabase.auth.signUp({
-            email: email,
-            password: `temp${Math.random().toString(36).substring(2, 15)}`, // Random password
-          });
-          
-          if (signUpError) {
-            // User might already exist, check if error message contains user ID
-            console.log('SignUp error:', signUpError);
-            
-            // Let's fetch all profiles and manually search
-            const { data: allProfiles } = await supabase
-              .from('profiles')
-              .select('id, email');
-              
-            // Find a profile where the email matches (case insensitive)
-            const matchingProfile = allProfiles?.find(
-              (profile) => profile.email && profile.email.toLowerCase() === email.toLowerCase()
-            );
-            
-            if (matchingProfile) {
-              userId = matchingProfile.id;
-              console.log('Found user through manual search:', userId);
-            }
-          }
-        } catch (e) {
-          console.error('Error in alternative lookup:', e);
-        }
-      }
+      // Find the user by email
+      const userId = await findUserByEmail(email);
       
       // If we still couldn't find the user, they don't exist in our system
       if (!userId) {
         throw new Error('User with this email not found. Please ensure they have an account first.');
       }
       
-      // 2. Check if the user is already a member of this project
+      // Check if the user is already a member of this project
       const { data: existingMember, error: memberError } = await supabase
         .from('project_members')
         .select('id')
@@ -126,7 +138,7 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
         throw new Error('User is already a member of this project');
       }
       
-      // 3. Add the user as a project member
+      // Add the user as a project member
       const { error: insertError } = await supabase
         .from('project_members')
         .insert({
