@@ -15,9 +15,12 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArrowLeft, Info, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const NewProject = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -38,18 +41,33 @@ const NewProject = () => {
       toast.error("Please enter a project title");
       return;
     }
+
+    if (!user) {
+      toast.error("You must be logged in to create a project");
+      return;
+    }
     
     setLoading(true);
     
     try {
-      // In a real app, this would be an API call to create the project in Supabase
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulating API call
+      // Create project in Supabase
+      const { data, error } = await supabase
+        .from('projects')
+        .insert({
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          owner_id: user.id,
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
       
       toast.success("Project created successfully!");
-      navigate('/dashboard');
-    } catch (error) {
+      navigate(`/project/${data.id}`);
+    } catch (error: any) {
       console.error("Error creating project:", error);
-      toast.error("Failed to create project. Please try again.");
+      toast.error(error.message || "Failed to create project. Please try again.");
     } finally {
       setLoading(false);
     }

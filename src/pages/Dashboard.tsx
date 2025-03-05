@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ProjectCard, { ProjectCardProps } from '@/components/ProjectCard';
 import Navbar from '@/components/Navbar';
-import { Plus, Search, Filter, ArrowUpDown } from 'lucide-react';
+import { Plus, Search, Filter, ArrowUpDown, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,60 +13,137 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'all' | 'active' | 'archived' | 'completed'>('all');
+  const [filter, setFilter] = useState<'all' | 'owned' | 'member'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
+  const [projects, setProjects] = useState<ProjectCardProps[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock projects data - this would come from Supabase in a real app
-  const mockProjects: ProjectCardProps[] = [
-    {
-      id: '1',
-      title: 'Website Redesign',
-      description: 'Complete overhaul of the company website with new design system',
-      createdAt: '2023-09-15T12:00:00Z',
-      updatedAt: '2023-09-20T10:30:00Z',
-      status: 'active',
-      memberCount: 5,
-    },
-    {
-      id: '2',
-      title: 'Mobile App Development',
-      description: 'Building a native mobile application for both iOS and Android platforms',
-      createdAt: '2023-08-10T09:00:00Z',
-      updatedAt: '2023-09-18T14:45:00Z',
-      status: 'active',
-      memberCount: 8,
-    },
-    {
-      id: '3',
-      title: 'Marketing Campaign',
-      description: 'Q4 marketing campaign focusing on product launch',
-      createdAt: '2023-07-20T15:30:00Z',
-      updatedAt: '2023-09-05T11:15:00Z',
-      status: 'completed',
-      memberCount: 4,
-    },
-    {
-      id: '4',
-      title: 'Legacy System Migration',
-      description: 'Migrating data and functionality from legacy systems to new platform',
-      createdAt: '2023-06-05T08:15:00Z',
-      updatedAt: '2023-08-30T16:20:00Z',
-      status: 'archived',
-      memberCount: 6,
-    },
-  ];
+  useEffect(() => {
+    const fetchProjects = async () => {
+      if (!user) return;
+
+      try {
+        setLoading(true);
+        
+        // Fetch projects where user is owner
+        const { data: ownedProjects, error: ownedError } = await supabase
+          .from('projects')
+          .select(`
+            id,
+            title,
+            description,
+            created_at,
+            updated_at,
+            owner_id
+          `)
+          .eq('owner_id', user.id);
+
+        if (ownedError) throw ownedError;
+
+        // Fetch projects where user is a member
+        const { data: memberProjects, error: memberError } = await supabase
+          .from('project_members')
+          .select(`
+            project_id,
+            role,
+            projects (
+              id,
+              title,
+              description,
+              created_at,
+              updated_at,
+              owner_id
+            )
+          `)
+          .eq('user_id', user.id);
+
+        if (memberError) throw memberError;
+
+        // Process owned projects
+        const formattedOwnedProjects = ownedProjects.map(project => ({
+          id: project.id,
+          title: project.title,
+          description: project.description || '',
+          createdAt: project.created_at,
+          updatedAt: project.updated_at,
+          status: 'active' as const,
+          memberCount: 1, // We'll update this with actual count later
+          isOwner: true
+        }));
+
+        // Process member projects (excluding duplicates from owned projects)
+        const memberProjectsMap = new Map();
+        memberProjects.forEach(item => {
+          if (item.projects && item.project_id) {
+            const project = item.projects;
+            // Skip if user is the owner (already included in ownedProjects)
+            if (project.owner_id !== user.id) {
+              memberProjectsMap.set(project.id, {
+                id: project.id,
+                title: project.title,
+                description: project.description || '',
+                createdAt: project.created_at,
+                updatedAt: project.updated_at,
+                status: 'active' as const,
+                memberCount: 1, // We'll update this later
+                isOwner: false,
+                role: item.role
+              });
+            }
+          }
+        });
+
+        const formattedMemberProjects = Array.from(memberProjectsMap.values());
+        
+        // Combine projects from both sources
+        const allProjects = [...formattedOwnedProjects, ...formattedMemberProjects];
+        
+        // Fetch member counts for each project
+        await Promise.all(allProjects.map(async (project) => {
+          const { count, error: countError } = await supabase
+            .from('project_members')
+            .select('*', { count: 'exact', head: true })
+            .eq('project_id', project.id);
+            
+          if (!countError) {
+            // Add 1 for the owner (if not included in the count)
+            project.memberCount = (count || 0) + 1;
+          }
+        }));
+
+        setProjects(allProjects);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+        toast.error("Failed to load projects");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, [user]);
 
   // Filter and sort projects
-  const filteredProjects = mockProjects
-    .filter(project => 
-      (filter === 'all' || project.status === filter) &&
-      (project.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-       project.description.toLowerCase().includes(searchTerm.toLowerCase()))
-    )
+  const filteredProjects = projects
+    .filter(project => {
+      const matchesSearch = 
+        project.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        project.description.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      if (filter === 'all') return matchesSearch;
+      if (filter === 'owned') return matchesSearch && project.isOwner;
+      if (filter === 'member') return matchesSearch && !project.isOwner;
+      
+      return matchesSearch;
+    })
     .sort((a, b) => {
       if (sortOrder === 'newest') {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -116,15 +193,15 @@ const Dashboard = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-[130px]">
                   <Filter className="h-4 w-4 mr-2" />
-                  {filter === 'all' ? 'All' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  {filter === 'all' ? 'All' : 
+                   filter === 'owned' ? 'Owned' : 'Member'}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Filter by status</DropdownMenuLabel>
+                <DropdownMenuLabel>Filter by role</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => setFilter('all')}>All</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilter('active')}>Active</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilter('completed')}>Completed</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFilter('archived')}>Archived</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter('owned')}>Owned</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter('member')}>Member</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             
@@ -147,9 +224,13 @@ const Dashboard = () => {
         </div>
         
         {/* Project Grid */}
-        {filteredProjects.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : filteredProjects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProjects.map((project, index) => (
+            {filteredProjects.map((project) => (
               <ProjectCard 
                 key={project.id} 
                 {...project} 
@@ -161,9 +242,9 @@ const Dashboard = () => {
           <div className="text-center py-12">
             <h3 className="text-lg font-medium mb-2">No projects found</h3>
             <p className="text-muted-foreground mb-6">
-              {searchTerm ? 'Try adjusting your search or filters' : 'Get started by creating your first project'}
+              {searchTerm || filter !== 'all' ? 'Try adjusting your search or filters' : 'Get started by creating your first project'}
             </p>
-            {!searchTerm && (
+            {!searchTerm && filter === 'all' && (
               <Button 
                 onClick={() => navigate('/new-project')}
               >

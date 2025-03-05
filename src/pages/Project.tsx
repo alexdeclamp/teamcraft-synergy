@@ -36,134 +36,228 @@ import {
   Settings, 
   Trash2, 
   UserPlus, 
-  Users
+  Users,
+  Loader2
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ProjectCardProps } from '@/components/ProjectCard';
 import { toast } from 'sonner';
-
-// Role types for project members
-type Role = 'owner' | 'admin' | 'member' | 'viewer';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProjectMember {
   id: string;
   name: string;
   email: string;
-  role: Role;
+  role: 'owner' | 'admin' | 'editor' | 'viewer';
   avatar?: string;
+}
+
+interface Project {
+  id: string;
+  title: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+  owner_id: string;
 }
 
 const Project = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [project, setProject] = useState<ProjectCardProps | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
+  const [userRole, setUserRole] = useState<string | null>(null);
 
-  // Mock data - this would come from Supabase in a real app
   useEffect(() => {
     const fetchProjectData = async () => {
+      if (!id || !user) return;
+
       try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        setLoading(true);
+
+        // Fetch project details
+        const { data: projectData, error: projectError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (projectError) throw projectError;
         
-        // Mock project data
-        const mockProject: ProjectCardProps = {
-          id: id || '1',
-          title: 'Website Redesign',
-          description: 'Complete overhaul of the company website with new design system and improved user experience. Implementation of new brand guidelines and updated content strategy.',
-          createdAt: '2023-09-15T12:00:00Z',
-          updatedAt: '2023-09-20T10:30:00Z',
-          status: 'active',
-          memberCount: 5,
-        };
+        // Check if user has access to this project
+        const isOwner = projectData.owner_id === user.id;
         
-        // Mock members data
-        const mockMembers: ProjectMember[] = [
+        if (!isOwner) {
+          // Check if user is a member
+          const { data: memberData, error: memberError } = await supabase
+            .from('project_members')
+            .select('role')
+            .eq('project_id', id)
+            .eq('user_id', user.id)
+            .single();
+
+          if (memberError) {
+            // User doesn't have access
+            navigate('/dashboard');
+            toast.error("You don't have access to this project");
+            return;
+          }
+          
+          setUserRole(memberData.role);
+        } else {
+          setUserRole('owner');
+        }
+
+        setProject(projectData);
+
+        // Fetch project members
+        const { data: membersData, error: membersError } = await supabase
+          .from('project_members')
+          .select(`
+            id,
+            role,
+            profiles:user_id (
+              id,
+              full_name,
+              avatar_url
+            )
+          `)
+          .eq('project_id', id);
+
+        if (membersError) throw membersError;
+
+        // Get owner's profile
+        const { data: ownerProfile, error: ownerError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', projectData.owner_id)
+          .single();
+
+        if (ownerError) throw ownerError;
+
+        // Combine owner and members
+        const allMembers: ProjectMember[] = [
           {
-            id: '1',
-            name: 'Alex Johnson',
-            email: 'alex@example.com',
+            id: ownerProfile.id,
+            name: ownerProfile.full_name || 'Unknown',
+            email: '', // We don't expose emails
             role: 'owner',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+            avatar: ownerProfile.avatar_url
           },
-          {
-            id: '2',
-            name: 'Sarah Miller',
-            email: 'sarah@example.com',
-            role: 'admin',
-            avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          },
-          {
-            id: '3',
-            name: 'David Chen',
-            email: 'david@example.com',
-            role: 'member',
-            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          },
-          {
-            id: '4',
-            name: 'Emily Wilson',
-            email: 'emily@example.com',
-            role: 'member',
-          },
-          {
-            id: '5',
-            name: 'Michael Brown',
-            email: 'michael@example.com',
-            role: 'viewer',
-            avatar: 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-          },
+          ...membersData.map((member: any) => ({
+            id: member.profiles.id,
+            name: member.profiles.full_name || 'Unknown',
+            email: '', // We don't expose emails
+            role: member.role,
+            avatar: member.profiles.avatar_url
+          }))
         ];
-        
-        setProject(mockProject);
-        setMembers(mockMembers);
-      } catch (error) {
+
+        setMembers(allMembers);
+      } catch (error: any) {
         console.error("Error fetching project data:", error);
         toast.error("Failed to load project data");
+        navigate('/dashboard');
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchProjectData();
-  }, [id]);
-  
-  const getRoleBadgeStyles = (role: Role) => {
-    switch (role) {
-      case 'owner':
-        return 'bg-purple-100 text-purple-800';
-      case 'admin':
-        return 'bg-blue-100 text-blue-800';
-      case 'member':
-        return 'bg-green-100 text-green-800';
-      case 'viewer':
-        return 'bg-gray-100 text-gray-800';
-      default:
-        return '';
+  }, [id, user, navigate]);
+
+  const handleDeleteProject = async () => {
+    if (!project || !user || userRole !== 'owner') return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this project? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', project.id);
+
+      if (error) throw error;
+
+      toast.success("Project deleted successfully");
+      navigate('/dashboard');
+    } catch (error: any) {
+      console.error("Error deleting project:", error);
+      toast.error("Failed to delete project");
     }
   };
-  
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+
+  const handleAddMember = () => {
+    // This will be implemented in a separate component
+    toast.info("Member invitation feature coming soon");
   };
-  
+
+  const handleUpdateMemberRole = async (memberId: string, newRole: string) => {
+    if (!project || userRole !== 'owner') return;
+
+    try {
+      const { error } = await supabase
+        .from('project_members')
+        .update({ role: newRole })
+        .eq('project_id', project.id)
+        .eq('user_id', memberId);
+
+      if (error) throw error;
+
+      // Update local state
+      setMembers(members.map(member => 
+        member.id === memberId ? { ...member, role: newRole as any } : member
+      ));
+
+      toast.success("Member role updated successfully");
+    } catch (error: any) {
+      console.error("Error updating member role:", error);
+      toast.error("Failed to update member role");
+    }
+  };
+
+  const handleRemoveMember = async (memberId: string) => {
+    if (!project || userRole !== 'owner') return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to remove this member from the project?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('project_members')
+        .delete()
+        .eq('project_id', project.id)
+        .eq('user_id', memberId);
+
+      if (error) throw error;
+
+      // Update local state
+      setMembers(members.filter(member => member.id !== memberId));
+      toast.success("Member removed successfully");
+    } catch (error: any) {
+      console.error("Error removing member:", error);
+      toast.error("Failed to remove member");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-center">
-          <div className="h-8 w-48 bg-muted rounded-md mx-auto mb-4"></div>
-          <div className="h-4 w-32 bg-muted rounded-md mx-auto"></div>
-        </div>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
-  
+
   if (!project) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
@@ -176,6 +270,14 @@ const Project = () => {
       </div>
     );
   }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background pb-12 animate-fade-in">
@@ -196,17 +298,9 @@ const Project = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline" className={`
-                  font-normal 
-                  ${project.status === 'active' ? 'bg-green-100 text-green-800' : 
-                   project.status === 'completed' ? 'bg-blue-100 text-blue-800' : 
-                   'bg-gray-100 text-gray-800'}
-                `}>
-                  {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                <Badge variant="outline" className="font-normal bg-green-100 text-green-800">
+                  {userRole === 'owner' ? 'Owner' : 'Member'}
                 </Badge>
-                <span className="text-sm text-muted-foreground">
-                  Project ID: {project.id}
-                </span>
               </div>
               
               <h1 className="text-3xl font-bold">{project.title}</h1>
@@ -216,10 +310,12 @@ const Project = () => {
             </div>
             
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => toast.info("Invite member feature coming soon")}>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Invite
-              </Button>
+              {userRole === 'owner' && (
+                <Button variant="outline" onClick={handleAddMember}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Invite
+                </Button>
+              )}
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -230,19 +326,26 @@ const Project = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-[200px]">
                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit project
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Project settings
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-600">
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete project
-                  </DropdownMenuItem>
+                  {userRole === 'owner' && (
+                    <>
+                      <DropdownMenuItem>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit project
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Settings className="h-4 w-4 mr-2" />
+                        Project settings
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        className="text-red-600"
+                        onClick={handleDeleteProject}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete project
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -251,15 +354,15 @@ const Project = () => {
           <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm text-muted-foreground">
             <div className="flex items-center">
               <CalendarDays className="h-4 w-4 mr-1" />
-              <span>Created: {formatDate(project.createdAt)}</span>
+              <span>Created: {formatDate(project.created_at)}</span>
             </div>
             <div className="flex items-center">
               <Clock className="h-4 w-4 mr-1" />
-              <span>Last updated: {formatDate(project.updatedAt)}</span>
+              <span>Last updated: {formatDate(project.updated_at)}</span>
             </div>
             <div className="flex items-center">
               <Users className="h-4 w-4 mr-1" />
-              <span>{project.memberCount} members</span>
+              <span>{members.length} member{members.length !== 1 ? 's' : ''}</span>
             </div>
           </div>
         </div>
@@ -268,7 +371,9 @@ const Project = () => {
           <TabsList className="bg-muted/50">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+            {userRole === 'owner' && (
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6">
@@ -330,10 +435,12 @@ const Project = () => {
                     People with access to this project
                   </CardDescription>
                 </div>
-                <Button size="sm" onClick={() => toast.info("Add member feature coming soon")}>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add Member
-                </Button>
+                {userRole === 'owner' && (
+                  <Button size="sm" onClick={handleAddMember}>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Add Member
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -351,15 +458,13 @@ const Project = () => {
                         </Avatar>
                         <div>
                           <p className="font-medium">{member.name}</p>
-                          <p className="text-sm text-muted-foreground">{member.email}</p>
+                          <Badge variant="outline" className="mt-1">
+                            {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                          </Badge>
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-3">
-                        <Badge variant="outline" className={getRoleBadgeStyles(member.role)}>
-                          {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                        </Badge>
-                        
+                      {userRole === 'owner' && member.role !== 'owner' && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -369,15 +474,25 @@ const Project = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-[180px]">
                             <DropdownMenuLabel>Member Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>Change role</DropdownMenuItem>
-                            <DropdownMenuItem>Transfer ownership</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateMemberRole(member.id, 'admin')}>
+                              Make admin
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateMemberRole(member.id, 'editor')}>
+                              Make editor
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleUpdateMemberRole(member.id, 'viewer')}>
+                              Make viewer
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="text-red-600">
+                            <DropdownMenuItem 
+                              className="text-red-600"
+                              onClick={() => handleRemoveMember(member.id)}
+                            >
                               Remove from project
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -385,22 +500,24 @@ const Project = () => {
             </Card>
           </TabsContent>
           
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Project Settings</CardTitle>
-                <CardDescription>
-                  Manage project configuration and permissions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Project settings will be implemented in a future update. 
-                  Here you'll be able to configure project details, permissions, and integrations.
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {userRole === 'owner' && (
+            <TabsContent value="settings" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Project Settings</CardTitle>
+                  <CardDescription>
+                    Manage project configuration and permissions
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    Project settings will be implemented in a future update. 
+                    Here you'll be able to configure project details, permissions, and integrations.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
       </main>
     </div>
