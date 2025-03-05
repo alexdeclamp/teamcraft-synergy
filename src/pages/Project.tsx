@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -116,15 +115,7 @@ const Project = () => {
         // Fetch project members
         const { data: membersData, error: membersError } = await supabase
           .from('project_members')
-          .select(`
-            id,
-            role,
-            profiles:user_id (
-              id,
-              full_name,
-              avatar_url
-            )
-          `)
+          .select('id, role, user_id')
           .eq('project_id', id);
 
         if (membersError) throw membersError;
@@ -138,6 +129,32 @@ const Project = () => {
 
         if (ownerError) throw ownerError;
 
+        // Fetch all member profiles separately
+        const memberIds = membersData.map((member: any) => member.user_id);
+        
+        let memberProfiles = [];
+        if (memberIds.length > 0) {
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url')
+            .in('id', memberIds);
+            
+          if (profilesError) throw profilesError;
+          memberProfiles = profilesData || [];
+        }
+
+        // Map member profiles to members with roles
+        const membersWithProfiles = membersData.map((member: any) => {
+          const profile = memberProfiles.find((p: any) => p.id === member.user_id) || {};
+          return {
+            id: member.user_id,
+            name: profile.full_name || 'Unknown User',
+            email: '', // We don't expose emails
+            role: member.role,
+            avatar: profile.avatar_url
+          };
+        });
+
         // Combine owner and members
         const allMembers: ProjectMember[] = [
           {
@@ -147,13 +164,7 @@ const Project = () => {
             role: 'owner',
             avatar: ownerProfile.avatar_url
           },
-          ...membersData.map((member: any) => ({
-            id: member.profiles.id,
-            name: member.profiles.full_name || 'Unknown',
-            email: '', // We don't expose emails
-            role: member.role,
-            avatar: member.profiles.avatar_url
-          }))
+          ...membersWithProfiles
         ];
 
         setMembers(allMembers);
