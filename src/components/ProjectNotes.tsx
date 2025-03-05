@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,7 +38,21 @@ import {
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Edit, Trash2, FileText, Loader2, User, Clock, Tag, Hash, X } from 'lucide-react';
+import { 
+  PlusCircle, 
+  Edit, 
+  Trash2, 
+  FileText, 
+  Loader2, 
+  User, 
+  Clock, 
+  Tag, 
+  Hash, 
+  X,
+  Bold,
+  Italic,
+  Underline 
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Note {
@@ -85,27 +98,22 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     try {
       setLoading(true);
       
-      // Build query
       let query = supabase
         .from('project_notes')
         .select('*')
         .eq('project_id', projectId);
       
-      // Apply tag filter if active
       if (activeTag) {
         query = query.contains('tags', [activeTag]);
       }
 
-      // Execute query ordered by updated_at
       const { data: notesData, error: notesError } = await query
         .order('updated_at', { ascending: false });
 
       if (notesError) throw notesError;
       
-      // Get unique user IDs to fetch profiles
       const userIds = [...new Set(notesData?.map(note => note.user_id) || [])];
       
-      // Collect all unique tags
       const tagSet = new Set<string>();
       notesData?.forEach(note => {
         if (note.tags && Array.isArray(note.tags)) {
@@ -125,7 +133,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         profiles = profilesData || [];
       }
       
-      // Merge notes with creator info
       const notesWithCreators = notesData?.map(note => {
         const creator = profiles.find(profile => profile.id === note.user_id);
         return {
@@ -196,7 +203,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
       resetForm();
       toast.success('Note created successfully');
       
-      // Update allTags with any new tags
       const newTags = tags.filter(tag => !allTags.includes(tag));
       if (newTags.length > 0) {
         setAllTags([...allTags, ...newTags]);
@@ -243,7 +249,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
       resetForm();
       toast.success('Note updated successfully');
       
-      // Update allTags with any new tags
       const newTags = tags.filter(tag => !allTags.includes(tag));
       if (newTags.length > 0) {
         setAllTags([...allTags, ...newTags]);
@@ -274,7 +279,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
       setNotes(notes.filter(note => note.id !== noteId));
       toast.success('Note deleted successfully');
       
-      // Recalculate allTags
       const remainingTags = new Set<string>();
       notes
         .filter(note => note.id !== noteId)
@@ -326,6 +330,55 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     setCurrentNote(null);
   };
 
+  const applyFormatting = (type: 'bold' | 'italic' | 'underline') => {
+    const textarea = document.getElementById(isEditOpen ? 'edit-content' : 'content') as HTMLTextAreaElement;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = textarea.value.substring(start, end);
+    
+    let formattedText = '';
+    let cursorAdjustment = 0;
+    
+    switch (type) {
+      case 'bold':
+        formattedText = `**${selectedText}**`;
+        cursorAdjustment = 2;
+        break;
+      case 'italic':
+        formattedText = `*${selectedText}*`;
+        cursorAdjustment = 1;
+        break;
+      case 'underline':
+        formattedText = `__${selectedText}__`;
+        cursorAdjustment = 2;
+        break;
+    }
+    
+    const newContent = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+    setContent(newContent);
+    
+    setTimeout(() => {
+      textarea.focus();
+      const newPosition = end + (2 * cursorAdjustment);
+      textarea.setSelectionRange(newPosition, newPosition);
+    }, 0);
+  };
+
+  const renderFormattedText = (text: string) => {
+    if (!text) return "No content provided.";
+    
+    let formattedText = text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/__(.*?)__/g, '<u>$1</u>');
+    
+    formattedText = formattedText.replace(/\n/g, '<br>');
+    
+    return formattedText;
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-6">
@@ -339,7 +392,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         </Button>
       </div>
 
-      {/* Tags Filter Bar */}
       {allTags.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 mb-4 bg-accent/10 p-3 rounded-md">
           <Tag className="h-4 w-4 text-muted-foreground mr-1" />
@@ -400,7 +452,9 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
                     </div>
                     
                     <div className="text-muted-foreground text-sm mb-2 line-clamp-2">
-                      {note.content || "No content"}
+                      {note.content ? 
+                        <div dangerouslySetInnerHTML={{ __html: renderFormattedText(note.content) }} /> : 
+                        "No content"}
                     </div>
                     
                     {note.tags && note.tags.length > 0 && (
@@ -486,7 +540,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         </div>
       )}
 
-      {/* View Note Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
         <DialogContent className="sm:max-w-[650px] max-h-[80vh] overflow-y-auto">
           {currentNote && (
@@ -555,14 +608,13 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
               )}
               
               <div className="mt-4 whitespace-pre-wrap">
-                {currentNote.content || "No content provided."}
+                <div dangerouslySetInnerHTML={{ __html: renderFormattedText(currentNote.content || '') }} />
               </div>
             </>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Create Note Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="sm:max-w-[650px]">
           <DialogHeader>
@@ -582,7 +634,58 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="content">Content</Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="content">Content</Label>
+                <div className="flex space-x-1">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8" 
+                          onClick={() => applyFormatting('bold')}
+                        >
+                          <Bold className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Bold</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8" 
+                          onClick={() => applyFormatting('italic')}
+                        >
+                          <Italic className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Italic</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8" 
+                          onClick={() => applyFormatting('underline')}
+                        >
+                          <Underline className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Underline</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
               <Textarea
                 id="content"
                 placeholder="Enter note content"
@@ -590,6 +693,9 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
                 onChange={(e) => setContent(e.target.value)}
                 className="min-h-[200px] font-mono"
               />
+              <div className="text-xs text-muted-foreground">
+                Use **bold**, *italic*, or __underline__ to format your text.
+              </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="tags">Tags (comma or enter to add)</Label>
@@ -637,7 +743,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Note Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-[650px]">
           <DialogHeader>
@@ -656,13 +761,67 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-content">Content</Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="edit-content">Content</Label>
+                <div className="flex space-x-1">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8" 
+                          onClick={() => applyFormatting('bold')}
+                        >
+                          <Bold className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Bold</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8" 
+                          onClick={() => applyFormatting('italic')}
+                        >
+                          <Italic className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Italic</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8" 
+                          onClick={() => applyFormatting('underline')}
+                        >
+                          <Underline className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Underline</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
               <Textarea
                 id="edit-content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="min-h-[200px] font-mono"
               />
+              <div className="text-xs text-muted-foreground">
+                Use **bold**, *italic*, or __underline__ to format your text.
+              </div>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-tags">Tags (comma or enter to add)</Label>
