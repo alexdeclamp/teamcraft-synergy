@@ -7,6 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -24,8 +31,15 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PlusCircle, Edit, Trash2, FileText, Loader2, User, Clock } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { PlusCircle, Edit, Trash2, FileText, Loader2, User, Clock, Tag, Hash, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Note {
@@ -38,6 +52,7 @@ interface Note {
   project_id: string;
   creator_name?: string;
   creator_avatar?: string;
+  tags?: string[];
 }
 
 interface ProjectNotesProps {
@@ -50,14 +65,19 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
   const [loading, setLoading] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [tagInput, setTagInput] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [allTags, setAllTags] = useState<string[]>([]);
 
   useEffect(() => {
     fetchNotes();
-  }, [projectId]);
+  }, [projectId, activeTag]);
 
   const fetchNotes = async () => {
     if (!projectId || !user) return;
@@ -65,17 +85,34 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     try {
       setLoading(true);
       
-      // Fetch notes with their creators
-      const { data: notesData, error: notesError } = await supabase
+      // Build query
+      let query = supabase
         .from('project_notes')
         .select('*')
-        .eq('project_id', projectId)
+        .eq('project_id', projectId);
+      
+      // Apply tag filter if active
+      if (activeTag) {
+        query = query.contains('tags', [activeTag]);
+      }
+
+      // Execute query ordered by updated_at
+      const { data: notesData, error: notesError } = await query
         .order('updated_at', { ascending: false });
 
       if (notesError) throw notesError;
       
       // Get unique user IDs to fetch profiles
       const userIds = [...new Set(notesData?.map(note => note.user_id) || [])];
+      
+      // Collect all unique tags
+      const tagSet = new Set<string>();
+      notesData?.forEach(note => {
+        if (note.tags && Array.isArray(note.tags)) {
+          note.tags.forEach(tag => tagSet.add(tag));
+        }
+      });
+      setAllTags(Array.from(tagSet));
       
       let profiles: any[] = [];
       if (userIds.length > 0) {
@@ -107,6 +144,25 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     }
   };
 
+  const addTag = () => {
+    if (!tagInput.trim() || tags.includes(tagInput.trim())) {
+      return;
+    }
+    setTags([...tags, tagInput.trim()]);
+    setTagInput('');
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag();
+    }
+  };
+
   const handleCreateNote = async () => {
     if (!title.trim() || !projectId || !user) {
       toast.error('Please enter a title for your note');
@@ -121,18 +177,30 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
           title,
           content,
           project_id: projectId,
-          user_id: user.id
+          user_id: user.id,
+          tags: tags.length > 0 ? tags : null
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      setNotes([data, ...notes]);
+      const newNote = {
+        ...data,
+        creator_name: user.user_metadata?.full_name || 'Unknown User',
+        creator_avatar: user.user_metadata?.avatar_url,
+      };
+
+      setNotes([newNote, ...notes]);
       setIsCreateOpen(false);
-      setTitle('');
-      setContent('');
+      resetForm();
       toast.success('Note created successfully');
+      
+      // Update allTags with any new tags
+      const newTags = tags.filter(tag => !allTags.includes(tag));
+      if (newTags.length > 0) {
+        setAllTags([...allTags, ...newTags]);
+      }
     } catch (error: any) {
       console.error('Error creating note:', error);
       toast.error('Failed to create note');
@@ -154,7 +222,8 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         .update({
           title,
           content,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          tags: tags.length > 0 ? tags : null
         })
         .eq('id', currentNote.id)
         .eq('user_id', user.id)
@@ -163,12 +232,22 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 
       if (error) throw error;
 
-      setNotes(notes.map(note => note.id === data.id ? data : note));
+      const updatedNote = {
+        ...data,
+        creator_name: currentNote.creator_name,
+        creator_avatar: currentNote.creator_avatar,
+      };
+
+      setNotes(notes.map(note => note.id === updatedNote.id ? updatedNote : note));
       setIsEditOpen(false);
-      setTitle('');
-      setContent('');
-      setCurrentNote(null);
+      resetForm();
       toast.success('Note updated successfully');
+      
+      // Update allTags with any new tags
+      const newTags = tags.filter(tag => !allTags.includes(tag));
+      if (newTags.length > 0) {
+        setAllTags([...allTags, ...newTags]);
+      }
     } catch (error: any) {
       console.error('Error updating note:', error);
       toast.error('Failed to update note');
@@ -194,6 +273,17 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 
       setNotes(notes.filter(note => note.id !== noteId));
       toast.success('Note deleted successfully');
+      
+      // Recalculate allTags
+      const remainingTags = new Set<string>();
+      notes
+        .filter(note => note.id !== noteId)
+        .forEach(note => {
+          if (note.tags) {
+            note.tags.forEach(tag => remainingTags.add(tag));
+          }
+        });
+      setAllTags(Array.from(remainingTags));
     } catch (error: any) {
       console.error('Error deleting note:', error);
       toast.error('Failed to delete note');
@@ -204,7 +294,13 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     setCurrentNote(note);
     setTitle(note.title);
     setContent(note.content || '');
+    setTags(note.tags || []);
     setIsEditOpen(true);
+  };
+
+  const openViewDialog = (note: Note) => {
+    setCurrentNote(note);
+    setIsViewOpen(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -218,14 +314,21 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
   };
   
   const handleOpenCreateDialog = () => {
+    resetForm();
+    setIsCreateOpen(true);
+  };
+  
+  const resetForm = () => {
     setTitle('');
     setContent('');
-    setIsCreateOpen(true);
+    setTags([]);
+    setTagInput('');
+    setCurrentNote(null);
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Project Notes</h2>
         <Button 
           onClick={handleOpenCreateDialog}
@@ -235,6 +338,33 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
           New Note
         </Button>
       </div>
+
+      {/* Tags Filter Bar */}
+      {allTags.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-4 bg-accent/10 p-3 rounded-md">
+          <Tag className="h-4 w-4 text-muted-foreground mr-1" />
+          <span className="text-sm font-medium mr-2">Filter by tag:</span>
+          <Button
+            variant={activeTag === null ? "secondary" : "outline"}
+            size="sm"
+            onClick={() => setActiveTag(null)}
+            className="h-7 text-xs"
+          >
+            All
+          </Button>
+          {allTags.map(tag => (
+            <Button
+              key={tag}
+              variant={activeTag === tag ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+              className="h-7 text-xs"
+            >
+              #{tag}
+            </Button>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center items-center py-10">
@@ -260,7 +390,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
       ) : (
         <div className="space-y-2">
           {notes.map((note) => (
-            <Card key={note.id} className="hover:bg-accent/5 transition-colors">
+            <Card key={note.id} className="hover:bg-accent/5 transition-colors cursor-pointer" onClick={() => openViewDialog(note)}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -273,6 +403,19 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
                       {note.content || "No content"}
                     </div>
                     
+                    {note.tags && note.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {note.tags.map(tag => (
+                          <Badge key={tag} variant="outline" className="text-xs bg-accent/20" onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveTag(tag === activeTag ? null : tag);
+                          }}>
+                            #{tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                       <div className="flex items-center">
                         <User className="h-3 w-3 mr-1" />
@@ -281,7 +424,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
                             <Avatar className="h-4 w-4 mr-1">
                               <AvatarImage src={note.creator_avatar} alt={note.creator_name} />
                               <AvatarFallback>
-                                {note.creator_name.substring(0, 2).toUpperCase()}
+                                {note.creator_name?.substring(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                           ) : null}
@@ -296,25 +439,44 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
                   </div>
                   
                   {note.user_id === user?.id && (
-                    <div className="flex space-x-1 ml-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        onClick={() => openEditDialog(note)}
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => handleDeleteNote(note.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
+                    <div className="flex space-x-1 ml-2" onClick={e => e.stopPropagation()}>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditDialog(note);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Edit</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteNote(note.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Delete</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   )}
                 </div>
@@ -324,9 +486,85 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         </div>
       )}
 
+      {/* View Note Dialog */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className="sm:max-w-[650px] max-h-[80vh] overflow-y-auto">
+          {currentNote && (
+            <>
+              <DialogHeader>
+                <div className="flex justify-between items-start">
+                  <DialogTitle className="pr-8">{currentNote.title}</DialogTitle>
+                  {currentNote.user_id === user?.id && (
+                    <div className="flex space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => {
+                          setIsViewOpen(false);
+                          setTimeout(() => openEditDialog(currentNote), 100);
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => {
+                          setIsViewOpen(false);
+                          setTimeout(() => handleDeleteNote(currentNote.id), 100);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                  <div className="flex items-center">
+                    <User className="h-3 w-3 mr-1" />
+                    <div className="flex items-center">
+                      {currentNote.creator_avatar ? (
+                        <Avatar className="h-5 w-5 mr-1">
+                          <AvatarImage src={currentNote.creator_avatar} alt={currentNote.creator_name} />
+                          <AvatarFallback>
+                            {currentNote.creator_name?.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : null}
+                      <span>{currentNote.creator_name}</span>
+                    </div>
+                  </div>
+                  <span>•</span>
+                  <div className="flex items-center">
+                    <Clock className="h-3 w-3 mr-1" />
+                    <span>{formatDate(currentNote.updated_at)}</span>
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              {currentNote.tags && currentNote.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {currentNote.tags.map(tag => (
+                    <Badge key={tag} variant="outline" className="text-xs bg-accent/20">
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              
+              <div className="mt-4 whitespace-pre-wrap">
+                {currentNote.content || "No content provided."}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Create Note Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-[550px]">
+        <DialogContent className="sm:max-w-[650px]">
           <DialogHeader>
             <DialogTitle>Create New Note</DialogTitle>
             <DialogDescription>
@@ -350,8 +588,41 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
                 placeholder="Enter note content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="min-h-[150px]"
+                className="min-h-[200px] font-mono"
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="tags">Tags (comma or enter to add)</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="tags"
+                  placeholder="Add tags..."
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagInputKeyDown}
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={addTag}
+                  disabled={!tagInput.trim()}
+                >
+                  Add
+                </Button>
+              </div>
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {tags.map(tag => (
+                    <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                      #{tag}
+                      <button onClick={() => removeTag(tag)} className="ml-1 h-3 w-3 rounded-full flex items-center justify-center hover:bg-accent">
+                        <X className="h-2 w-2" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -368,7 +639,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 
       {/* Edit Note Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[550px]">
+        <DialogContent className="sm:max-w-[650px]">
           <DialogHeader>
             <DialogTitle>Edit Note</DialogTitle>
             <DialogDescription>
@@ -390,8 +661,41 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
                 id="edit-content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="min-h-[150px]"
+                className="min-h-[200px] font-mono"
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-tags">Tags (comma or enter to add)</Label>
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="edit-tags"
+                  placeholder="Add tags..."
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagInputKeyDown}
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={addTag}
+                  disabled={!tagInput.trim()}
+                >
+                  Add
+                </Button>
+              </div>
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {tags.map(tag => (
+                    <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                      #{tag}
+                      <button onClick={() => removeTag(tag)} className="ml-1 h-3 w-3 rounded-full flex items-center justify-center hover:bg-accent">
+                        <X className="h-2 w-2" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
