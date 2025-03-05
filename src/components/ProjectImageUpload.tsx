@@ -31,7 +31,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { 
-  Image, 
+  Image as ImageIcon, 
   Upload, 
   Loader2,
   X,
@@ -168,7 +168,7 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (event) => {
-        const img = new Image();
+        const img = new window.Image(); // Use window.Image instead of Image to avoid confusion with the lucide icon
         img.src = event.target?.result as string;
         
         img.onload = () => {
@@ -322,7 +322,7 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
                   className="border-2 border-dashed rounded-lg p-10 text-center cursor-pointer hover:bg-accent/10 transition-colors"
                   onClick={() => document.getElementById('image-input')?.click()}
                 >
-                  <Image className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
+                  <ImageIcon className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">
                     Click to select an image or drag and drop
                   </p>
