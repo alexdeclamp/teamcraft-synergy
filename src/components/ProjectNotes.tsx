@@ -338,32 +338,55 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     const end = textarea.selectionEnd;
     const selectedText = textarea.value.substring(start, end);
     
-    let formattedText = '';
-    let cursorAdjustment = 0;
-    
-    switch (type) {
-      case 'bold':
-        formattedText = `**${selectedText}**`;
-        cursorAdjustment = 2;
-        break;
-      case 'italic':
-        formattedText = `*${selectedText}*`;
-        cursorAdjustment = 1;
-        break;
-      case 'underline':
-        formattedText = `__${selectedText}__`;
-        cursorAdjustment = 2;
-        break;
+    if (start === end) {
+      let formattedText = '';
+      let placeholder = 'text';
+      
+      switch (type) {
+        case 'bold':
+          formattedText = `**${placeholder}**`;
+          break;
+        case 'italic':
+          formattedText = `*${placeholder}*`;
+          break;
+        case 'underline':
+          formattedText = `__${placeholder}__`;
+          break;
+      }
+      
+      const newContent = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+      setContent(newContent);
+      
+      setTimeout(() => {
+        textarea.focus();
+        const placeholderStart = start + (type === 'bold' || type === 'underline' ? 2 : 1);
+        textarea.setSelectionRange(placeholderStart, placeholderStart + placeholder.length);
+      }, 0);
+      
+    } else {
+      let formattedText = '';
+      
+      switch (type) {
+        case 'bold':
+          formattedText = `**${selectedText}**`;
+          break;
+        case 'italic':
+          formattedText = `*${selectedText}*`;
+          break;
+        case 'underline':
+          formattedText = `__${selectedText}__`;
+          break;
+      }
+      
+      const newContent = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
+      setContent(newContent);
+      
+      const newCursorPos = start + formattedText.length;
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
     }
-    
-    const newContent = textarea.value.substring(0, start) + formattedText + textarea.value.substring(end);
-    setContent(newContent);
-    
-    setTimeout(() => {
-      textarea.focus();
-      const newPosition = end + (2 * cursorAdjustment);
-      textarea.setSelectionRange(newPosition, newPosition);
-    }, 0);
   };
 
   const renderFormattedText = (text: string) => {
