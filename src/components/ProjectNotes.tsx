@@ -24,7 +24,8 @@ import {
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
-import { PlusCircle, Edit, Trash2, FileText, Loader2 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PlusCircle, Edit, Trash2, FileText, Loader2, User, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Note {
@@ -35,6 +36,8 @@ interface Note {
   updated_at: string;
   user_id: string;
   project_id: string;
+  creator_name?: string;
+  creator_avatar?: string;
 }
 
 interface ProjectNotesProps {
@@ -61,14 +64,41 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Fetch notes with their creators
+      const { data: notesData, error: notesError } = await supabase
         .from('project_notes')
         .select('*')
         .eq('project_id', projectId)
         .order('updated_at', { ascending: false });
 
-      if (error) throw error;
-      setNotes(data || []);
+      if (notesError) throw notesError;
+      
+      // Get unique user IDs to fetch profiles
+      const userIds = [...new Set(notesData?.map(note => note.user_id) || [])];
+      
+      let profiles: any[] = [];
+      if (userIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', userIds);
+          
+        if (profilesError) throw profilesError;
+        profiles = profilesData || [];
+      }
+      
+      // Merge notes with creator info
+      const notesWithCreators = notesData?.map(note => {
+        const creator = profiles.find(profile => profile.id === note.user_id);
+        return {
+          ...note,
+          creator_name: creator?.full_name || 'Unknown User',
+          creator_avatar: creator?.avatar_url,
+        };
+      }) || [];
+
+      setNotes(notesWithCreators);
     } catch (error: any) {
       console.error('Error fetching notes:', error);
       toast.error('Failed to load notes');
@@ -181,7 +211,9 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
   
@@ -226,14 +258,45 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-2">
           {notes.map((note) => (
-            <Card key={note.id} className="overflow-hidden flex flex-col">
-              <CardHeader className="p-4 pb-0">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg line-clamp-1">{note.title}</CardTitle>
+            <Card key={note.id} className="hover:bg-accent/5 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <h3 className="font-medium text-lg">{note.title}</h3>
+                    </div>
+                    
+                    <div className="text-muted-foreground text-sm mb-2 line-clamp-2">
+                      {note.content || "No content"}
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      <div className="flex items-center">
+                        <User className="h-3 w-3 mr-1" />
+                        <div className="flex items-center">
+                          {note.creator_avatar ? (
+                            <Avatar className="h-4 w-4 mr-1">
+                              <AvatarImage src={note.creator_avatar} alt={note.creator_name} />
+                              <AvatarFallback>
+                                {note.creator_name.substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          ) : null}
+                          <span>{note.creator_name}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        <span>{formatDate(note.updated_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
                   {note.user_id === user?.id && (
-                    <div className="flex space-x-1">
+                    <div className="flex space-x-1 ml-2">
                       <Button 
                         variant="ghost" 
                         size="icon" 
@@ -255,14 +318,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
                     </div>
                   )}
                 </div>
-                <CardDescription className="pt-1">
-                  {formatDate(note.updated_at)}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-4 flex-1">
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {note.content || "No content"}
-                </p>
               </CardContent>
             </Card>
           ))}
