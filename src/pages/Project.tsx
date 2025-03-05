@@ -36,13 +36,15 @@ import {
   Trash2, 
   UserPlus, 
   Users,
-  Loader2
+  Loader2,
+  StickyNote,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import MemberInvite from '@/components/MemberInvite';
+import ProjectNotes from '@/components/ProjectNotes';
 
 interface ProjectMember {
   id: string;
@@ -432,6 +434,10 @@ const Project = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-muted/50">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="notes">
+              <StickyNote className="h-4 w-4 mr-2" />
+              Notes
+            </TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
             {userRole === 'owner' && (
               <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -484,6 +490,14 @@ const Project = () => {
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="notes" className="space-y-6">
+            <Card>
+              <CardContent className="p-6">
+                {project && id && <ProjectNotes projectId={id} />}
               </CardContent>
             </Card>
           </TabsContent>
