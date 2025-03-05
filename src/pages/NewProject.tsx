@@ -1,0 +1,154 @@
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Navbar from '@/components/Navbar';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { toast } from "sonner";
+import { ArrowLeft, Info, Loader2 } from 'lucide-react';
+
+const NewProject = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+  });
+  
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.title.trim()) {
+      toast.error("Please enter a project title");
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      // In a real app, this would be an API call to create the project in Supabase
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulating API call
+      
+      toast.success("Project created successfully!");
+      navigate('/dashboard');
+    } catch (error) {
+      console.error("Error creating project:", error);
+      toast.error("Failed to create project. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background pb-12 animate-fade-in">
+      <Navbar />
+      
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mb-6"
+            onClick={() => navigate('/dashboard')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Projects
+          </Button>
+          
+          <h1 className="text-3xl font-bold">Create a New Project</h1>
+          <p className="text-muted-foreground mt-1">
+            Set up your project and start collaborating with your team
+          </p>
+        </div>
+        
+        <Card className="shadow-sm">
+          <form onSubmit={handleSubmit}>
+            <CardHeader>
+              <CardTitle>Project Details</CardTitle>
+              <CardDescription>
+                Enter the basic information about your project
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <label htmlFor="title" className="text-sm font-medium">
+                  Project Title <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  id="title"
+                  name="title"
+                  placeholder="Enter project title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="description" className="text-sm font-medium">
+                  Description
+                </label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  placeholder="Enter project description"
+                  rows={4}
+                  value={formData.description}
+                  onChange={handleChange}
+                />
+              </div>
+              
+              <div className="rounded-md bg-blue-50 p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <Info className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-blue-800">
+                      After creating your project, you'll be able to add team members and set up permissions.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            
+            <CardFooter className="flex justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate('/dashboard')}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              
+              <Button type="submit" disabled={loading}>
+                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Create Project
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+      </main>
+    </div>
+  );
+};
+
+export default NewProject;
