@@ -42,6 +42,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import MemberInvite from '@/components/MemberInvite';
 
 interface ProjectMember {
   id: string;
@@ -69,6 +70,7 @@ const Project = () => {
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -77,7 +79,6 @@ const Project = () => {
       try {
         setLoading(true);
 
-        // Fetch project details
         const { data: projectData, error: projectError } = await supabase
           .from('projects')
           .select('*')
@@ -86,11 +87,9 @@ const Project = () => {
 
         if (projectError) throw projectError;
         
-        // Check if user has access to this project
         const isOwner = projectData.owner_id === user.id;
         
         if (!isOwner) {
-          // Check if user is a member
           const { data: memberData, error: memberError } = await supabase
             .from('project_members')
             .select('role')
@@ -99,7 +98,6 @@ const Project = () => {
             .single();
 
           if (memberError) {
-            // User doesn't have access
             navigate('/dashboard');
             toast.error("You don't have access to this project");
             return;
@@ -112,7 +110,6 @@ const Project = () => {
 
         setProject(projectData);
 
-        // Fetch project members
         const { data: membersData, error: membersError } = await supabase
           .from('project_members')
           .select('id, role, user_id')
@@ -120,7 +117,6 @@ const Project = () => {
 
         if (membersError) throw membersError;
 
-        // Get owner's profile
         const { data: ownerProfile, error: ownerError } = await supabase
           .from('profiles')
           .select('*')
@@ -129,7 +125,6 @@ const Project = () => {
 
         if (ownerError) throw ownerError;
 
-        // Fetch all member profiles separately
         const memberIds = membersData.map((member: any) => member.user_id);
         
         let memberProfiles = [];
@@ -143,7 +138,6 @@ const Project = () => {
           memberProfiles = profilesData || [];
         }
 
-        // Map member profiles to members with roles
         const membersWithProfiles = membersData.map((member: any) => {
           const profile = memberProfiles.find((p: any) => p.id === member.user_id) || {};
           return {
@@ -155,7 +149,6 @@ const Project = () => {
           };
         });
 
-        // Combine owner and members
         const allMembers: ProjectMember[] = [
           {
             id: ownerProfile.id,
@@ -206,8 +199,68 @@ const Project = () => {
   };
 
   const handleAddMember = () => {
-    // This will be implemented in a separate component
-    toast.info("Member invitation feature coming soon");
+    setShowInviteDialog(true);
+  };
+
+  const handleInviteSuccess = async () => {
+    if (!id || !user) return;
+    
+    try {
+      const { data: membersData, error: membersError } = await supabase
+        .from('project_members')
+        .select('id, role, user_id')
+        .eq('project_id', id);
+
+      if (membersError) throw membersError;
+
+      const { data: ownerProfile, error: ownerError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', project?.owner_id)
+        .single();
+
+      if (ownerError) throw ownerError;
+
+      const memberIds = membersData.map((member: any) => member.user_id);
+      
+      let memberProfiles = [];
+      if (memberIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', memberIds);
+          
+        if (profilesError) throw profilesError;
+        memberProfiles = profilesData || [];
+      }
+
+      const membersWithProfiles = membersData.map((member: any) => {
+        const profile = memberProfiles.find((p: any) => p.id === member.user_id) || {};
+        return {
+          id: member.user_id,
+          name: profile.full_name || 'Unknown User',
+          email: '', // We don't expose emails
+          role: member.role,
+          avatar: profile.avatar_url
+        };
+      });
+
+      const allMembers: ProjectMember[] = [
+        {
+          id: ownerProfile.id,
+          name: ownerProfile.full_name || 'Unknown',
+          email: '', // We don't expose emails
+          role: 'owner',
+          avatar: ownerProfile.avatar_url
+        },
+        ...membersWithProfiles
+      ];
+
+      setMembers(allMembers);
+    } catch (error: any) {
+      console.error("Error refreshing members:", error);
+      toast.error("Failed to refresh member list");
+    }
   };
 
   const handleUpdateMemberRole = async (memberId: string, newRole: string) => {
@@ -222,7 +275,6 @@ const Project = () => {
 
       if (error) throw error;
 
-      // Update local state
       setMembers(members.map(member => 
         member.id === memberId ? { ...member, role: newRole as any } : member
       ));
@@ -252,7 +304,6 @@ const Project = () => {
 
       if (error) throw error;
 
-      // Update local state
       setMembers(members.filter(member => member.id !== memberId));
       toast.success("Member removed successfully");
     } catch (error: any) {
@@ -531,6 +582,15 @@ const Project = () => {
           )}
         </Tabs>
       </main>
+
+      {showInviteDialog && id && (
+        <MemberInvite 
+          projectId={id} 
+          isOpen={showInviteDialog} 
+          onClose={() => setShowInviteDialog(false)}
+          onInviteSuccess={handleInviteSuccess}
+        />
+      )}
     </div>
   );
 };
