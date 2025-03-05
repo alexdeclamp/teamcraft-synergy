@@ -38,6 +38,7 @@ import {
   Users,
   Loader2,
   StickyNote,
+  Image,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
@@ -45,6 +46,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import MemberInvite from '@/components/MemberInvite';
 import ProjectNotes from '@/components/ProjectNotes';
+import ProjectImageUpload from '@/components/ProjectImageUpload';
 
 interface ProjectMember {
   id: string;
@@ -73,6 +75,7 @@ const Project = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [userRole, setUserRole] = useState<string | null>(null);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [projectImages, setProjectImages] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -314,6 +317,11 @@ const Project = () => {
     }
   };
 
+  const handleImageUploadComplete = (imageUrl: string) => {
+    setProjectImages([...projectImages, imageUrl]);
+    toast.success('Image uploaded successfully');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -438,6 +446,10 @@ const Project = () => {
               <StickyNote className="h-4 w-4 mr-2" />
               Notes
             </TabsTrigger>
+            <TabsTrigger value="images">
+              <Image className="h-4 w-4 mr-2" />
+              Images
+            </TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
             {userRole === 'owner' && (
               <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -498,6 +510,25 @@ const Project = () => {
             <Card>
               <CardContent className="p-6">
                 {project && id && <ProjectNotes projectId={id} />}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="images" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Images</CardTitle>
+                <CardDescription>
+                  Upload and manage images for this project
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {project && id && (
+                  <ProjectImageUpload 
+                    projectId={id} 
+                    onUploadComplete={handleImageUploadComplete}
+                  />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
