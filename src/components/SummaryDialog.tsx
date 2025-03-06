@@ -31,11 +31,19 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   const [feedbackGiven, setFeedbackGiven] = useState(false);
 
   const handleCopy = () => {
+    if (!summary) {
+      toast.error("No summary available to copy");
+      return;
+    }
     navigator.clipboard.writeText(summary);
     toast.success('Summary copied to clipboard');
   };
 
   const handleDownload = () => {
+    if (!summary) {
+      toast.error("No summary available to download");
+      return;
+    }
     const blob = new Blob([summary], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -70,16 +78,20 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">Generating summary...</p>
             </div>
-          ) : (
+          ) : summary ? (
             <div className="p-4 bg-accent/20 rounded-md whitespace-pre-wrap max-h-[50vh] overflow-y-auto">
               {summary}
+            </div>
+          ) : (
+            <div className="p-4 bg-accent/10 rounded-md flex items-center justify-center h-32">
+              <p className="text-muted-foreground">No summary available yet.</p>
             </div>
           )}
         </div>
         
         <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 mt-4">
           <div className="flex items-center space-x-2 mt-4 sm:mt-0">
-            {!isLoading && !feedbackGiven && (
+            {!isLoading && summary && !feedbackGiven && (
               <>
                 <p className="text-sm text-muted-foreground mr-2">Was this summary helpful?</p>
                 <Button 
@@ -106,7 +118,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           </div>
           
           <div className="flex space-x-2">
-            {!isLoading && (
+            {!isLoading && summary && (
               <>
                 <Button onClick={handleCopy} size="sm" variant="outline">
                   <Copy className="h-4 w-4 mr-2" />

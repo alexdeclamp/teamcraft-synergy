@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -21,28 +20,33 @@ serve(async (req) => {
     const requestBody = await req.json();
     const { type, content, imageUrl, userId, projectId } = requestBody;
     
-    console.log(`Processing ${type} summary request with request body:`, JSON.stringify(requestBody));
+    console.log(`Processing ${type} summary request`);
     console.log(`User ID: ${userId}`);
     console.log(`Project ID: ${projectId}`);
+    console.log(`Content length: ${content ? content.length : 0}`);
     
     if (!projectId) {
-      console.error('Missing projectId in request body:', JSON.stringify(requestBody));
+      console.error('Missing projectId in request body');
       return new Response(JSON.stringify({ error: 'Project ID is required for generating summaries' }), {
         status: 200, // Use 200 to avoid client-side HTTP error handling issues
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
     
-    if (type === 'image') {
-      console.log(`Image URL: ${imageUrl}`);
-      
-      // Additional validation for image type requests
-      if (!imageUrl) {
-        return new Response(JSON.stringify({ error: 'Image URL is required for image summaries' }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+    if (type === 'image' && !imageUrl) {
+      console.error('Missing imageUrl for image summary request');
+      return new Response(JSON.stringify({ error: 'Image URL is required for image summaries' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    if (type === 'note' && (!content || content.trim() === '')) {
+      console.error('Empty content for note summary request');
+      return new Response(JSON.stringify({ error: 'Note content cannot be empty' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
     
     let prompt = '';
@@ -87,6 +91,7 @@ serve(async (req) => {
     console.log('Sending request to OpenAI API with model:', model);
 
     if (!openAIApiKey) {
+      console.error('OpenAI API key is not configured');
       return new Response(JSON.stringify({ error: 'OpenAI API key is not configured' }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -104,7 +109,7 @@ serve(async (req) => {
           model: model,
           messages: messages,
           temperature: 0.7,
-          max_tokens: 500, // Add a limit to ensure we get a response
+          max_tokens: 500,
         }),
       });
 
@@ -117,8 +122,7 @@ serve(async (req) => {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.error?.message || errorMessage;
         } catch (e) {
-          // If JSON parsing fails, use the raw error text
-          errorMessage = errorText.substring(0, 100); // Limit length
+          errorMessage = errorText.substring(0, 100);
         }
         
         return new Response(JSON.stringify({ error: `OpenAI API error: ${errorMessage}` }), {
@@ -128,7 +132,7 @@ serve(async (req) => {
       }
 
       const data = await response.json();
-      console.log('OpenAI API response:', JSON.stringify(data).substring(0, 200));
+      console.log('OpenAI API response received');
       
       if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
         console.error('Invalid response structure from OpenAI:', JSON.stringify(data));
@@ -139,6 +143,7 @@ serve(async (req) => {
       }
       
       const summary = data.choices[0].message.content;
+      console.log('Generated summary:', summary.substring(0, 100) + '...');
 
       if (type === 'image' && userId && projectId) {
         // Initialize Supabase client with service role key for admin access
@@ -202,8 +207,6 @@ serve(async (req) => {
         }
       }
 
-      console.log('Successfully generated summary:', summary.substring(0, 100) + '...');
-
       return new Response(JSON.stringify({ summary }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -211,14 +214,14 @@ serve(async (req) => {
     } catch (openAIError) {
       console.error('Error in OpenAI API call:', openAIError);
       return new Response(JSON.stringify({ error: openAIError.message }), {
-        status: 200, // Return 200 instead of 500 to avoid the "non-2xx status code" issue
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
   } catch (error) {
     console.error('Error in generate-summary function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 200, // Return 200 even for errors to avoid the "non-2xx status code" issue
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
