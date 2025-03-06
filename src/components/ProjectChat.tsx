@@ -13,6 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -155,7 +156,15 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
                     : 'bg-muted text-muted-foreground mr-4'
                 }`}
               >
-                {message.content}
+                {message.role === 'user' ? (
+                  message.content
+                ) : (
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <ReactMarkdown>
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
             </div>
           ))}
