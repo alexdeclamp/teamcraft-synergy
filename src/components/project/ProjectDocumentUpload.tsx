@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
@@ -129,87 +128,81 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
   };
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          PDF Upload
-        </CardTitle>
-        <CardDescription>
-          Upload PDF documents to your project
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <Input
-              id="pdf-upload"
-              type="file"
-              accept=".pdf"
-              onChange={handleFileChange}
-              disabled={isUploading}
-              className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:font-medium file:bg-primary/10 file:text-primary hover:file:cursor-pointer"
-            />
-            <Button 
-              onClick={uploadDocument} 
-              disabled={!file || isUploading}
-              className="whitespace-nowrap"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload PDF
-                </>
-              )}
-            </Button>
-          </div>
-          
-          {file && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <FileText className="mr-2 h-4 w-4" />
-              <span className="truncate max-w-[300px]">{file.name}</span>
-              <span className="ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
-            </div>
-          )}
-          
-          {errorMessage && (
-            <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm flex items-start">
-              <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-              <div>{errorMessage}</div>
-            </div>
-          )}
-          
-          {isUploading && (
-            <div className="space-y-2">
-              <Progress value={uploadProgress} className="h-2" />
-              <p className="text-xs text-muted-foreground text-center">
-                {uploadProgress < 30 && "Reading file..."}
-                {uploadProgress >= 30 && uploadProgress < 90 && "Uploading file..."}
-                {uploadProgress >= 90 && "Finalizing..."}
-              </p>
-            </div>
-          )}
-          
-          {uploadProgress === 100 && !isUploading && (
-            <div className="p-3 rounded-md bg-green-50 text-green-600 text-sm flex items-start">
-              <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-              <div>File uploaded successfully</div>
-            </div>
-          )}
-          
-          {uploadProgress === 100 && !isUploading && (
-            <Button variant="outline" size="sm" onClick={resetForm}>
-              Upload Another PDF
-            </Button>
-          )}
+    <div className="bg-accent/20 rounded-lg p-4">
+      <div className="flex items-center gap-2 mb-4">
+        <FileText className="h-5 w-5" />
+        <h3 className="font-medium text-lg">Upload PDF</h3>
+      </div>
+      
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <Input
+            id="pdf-upload"
+            type="file"
+            accept=".pdf"
+            onChange={handleFileChange}
+            disabled={isUploading}
+            className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:font-medium file:bg-primary/10 file:text-primary hover:file:cursor-pointer"
+          />
+          <Button 
+            onClick={uploadDocument} 
+            disabled={!file || isUploading}
+            className="whitespace-nowrap"
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload PDF
+              </>
+            )}
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+        
+        {file && (
+          <div className="flex items-center text-sm text-muted-foreground">
+            <FileText className="mr-2 h-4 w-4" />
+            <span className="truncate max-w-[300px]">{file.name}</span>
+            <span className="ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
+          </div>
+        )}
+        
+        {errorMessage && (
+          <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm flex items-start">
+            <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+            <div>{errorMessage}</div>
+          </div>
+        )}
+        
+        {isUploading && (
+          <div className="space-y-2">
+            <Progress value={uploadProgress} className="h-2" />
+            <p className="text-xs text-muted-foreground text-center">
+              {uploadProgress < 30 && "Reading file..."}
+              {uploadProgress >= 30 && uploadProgress < 90 && "Uploading file..."}
+              {uploadProgress >= 90 && "Finalizing..."}
+            </p>
+          </div>
+        )}
+        
+        {uploadProgress === 100 && !isUploading && (
+          <div className="p-3 rounded-md bg-green-50 text-green-600 text-sm flex items-start">
+            <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+            <div>File uploaded successfully</div>
+          </div>
+        )}
+        
+        {uploadProgress === 100 && !isUploading && (
+          <Button variant="outline" size="sm" onClick={resetForm}>
+            Upload Another PDF
+          </Button>
+        )}
+      </div>
+    </div>
   );
 };
 

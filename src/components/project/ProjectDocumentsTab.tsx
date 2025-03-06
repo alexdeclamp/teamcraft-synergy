@@ -16,7 +16,7 @@ const ProjectDocumentsTab: React.FC<ProjectDocumentsTabProps> = ({ projectId }) 
           Upload and manage PDF documents for your project
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent>
         <ProjectDocuments projectId={projectId} />
       </CardContent>
     </Card>

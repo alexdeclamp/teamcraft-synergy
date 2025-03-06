@@ -34,10 +34,10 @@ const Project = () => {
 
   // Fetch images when the project loads
   useEffect(() => {
-    if (project && id && !isImagesLoading && projectImages.length === 0) {
+    if (project && id) {
       fetchProjectImages();
     }
-  }, [project, id, fetchProjectImages, isImagesLoading, projectImages.length]);
+  }, [project, id, fetchProjectImages]);
 
   return (
     <ProjectLayout

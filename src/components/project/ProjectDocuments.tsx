@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, RefreshCw, FileText, Download, Eye, Clock } from 'lucide-react';
@@ -67,14 +66,9 @@ const ProjectDocuments: React.FC<ProjectDocumentsProps> = ({ projectId }) => {
         onDocumentUploaded={handleDocumentUploaded}
       />
       
-      <Card className="shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <div>
-            <CardTitle>Project Documents</CardTitle>
-            <CardDescription>
-              Uploaded documents for this project
-            </CardDescription>
-          </div>
+      <div className="bg-accent/20 rounded-lg">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h3 className="font-medium text-lg">Uploaded Documents</h3>
           <Button 
             variant="outline" 
             size="sm" 
@@ -87,8 +81,9 @@ const ProjectDocuments: React.FC<ProjectDocumentsProps> = ({ projectId }) => {
               <RefreshCw className="h-4 w-4" />
             )}
           </Button>
-        </CardHeader>
-        <CardContent>
+        </div>
+        
+        <div className="p-4">
           {isLoading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -102,7 +97,7 @@ const ProjectDocuments: React.FC<ProjectDocumentsProps> = ({ projectId }) => {
             <ScrollArea className="h-[400px] pr-4">
               <div className="space-y-2">
                 {documents.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 rounded-md bg-accent/30 hover:bg-accent/40 transition-colors">
+                  <div key={doc.id} className="flex items-center justify-between p-3 rounded-md bg-background hover:bg-accent/40 transition-colors">
                     <div className="flex items-center gap-3">
                       <FileText className="h-5 w-5 flex-shrink-0 text-primary/70" />
                       <div className="flex-1 min-w-0">
@@ -130,8 +125,8 @@ const ProjectDocuments: React.FC<ProjectDocumentsProps> = ({ projectId }) => {
               </div>
             </ScrollArea>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
