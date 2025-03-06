@@ -34,11 +34,15 @@ const ProjectUpdates: React.FC<ProjectUpdatesProps> = ({ projectId }) => {
       const isInitialLoad = isLoading;
       if (!isInitialLoad) setIsRefreshing(true);
       
+      // Fixed query - use a proper join between project_updates and profiles
       const { data, error } = await supabase
         .from('project_updates')
         .select(`
-          *,
-          profiles:user_id(full_name, avatar_url)
+          id,
+          content,
+          created_at,
+          user_id,
+          profiles (full_name, avatar_url)
         `)
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });

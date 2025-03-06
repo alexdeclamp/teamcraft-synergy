@@ -35,13 +35,13 @@ serve(async (req) => {
       .select('summary')
       .eq('user_id', userId);
     
-    // Fetch project documents (NEW)
+    // Fetch project documents
     const { data: documents } = await supabase
       .from('project_documents')
       .select('file_name, content_text')
       .eq('project_id', projectId);
     
-    // Fetch project updates (NEW)
+    // Fetch project updates with proper join to profiles
     const { data: updates } = await supabase
       .from('project_updates')
       .select('content, created_at, profiles:user_id(full_name)')
@@ -61,7 +61,7 @@ serve(async (req) => {
     ${documents?.map(doc => `Document: ${doc.file_name}\nContent: ${doc.content_text?.substring(0, 500)}${doc.content_text?.length > 500 ? '...' : ''}`).join('\n\n') || 'No documents available.'}
     
     Recent Updates:
-    ${updates?.map(update => `Update by ${update.profiles.full_name || 'Unknown'} on ${new Date(update.created_at).toLocaleDateString()}: ${update.content}`).join('\n') || 'No recent updates.'}
+    ${updates?.map(update => `Update by ${update.profiles?.full_name || 'Unknown'} on ${new Date(update.created_at).toLocaleDateString()}: ${update.content}`).join('\n') || 'No recent updates.'}
     `;
 
     console.log('Project context assembled from multiple sources');
