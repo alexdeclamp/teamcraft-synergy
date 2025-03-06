@@ -84,9 +84,9 @@ const ProjectUpdateItem: React.FC<ProjectUpdateItemProps> = ({
   };
 
   return (
-    <div>
+    <div className="bg-card rounded-lg p-4 border">
       <div className="flex gap-3">
-        <Avatar className="h-8 w-8">
+        <Avatar className="h-10 w-10">
           {update.user_avatar ? (
             <AvatarImage src={update.user_avatar} alt={update.user_name} />
           ) : (
@@ -95,9 +95,9 @@ const ProjectUpdateItem: React.FC<ProjectUpdateItemProps> = ({
             </AvatarFallback>
           )}
         </Avatar>
-        <div className="space-y-1 flex-1">
+        <div className="space-y-2 flex-1">
           <div className="flex justify-between items-center">
-            <p className="font-medium text-sm">{update.user_name}</p>
+            <p className="font-medium">{update.user_name}</p>
             <div className="flex gap-2 items-center">
               <p className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(update.created_at), { addSuffix: true })}
@@ -106,8 +106,9 @@ const ProjectUpdateItem: React.FC<ProjectUpdateItemProps> = ({
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-6 w-6 p-0"
+                  className="h-6 w-6 p-0 rounded-full"
                   onClick={() => onRemove(update.id)}
+                  title="Delete update"
                 >
                   <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                 </Button>
@@ -118,9 +119,9 @@ const ProjectUpdateItem: React.FC<ProjectUpdateItemProps> = ({
           
           {/* Tags section */}
           <div className="mt-2">
-            <div className="flex flex-wrap gap-1 items-center">
+            <div className="flex flex-wrap gap-1.5 items-center">
               {(update.tags || []).map((tag, tagIndex) => (
-                <Badge key={tagIndex} variant="secondary" className="text-xs gap-1 py-0">
+                <Badge key={tagIndex} variant="secondary" className="text-xs gap-1 py-0.5 px-2">
                   {tag}
                   {userId === update.user_id && (
                     <X 
@@ -137,6 +138,7 @@ const ProjectUpdateItem: React.FC<ProjectUpdateItemProps> = ({
                   size="sm" 
                   className="h-5 w-5 p-0 rounded-full"
                   onClick={() => setActiveUpdateId(update.id)}
+                  title="Add tag"
                 >
                   <Plus className="h-3 w-3" />
                 </Button>
@@ -185,7 +187,6 @@ const ProjectUpdateItem: React.FC<ProjectUpdateItemProps> = ({
           </div>
         </div>
       </div>
-      {!isLast && <Separator className="my-4" />}
     </div>
   );
 };

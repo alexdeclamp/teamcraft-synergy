@@ -107,7 +107,7 @@ const ProjectUpdates: React.FC<ProjectUpdatesProps> = ({ projectId }) => {
         onUpdateAdded={fetchUpdates}
       />
       
-      <div>
+      <div className="bg-card rounded-lg p-5 border">
         <ProjectUpdatesHeader 
           onRefresh={fetchUpdates}
           isRefreshing={isRefreshing}

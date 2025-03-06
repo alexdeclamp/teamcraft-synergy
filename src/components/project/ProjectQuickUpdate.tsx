@@ -50,12 +50,12 @@ const ProjectQuickUpdate: React.FC<ProjectQuickUpdateProps> = ({ projectId, onUp
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
+    <form onSubmit={handleSubmit} className="space-y-3 bg-card rounded-lg p-4 border">
       <Textarea
         placeholder="Share a quick project update with your team..."
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        className="min-h-[100px] resize-none"
+        className="min-h-[100px] resize-none focus-visible:ring-primary"
         disabled={isSubmitting}
       />
       

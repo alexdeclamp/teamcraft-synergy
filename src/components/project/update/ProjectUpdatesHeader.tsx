@@ -11,17 +11,24 @@ interface ProjectUpdatesHeaderProps {
 const ProjectUpdatesHeader: React.FC<ProjectUpdatesHeaderProps> = ({ onRefresh, isRefreshing }) => {
   return (
     <div className="flex justify-between items-center mb-4">
-      <h3 className="text-lg font-medium">Recent Updates</h3>
+      <h3 className="text-xl font-semibold">Recent Updates</h3>
       <Button 
         variant="outline" 
         size="sm"
         onClick={onRefresh}
         disabled={isRefreshing}
+        className="gap-1"
       >
         {isRefreshing ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Refreshing</span>
+          </>
         ) : (
-          <RefreshCw className="h-4 w-4" />
+          <>
+            <RefreshCw className="h-4 w-4" />
+            <span>Refresh</span>
+          </>
         )}
       </Button>
     </div>
