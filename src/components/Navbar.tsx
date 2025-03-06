@@ -1,21 +1,38 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   LayoutDashboard, 
   Plus, 
   User, 
   LogOut, 
   Menu, 
-  X
+  X,
+  Settings,
 } from "lucide-react";
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, profile, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,6 +47,10 @@ const Navbar = () => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   const navLinks = [
     { 
       name: 'Dashboard',
@@ -42,6 +63,19 @@ const Navbar = () => {
       icon: <Plus className="h-4 w-4 mr-2" />
     },
   ];
+
+  // Get user initials for avatar fallback
+  const getInitials = () => {
+    if (profile?.full_name) {
+      return profile.full_name
+        .split(' ')
+        .map(part => part[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+    }
+    return user?.email?.substring(0, 2).toUpperCase() || 'U';
+  };
 
   return (
     <header 
@@ -73,12 +107,24 @@ const Navbar = () => {
             </Link>
           ))}
           
-          <Button variant="outline" size="sm" className="ml-2">
-            <User className="h-4 w-4 mr-2" />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="ml-2"
+            onClick={() => setProfileDialogOpen(true)}
+          >
+            <Avatar className="h-5 w-5 mr-2">
+              <AvatarFallback>{getInitials()}</AvatarFallback>
+            </Avatar>
             Profile
           </Button>
           
-          <Button variant="ghost" size="sm" className="text-muted-foreground">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-muted-foreground"
+            onClick={handleSignOut}
+          >
             <LogOut className="h-4 w-4 mr-2" />
             Sign Out
           </Button>
@@ -117,16 +163,16 @@ const Navbar = () => {
               </Link>
             ))}
             <div className="border-t my-2 pt-2">
-              <Link 
-                to="/profile" 
-                className="flex items-center px-3 py-2 rounded-md hover:bg-accent"
+              <button
+                onClick={() => setProfileDialogOpen(true)}
+                className="w-full flex items-center px-3 py-2 rounded-md hover:bg-accent text-left"
               >
                 <User className="h-4 w-4 mr-2" />
                 Profile
-              </Link>
+              </button>
               <button 
-                className="w-full flex items-center px-3 py-2 rounded-md hover:bg-accent text-muted-foreground"
-                onClick={() => console.log("Sign out")}
+                className="w-full flex items-center px-3 py-2 rounded-md hover:bg-accent text-muted-foreground text-left"
+                onClick={handleSignOut}
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
@@ -135,6 +181,45 @@ const Navbar = () => {
           </div>
         </div>
       )}
+
+      {/* Profile Dialog */}
+      <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Profile</DialogTitle>
+            <DialogDescription>
+              Your account information
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center py-4">
+            <Avatar className="h-20 w-20 mb-4">
+              <AvatarFallback className="text-xl">{getInitials()}</AvatarFallback>
+            </Avatar>
+            <h3 className="text-xl font-medium">{profile?.full_name || 'User'}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{user?.email}</p>
+            
+            <div className="w-full space-y-2 mt-2">
+              <div className="flex justify-between p-3 bg-muted rounded-md">
+                <span className="text-sm font-medium">Account Type</span>
+                <span className="text-sm">Free</span>
+              </div>
+              <div className="flex justify-between p-3 bg-muted rounded-md">
+                <span className="text-sm font-medium">Member Since</span>
+                <span className="text-sm">{new Date(user?.created_at || Date.now()).toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" className="mr-2" onClick={() => setProfileDialogOpen(false)}>
+              Close
+            </Button>
+            <Button size="sm" variant="outline" className="gap-1">
+              <Settings className="h-4 w-4" />
+              Settings
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 };
