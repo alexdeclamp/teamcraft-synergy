@@ -32,7 +32,21 @@ serve(async (req) => {
 
   try {
     console.log("Starting PDF extraction process");
-    const { fileBase64, fileName, projectId, userId } = await req.json();
+    
+    // First validate the request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+      console.log("Request received with parameters:", Object.keys(requestBody).join(', '));
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { fileBase64, fileName, projectId, userId } = requestBody;
     
     if (!fileBase64 || !projectId || !userId) {
       console.error("Missing required parameters");
@@ -43,15 +57,47 @@ serve(async (req) => {
     }
 
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Missing Supabase environment variables");
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     console.log("Decoding PDF data");
     // Remove the base64 prefix (e.g., "data:application/pdf;base64,")
-    const base64Data = fileBase64.split(',')[1];
+    let base64Data;
+    try {
+      base64Data = fileBase64.split(',')[1];
+      if (!base64Data) {
+        throw new Error('Invalid base64 format');
+      }
+    } catch (error) {
+      console.error("Failed to process base64 data:", error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid PDF data format' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     // Convert base64 to binary
-    const binaryPdf = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    let binaryPdf;
+    try {
+      binaryPdf = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+      console.log(`Binary PDF size: ${binaryPdf.length} bytes`);
+    } catch (error) {
+      console.error("Failed to convert base64 to binary:", error);
+      return new Response(
+        JSON.stringify({ error: 'Failed to decode PDF data' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     console.log("Loading PDF document");
     try {
@@ -97,7 +143,10 @@ serve(async (req) => {
         
       if (storageError) {
         console.error('Error uploading PDF to storage:', storageError);
-        throw storageError;
+        return new Response(
+          JSON.stringify({ error: `Storage error: ${storageError.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
       
       // Get public URL for the uploaded file
@@ -124,7 +173,10 @@ serve(async (req) => {
         
       if (documentError) {
         console.error('Error saving document to database:', documentError);
-        throw documentError;
+        return new Response(
+          JSON.stringify({ error: `Database error: ${documentError.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
       
       console.log("PDF processing completed successfully");
@@ -138,7 +190,10 @@ serve(async (req) => {
       );
     } catch (pdfError) {
       console.error("Error processing PDF document:", pdfError);
-      throw new Error(`PDF processing error: ${pdfError.message}`);
+      return new Response(
+        JSON.stringify({ error: `PDF processing error: ${pdfError.message || 'Unknown error'}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
   } catch (error) {
     console.error('Error in extract-pdf-text function:', error);

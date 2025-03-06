@@ -58,6 +58,12 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
           }
           
           setUploadProgress(30);
+          console.log("Calling edge function with params:", {
+            fileSize: file.size,
+            fileName: file.name,
+            projectId,
+            userId: user.id
+          });
           
           // Send file to edge function for processing
           const { data, error } = await supabase.functions.invoke('extract-pdf-text', {
@@ -68,6 +74,8 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
               userId: user.id
             }
           });
+          
+          console.log("Edge function response:", data, error);
           
           if (error) {
             console.error('Edge function error:', error);
@@ -103,7 +111,8 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
         }
       };
       
-      fileReader.onerror = () => {
+      fileReader.onerror = (event) => {
+        console.error('FileReader error:', event);
         toast.error('Failed to read file');
         setIsUploading(false);
         setErrorMessage('Failed to read file');
