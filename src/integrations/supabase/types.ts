@@ -283,6 +283,7 @@ export type Database = {
           created_at: string
           id: string
           project_id: string
+          tags: string[] | null
           user_id: string
         }
         Insert: {
@@ -290,6 +291,7 @@ export type Database = {
           created_at?: string
           id?: string
           project_id: string
+          tags?: string[] | null
           user_id: string
         }
         Update: {
@@ -297,6 +299,7 @@ export type Database = {
           created_at?: string
           id?: string
           project_id?: string
+          tags?: string[] | null
           user_id?: string
         }
         Relationships: [
