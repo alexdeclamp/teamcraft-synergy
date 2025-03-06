@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import Logo from './navbar/Logo';
 import NavLinks from './navbar/NavLinks';
 import ProfileButton from './navbar/ProfileButton';
-import SignOutButton from './navbar/SignOutButton';
 import MobileMenu from './navbar/MobileMenu';
 import ProfileDialog from './navbar/ProfileDialog';
 import SettingsDialog from './navbar/SettingsDialog';
@@ -35,10 +34,6 @@ const Navbar = () => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  const handleSignOut = async () => {
-    await signOut();
-  };
-
   const handleOpenSettings = () => {
     setProfileDialogOpen(false);
     setSettingsDialogOpen(true);
@@ -59,8 +54,6 @@ const Navbar = () => {
           <NavLinks />
           
           <ProfileButton onClick={() => setProfileDialogOpen(true)} />
-          
-          <SignOutButton onClick={handleSignOut} />
         </nav>
 
         {/* Mobile menu button */}
@@ -80,7 +73,7 @@ const Navbar = () => {
       <MobileMenu 
         isOpen={mobileMenuOpen}
         onProfileClick={() => setProfileDialogOpen(true)}
-        onSignOutClick={handleSignOut}
+        onSignOutClick={signOut}
       />
 
       {/* Profile Dialog */}

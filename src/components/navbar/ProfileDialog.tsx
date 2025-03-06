@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Settings } from "lucide-react";
+import { Settings, LogOut } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 
 type ProfileDialogProps = {
@@ -19,7 +19,7 @@ type ProfileDialogProps = {
 };
 
 const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProps) => {
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
 
   // Get user initials for avatar fallback
   const getInitials = () => {
@@ -32,6 +32,11 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
         .substring(0, 2);
     }
     return user?.email?.substring(0, 2).toUpperCase() || 'U';
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    onOpenChange(false);
   };
 
   return (
@@ -61,9 +66,10 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
             </div>
           </div>
         </div>
-        <div className="flex justify-end">
-          <Button variant="outline" size="sm" className="mr-2" onClick={() => onOpenChange(false)}>
-            Close
+        <div className="flex justify-between">
+          <Button variant="outline" size="sm" className="gap-1 text-destructive hover:bg-destructive/10" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4" />
+            Sign Out
           </Button>
           <Button size="sm" variant="outline" className="gap-1" onClick={onOpenSettings}>
             <Settings className="h-4 w-4" />
