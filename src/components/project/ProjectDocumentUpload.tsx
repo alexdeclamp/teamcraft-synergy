@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -143,13 +142,13 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
               accept=".pdf"
               onChange={handleFileChange}
               disabled={isUploading}
-              className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:font-medium file:bg-primary/10 file:text-primary hover:file:cursor-pointer w-full"
+              className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:font-medium file:bg-primary/10 file:text-primary hover:file:cursor-pointer w-full h-12"
             />
           </div>
           <Button 
             onClick={uploadDocument} 
             disabled={!file || isUploading}
-            className="whitespace-nowrap w-full sm:w-auto"
+            className="whitespace-nowrap w-full sm:w-auto h-12"
           >
             {isUploading ? (
               <>
