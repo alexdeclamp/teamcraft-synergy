@@ -21,7 +21,8 @@ const Project = () => {
     activityPercentage,
     formatFileSize,
     handleImagesUpdated,
-    handleAddMember
+    handleAddMember,
+    fetchProjectImages
   } = useProjectPageData(id);
 
   // Update members when they're fetched
@@ -30,6 +31,13 @@ const Project = () => {
       setMembers(fetchedMembers);
     }
   }, [fetchedMembers]);
+
+  // Fetch images when the project loads
+  useEffect(() => {
+    if (project && id && !isImagesLoading && projectImages.length === 0) {
+      fetchProjectImages();
+    }
+  }, [project, id, fetchProjectImages, isImagesLoading, projectImages.length]);
 
   return (
     <ProjectLayout

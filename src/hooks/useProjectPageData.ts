@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,6 +46,7 @@ interface UseProjectPageDataResult {
   handleAddMember: () => void;
   showInviteDialog: boolean;
   setShowInviteDialog: (show: boolean) => void;
+  fetchProjectImages: () => Promise<void>;
 }
 
 export const useProjectPageData = (projectId: string | undefined): UseProjectPageDataResult => {
@@ -167,6 +168,68 @@ export const useProjectPageData = (projectId: string | undefined): UseProjectPag
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
+  const fetchProjectImages = useCallback(async () => {
+    if (!projectId || !user) return;
+
+    try {
+      setIsImagesLoading(true);
+      
+      const { data, error } = await supabase
+        .storage
+        .from('project_images')
+        .list(`${projectId}`);
+
+      if (error) throw error;
+
+      if (data) {
+        const imageUrls = await Promise.all(
+          data.map(async (item) => {
+            const { data: urlData } = await supabase
+              .storage
+              .from('project_images')
+              .getPublicUrl(`${projectId}/${item.name}`);
+            
+            // Fetch summary if exists
+            const { data: summaryData } = await supabase
+              .from('image_summaries')
+              .select('summary')
+              .eq('image_url', urlData.publicUrl)
+              .eq('project_id', projectId)
+              .single();
+
+            return {
+              url: urlData.publicUrl,
+              path: `${projectId}/${item.name}`,
+              size: item.metadata?.size || 0,
+              name: item.name,
+              createdAt: new Date(item.created_at || Date.now()),
+              summary: summaryData?.summary || undefined
+            };
+          })
+        );
+
+        const sortedImages = imageUrls.sort((a, b) => 
+          b.createdAt.getTime() - a.createdAt.getTime()
+        );
+
+        setProjectImages(sortedImages);
+        setRecentImages(sortedImages.slice(0, 3));
+      }
+    } catch (error: any) {
+      console.error('Error fetching images:', error);
+      toast.error('Failed to load project images');
+    } finally {
+      setIsImagesLoading(false);
+    }
+  }, [projectId, user]);
+
+  // Initial fetch of images when project is loaded
+  useEffect(() => {
+    if (project && projectId && !isImagesLoading && projectImages.length === 0) {
+      fetchProjectImages();
+    }
+  }, [project, projectId, fetchProjectImages, isImagesLoading, projectImages.length]);
+
   const handleImagesUpdated = (images: UploadedImage[], recent: UploadedImage[]) => {
     setProjectImages(images);
     setRecentImages(recent);
@@ -201,6 +264,7 @@ export const useProjectPageData = (projectId: string | undefined): UseProjectPag
     handleImagesUpdated,
     handleAddMember,
     showInviteDialog,
-    setShowInviteDialog
+    setShowInviteDialog,
+    fetchProjectImages
   };
 };

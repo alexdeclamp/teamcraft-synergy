@@ -30,106 +30,67 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({ projectId, onImagesUpdate
   const { user } = useAuth();
   const [isImagesLoading, setIsImagesLoading] = useState(false);
 
+  // Fetch images when component mounts
   useEffect(() => {
-    const fetchProjectImages = async () => {
-      if (!projectId || !user) return;
-
-      try {
-        setIsImagesLoading(true);
-        
-        const { data, error } = await supabase
-          .storage
-          .from('project_images')
-          .list(`${projectId}`);
-
-        if (error) throw error;
-
-        if (data) {
-          const imageUrls = await Promise.all(
-            data.map(async (item) => {
-              const { data: urlData } = await supabase
-                .storage
-                .from('project_images')
-                .getPublicUrl(`${projectId}/${item.name}`);
-              
-              // Fetch summary if exists
-              const { data: summaryData } = await supabase
-                .from('image_summaries')
-                .select('summary')
-                .eq('image_url', urlData.publicUrl)
-                .eq('user_id', user.id)
-                .single();
-
-              return {
-                url: urlData.publicUrl,
-                path: `${projectId}/${item.name}`,
-                size: item.metadata?.size || 0,
-                name: item.name,
-                createdAt: new Date(item.created_at || Date.now()),
-                summary: summaryData?.summary || undefined
-              };
-            })
-          );
-
-          const sortedImages = imageUrls.sort((a, b) => 
-            b.createdAt.getTime() - a.createdAt.getTime()
-          );
-
-          onImagesUpdated(sortedImages, sortedImages.slice(0, 3));
-        }
-      } catch (error: any) {
-        console.error('Error fetching images:', error);
-      } finally {
-        setIsImagesLoading(false);
-      }
-    };
-
     fetchProjectImages();
-  }, [projectId, user, onImagesUpdated]);
+  }, [projectId]);
 
-  const handleImageUploadComplete = (imageUrl: string) => {
-    // Refresh the project images
-    const fetchUpdatedImages = async () => {
-      if (!projectId || !user) return;
+  const fetchProjectImages = async () => {
+    if (!projectId || !user) return;
 
-      try {
-        const { data, error } = await supabase
-          .storage
-          .from('project_images')
-          .list(`${projectId}`);
+    try {
+      setIsImagesLoading(true);
+      
+      const { data, error } = await supabase
+        .storage
+        .from('project_images')
+        .list(`${projectId}`);
 
-        if (error) throw error;
+      if (error) throw error;
 
-        if (data) {
-          const imageUrls = await Promise.all(
-            data.map(async (item) => {
-              const { data: urlData } = await supabase
-                .storage
-                .from('project_images')
-                .getPublicUrl(`${projectId}/${item.name}`);
-              
-              return {
-                url: urlData.publicUrl,
-                path: `${projectId}/${item.name}`,
-                size: item.metadata?.size || 0,
-                name: item.name,
-                createdAt: new Date(item.created_at || Date.now())
-              };
-            })
-          );
+      if (data) {
+        const imageUrls = await Promise.all(
+          data.map(async (item) => {
+            const { data: urlData } = await supabase
+              .storage
+              .from('project_images')
+              .getPublicUrl(`${projectId}/${item.name}`);
+            
+            // Fetch summary if exists
+            const { data: summaryData } = await supabase
+              .from('image_summaries')
+              .select('summary')
+              .eq('image_url', urlData.publicUrl)
+              .eq('project_id', projectId)
+              .single();
 
-          const sortedImages = imageUrls.sort((a, b) => 
-            b.createdAt.getTime() - a.createdAt.getTime()
-          );
+            return {
+              url: urlData.publicUrl,
+              path: `${projectId}/${item.name}`,
+              size: item.metadata?.size || 0,
+              name: item.name,
+              createdAt: new Date(item.created_at || Date.now()),
+              summary: summaryData?.summary || undefined
+            };
+          })
+        );
 
-          onImagesUpdated(sortedImages, sortedImages.slice(0, 3));
-        }
-      } catch (error: any) {
-        console.error('Error fetching updated images:', error);
+        const sortedImages = imageUrls.sort((a, b) => 
+          b.createdAt.getTime() - a.createdAt.getTime()
+        );
+
+        onImagesUpdated(sortedImages, sortedImages.slice(0, 3));
       }
-    };
+    } catch (error: any) {
+      console.error('Error fetching images:', error);
+    } finally {
+      setIsImagesLoading(false);
+    }
+  };
 
-    fetchUpdatedImages();
+  const handleImageUploadComplete = async (imageUrl: string) => {
+    // Refresh the project images
+    await fetchProjectImages();
     toast.success('Image uploaded successfully');
   };
 
