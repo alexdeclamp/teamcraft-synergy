@@ -114,7 +114,8 @@ serve(async (req) => {
     
     // Store file in Supabase Storage
     const fileExt = fileName.split('.').pop();
-    const filePath = `${projectId}/${Date.now()}_${fileName}`;
+    // Fix: Change the file path to include user_id first, then project_id
+    const filePath = `${userId}/${projectId}/${Date.now()}_${fileName}`;
     
     // Check if the bucket exists, create it if it doesn't
     const { data: buckets } = await supabase.storage.listBuckets();
@@ -129,7 +130,7 @@ serve(async (req) => {
     }
     
     // Upload file to storage
-    console.log('Uploading file to storage...');
+    console.log(`Uploading file to storage with path: ${filePath}`);
     const { data: storageData, error: storageError } = await supabase.storage
       .from('project-documents')
       .upload(filePath, new Uint8Array(pdfBuffer), {
@@ -158,6 +159,7 @@ serve(async (req) => {
         file_url: publicUrl,
         document_type: 'pdf',
         summary: summary,
+        file_path: filePath
       })
       .select()
       .single();
