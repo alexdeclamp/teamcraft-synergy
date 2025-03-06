@@ -24,7 +24,9 @@ type ProfileDialogProps = {
 const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProps) => {
   const { user, profile, signOut } = useAuth();
   const [statsLoading, setStatsLoading] = useState(true);
+  const [activeBrains, setActiveBrains] = useState(0);
   const [apiCalls, setApiCalls] = useState(0);
+  const [storageUsed, setStorageUsed] = useState('0 KB');
   const [error, setError] = useState<string | null>(null);
 
   // Get user initials for avatar fallback
@@ -77,8 +79,10 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
           return;
         }
         
-        // Set only the API calls stat
+        // Set the stats with fallbacks for any missing data
+        setActiveBrains(data.activeBrains ?? 0);
         setApiCalls(data.apiCalls ?? 0);
+        setStorageUsed(data.storageUsed ?? '0 KB');
       } catch (error) {
         console.error('Error fetching user stats:', error);
         setError('An unexpected error occurred');
@@ -126,7 +130,9 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
           <ProfileStats 
             isLoading={statsLoading}
             error={error}
+            activeBrains={activeBrains}
             apiCalls={apiCalls}
+            storageUsed={storageUsed}
           />
         </div>
         <div className="flex justify-between">
