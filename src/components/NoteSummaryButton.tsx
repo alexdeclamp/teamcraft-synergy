@@ -38,7 +38,13 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
         variant="ghost" 
         size="icon" 
         className="h-8 w-8"
-        onClick={generateSummary}
+        onClick={() => {
+          if (savedSummary) {
+            setIsDialogOpen(true);
+          } else {
+            generateSummary();
+          }
+        }}
         disabled={isGenerating || !noteContent}
         title={savedSummary ? "View Saved AI Summary" : "Generate AI Summary"}
       >

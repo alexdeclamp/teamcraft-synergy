@@ -38,11 +38,11 @@ export function useNoteSummary({ noteId, noteContent, projectId }: UseNoteSummar
         if (data?.summary) {
           console.log('Found saved summary for note:', noteId);
           setSavedSummary(data.summary);
-          setSummary(data.summary);
+          setSummary(data.summary); // Set both states to ensure consistency
         } else {
           console.log('No saved summary found for note:', noteId);
           setSavedSummary(null);
-          setSummary('');
+          setSummary(''); // Reset summary when no saved summary exists
         }
       } catch (error) {
         console.error('Error fetching saved summary:', error);
@@ -95,7 +95,7 @@ export function useNoteSummary({ noteId, noteContent, projectId }: UseNoteSummar
       }
       
       setSummary(data.summary);
-      setSavedSummary(data.summary);
+      setSavedSummary(data.summary); // Update both states when a new summary is generated
     } catch (error: any) {
       console.error('Error generating summary:', error);
       toast.error(`Failed to generate summary: ${error.message || 'Unknown error'}`);
