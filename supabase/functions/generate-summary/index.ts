@@ -36,22 +36,31 @@ serve(async (req) => {
         { role: 'user', content: prompt }
       ];
     } else if (type === 'image') {
-      prompt = `
-      You are a project manager and data protection officer. Create a concise description of the following image.
-      Focus on describing what's in the image professionally and highlight its relevance to a project context.
-      Keep your description clear and mention any key elements that would help someone remember what this image was about.
-      
-      IMAGE URL:
-      ${imageUrl}
-      `;
-      
+      // For images, we'll use GPT-4's vision capabilities
       messages = [
-        { role: 'system', content: 'You are a professional project manager and data protection officer assistant that specializes in creating concise descriptions of project images.' },
-        { role: 'user', content: prompt }
+        { 
+          role: 'system', 
+          content: 'You are a professional project manager and data protection officer assistant that specializes in describing project-related images accurately. When describing images, focus on factual details rather than making assumptions.'
+        },
+        { 
+          role: 'user', 
+          content: [
+            {
+              type: 'text',
+              text: 'Please provide a concise, accurate description of this project-related image. Focus only on what you can clearly see in the image. If the image is not clear or you cannot identify key elements, state that directly. Do not make assumptions about the purpose or context if they are not visually apparent.'
+            },
+            {
+              type: 'image_url',
+              image_url: imageUrl
+            }
+          ]
+        }
       ];
     } else {
       throw new Error('Invalid summary type requested');
     }
+
+    console.log('Sending request to OpenAI API with messages:', JSON.stringify(messages));
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -60,7 +69,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: type === 'image' ? 'gpt-4o' : 'gpt-4o-mini',
         messages: messages,
         temperature: 0.7,
       }),
@@ -74,6 +83,8 @@ serve(async (req) => {
 
     const data = await response.json();
     const summary = data.choices[0].message.content;
+
+    console.log('Generated summary:', summary);
 
     return new Response(JSON.stringify({ summary }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -24,6 +24,8 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
       setIsGenerating(true);
       setIsDialogOpen(true);
       
+      console.log('Generating summary for image:', imageUrl);
+      
       const { data, error } = await supabase.functions.invoke('generate-summary', {
         body: {
           type: 'image',
@@ -31,8 +33,12 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error from edge function:', error);
+        throw error;
+      }
       
+      console.log('Received summary data:', data);
       setSummary(data.summary);
     } catch (error: any) {
       console.error('Error generating image summary:', error);
