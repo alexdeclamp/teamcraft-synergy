@@ -22,12 +22,22 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hasSummary, setHasSummary] = useState(false);
   const { user } = useAuth();
-  const { projectId } = useParams<{ projectId: string }>();
+  const params = useParams<{ projectId: string }>();
+  const projectId = params.projectId || params.id; // Try both possible param names
+
+  // Debug logging to identify the issue
+  useEffect(() => {
+    console.log('Current params:', params);
+    console.log('Project ID from params:', projectId);
+    console.log('Image URL:', imageUrl);
+  }, [params, projectId, imageUrl]);
 
   // Fetch existing summary when component mounts
   useEffect(() => {
     if (imageUrl && projectId) {
       fetchExistingSummary();
+    } else {
+      console.error('Missing required data to fetch summary:', { imageUrl, projectId });
     }
   }, [imageUrl, projectId]);
 
@@ -62,7 +72,6 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
   const generateSummary = async () => {
     try {
       setIsGenerating(true);
-      setIsDialogOpen(true);
       
       // If we already have a summary, no need to generate a new one
       if (hasSummary) {
@@ -127,6 +136,11 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
   };
 
   const handleButtonClick = () => {
+    if (!projectId) {
+      toast.error('Project ID is missing. Please reload the page or navigate to the project again.');
+      return;
+    }
+
     setIsDialogOpen(true);
     if (!hasSummary) {
       generateSummary();
@@ -140,7 +154,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         size="icon"
         className={`h-7 w-7 ${hasSummary ? 'text-green-500' : ''}`}
         onClick={handleButtonClick}
-        disabled={isGenerating}
+        disabled={isGenerating || !projectId}
         title={hasSummary ? "View AI Summary" : "Generate AI Summary"}
       >
         {isGenerating ? 

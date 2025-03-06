@@ -47,7 +47,7 @@ serve(async (req) => {
     
     let prompt = '';
     let messages = [];
-    let model = 'gpt-4o-mini'; // Default model for all summaries now
+    let model = 'gpt-4o-mini'; // Use gpt-4o-mini for all summaries
     
     if (type === 'note') {
       prompt = `
@@ -64,7 +64,6 @@ serve(async (req) => {
         { role: 'user', content: prompt }
       ];
     } else if (type === 'image') {
-      // Using the same model for image analysis to avoid potential issues
       messages = [
         {
           role: 'system',
