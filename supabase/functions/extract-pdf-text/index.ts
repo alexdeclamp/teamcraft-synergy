@@ -2,6 +2,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import * as pdfjs from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/+esm';
+
+// Configure PDF.js worker
+const pdfjsWorker = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.mjs');
+pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -82,46 +87,90 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Load the PDF using PDF.js
+    console.log("Loading PDF with PDF.js");
+    const pdf = await pdfjs.getDocument({ data: binaryPdf }).promise;
+    console.log(`PDF loaded successfully. Number of pages: ${pdf.numPages}`);
     
-    // Store the PDF in Supabase Storage
     const timestamp = new Date().getTime();
-    const filePath = `${userId}/${projectId}/${timestamp}_${fileName}`;
+    const fileNameWithoutExt = fileName.replace(/\.pdf$/i, '');
+    const images = [];
     
-    console.log("Uploading PDF to storage");
-    // Upload PDF to storage
-    const { data: storageData, error: storageError } = await supabase
-      .storage
-      .from('project_documents')
-      .upload(filePath, binaryPdf, {
-        contentType: 'application/pdf',
-        upsert: false
-      });
+    // Process each page of the PDF
+    for (let i = 1; i <= pdf.numPages; i++) {
+      console.log(`Processing page ${i} of ${pdf.numPages}`);
+      const page = await pdf.getPage(i);
       
-    if (storageError) {
-      console.error('Error uploading PDF to storage:', storageError);
-      return new Response(
-        JSON.stringify({ error: `Storage error: ${storageError.message}` }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      // Set scale for better resolution
+      const viewport = page.getViewport({ scale: 1.5 });
+      const canvas = new OffscreenCanvas(viewport.width, viewport.height);
+      const context = canvas.getContext('2d');
+      
+      // Prepare canvas for rendering
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport
+      };
+      
+      // Render the page to canvas
+      await page.render(renderContext).promise;
+      
+      // Convert canvas to PNG
+      const pngBlob = await canvas.convertToBlob({ type: 'image/png' });
+      const pngArrayBuffer = await pngBlob.arrayBuffer();
+      const pngUint8Array = new Uint8Array(pngArrayBuffer);
+      
+      // Define file path and name for this page
+      const imagePath = `${userId}/${projectId}/${timestamp}_${fileNameWithoutExt}_page_${i}.png`;
+      
+      // Upload PNG to storage
+      console.log(`Uploading page ${i} as PNG to storage`);
+      const { data: storageData, error: storageError } = await supabase
+        .storage
+        .from('project_documents')
+        .upload(imagePath, pngUint8Array, {
+          contentType: 'image/png',
+          upsert: false
+        });
+        
+      if (storageError) {
+        console.error(`Error uploading page ${i} to storage:`, storageError);
+        continue;
+      }
+      
+      // Get public URL for the uploaded file
+      const { data: { publicUrl } } = supabase
+        .storage
+        .from('project_documents')
+        .getPublicUrl(imagePath);
+      
+      images.push({
+        page: i,
+        url: publicUrl,
+        path: imagePath
+      });
     }
-    
-    // Get public URL for the uploaded file
-    const { data: { publicUrl } } = supabase
-      .storage
-      .from('project_documents')
-      .getPublicUrl(filePath);
-    
-    console.log("Saving document info to database");  
-    // Save PDF document info to the database
+
+    // Save document info in the database with references to all pages
+    console.log("Saving document info to database");
     const { data: documentData, error: documentError } = await supabase
       .from('project_documents')
       .insert({
         project_id: projectId,
         user_id: userId,
         file_name: fileName,
-        file_url: publicUrl,
-        file_path: filePath,
-        document_type: 'pdf'
+        file_url: images.length > 0 ? images[0].url : null, // Use first image as main URL
+        file_path: `${userId}/${projectId}/${timestamp}_${fileName}`, // Original reference path
+        document_type: 'png',
+        metadata: {
+          pages: images.map(img => ({ 
+            page: img.page, 
+            url: img.url,
+            path: img.path
+          })),
+          totalPages: pdf.numPages
+        }
       })
       .select()
       .single();
@@ -134,16 +183,18 @@ serve(async (req) => {
       );
     }
     
-    console.log("PDF processing completed successfully");
+    console.log("PDF to PNG conversion completed successfully");
     return new Response(
       JSON.stringify({ 
         success: true, 
         document: documentData,
+        pages: images.length,
+        images: images
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error in extract-pdf-text function:', error);
+    console.error('Error in PDF to PNG conversion function:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'Unknown error occurred' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

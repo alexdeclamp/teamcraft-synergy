@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { FileText, Upload, Loader2, AlertCircle } from 'lucide-react';
+import { FileText, Upload, Loader2, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,12 +19,14 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [convertedImages, setConvertedImages] = useState<Array<{page: number, url: string}>>([]);
   const { user } = useAuth();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setErrorMessage(null);
+      setConvertedImages([]);
       
       if (selectedFile.type !== 'application/pdf') {
         toast.error('Only PDF files are supported');
@@ -46,6 +49,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
       setIsUploading(true);
       setErrorMessage(null);
       setUploadProgress(10);
+      setConvertedImages([]);
       
       // Convert file to base64
       const fileReader = new FileReader();
@@ -56,7 +60,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
             throw new Error('Failed to read file');
           }
           
-          setUploadProgress(30);
+          setUploadProgress(20);
           console.log("Calling edge function with params:", {
             fileSize: file.size,
             fileName: file.name,
@@ -87,19 +91,19 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
           
           setUploadProgress(90);
           
-          toast.success(`PDF uploaded successfully`);
+          // Set the converted images if they exist
+          if (data.images && Array.isArray(data.images)) {
+            setConvertedImages(data.images);
+          }
+          
+          toast.success(`PDF converted to ${data.pages || 0} image(s) successfully`);
           setUploadProgress(100);
           
           if (onDocumentUploaded && data.document) {
             onDocumentUploaded(data.document);
           }
           
-          // Reset the form
-          setFile(null);
-          const inputElement = document.getElementById('pdf-upload') as HTMLInputElement;
-          if (inputElement) {
-            inputElement.value = '';
-          }
+          // Don't reset the form immediately so users can see the converted images
           
         } catch (err: any) {
           console.error('Error processing PDF:', err);
@@ -127,15 +131,25 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
     }
   };
 
+  const resetForm = () => {
+    setFile(null);
+    setConvertedImages([]);
+    setErrorMessage(null);
+    const inputElement = document.getElementById('pdf-upload') as HTMLInputElement;
+    if (inputElement) {
+      inputElement.value = '';
+    }
+  };
+
   return (
     <Card className="shadow-sm">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Upload Document
+          Convert PDF to Images
         </CardTitle>
         <CardDescription>
-          Upload a PDF document to your project
+          Upload a PDF document to convert it to images
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -157,12 +171,12 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
               {isUploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing
+                  Converting
                 </>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Upload
+                  Convert
                 </>
               )}
             </Button>
@@ -187,10 +201,41 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
             <div className="space-y-2">
               <Progress value={uploadProgress} className="h-2" />
               <p className="text-xs text-muted-foreground text-center">
-                {uploadProgress < 30 && "Reading file..."}
-                {uploadProgress >= 30 && uploadProgress < 90 && "Uploading PDF..."}
+                {uploadProgress < 20 && "Reading file..."}
+                {uploadProgress >= 20 && uploadProgress < 90 && "Converting PDF to images..."}
                 {uploadProgress >= 90 && "Finalizing..."}
               </p>
+            </div>
+          )}
+          
+          {convertedImages.length > 0 && (
+            <div className="mt-4 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="font-medium flex items-center">
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  Converted Images ({convertedImages.length})
+                </h3>
+                <Button variant="outline" size="sm" onClick={resetForm}>
+                  Upload Another PDF
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto p-2">
+                {convertedImages.map((image, index) => (
+                  <div key={index} className="border rounded-md overflow-hidden shadow-sm">
+                    <div className="p-2 bg-muted text-sm font-medium">
+                      Page {image.page}
+                    </div>
+                    <a href={image.url} target="_blank" rel="noopener noreferrer">
+                      <img 
+                        src={image.url} 
+                        alt={`Page ${image.page}`} 
+                        className="w-full h-auto object-contain hover:opacity-90 transition-opacity"
+                      />
+                    </a>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
