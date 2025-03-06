@@ -94,12 +94,12 @@ serve(async (req) => {
       );
     }
 
-    // Log the API call if requested - using admin client
+    // Log the OpenAI API call if requested - using admin client
     if (action === 'log_api_call') {
       try {
         const { error: logError } = await adminClient.from('user_usage_stats').insert({
           user_id: userIdToUse,
-          action_type: 'api_call',
+          action_type: 'openai_api_call', // Changed from 'api_call' to 'openai_api_call'
         });
 
         if (logError) {
@@ -116,14 +116,14 @@ serve(async (req) => {
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
-    // Get API call count for the current month
+    // Get OpenAI API call count for the current month
     let apiCallCount = 0;
     try {
       const { count, error: apiError } = await adminClient
         .from('user_usage_stats')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userIdToUse)
-        .eq('action_type', 'api_call')
+        .eq('action_type', 'openai_api_call') // Changed from 'api_call' to 'openai_api_call'
         .gte('created_at', firstDayOfMonth.toISOString());
       
       if (!apiError) {

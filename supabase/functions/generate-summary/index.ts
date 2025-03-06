@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -38,6 +37,25 @@ serve(async (req) => {
     
     if (type === 'image' && !imageUrl) {
       throw new Error('Image URL is required for image summaries');
+    }
+    
+    // Initialize Supabase client
+    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+    
+    // Log an OpenAI API call before making the request
+    try {
+      const { error: logError } = await supabase
+        .from('user_usage_stats')
+        .insert({
+          user_id: userId,
+          action_type: 'openai_api_call',
+        });
+      
+      if (logError) {
+        console.error('Error logging OpenAI API call:', logError);
+      }
+    } catch (error) {
+      console.error('Error inserting OpenAI API call record:', error);
     }
     
     // Initialize the OpenAI API client

@@ -37,7 +37,7 @@ const ProfileStats = ({ isLoading, error, activeBrains, apiCalls, storageUsed }:
         <span className="text-sm">{activeBrains}</span>
       </div>
       <div className="flex justify-between p-3 bg-muted rounded-md">
-        <span className="text-sm font-medium">API Calls (This Month)</span>
+        <span className="text-sm font-medium">OpenAI API Calls (This Month)</span>
         <span className="text-sm">{apiCalls}</span>
       </div>
       <div className="flex justify-between p-3 bg-muted rounded-md">
