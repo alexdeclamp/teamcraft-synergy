@@ -36,23 +36,17 @@ serve(async (req) => {
         { role: 'user', content: prompt }
       ];
     } else if (type === 'image') {
-      // For images, we'll use GPT-4's vision capabilities
+      // For images, we'll use GPT-4's vision capabilities with the correct format
       messages = [
-        { 
-          role: 'system', 
+        {
+          role: 'system',
           content: 'You are a professional project manager and data protection officer assistant that specializes in describing project-related images accurately. When describing images, focus on factual details rather than making assumptions.'
         },
-        { 
-          role: 'user', 
+        {
+          role: 'user',
           content: [
-            {
-              type: 'text',
-              text: 'Please provide a concise, accurate description of this project-related image. Focus only on what you can clearly see in the image. If the image is not clear or you cannot identify key elements, state that directly. Do not make assumptions about the purpose or context if they are not visually apparent.'
-            },
-            {
-              type: 'image_url',
-              image_url: imageUrl
-            }
+            { type: 'text', text: 'Please provide a concise, accurate description of this project-related image. Focus only on what you can clearly see in the image. If the image is not clear or you cannot identify key elements, state that directly. Do not make assumptions about the purpose or context if they are not visually apparent.' },
+            { type: 'image_url', url: imageUrl }
           ]
         }
       ];
