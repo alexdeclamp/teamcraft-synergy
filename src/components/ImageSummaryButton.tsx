@@ -72,12 +72,17 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
       console.log('Generating summary for image:', imageUrl);
       console.log('For project:', projectId);
       
+      // Ensure projectId is included as a string in the request
+      if (!projectId) {
+        throw new Error('Project ID is missing, cannot generate summary');
+      }
+      
       const response = await supabase.functions.invoke('generate-summary', {
         body: {
           type: 'image',
           imageUrl: imageUrl,
           userId: user?.id,
-          projectId: projectId
+          projectId: projectId // Make sure projectId is passed here
         },
       });
 

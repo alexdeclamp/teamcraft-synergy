@@ -18,18 +18,31 @@ serve(async (req) => {
   }
 
   try {
-    const { type, content, imageUrl, userId, projectId } = await req.json();
+    const requestBody = await req.json();
+    const { type, content, imageUrl, userId, projectId } = requestBody;
     
-    console.log(`Processing ${type} summary request`);
+    console.log(`Processing ${type} summary request with request body:`, JSON.stringify(requestBody));
     console.log(`User ID: ${userId}`);
+    console.log(`Project ID: ${projectId}`);
     
     if (!projectId) {
-      throw new Error('Project ID is required for generating summaries');
+      console.error('Missing projectId in request body:', JSON.stringify(requestBody));
+      return new Response(JSON.stringify({ error: 'Project ID is required for generating summaries' }), {
+        status: 200, // Use 200 to avoid client-side HTTP error handling issues
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
     
     if (type === 'image') {
       console.log(`Image URL: ${imageUrl}`);
-      console.log(`Project ID: ${projectId}`);
+      
+      // Additional validation for image type requests
+      if (!imageUrl) {
+        return new Response(JSON.stringify({ error: 'Image URL is required for image summaries' }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
     }
     
     let prompt = '';
@@ -66,13 +79,19 @@ serve(async (req) => {
         }
       ];
     } else {
-      throw new Error('Invalid summary type requested');
+      return new Response(JSON.stringify({ error: 'Invalid summary type requested' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log('Sending request to OpenAI API with model:', model);
 
     if (!openAIApiKey) {
-      throw new Error('OpenAI API key is not configured');
+      return new Response(JSON.stringify({ error: 'OpenAI API key is not configured' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     try {
@@ -103,7 +122,10 @@ serve(async (req) => {
           errorMessage = errorText.substring(0, 100); // Limit length
         }
         
-        throw new Error(`OpenAI API error: ${errorMessage}`);
+        return new Response(JSON.stringify({ error: `OpenAI API error: ${errorMessage}` }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
 
       const data = await response.json();
@@ -111,7 +133,10 @@ serve(async (req) => {
       
       if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
         console.error('Invalid response structure from OpenAI:', JSON.stringify(data));
-        throw new Error('Invalid response structure from OpenAI');
+        return new Response(JSON.stringify({ error: 'Invalid response structure from OpenAI' }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
       
       const summary = data.choices[0].message.content;
@@ -121,7 +146,11 @@ serve(async (req) => {
         const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
         
         if (!supabase) {
-          throw new Error('Failed to initialize Supabase client');
+          console.error('Failed to initialize Supabase client');
+          return new Response(JSON.stringify({ error: 'Failed to initialize Supabase client' }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
         }
         
         // Check if a summary already exists for this image in this project
@@ -155,6 +184,7 @@ serve(async (req) => {
         } else {
           // Insert new summary
           console.log('Inserting new summary for image:', imageUrl);
+          console.log('With project ID:', projectId);
           const { error } = await supabase
             .from('image_summaries')
             .insert({
@@ -169,7 +199,7 @@ serve(async (req) => {
 
         if (saveError) {
           console.error('Error saving summary:', saveError);
-          // Log error but don't throw - we still want to return the summary
+          // Log error but don't fail the request - we still want to return the summary
         }
       }
 
