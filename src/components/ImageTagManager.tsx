@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Tag, X } from 'lucide-react';
+import { Tag, X, Plus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Popover,
@@ -12,6 +12,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface ImageTag {
   id: string;
@@ -22,6 +23,18 @@ interface ImageTagManagerProps {
   imageUrl: string;
   projectId: string | undefined;
 }
+
+// Define tag colors for visual variety
+const TAG_COLORS = [
+  'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200',
+  'bg-green-100 text-green-800 border-green-200 hover:bg-green-200',
+  'bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-200',
+  'bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200',
+  'bg-rose-100 text-rose-800 border-rose-200 hover:bg-rose-200',
+  'bg-indigo-100 text-indigo-800 border-indigo-200 hover:bg-indigo-200',
+  'bg-cyan-100 text-cyan-800 border-cyan-200 hover:bg-cyan-200',
+  'bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-200',
+];
 
 const ImageTagManager: React.FC<ImageTagManagerProps> = ({ imageUrl, projectId }) => {
   const [tags, setTags] = useState<ImageTag[]>([]);
@@ -137,52 +150,84 @@ const ImageTagManager: React.FC<ImageTagManagerProps> = ({ imageUrl, projectId }
     }
   };
 
+  // Function to get a consistent color for a tag based on its content
+  const getTagColor = (tag: string) => {
+    const index = tag.length % TAG_COLORS.length;
+    return TAG_COLORS[index];
+  };
+
   return (
     <Popover open={isTagPopoverOpen} onOpenChange={setIsTagPopoverOpen}>
       <PopoverTrigger asChild>
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-7 w-7"
-          title="Manage Tags"
+          className={cn(
+            "h-7 w-7 relative transition-all",
+            tags.length > 0 && "after:content-[''] after:absolute after:top-0 after:right-0 after:w-2 after:h-2 after:bg-primary after:rounded-full"
+          )}
+          title={tags.length > 0 ? `${tags.length} Tags` : "Add Tags"}
         >
           <Tag className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-3" side="top">
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium">Image Tags</h3>
+      <PopoverContent className="w-72 p-3 animate-scale-in" side="top">
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium flex items-center gap-1.5">
+            <Tag className="h-3.5 w-3.5" />
+            Image Tags
+          </h3>
           
-          <div className="flex flex-wrap gap-1 min-h-[40px]">
+          <div className="flex flex-wrap gap-1.5 min-h-[40px] max-h-[120px] overflow-y-auto p-1">
             {tags.length > 0 ? (
               tags.map(tag => (
-                <Badge key={tag.id} className="flex items-center gap-1 text-xs">
+                <Badge 
+                  key={tag.id} 
+                  variant="outline"
+                  className={cn(
+                    "flex items-center gap-1.5 text-xs py-1 pl-2 pr-1 shadow-sm border transition-all transform hover:scale-105", 
+                    getTagColor(tag.tag)
+                  )}
+                >
                   {tag.tag}
                   <button 
                     onClick={() => removeTag(tag.id)} 
-                    className="text-xs hover:text-destructive transition-colors"
+                    className="rounded-full hover:bg-white/30 p-0.5 transition-colors"
+                    aria-label={`Remove tag ${tag.tag}`}
                   >
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
               ))
             ) : (
-              <p className="text-xs text-muted-foreground">No tags added yet</p>
+              <p className="text-xs text-muted-foreground italic px-1">No tags added yet</p>
             )}
           </div>
           
           <div className="flex items-center gap-2">
-            <Input
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              onKeyDown={handleTagKeyDown}
-              placeholder="Add a tag..."
-              className="text-xs h-7"
-            />
-            <Button size="sm" className="h-7 text-xs px-2" onClick={addTag}>
-              Add
-            </Button>
+            <div className="relative w-full">
+              <Input
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={handleTagKeyDown}
+                placeholder="Add a tag..."
+                className="text-xs h-8 pr-8"
+              />
+              <Button 
+                size="sm" 
+                className="absolute right-0 top-0 h-8 w-8 p-0 min-w-0" 
+                onClick={addTag}
+                disabled={!newTag.trim()}
+                title="Add Tag"
+              >
+                <Plus className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
+          
+          <p className="text-[10px] text-muted-foreground mt-2">
+            Tags help organize and find images in your project
+          </p>
         </div>
       </PopoverContent>
     </Popover>
