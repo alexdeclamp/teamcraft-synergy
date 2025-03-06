@@ -16,6 +16,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [aiPersona, setAiPersona] = useState('');
   const { toast } = useToast();
 
   // Fetch project details when component mounts
@@ -24,7 +25,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
       try {
         const { data, error } = await supabase
           .from('projects')
-          .select('title, description')
+          .select('title, description, ai_persona')
           .eq('id', projectId)
           .single();
 
@@ -33,6 +34,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
         if (data) {
           setTitle(data.title);
           setDescription(data.description || '');
+          setAiPersona(data.ai_persona || '');
         }
       } catch (error) {
         console.error('Error fetching project:', error);
@@ -57,6 +59,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
         .update({
           title: title.trim(),
           description: description.trim(),
+          ai_persona: aiPersona.trim(),
           updated_at: new Date().toISOString(),
         })
         .eq('id', projectId);
@@ -115,6 +118,23 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
               className="max-w-md"
               rows={4}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="aiPersona" className="text-sm font-medium">
+              AI Persona
+            </label>
+            <Textarea
+              id="aiPersona"
+              value={aiPersona}
+              onChange={(e) => setAiPersona(e.target.value)}
+              placeholder="Describe how you want the AI assistant to behave, e.g., 'Act as a helpful project manager who prioritizes tasks and suggests next steps'"
+              className="max-w-md"
+              rows={4}
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              This will guide how the AI assistant responds when discussing your project.
+            </p>
           </div>
 
           <div className="flex items-center gap-4">

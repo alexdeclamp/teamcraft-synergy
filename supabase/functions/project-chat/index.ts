@@ -18,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    const { projectId, message, userId } = await req.json();
+    const { projectId, message, userId, description, aiPersona } = await req.json();
     
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
@@ -79,6 +79,9 @@ serve(async (req) => {
 
     // Combine all project context
     const projectContext = `
+    Project Description:
+    ${description || 'No project description available.'}
+    
     Project Notes:
     ${notes?.map(note => `Title: ${note.title}\nContent: ${note.content}\nTags: ${note.tags?.join(', ') || 'No tags'}`).join('\n\n') || 'No notes available.'}
     
@@ -95,20 +98,28 @@ serve(async (req) => {
     console.log('Project context assembled from multiple sources');
     console.log('Sending request to OpenAI');
     
+    // Construct the system message with the AI persona
+    let systemMessage = `You are a Project Management Officer (PMO) assistant who helps discuss and analyze projects. 
+    Use the following context about the project's notes, images, documents and updates to inform your responses:
+    
+    ${projectContext}
+    
+    When discussing the project:
+    1. Reference specific notes, images, documents or updates when relevant
+    2. Provide actionable insights and suggestions
+    3. Stay focused on project management best practices
+    4. Be concise but informative`;
+    
+    // Add the AI persona if provided
+    if (aiPersona) {
+      console.log('Using custom AI persona:', aiPersona.substring(0, 100) + (aiPersona.length > 100 ? '...' : ''));
+      systemMessage += `\n\nAdditional persona instructions: ${aiPersona}`;
+    }
+    
     const messages = [
       {
         role: 'system',
-        content: `You are a Project Management Officer (PMO) assistant who helps discuss and analyze projects. 
-        Use the following context about the project's notes, images, documents and updates to inform your responses:
-        
-        ${projectContext}
-        
-        When discussing the project:
-        1. Reference specific notes, images, documents or updates when relevant
-        2. Provide actionable insights and suggestions
-        3. Stay focused on project management best practices
-        4. Be concise but informative
-        `
+        content: systemMessage
       },
       {
         role: 'user',

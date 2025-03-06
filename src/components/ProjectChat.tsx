@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -22,6 +22,10 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [projectData, setProjectData] = useState<{
+    description: string | null;
+    aiPersona: string | null;
+  }>({ description: null, aiPersona: null });
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -33,6 +37,32 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
     "Show me recent activity",
     "What's the project status?"
   ];
+
+  // Fetch project description and AI persona
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('description, ai_persona')
+          .eq('id', projectId)
+          .single();
+
+        if (error) throw error;
+
+        setProjectData({
+          description: data.description,
+          aiPersona: data.ai_persona
+        });
+      } catch (error) {
+        console.error('Error fetching project data:', error);
+      }
+    };
+
+    if (projectId) {
+      fetchProjectData();
+    }
+  }, [projectId]);
 
   const sendMessage = async (userMessage?: string) => {
     if ((!input.trim() && !userMessage) || !user) return;
@@ -47,7 +77,9 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
         body: {
           projectId,
           message: messageToSend,
-          userId: user.id
+          userId: user.id,
+          description: projectData.description,
+          aiPersona: projectData.aiPersona
         }
       });
 
