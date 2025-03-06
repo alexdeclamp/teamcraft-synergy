@@ -18,10 +18,16 @@ import { useToast } from "@/components/ui/use-toast";
 interface ProjectActionsMenuProps {
   projectId: string;
   userRole: string | null;
-  project: any;
+  project: {
+    id: string;
+    title: string;
+    description?: string | null;
+    is_favorite?: boolean;
+    is_archived?: boolean;
+  };
   onEdit?: () => void;
-  onFavoriteToggle?: () => void;
-  onArchiveToggle?: () => void;
+  onFavoriteToggle?: () => Promise<void>;
+  onArchiveToggle?: () => Promise<void>;
 }
 
 const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({ 

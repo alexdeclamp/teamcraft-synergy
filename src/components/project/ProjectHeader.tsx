@@ -15,6 +15,7 @@ interface ProjectHeaderProps {
     description: string | null;
     created_at: string;
     is_favorite?: boolean;
+    is_archived?: boolean;
   };
   userRole: string | null;
   membersCount: number;
@@ -24,6 +25,8 @@ interface ProjectHeaderProps {
   showInviteDialog: boolean;
   setShowInviteDialog: (show: boolean) => void;
   onInviteSuccess?: () => void;
+  onFavoriteToggle?: () => Promise<void>;
+  onArchiveToggle?: () => Promise<void>;
 }
 
 const ProjectHeader: React.FC<ProjectHeaderProps> = ({
@@ -36,12 +39,13 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   showInviteDialog,
   setShowInviteDialog,
   onInviteSuccess,
+  onFavoriteToggle,
+  onArchiveToggle
 }) => {
-  const [favorite, setFavorite] = useState(project.is_favorite || false);
-  
   const toggleFavorite = async () => {
-    // This would be implemented with a database update
-    setFavorite(!favorite);
+    if (onFavoriteToggle) {
+      await onFavoriteToggle();
+    }
   };
 
   const canInvite = userRole === 'owner' || userRole === 'admin';
@@ -55,11 +59,11 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 ${favorite ? 'text-yellow-500' : 'text-muted-foreground'}`}
+              className={`h-8 w-8 ${project.is_favorite ? 'text-yellow-500' : 'text-muted-foreground'}`}
               onClick={toggleFavorite}
             >
               <Star className="h-5 w-5 fill-current" />
-              <span className="sr-only">{favorite ? 'Remove from favorites' : 'Add to favorites'}</span>
+              <span className="sr-only">{project.is_favorite ? 'Remove from favorites' : 'Add to favorites'}</span>
             </Button>
           </div>
           <p className="text-muted-foreground">{project.description || "No description provided"}</p>
@@ -77,7 +81,14 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               Invite
             </Button>
           )}
-          <ProjectActionsMenu projectId={project.id} userRole={userRole} />
+          <ProjectActionsMenu 
+            projectId={project.id} 
+            userRole={userRole} 
+            project={project}
+            onEdit={() => {/* Implement edit functionality */}}
+            onFavoriteToggle={onFavoriteToggle}
+            onArchiveToggle={onArchiveToggle}
+          />
         </div>
       </div>
       
