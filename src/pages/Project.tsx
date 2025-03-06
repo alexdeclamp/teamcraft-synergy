@@ -8,6 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Tabs,
@@ -42,6 +43,11 @@ import {
   ImageIcon,
   FileWarning,
   MessageSquare,
+  Bookmark,
+  Activity,
+  BarChart,
+  CheckCircle,
+  Info,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
@@ -52,6 +58,7 @@ import ProjectNotes from '@/components/ProjectNotes';
 import ProjectImageUpload from '@/components/ProjectImageUpload';
 import ImageSummaryButton from '@/components/ImageSummaryButton';
 import ProjectChat from '@/components/ProjectChat';
+import { Progress } from '@/components/ui/progress';
 
 interface ProjectMember {
   id: string;
@@ -473,6 +480,18 @@ const Project = () => {
     });
   };
 
+  // Calculate days since project creation
+  const daysSinceCreation = () => {
+    if (!project) return 0;
+    const creationDate = new Date(project.created_at);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - creationDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  // Generate a sample activity percentage between 40-100%
+  const activityPercentage = Math.floor(Math.random() * 60) + 40;
+
   return (
     <div className="min-h-screen bg-background pb-12 animate-fade-in">
       <Navbar />
@@ -492,14 +511,17 @@ const Project = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline" className="font-normal bg-green-100 text-green-800">
+                <Badge variant="outline" className={`font-normal ${userRole === 'owner' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
                   {userRole === 'owner' ? 'Owner' : 'Member'}
+                </Badge>
+                <Badge variant="outline" className="font-normal bg-purple-100 text-purple-800">
+                  Active {daysSinceCreation()} days
                 </Badge>
               </div>
               
-              <h1 className="text-3xl font-bold">{project.title}</h1>
+              <h1 className="text-3xl font-bold">{project?.title}</h1>
               <p className="text-muted-foreground mt-1 max-w-3xl">
-                {project.description}
+                {project?.description || "No description provided"}
               </p>
             </div>
             
@@ -548,11 +570,11 @@ const Project = () => {
           <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm text-muted-foreground">
             <div className="flex items-center">
               <CalendarDays className="h-4 w-4 mr-1" />
-              <span>Created: {formatDate(project.created_at)}</span>
+              <span>Created: {formatDate(project?.created_at || '')}</span>
             </div>
             <div className="flex items-center">
               <Clock className="h-4 w-4 mr-1" />
-              <span>Last updated: {formatDate(project.updated_at)}</span>
+              <span>Last updated: {formatDate(project?.updated_at || '')}</span>
             </div>
             <div className="flex items-center">
               <Users className="h-4 w-4 mr-1" />
@@ -587,140 +609,287 @@ const Project = () => {
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Project Overview</CardTitle>
-                <CardDescription>
-                  Key information and resources for this project
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-6">
-                  {project.description || "This project contains visual assets and collaborative resources."}
-                </p>
-                
-                <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
+              {/* Project Stats */}
+              <Card className="md:col-span-1">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center">
+                    <BarChart className="h-5 w-5 mr-2 text-primary" />
+                    Project Statistics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Activity</span>
+                      <span className="font-medium">{activityPercentage}%</span>
+                    </div>
+                    <Progress value={activityPercentage} className="h-2" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 pt-2">
+                    <div className="space-y-1 border rounded-md p-3">
+                      <div className="text-xl font-bold text-primary">{projectImages.length}</div>
+                      <div className="text-xs text-muted-foreground">Images</div>
+                    </div>
+                    <div className="space-y-1 border rounded-md p-3">
+                      <div className="text-xl font-bold text-primary">{members.length}</div>
+                      <div className="text-xs text-muted-foreground">Members</div>
+                    </div>
+                    <div className="space-y-1 border rounded-md p-3">
+                      <div className="text-xl font-bold text-primary">{daysSinceCreation()}</div>
+                      <div className="text-xs text-muted-foreground">Days active</div>
+                    </div>
+                    <div className="space-y-1 border rounded-md p-3">
+                      <div className="text-xl font-bold text-primary">0</div>
+                      <div className="text-xs text-muted-foreground">Comments</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Project Info & Recent Activity */}
+              <Card className="md:col-span-2">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center">
+                    <Info className="h-5 w-5 mr-2 text-primary" />
+                    Project Overview
+                  </CardTitle>
+                  <CardDescription>
+                    Key information about this project
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium flex items-center">
-                      <Image className="h-5 w-5 mr-2 text-muted-foreground" />
-                      Recent Images
-                    </h3>
-                    {isImagesLoading ? (
-                      <div className="flex justify-center py-8">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      </div>
-                    ) : recentImages.length === 0 ? (
-                      <div className="text-center p-6 border border-dashed rounded-md">
-                        <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-muted-foreground">No images uploaded yet</p>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="mt-4"
-                          onClick={() => setActiveTab('images')}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Images
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {recentImages.map((image) => (
-                          <div key={image.path} className="flex gap-3 p-3 bg-accent/50 rounded-md">
-                            <div className="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden">
-                              <img
-                                src={image.url}
-                                alt={image.name}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate" title={image.name}>
-                                {image.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {formatFileSize(image.size)} • {image.createdAt.toLocaleDateString()}
-                              </p>
-                              {image.summary && (
-                                <div className="mt-1 flex items-center text-xs text-green-600">
-                                  <MessageSquare className="h-3 w-3 mr-1" />
-                                  <span className="truncate">AI Summary available</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                    <div className="p-4 bg-accent/30 rounded-md">
+                      <h3 className="font-medium mb-2">About this project</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {project?.description || "This project contains visual assets and collaborative resources for the team."}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h3 className="font-medium">Project Team</h3>
+                      <div className="flex items-center space-x-2">
+                        {members.slice(0, 5).map((member) => (
+                          <Avatar key={member.id} className="border-2 border-background">
+                            {member.avatar && <AvatarImage src={member.avatar} alt={member.name} />}
+                            <AvatarFallback>
+                              {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
                         ))}
-                        {projectImages.length > 3 && (
+                        
+                        {members.length > 5 && (
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted text-sm font-medium">
+                            +{members.length - 5}
+                          </div>
+                        )}
+                        
+                        {userRole === 'owner' && (
                           <Button 
                             variant="outline" 
-                            size="sm" 
-                            className="w-full"
-                            onClick={() => setActiveTab('images')}
+                            size="icon"
+                            className="w-10 h-10 rounded-full"
+                            onClick={handleAddMember}
                           >
-                            View all {projectImages.length} images
+                            <Plus className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
-                    )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="font-medium">Status</h3>
+                      <div className="flex space-x-2">
+                        <Badge className="bg-green-500 hover:bg-green-600">Active</Badge>
+                        <Badge variant="outline" className="font-normal">
+                          Created {formatDate(project?.created_at || '')}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="font-medium">Quick Actions</h3>
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="outline" onClick={() => setActiveTab('notes')}>
+                          <StickyNote className="h-4 w-4 mr-2" />
+                          View Notes
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setActiveTab('images')}>
+                          <Image className="h-4 w-4 mr-2" />
+                          Manage Images
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setActiveTab('chat')}>
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Project Chat
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium flex items-center">
-                      <StickyNote className="h-5 w-5 mr-2 text-muted-foreground" />
-                      Project Notes
-                    </h3>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Recent Images */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center">
+                    <Image className="h-5 w-5 mr-2 text-primary" />
+                    Recent Images
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isImagesLoading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : recentImages.length === 0 ? (
+                    <div className="text-center p-6 border border-dashed rounded-md">
+                      <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-muted-foreground">No images uploaded yet</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-4"
+                        onClick={() => setActiveTab('images')}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Images
+                      </Button>
+                    </div>
+                  ) : (
                     <div className="space-y-3">
-                      <div className="p-6 border border-dashed rounded-md">
-                        <div className="text-center">
-                          <StickyNote className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                          <p className="text-muted-foreground mb-4">Capture ideas and keep track of important information</p>
+                      {recentImages.map((image) => (
+                        <div key={image.path} className="flex gap-3 p-3 hover:bg-accent/50 rounded-md transition-colors">
+                          <div className="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden">
+                            <img
+                              src={image.url}
+                              alt={image.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate" title={image.name}>
+                              {image.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatFileSize(image.size)} • {image.createdAt.toLocaleDateString()}
+                            </p>
+                            {image.summary && (
+                              <div className="mt-1 flex items-center text-xs text-green-600">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                <span className="truncate">AI Summary available</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {projectImages.length > 3 && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => setActiveTab('images')}
+                        >
+                          View all {projectImages.length} images
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+              
+              {/* Project Notes */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center">
+                    <StickyNote className="h-5 w-5 mr-2 text-primary" />
+                    Project Notes
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="p-6 border border-dashed rounded-md">
+                      <div className="text-center">
+                        <StickyNote className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-muted-foreground mb-2">Capture ideas and keep track of important information</p>
+                        <div className="flex justify-center gap-2">
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            onClick={() => setActiveTab('notes')}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create Note
+                          </Button>
                           <Button 
                             variant="outline" 
                             size="sm"
                             onClick={() => setActiveTab('notes')}
                           >
-                            <Plus className="h-4 w-4 mr-2" />
                             View Notes
                           </Button>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="mt-6 pt-6 border-t">
-                  <h3 className="text-lg font-medium mb-4 flex items-center">
-                    <Users className="h-5 w-5 mr-2 text-muted-foreground" />
-                    Project Members
-                  </h3>
+                </CardContent>
+              </Card>
+            </div>
+              
+            {/* Resources and Quick Links */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center">
+                  <Bookmark className="h-5 w-5 mr-2 text-primary" />
+                  Resources & Quick Links
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Button 
+                    variant="outline" 
+                    className="h-auto p-4 justify-start items-start flex-col text-left"
+                    onClick={() => setActiveTab('images')}
+                  >
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 mb-2">
+                      <Image className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Image Gallery</p>
+                      <p className="text-xs text-muted-foreground mt-1">Browse and manage project images</p>
+                    </div>
+                  </Button>
                   
-                  <div className="flex flex-wrap gap-2">
-                    {members.slice(0, 5).map((member) => (
-                      <Avatar key={member.id} className="border-2 border-background">
-                        {member.avatar && <AvatarImage src={member.avatar} alt={member.name} />}
-                        <AvatarFallback>
-                          {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
-                    
-                    {members.length > 5 && (
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted text-sm font-medium">
-                        +{members.length - 5}
-                      </div>
-                    )}
-                    
-                    {userRole === 'owner' && (
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        className="w-10 h-10 rounded-full"
-                        onClick={handleAddMember}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="h-auto p-4 justify-start items-start flex-col text-left"
+                    onClick={() => setActiveTab('chat')}
+                  >
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 mb-2">
+                      <MessageSquare className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">AI Assistant</p>
+                      <p className="text-xs text-muted-foreground mt-1">Chat with AI about your project</p>
+                    </div>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="h-auto p-4 justify-start items-start flex-col text-left"
+                    onClick={() => setActiveTab('members')}
+                  >
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 mb-2">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Team Members</p>
+                      <p className="text-xs text-muted-foreground mt-1">Manage project collaborators</p>
+                    </div>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -759,119 +928,3 @@ const Project = () => {
                 <div>
                   <CardTitle>Project Members</CardTitle>
                   <CardDescription>
-                    People with access to this project
-                  </CardDescription>
-                </div>
-                {userRole === 'owner' && (
-                  <Button size="sm" onClick={handleAddMember}>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add Member
-                  </Button>
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {members.map((member) => (
-                    <div 
-                      key={member.id}
-                      className="flex items-center justify-between p-3 rounded-md hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Avatar>
-                          {member.avatar && <AvatarImage src={member.avatar} alt={member.name} />}
-                          <AvatarFallback>
-                            {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{member.name}</p>
-                          <Badge variant="outline" className="mt-1">
-                            {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      {userRole === 'owner' && member.role !== 'owner' && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Member options</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-[180px]">
-                            <DropdownMenuLabel>Member Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleUpdateMemberRole(member.id, 'admin')}>
-                              Make admin
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateMemberRole(member.id, 'editor')}>
-                              Make editor
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateMemberRole(member.id, 'viewer')}>
-                              Make viewer
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem 
-                              className="text-red-600"
-                              onClick={() => handleRemoveMember(member.id)}
-                            >
-                              Remove from project
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="chat" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Project Chat</CardTitle>
-                <CardDescription>
-                  Discuss your project with an AI assistant that has context about your notes and images
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {project && <ProjectChat projectId={project.id} />}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {userRole === 'owner' && (
-            <TabsContent value="settings" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Project Settings</CardTitle>
-                  <CardDescription>
-                    Manage project configuration and permissions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Project settings will be implemented in a future update. 
-                    Here you'll be able to configure project details, permissions, and integrations.
-                  </p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
-        </Tabs>
-      </main>
-
-      {showInviteDialog && id && (
-        <MemberInvite 
-          projectId={id} 
-          isOpen={showInviteDialog} 
-          onClose={() => setShowInviteDialog(false)}
-          onInviteSuccess={handleInviteSuccess}
-        />
-      )}
-    </div>
-  );
-};
-
-export default Project;
