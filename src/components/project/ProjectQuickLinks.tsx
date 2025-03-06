@@ -1,24 +1,14 @@
 
 import React from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Bookmark,
-  Image,
-  MessageSquare,
-  Users,
-} from 'lucide-react';
+import { Bookmark, Image, MessageSquare, Users } from 'lucide-react';
 
 interface ProjectQuickLinksProps {
   onTabChange: (tab: string) => void;
 }
 
-const ProjectQuickLinks = ({ onTabChange }: ProjectQuickLinksProps) => {
+const ProjectQuickLinks: React.FC<ProjectQuickLinksProps> = ({ onTabChange }) => {
   return (
     <Card>
       <CardHeader className="pb-2">

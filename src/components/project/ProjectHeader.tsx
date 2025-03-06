@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,45 +10,74 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  ArrowLeft,
-  CalendarDays,
-  Clock,
-  Edit,
-  MoreHorizontal,
-  Settings,
-  Trash2,
-  UserPlus,
+import { 
+  ArrowLeft, 
+  CalendarDays, 
+  Clock, 
+  Edit, 
+  MoreHorizontal, 
+  Settings, 
+  Trash2, 
+  UserPlus, 
   Users,
-  Image,
+  Image 
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Project {
+  id: string;
+  title: string;
+  description: string | null;
+  created_at: string;
+  updated_at: string;
+  owner_id: string;
+}
 
 interface ProjectHeaderProps {
-  project: {
-    id: string;
-    title: string;
-    description: string | null;
-    created_at: string;
-    updated_at: string;
-  };
+  project: Project;
   userRole: string | null;
   membersCount: number;
   imagesCount: number;
   daysSinceCreation: number;
   onAddMember: () => void;
-  onDeleteProject: () => void;
 }
 
-const ProjectHeader = ({
-  project,
-  userRole,
-  membersCount,
-  imagesCount,
+const ProjectHeader: React.FC<ProjectHeaderProps> = ({ 
+  project, 
+  userRole, 
+  membersCount, 
+  imagesCount, 
   daysSinceCreation,
-  onAddMember,
-  onDeleteProject,
-}: ProjectHeaderProps) => {
+  onAddMember
+}) => {
   const navigate = useNavigate();
+  
+  const handleDeleteProject = async () => {
+    if (!project || userRole !== 'owner') return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this project? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', project.id);
+
+      if (error) throw error;
+
+      toast.success("Project deleted successfully");
+      navigate('/dashboard');
+    } catch (error: any) {
+      console.error("Error deleting project:", error);
+      toast.error("Failed to delete project");
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -118,7 +146,7 @@ const ProjectHeader = ({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     className="text-red-600"
-                    onClick={onDeleteProject}
+                    onClick={handleDeleteProject}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete project
