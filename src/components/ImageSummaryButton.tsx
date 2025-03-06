@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Loader2 } from 'lucide-react';
@@ -19,12 +19,48 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [summary, setSummary] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [hasSummary, setHasSummary] = useState(false);
   const { user } = useAuth();
+
+  // Fetch existing summary when component mounts
+  useEffect(() => {
+    if (user) {
+      fetchExistingSummary();
+    }
+  }, [imageUrl, user]);
+
+  const fetchExistingSummary = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('image_summaries')
+        .select('summary')
+        .eq('image_url', imageUrl)
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching summary:', error);
+        return;
+      }
+
+      if (data) {
+        setSummary(data.summary);
+        setHasSummary(true);
+      }
+    } catch (error) {
+      console.error('Error checking for existing summary:', error);
+    }
+  };
 
   const generateSummary = async () => {
     try {
       setIsGenerating(true);
       setIsDialogOpen(true);
+      
+      // If we already have a summary, no need to generate a new one
+      if (hasSummary) {
+        return;
+      }
       
       console.log('Generating summary for image:', imageUrl);
       
@@ -48,6 +84,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
       
       console.log('Received summary data:', data);
       setSummary(data.summary);
+      setHasSummary(true);
       toast.success('Summary generated and saved successfully');
     } catch (error: any) {
       console.error('Error generating image summary:', error);
@@ -58,15 +95,22 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
     }
   };
 
+  const handleButtonClick = () => {
+    setIsDialogOpen(true);
+    if (!hasSummary) {
+      generateSummary();
+    }
+  };
+
   return (
     <>
       <Button 
         variant="ghost" 
         size="icon"
-        className="h-7 w-7"
-        onClick={generateSummary}
+        className={`h-7 w-7 ${hasSummary ? 'text-green-500' : ''}`}
+        onClick={handleButtonClick}
         disabled={isGenerating}
-        title="Generate AI Summary"
+        title={hasSummary ? "View AI Summary" : "Generate AI Summary"}
       >
         {isGenerating ? 
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 

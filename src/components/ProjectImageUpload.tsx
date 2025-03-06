@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -120,7 +119,6 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
     }
   }, [projectId, user]);
 
-  // Fetch images when component mounts and after uploads
   useEffect(() => {
     fetchUploadedImages();
   }, [fetchUploadedImages]);
@@ -155,7 +153,6 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
 
     setSelectedFile(file);
 
-    // Create preview
     const reader = new FileReader();
     reader.onload = (event) => {
       setPreview(event.target?.result as string);
@@ -168,7 +165,7 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (event) => {
-        const img = new window.Image(); // Use window.Image instead of Image to avoid confusion with the lucide icon
+        const img = new window.Image();
         img.src = event.target?.result as string;
         
         img.onload = () => {
@@ -176,7 +173,6 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
           let width = img.width;
           let height = img.height;
           
-          // Scale down maintaining aspect ratio
           if (width > maxWidth) {
             height = (height * maxWidth) / width;
             width = maxWidth;
@@ -193,7 +189,6 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
           
-          // Convert to JPEG with 0.8 quality
           canvas.toBlob(
             (blob) => {
               if (!blob) {
@@ -225,7 +220,6 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
       setIsUploading(true);
       setUploadProgress(10);
       
-      // Compress the image
       const compressedImage = await compressImage(selectedFile, maxWidth, maxHeight);
       setUploadProgress(40);
 
@@ -257,10 +251,8 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
       
       toast.success('Image uploaded successfully');
       
-      // Fetch updated images list
       await fetchUploadedImages();
       
-      // Close the dialog
       handleCloseDialog();
     } catch (error: any) {
       console.error('Error uploading image:', error);
@@ -486,7 +478,6 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
         </Dialog>
       </div>
       
-      {/* Display uploaded images directly in the component */}
       <div>
         {isLoading ? (
           <div className="flex justify-center items-center py-10">
