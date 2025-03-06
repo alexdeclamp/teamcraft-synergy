@@ -1,132 +1,173 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
-interface UploadedImage {
+interface ImageTag {
+  id: string;
+  tag: string;
+}
+
+export interface UploadedImage {
   url: string;
   path: string;
   size: number;
   name: string;
   createdAt: Date;
-  summary?: string;
+  tags?: ImageTag[];
 }
 
-export const useProjectImages = (projectId: string | undefined, userId: string | undefined) => {
-  const [projectImages, setProjectImages] = useState<UploadedImage[]>([]);
-  const [recentImages, setRecentImages] = useState<UploadedImage[]>([]);
-  const [isImagesLoading, setIsImagesLoading] = useState(false);
+export function useProjectImages(projectId: string) {
+  const [images, setImages] = useState<UploadedImage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchProjectImages = async () => {
-      if (!projectId || !userId) return;
+    if (projectId) {
+      fetchImages();
+    }
+  }, [projectId]);
 
-      try {
-        setIsImagesLoading(true);
-        
-        const { data, error } = await supabase
-          .storage
-          .from('project_images')
-          .list(`${projectId}`);
-
-        if (error) throw error;
-
-        if (data) {
-          const imageUrls = await Promise.all(
-            data.map(async (item) => {
-              const { data: urlData } = await supabase
-                .storage
-                .from('project_images')
-                .getPublicUrl(`${projectId}/${item.name}`);
-              
-              // Fetch summary if exists
-              const { data: summaryData } = await supabase
-                .from('image_summaries')
-                .select('summary')
-                .eq('image_url', urlData.publicUrl)
-                .eq('user_id', userId)
-                .single();
-
-              return {
-                url: urlData.publicUrl,
-                path: `${projectId}/${item.name}`,
-                size: item.metadata?.size || 0,
-                name: item.name,
-                createdAt: new Date(item.created_at || Date.now()),
-                summary: summaryData?.summary || undefined
-              };
-            })
-          );
-
-          const sortedImages = imageUrls.sort((a, b) => 
-            b.createdAt.getTime() - a.createdAt.getTime()
-          );
-
-          setProjectImages(sortedImages);
-          setRecentImages(sortedImages.slice(0, 3));
-        }
-      } catch (error: any) {
-        console.error('Error fetching images:', error);
-      } finally {
-        setIsImagesLoading(false);
-      }
-    };
-
-    fetchProjectImages();
-  }, [projectId, userId]);
-
-  const handleImageUploadComplete = async () => {
-    if (!projectId || !userId) return;
-
+  const fetchImages = async () => {
+    setLoading(true);
     try {
-      const { data, error } = await supabase
-        .storage
+      // Get all images from this project
+      const { data, error } = await supabase.storage
         .from('project_images')
         .list(`${projectId}`);
 
-      if (error) throw error;
-
-      if (data) {
-        const imageUrls = await Promise.all(
-          data.map(async (item) => {
-            const { data: urlData } = await supabase
-              .storage
-              .from('project_images')
-              .getPublicUrl(`${projectId}/${item.name}`);
-            
-            return {
-              url: urlData.publicUrl,
-              path: `${projectId}/${item.name}`,
-              size: item.metadata?.size || 0,
-              name: item.name,
-              createdAt: new Date(item.created_at || Date.now())
-            };
-          })
-        );
-
-        const sortedImages = imageUrls.sort((a, b) => 
-          b.createdAt.getTime() - a.createdAt.getTime()
-        );
-
-        setProjectImages(sortedImages);
-        setRecentImages(sortedImages.slice(0, 3));
+      if (error) {
+        throw error;
       }
+
+      // Filter out folders (only get files)
+      const filteredData = data.filter(item => !item.metadata?.is_dir);
+      
+      // Generate URLs for each image
+      const imagesWithUrls = await Promise.all(
+        filteredData.map(async (file) => {
+          const { data: publicUrl } = supabase.storage
+            .from('project_images')
+            .getPublicUrl(`${projectId}/${file.name}`);
+            
+          // Get tags for this image
+          const { data: tagData, error: tagError } = await supabase
+            .from('image_tags')
+            .select('id, tag')
+            .eq('image_url', publicUrl.publicUrl);
+            
+          if (tagError) {
+            console.error('Error fetching tags for image:', tagError);
+          }
+          
+          const tags: ImageTag[] = tagData || [];
+          
+          return {
+            url: publicUrl.publicUrl,
+            path: `${projectId}/${file.name}`,
+            size: file.metadata?.size || 0,
+            name: file.name,
+            createdAt: new Date(file.created_at || Date.now()),
+            tags: tags
+          };
+        })
+      );
+
+      // Sort images by creation time
+      const sortedImages = imagesWithUrls.sort((a, b) => {
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      });
+
+      setImages(sortedImages);
+      setError(null);
     } catch (error: any) {
-      console.error('Error fetching updated images:', error);
+      console.error('Error fetching project images:', error);
+      setError(error.message || 'Failed to load images');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' bytes';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  const uploadImage = async (file: File) => {
+    if (!projectId) {
+      setError('Project ID is required');
+      return null;
+    }
+    
+    try {
+      // Upload image to storage
+      const { data, error } = await supabase.storage
+        .from('project_images')
+        .upload(`${projectId}/${file.name}`, file, {
+          cacheControl: '3600',
+          upsert: true,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      // Get the public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('project_images')
+        .getPublicUrl(data.path);
+
+      // Create new image object
+      const newImage: UploadedImage = {
+        url: publicUrlData.publicUrl,
+        path: data.path,
+        size: file.size,
+        name: file.name,
+        createdAt: new Date(),
+        tags: []
+      };
+
+      // Update state with new image
+      setImages(prevImages => [newImage, ...prevImages]);
+      return newImage;
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      setError(error.message || 'Failed to upload image');
+      return null;
+    }
   };
 
-  return {
-    projectImages,
-    recentImages,
-    isImagesLoading,
-    handleImageUploadComplete,
-    formatFileSize
+  const deleteImage = async (path: string) => {
+    try {
+      // Get the public URL to remove from image_summaries and image_tags
+      const { data: publicUrlData } = supabase.storage
+        .from('project_images')
+        .getPublicUrl(path);
+      
+      // Delete the image from storage
+      const { error } = await supabase.storage
+        .from('project_images')
+        .remove([path]);
+
+      if (error) {
+        throw error;
+      }
+      
+      // Delete any summaries for this image
+      await supabase
+        .from('image_summaries')
+        .delete()
+        .eq('image_url', publicUrlData.publicUrl);
+        
+      // Delete any tags for this image
+      await supabase
+        .from('image_tags')
+        .delete()
+        .eq('image_url', publicUrlData.publicUrl);
+
+      // Update state to remove deleted image
+      setImages(prevImages => prevImages.filter(img => img.path !== path));
+      return true;
+    } catch (error: any) {
+      console.error('Error deleting image:', error);
+      setError(error.message || 'Failed to delete image');
+      return false;
+    }
   };
-};
+
+  return { images, loading, error, uploadImage, deleteImage, refreshImages: fetchImages };
+}

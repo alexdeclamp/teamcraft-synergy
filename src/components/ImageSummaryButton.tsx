@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Loader2, Tag } from 'lucide-react';
+import { MessageSquare, Loader2, Tag, X } from 'lucide-react';
 import { toast } from 'sonner';
 import SummaryDialog from './SummaryDialog';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/popover";
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
 
 interface ImageTag {
   id: string;
@@ -38,8 +37,9 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
   const [newTag, setNewTag] = useState('');
   const [isTagPopoverOpen, setIsTagPopoverOpen] = useState(false);
   const { user } = useAuth();
-  const params = useParams<{ projectId?: string }>();
-  const projectId = params.projectId;
+  const params = useParams<{ projectId?: string; id?: string }>();
+  // Use projectId from params or from id (support both formats)
+  const projectId = params.projectId || params.id;
 
   // Debug logging to identify the issue
   useEffect(() => {
@@ -88,9 +88,11 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
 
   const fetchImageTags = async () => {
     try {
+      console.log('Fetching tags for image:', imageUrl);
+      
       const { data, error } = await supabase
         .from('image_tags')
-        .select('*')
+        .select('id, tag')
         .eq('image_url', imageUrl)
         .eq('project_id', projectId);
 
@@ -99,8 +101,15 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         return;
       }
 
+      console.log('Image tags data:', data);
+      
       if (data) {
-        setTags(data);
+        // Ensure data is of the right type by mapping it
+        const typedTags: ImageTag[] = data.map(item => ({
+          id: item.id,
+          tag: item.tag
+        }));
+        setTags(typedTags);
       }
     } catch (error) {
       console.error('Error checking for existing tags:', error);
@@ -189,6 +198,10 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
     if (!newTag.trim() || !projectId || !user) return;
     
     try {
+      console.log('Adding new tag:', newTag.trim());
+      console.log('For image:', imageUrl);
+      console.log('In project:', projectId);
+      
       const { data, error } = await supabase
         .from('image_tags')
         .insert({
@@ -197,7 +210,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
           tag: newTag.trim(),
           user_id: user.id
         })
-        .select('*')
+        .select('id, tag')
         .single();
 
       if (error) {
@@ -206,7 +219,15 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         return;
       }
 
-      setTags([...tags, data]);
+      console.log('Tag added successfully:', data);
+      
+      // Ensure the new tag has the correct type
+      const newTagObject: ImageTag = {
+        id: data.id,
+        tag: data.tag
+      };
+      
+      setTags([...tags, newTagObject]);
       setNewTag('');
       toast.success('Tag added successfully');
     } catch (error) {
@@ -217,6 +238,8 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
 
   const removeTag = async (tagId: string) => {
     try {
+      console.log('Removing tag with ID:', tagId);
+      
       const { error } = await supabase
         .from('image_tags')
         .delete()
