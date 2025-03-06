@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { cn } from "@/lib/utils";
@@ -6,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 // Import the smaller components
 import Logo from './navbar/Logo';
+import NavLinks from './navbar/NavLinks';
 import ProfileButton from './navbar/ProfileButton';
 import SignOutButton from './navbar/SignOutButton';
 import MobileMenu from './navbar/MobileMenu';
@@ -54,7 +56,10 @@ const Navbar = () => {
 
         {/* Desktop Menu */}
         <nav className="hidden md:flex items-center space-x-1">
+          <NavLinks />
+          
           <ProfileButton onClick={() => setProfileDialogOpen(true)} />
+          
           <SignOutButton onClick={handleSignOut} />
         </nav>
 
@@ -78,13 +83,14 @@ const Navbar = () => {
         onSignOutClick={handleSignOut}
       />
 
-      {/* Dialogs */}
+      {/* Profile Dialog */}
       <ProfileDialog 
         open={profileDialogOpen}
         onOpenChange={setProfileDialogOpen}
         onOpenSettings={handleOpenSettings}
       />
 
+      {/* Settings Dialog */}
       <SettingsDialog
         open={settingsDialogOpen}
         onOpenChange={setSettingsDialogOpen}
