@@ -22,7 +22,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hasSummary, setHasSummary] = useState(false);
   const { user } = useAuth();
-  const { projectId } = useParams();
+  const { projectId } = useParams<{ projectId: string }>();
 
   // Fetch existing summary when component mounts
   useEffect(() => {
@@ -33,19 +33,24 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
 
   const fetchExistingSummary = async () => {
     try {
+      console.log('Fetching existing summary for image:', imageUrl);
+      console.log('Project ID:', projectId);
+      
       const { data, error } = await supabase
         .from('image_summaries')
         .select('summary')
         .eq('image_url', imageUrl)
         .eq('project_id', projectId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching summary:', error);
         return;
       }
 
-      if (data) {
+      console.log('Summary data:', data);
+
+      if (data && data.summary) {
         setSummary(data.summary);
         setHasSummary(true);
       }

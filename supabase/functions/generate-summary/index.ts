@@ -21,9 +21,14 @@ serve(async (req) => {
     const { type, content, imageUrl, userId, projectId } = await req.json();
     
     console.log(`Processing ${type} summary request`);
+    console.log(`User ID: ${userId}`);
     if (type === 'image') {
       console.log(`Image URL: ${imageUrl}`);
       console.log(`Project ID: ${projectId}`);
+    }
+    
+    if (!projectId) {
+      throw new Error('Project ID is required for generating summaries');
     }
     
     let prompt = '';
@@ -45,7 +50,7 @@ serve(async (req) => {
         { role: 'user', content: prompt }
       ];
     } else if (type === 'image') {
-      model = 'gpt-4o'; // Use gpt-4o for vision tasks as requested
+      model = 'gpt-4o'; // Use gpt-4o for vision tasks
       messages = [
         {
           role: 'system',
@@ -64,7 +69,6 @@ serve(async (req) => {
     }
 
     console.log('Sending request to OpenAI API with model:', model);
-    console.log('Messages:', JSON.stringify(messages));
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -89,16 +93,50 @@ serve(async (req) => {
     const summary = data.choices[0].message.content;
 
     if (type === 'image' && userId && projectId) {
+      // Initialize Supabase client with service role key for admin access
       const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
       
-      const { error: saveError } = await supabase
+      // Check if a summary already exists for this image in this project
+      const { data: existingSummary, error: checkError } = await supabase
         .from('image_summaries')
-        .insert({
-          user_id: userId,
-          image_url: imageUrl,
-          summary: summary,
-          project_id: projectId // Add project_id to associate the summary with a project
-        });
+        .select('id')
+        .eq('image_url', imageUrl)
+        .eq('project_id', projectId)
+        .maybeSingle();
+        
+      if (checkError) {
+        console.error('Error checking for existing summary:', checkError);
+      }
+      
+      let saveError;
+      
+      if (existingSummary) {
+        // Update existing summary
+        console.log('Updating existing summary for image:', imageUrl);
+        const { error } = await supabase
+          .from('image_summaries')
+          .update({
+            summary: summary,
+            user_id: userId, // Keep track of who last updated it
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingSummary.id);
+          
+        saveError = error;
+      } else {
+        // Insert new summary
+        console.log('Inserting new summary for image:', imageUrl);
+        const { error } = await supabase
+          .from('image_summaries')
+          .insert({
+            user_id: userId,
+            image_url: imageUrl,
+            summary: summary,
+            project_id: projectId
+          });
+          
+        saveError = error;
+      }
 
       if (saveError) {
         console.error('Error saving summary:', saveError);
@@ -106,7 +144,7 @@ serve(async (req) => {
       }
     }
 
-    console.log('Generated summary:', summary);
+    console.log('Successfully generated summary:', summary.substring(0, 100) + '...');
 
     return new Response(JSON.stringify({ summary }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
