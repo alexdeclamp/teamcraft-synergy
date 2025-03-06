@@ -31,13 +31,13 @@ serve(async (req) => {
     // Decode base64 PDF
     const binaryPdf = Uint8Array.from(atob(fileBase64.split(',')[1]), c => c.charCodeAt(0));
     
-    // Use PDF.js to extract text from the PDF
-    const pdfjs = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.143/build/pdf.min.mjs');
-    const pdfjsWorker = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.2.143/build/pdf.worker.min.mjs');
+    // Use pdfjs-dist to extract text - updated import to use a more reliable version
+    const pdfjs = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js');
     
-    pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+    // Configure the worker
+    pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.worker.min.js';
     
-    // Load PDF from binary data
+    // Load PDF data
     const loadingTask = pdfjs.getDocument({ data: binaryPdf });
     const pdf = await loadingTask.promise;
     
@@ -46,7 +46,7 @@ serve(async (req) => {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      extractedText += textContent.items.map((item: any) => item.str).join(' ') + '\n';
+      extractedText += textContent.items.map((item) => item.str).join(' ') + '\n';
     }
     
     console.log(`Extracted ${extractedText.length} characters of text from PDF`);
