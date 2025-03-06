@@ -18,11 +18,12 @@ serve(async (req) => {
   }
 
   try {
-    const { type, content, imageUrl, userId } = await req.json();
+    const { type, content, imageUrl, userId, projectId } = await req.json();
     
     console.log(`Processing ${type} summary request`);
     if (type === 'image') {
       console.log(`Image URL: ${imageUrl}`);
+      console.log(`Project ID: ${projectId}`);
     }
     
     let prompt = '';
@@ -44,7 +45,7 @@ serve(async (req) => {
         { role: 'user', content: prompt }
       ];
     } else if (type === 'image') {
-      model = 'gpt-4-vision-preview'; // Use vision model that supports image_url
+      model = 'gpt-4o'; // Use gpt-4o for vision tasks as requested
       messages = [
         {
           role: 'system',
@@ -87,7 +88,7 @@ serve(async (req) => {
     const data = await response.json();
     const summary = data.choices[0].message.content;
 
-    if (type === 'image' && userId) {
+    if (type === 'image' && userId && projectId) {
       const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
       
       const { error: saveError } = await supabase
@@ -95,7 +96,8 @@ serve(async (req) => {
         .insert({
           user_id: userId,
           image_url: imageUrl,
-          summary: summary
+          summary: summary,
+          project_id: projectId // Add project_id to associate the summary with a project
         });
 
       if (saveError) {

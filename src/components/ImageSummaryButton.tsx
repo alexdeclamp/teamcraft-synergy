@@ -6,6 +6,7 @@ import { MessageSquare, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import SummaryDialog from './SummaryDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { useParams } from 'react-router-dom';
 
 interface ImageSummaryButtonProps {
   imageUrl: string;
@@ -21,13 +22,14 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hasSummary, setHasSummary] = useState(false);
   const { user } = useAuth();
+  const { projectId } = useParams();
 
   // Fetch existing summary when component mounts
   useEffect(() => {
-    if (user) {
+    if (imageUrl && projectId) {
       fetchExistingSummary();
     }
-  }, [imageUrl, user]);
+  }, [imageUrl, projectId]);
 
   const fetchExistingSummary = async () => {
     try {
@@ -35,7 +37,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         .from('image_summaries')
         .select('summary')
         .eq('image_url', imageUrl)
-        .eq('user_id', user?.id)
+        .eq('project_id', projectId)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -63,12 +65,14 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
       }
       
       console.log('Generating summary for image:', imageUrl);
+      console.log('For project:', projectId);
       
       const { data, error } = await supabase.functions.invoke('generate-summary', {
         body: {
           type: 'image',
           imageUrl: imageUrl,
-          userId: user?.id // Pass the user ID to save the summary
+          userId: user?.id,
+          projectId: projectId
         },
       });
 
