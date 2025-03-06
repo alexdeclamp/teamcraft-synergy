@@ -98,7 +98,7 @@ const ProjectDocuments: React.FC<ProjectDocumentsProps> = ({ projectId }) => {
               <div className="space-y-2">
                 {documents.map((doc) => (
                   <div key={doc.id} className="flex items-center justify-between p-3 rounded-md bg-background hover:bg-accent/40 transition-colors">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
                       <FileText className="h-5 w-5 flex-shrink-0 text-primary/70" />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{doc.file_name}</p>
@@ -108,13 +108,13 @@ const ProjectDocuments: React.FC<ProjectDocumentsProps> = ({ projectId }) => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" asChild>
+                    <div className="flex gap-2 ml-2">
+                      <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0">
                         <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
                           <Eye className="h-4 w-4" />
                         </a>
                       </Button>
-                      <Button variant="ghost" size="sm" asChild>
+                      <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0">
                         <a href={doc.file_url} download={doc.file_name}>
                           <Download className="h-4 w-4" />
                         </a>

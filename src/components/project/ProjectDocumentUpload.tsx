@@ -135,19 +135,21 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
       </div>
       
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <Input
-            id="pdf-upload"
-            type="file"
-            accept=".pdf"
-            onChange={handleFileChange}
-            disabled={isUploading}
-            className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:font-medium file:bg-primary/10 file:text-primary hover:file:cursor-pointer"
-          />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="w-full">
+            <Input
+              id="pdf-upload"
+              type="file"
+              accept=".pdf"
+              onChange={handleFileChange}
+              disabled={isUploading}
+              className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:font-medium file:bg-primary/10 file:text-primary hover:file:cursor-pointer w-full"
+            />
+          </div>
           <Button 
             onClick={uploadDocument} 
             disabled={!file || isUploading}
-            className="whitespace-nowrap"
+            className="whitespace-nowrap w-full sm:w-auto"
           >
             {isUploading ? (
               <>
