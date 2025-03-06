@@ -1,26 +1,38 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import ProjectNotesComponent from '@/components/ProjectNotes';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import ProjectNoteCard from './ProjectNoteCard';
 
-interface ProjectNotesTabProps {
+interface ProjectNotesProps {
+  notes: any[];
   projectId: string;
+  onNoteUpdated?: () => void;
 }
 
-const ProjectNotesTab: React.FC<ProjectNotesTabProps> = ({ projectId }) => {
+const ProjectNotes: React.FC<ProjectNotesProps> = ({ notes, projectId, onNoteUpdated }) => {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Project Notes</CardTitle>
-        <CardDescription>
-          Capture and organize your project ideas and information
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-6">
-        <ProjectNotesComponent projectId={projectId} />
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {/* Removed the "Project Notes" heading from here */}
+      <ScrollArea className="h-[400px] pr-4">
+        <div className="space-y-4">
+          {notes && notes.length > 0 ? (
+            notes.map((note) => (
+              <ProjectNoteCard
+                key={note.id}
+                note={note}
+                projectId={projectId}
+                onNoteUpdated={onNoteUpdated}
+              />
+            ))
+          ) : (
+            <div className="text-center py-10 text-muted-foreground">
+              No notes found. Add your first note to get started.
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
   );
 };
 
-export default ProjectNotesTab;
+export default ProjectNotes;
