@@ -1,15 +1,20 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import Navbar from '@/components/Navbar';
+import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import ProjectHeader from '@/components/project/ProjectHeader';
-import ProjectTabs from '@/components/project/ProjectTabs';
+import ProjectHeader from './ProjectHeader';
+import ProjectOverview from './ProjectOverview';
+import ProjectTabs from './ProjectTabs';
+import ProjectNotesTab from './ProjectNotes';
+import ProjectImagesTab from './ProjectImagesTab';
+import ProjectChatTab from './ProjectChatTab';
+import ProjectDocumentsTab from './ProjectDocumentsTab';
+import ProjectUpdatesTab from './ProjectUpdatesTab';
+import ProjectSettings from './ProjectSettings';
+import MemberInvite from '@/components/MemberInvite';
 
 interface ProjectLayoutProps {
   loading: boolean;
-  project: any;
+  project: any | null;
   members: any[];
   setMembers: React.Dispatch<React.SetStateAction<any[]>>;
   userRole: string | null;
@@ -19,14 +24,15 @@ interface ProjectLayoutProps {
   daysSinceCreation: () => number;
   activityPercentage: number;
   formatFileSize: (bytes: number) => string;
-  handleImagesUpdated: (images: any[], recent: any[]) => void;
+  handleImagesUpdated: (images: any[], recent?: any[]) => void;
   handleAddMember: () => void;
   activeTab: string;
-  setActiveTab: (tab: string) => void;
+  setActiveTab: React.Dispatch<React.SetStateAction<string>>;
   showInviteDialog: boolean;
-  setShowInviteDialog: (show: boolean) => void;
-  toggleFavoriteProject?: () => Promise<void>;
-  toggleArchiveProject?: () => Promise<void>;
+  setShowInviteDialog: React.Dispatch<React.SetStateAction<boolean>>;
+  toggleFavoriteProject: () => Promise<void>;
+  toggleArchiveProject: () => Promise<void>;
+  fetchProjectImages: () => Promise<void>;
 }
 
 const ProjectLayout: React.FC<ProjectLayoutProps> = ({
@@ -48,70 +54,110 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
   showInviteDialog,
   setShowInviteDialog,
   toggleFavoriteProject,
-  toggleArchiveProject
+  toggleArchiveProject,
+  fetchProjectImages
 }) => {
-  const navigate = useNavigate();
+  const [hasNewContent, setHasNewContent] = useState(false);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  // When a member is added, update the list
+  const handleInviteSuccess = () => {
+    // This would ideally refetch the members
+    setHasNewContent(true);
+  };
 
-  if (!project) {
+  if (loading || !project) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-        <h2 className="text-2xl font-bold mb-4">Project not found</h2>
-        <p className="text-muted-foreground mb-6">The project you're looking for doesn't exist or has been removed.</p>
-        <Button onClick={() => navigate('/dashboard')}>
-          Back to Projects
-        </Button>
+      <div className="flex items-center justify-center min-h-[70vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-12 animate-fade-in">
-      <Navbar />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-        <ProjectHeader
+    <div className="container max-w-7xl mx-auto px-4 py-4 space-y-6">
+      <ProjectHeader
+        project={project}
+        userRole={userRole}
+        membersCount={members.length}
+        imagesCount={projectImages.length}
+        daysSinceCreation={daysSinceCreation()}
+        onAddMember={handleAddMember}
+        showInviteDialog={showInviteDialog}
+        setShowInviteDialog={setShowInviteDialog}
+        onFavoriteToggle={toggleFavoriteProject}
+        onArchiveToggle={toggleArchiveProject}
+        onInviteSuccess={handleInviteSuccess}
+      />
+
+      <ProjectTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+
+      {activeTab === 'overview' && (
+        <ProjectOverview
           project={project}
-          userRole={userRole}
-          membersCount={members.length}
-          imagesCount={projectImages.length}
-          daysSinceCreation={daysSinceCreation()}
-          onAddMember={handleAddMember}
-          showInviteDialog={showInviteDialog}
-          setShowInviteDialog={setShowInviteDialog}
-          onFavoriteToggle={toggleFavoriteProject}
-          onArchiveToggle={toggleArchiveProject}
-          onInviteSuccess={() => {
-            // Refresh members list when invitation is successful
-            // This would typically trigger a re-fetch
-          }}
-        />
-        
-        <ProjectTabs
+          members={members}
+          recentImages={recentImages}
+          activityPercentage={activityPercentage}
+          handleAddMember={handleAddMember}
           projectId={project.id}
+        />
+      )}
+
+      {activeTab === 'notes' && (
+        <ProjectNotesTab
+          projectId={project.id}
+        />
+      )}
+
+      {activeTab === 'images' && (
+        <ProjectImagesTab
+          projectId={project.id}
+          images={projectImages}
+          isLoading={isImagesLoading}
+          onImagesUpdated={handleImagesUpdated}
+          onUploadComplete={fetchProjectImages}
+        />
+      )}
+
+      {activeTab === 'chat' && (
+        <ProjectChatTab
+          projectId={project.id}
+          projectTitle={project.title}
+          aiPersona={project.ai_persona}
+        />
+      )}
+
+      {activeTab === 'documents' && (
+        <ProjectDocumentsTab
+          projectId={project.id}
+        />
+      )}
+
+      {activeTab === 'updates' && (
+        <ProjectUpdatesTab
+          projectId={project.id}
+        />
+      )}
+
+      {activeTab === 'settings' && (
+        <ProjectSettings
           project={project}
           members={members}
           setMembers={setMembers}
           userRole={userRole}
-          projectImages={projectImages}
-          recentImages={recentImages}
-          isImagesLoading={isImagesLoading}
-          daysSinceCreation={daysSinceCreation}
-          activityPercentage={activityPercentage}
-          formatFileSize={formatFileSize}
-          handleImagesUpdated={handleImagesUpdated}
-          handleAddMember={handleAddMember}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          projectId={project.id}
         />
-      </main>
+      )}
+
+      {/* Invite Modal */}
+      <MemberInvite
+        projectId={project.id}
+        isOpen={showInviteDialog}
+        onClose={() => setShowInviteDialog(false)}
+        onSuccess={handleInviteSuccess}
+      />
     </div>
   );
 };

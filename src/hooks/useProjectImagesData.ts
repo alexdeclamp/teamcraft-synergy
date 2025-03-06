@@ -19,7 +19,7 @@ interface UseProjectImagesDataResult {
   projectImages: UploadedImage[];
   recentImages: UploadedImage[];
   isImagesLoading: boolean;
-  handleImagesUpdated: (images: UploadedImage[], recent: UploadedImage[]) => void;
+  handleImagesUpdated: (images: UploadedImage[], recent?: UploadedImage[]) => void;
   fetchProjectImages: () => Promise<void>;
 }
 
@@ -92,9 +92,16 @@ export const useProjectImagesData = (
     }
   }, [projectId, userId]);
 
-  const handleImagesUpdated = (images: UploadedImage[], recent: UploadedImage[]) => {
+  const handleImagesUpdated = (images: UploadedImage[], recent?: UploadedImage[]) => {
     setProjectImages(images);
-    setRecentImages(recent);
+    
+    if (recent) {
+      setRecentImages(recent);
+    } else {
+      // Filter out archived images for the recent images display
+      const filteredImages = images.filter(img => !img.is_archived);
+      setRecentImages(filteredImages.slice(0, 3));
+    }
   };
 
   return {

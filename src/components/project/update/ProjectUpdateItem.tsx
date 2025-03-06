@@ -10,22 +10,26 @@ import { X, Tag, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Update } from './types';
+import ToggleStatusButton from '../common/ToggleStatusButton';
 
 interface ProjectUpdateItemProps {
   update: Update;
   isLast: boolean;
   userId?: string;
   onRemove: (updateId: string) => void;
+  onStatusChange?: () => void;
 }
 
 const ProjectUpdateItem: React.FC<ProjectUpdateItemProps> = ({ 
   update, 
   isLast, 
   userId,
-  onRemove 
+  onRemove,
+  onStatusChange
 }) => {
   const [activeUpdateId, setActiveUpdateId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const handleAddTag = async (updateId: string) => {
     if (!tagInput.trim()) return;
@@ -83,8 +87,89 @@ const ProjectUpdateItem: React.FC<ProjectUpdateItemProps> = ({
     }
   };
 
+  const toggleFavorite = async () => {
+    try {
+      setIsUpdating(true);
+      
+      const newValue = !update.is_favorite;
+      
+      const { error } = await supabase
+        .from('project_updates')
+        .update({ is_favorite: newValue })
+        .eq('id', update.id);
+      
+      if (error) throw error;
+      
+      // Update UI
+      update.is_favorite = newValue;
+      
+      toast.success(newValue ? 'Update added to favorites' : 'Update removed from favorites');
+      
+      if (onStatusChange) onStatusChange();
+    } catch (error: any) {
+      console.error('Error toggling favorite:', error);
+      toast.error('Failed to update status');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+  
+  const toggleArchive = async () => {
+    try {
+      setIsUpdating(true);
+      
+      const newValue = !update.is_archived;
+      
+      const { error } = await supabase
+        .from('project_updates')
+        .update({ is_archived: newValue })
+        .eq('id', update.id);
+      
+      if (error) throw error;
+      
+      // Update UI
+      update.is_archived = newValue;
+      
+      toast.success(newValue ? 'Update archived' : 'Update restored from archive');
+      
+      if (onStatusChange) onStatusChange();
+    } catch (error: any) {
+      console.error('Error toggling archive:', error);
+      toast.error('Failed to update status');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+  
+  const toggleImportant = async () => {
+    try {
+      setIsUpdating(true);
+      
+      const newValue = !update.is_important;
+      
+      const { error } = await supabase
+        .from('project_updates')
+        .update({ is_important: newValue })
+        .eq('id', update.id);
+      
+      if (error) throw error;
+      
+      // Update UI
+      update.is_important = newValue;
+      
+      toast.success(newValue ? 'Update marked as important' : 'Update unmarked as important');
+      
+      if (onStatusChange) onStatusChange();
+    } catch (error: any) {
+      console.error('Error toggling important:', error);
+      toast.error('Failed to update status');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
-    <div className="bg-card rounded-lg p-4 border">
+    <div className={`bg-card rounded-lg p-4 border ${update.is_archived ? 'opacity-60' : 'opacity-100'}`}>
       <div className="flex gap-3">
         <Avatar className="h-10 w-10">
           {update.user_avatar ? (
@@ -102,16 +187,41 @@ const ProjectUpdateItem: React.FC<ProjectUpdateItemProps> = ({
               <p className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(update.created_at), { addSuffix: true })}
               </p>
+              
+              {/* Status buttons */}
               {userId === update.user_id && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-6 w-6 p-0 rounded-full"
-                  onClick={() => onRemove(update.id)}
-                  title="Delete update"
-                >
-                  <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                </Button>
+                <div className="flex space-x-1">
+                  <ToggleStatusButton 
+                    status="important"
+                    isActive={!!update.is_important}
+                    onClick={toggleImportant}
+                    size="xs"
+                    disabled={isUpdating}
+                  />
+                  <ToggleStatusButton 
+                    status="favorite"
+                    isActive={!!update.is_favorite}
+                    onClick={toggleFavorite}
+                    size="xs"
+                    disabled={isUpdating}
+                  />
+                  <ToggleStatusButton 
+                    status="archive"
+                    isActive={!!update.is_archived}
+                    onClick={toggleArchive}
+                    size="xs"
+                    disabled={isUpdating}
+                  />
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 w-6 p-0 rounded-full"
+                    onClick={() => onRemove(update.id)}
+                    title="Delete update"
+                  >
+                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                  </Button>
+                </div>
               )}
             </div>
           </div>
