@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import SummaryDialog from './SummaryDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ImageSummaryButtonProps {
   imageUrl: string;
@@ -18,6 +19,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [summary, setSummary] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { user } = useAuth();
 
   const generateSummary = async () => {
     try {
@@ -30,6 +32,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         body: {
           type: 'image',
           imageUrl: imageUrl,
+          userId: user?.id // Pass the user ID to save the summary
         },
       });
 
@@ -45,6 +48,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
       
       console.log('Received summary data:', data);
       setSummary(data.summary);
+      toast.success('Summary generated and saved successfully');
     } catch (error: any) {
       console.error('Error generating image summary:', error);
       setSummary(`Failed to generate summary: ${error.message}`);
