@@ -36,10 +36,10 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
           .from('note_summaries')
           .select('summary')
           .eq('note_id', noteId)
-          .single();
+          .maybeSingle();
         
         if (error) {
-          console.log('No saved summary found or error fetching:', error.message);
+          console.log('Error fetching saved summary:', error.message);
           return;
         }
         
