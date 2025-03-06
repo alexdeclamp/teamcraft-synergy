@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import ProjectUpdates from './ProjectUpdates';
 
 interface ProjectUpdatesTabProps {
@@ -8,11 +9,17 @@ interface ProjectUpdatesTabProps {
 
 const ProjectUpdatesTab: React.FC<ProjectUpdatesTabProps> = ({ projectId }) => {
   return (
-    <div className="space-y-4">
-      <h2 className="text-2xl font-bold tracking-tight">Project Updates</h2>
-      <p className="text-muted-foreground">Share updates and progress with your team.</p>
-      <ProjectUpdates projectId={projectId} />
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Project Updates</CardTitle>
+        <CardDescription>
+          Share updates and progress with your team
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-6">
+        <ProjectUpdates projectId={projectId} />
+      </CardContent>
+    </Card>
   );
 };
 

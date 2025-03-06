@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { StickyNote, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import ProjectNotesComponent from '@/components/ProjectNotes';
 
 interface ProjectNotesTabProps {
@@ -12,6 +10,12 @@ interface ProjectNotesTabProps {
 const ProjectNotesTab: React.FC<ProjectNotesTabProps> = ({ projectId }) => {
   return (
     <Card>
+      <CardHeader>
+        <CardTitle>Project Notes</CardTitle>
+        <CardDescription>
+          Capture and organize your project ideas and information
+        </CardDescription>
+      </CardHeader>
       <CardContent className="p-6">
         <ProjectNotesComponent projectId={projectId} />
       </CardContent>
