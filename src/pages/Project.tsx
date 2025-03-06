@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -52,6 +51,7 @@ import MemberInvite from '@/components/MemberInvite';
 import ProjectNotes from '@/components/ProjectNotes';
 import ProjectImageUpload from '@/components/ProjectImageUpload';
 import ImageSummaryButton from '@/components/ImageSummaryButton';
+import ProjectChat from '@/components/ProjectChat';
 
 interface ProjectMember {
   id: string;
@@ -580,6 +580,10 @@ const Project = () => {
             {userRole === 'owner' && (
               <TabsTrigger value="settings">Settings</TabsTrigger>
             )}
+            <TabsTrigger value="chat">
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Project Chat
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6">
@@ -819,6 +823,20 @@ const Project = () => {
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="chat" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Chat</CardTitle>
+                <CardDescription>
+                  Discuss your project with an AI assistant that has context about your notes and images
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {project && <ProjectChat projectId={project.id} />}
               </CardContent>
             </Card>
           </TabsContent>
