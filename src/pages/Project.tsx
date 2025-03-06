@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -39,6 +40,9 @@ import {
   Loader2,
   StickyNote,
   Image,
+  ImageIcon,
+  FileWarning,
+  MessageSquare,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
@@ -47,6 +51,7 @@ import { supabase } from '@/integrations/supabase/client';
 import MemberInvite from '@/components/MemberInvite';
 import ProjectNotes from '@/components/ProjectNotes';
 import ProjectImageUpload from '@/components/ProjectImageUpload';
+import ImageSummaryButton from '@/components/ImageSummaryButton';
 
 interface ProjectMember {
   id: string;
@@ -65,6 +70,15 @@ interface Project {
   owner_id: string;
 }
 
+interface UploadedImage {
+  url: string;
+  path: string;
+  size: number;
+  name: string;
+  createdAt: Date;
+  summary?: string;
+}
+
 const Project = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -75,7 +89,9 @@ const Project = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [userRole, setUserRole] = useState<string | null>(null);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [projectImages, setProjectImages] = useState<string[]>([]);
+  const [projectImages, setProjectImages] = useState<UploadedImage[]>([]);
+  const [recentImages, setRecentImages] = useState<UploadedImage[]>([]);
+  const [isImagesLoading, setIsImagesLoading] = useState(false);
 
   useEffect(() => {
     const fetchProjectData = async () => {
@@ -177,6 +193,64 @@ const Project = () => {
 
     fetchProjectData();
   }, [id, user, navigate]);
+
+  useEffect(() => {
+    const fetchProjectImages = async () => {
+      if (!id || !user) return;
+
+      try {
+        setIsImagesLoading(true);
+        
+        const { data, error } = await supabase
+          .storage
+          .from('project_images')
+          .list(`${id}`);
+
+        if (error) throw error;
+
+        if (data) {
+          const imageUrls = await Promise.all(
+            data.map(async (item) => {
+              const { data: urlData } = await supabase
+                .storage
+                .from('project_images')
+                .getPublicUrl(`${id}/${item.name}`);
+              
+              // Fetch summary if exists
+              const { data: summaryData } = await supabase
+                .from('image_summaries')
+                .select('summary')
+                .eq('image_url', urlData.publicUrl)
+                .eq('user_id', user.id)
+                .single();
+
+              return {
+                url: urlData.publicUrl,
+                path: `${id}/${item.name}`,
+                size: item.metadata?.size || 0,
+                name: item.name,
+                createdAt: new Date(item.created_at || Date.now()),
+                summary: summaryData?.summary || undefined
+              };
+            })
+          );
+
+          const sortedImages = imageUrls.sort((a, b) => 
+            b.createdAt.getTime() - a.createdAt.getTime()
+          );
+
+          setProjectImages(sortedImages);
+          setRecentImages(sortedImages.slice(0, 3));
+        }
+      } catch (error: any) {
+        console.error('Error fetching images:', error);
+      } finally {
+        setIsImagesLoading(false);
+      }
+    };
+
+    fetchProjectImages();
+  }, [id, user]);
 
   const handleDeleteProject = async () => {
     if (!project || !user || userRole !== 'owner') return;
@@ -318,8 +392,56 @@ const Project = () => {
   };
 
   const handleImageUploadComplete = (imageUrl: string) => {
-    setProjectImages([...projectImages, imageUrl]);
+    // Refresh the project images
+    const fetchUpdatedImages = async () => {
+      if (!id || !user) return;
+
+      try {
+        const { data, error } = await supabase
+          .storage
+          .from('project_images')
+          .list(`${id}`);
+
+        if (error) throw error;
+
+        if (data) {
+          const imageUrls = await Promise.all(
+            data.map(async (item) => {
+              const { data: urlData } = await supabase
+                .storage
+                .from('project_images')
+                .getPublicUrl(`${id}/${item.name}`);
+              
+              return {
+                url: urlData.publicUrl,
+                path: `${id}/${item.name}`,
+                size: item.metadata?.size || 0,
+                name: item.name,
+                createdAt: new Date(item.created_at || Date.now())
+              };
+            })
+          );
+
+          const sortedImages = imageUrls.sort((a, b) => 
+            b.createdAt.getTime() - a.createdAt.getTime()
+          );
+
+          setProjectImages(sortedImages);
+          setRecentImages(sortedImages.slice(0, 3));
+        }
+      } catch (error: any) {
+        console.error('Error fetching updated images:', error);
+      }
+    };
+
+    fetchUpdatedImages();
     toast.success('Image uploaded successfully');
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return bytes + ' bytes';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   if (loading) {
@@ -436,6 +558,10 @@ const Project = () => {
               <Users className="h-4 w-4 mr-1" />
               <span>{members.length} member{members.length !== 1 ? 's' : ''}</span>
             </div>
+            <div className="flex items-center">
+              <Image className="h-4 w-4 mr-1" />
+              <span>{projectImages.length} image{projectImages.length !== 1 ? 's' : ''}</span>
+            </div>
           </div>
         </div>
         
@@ -466,40 +592,130 @@ const Project = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-6">
-                  This is where you'll find project details, resources, and updates. 
-                  Content for this section will be customizable based on your needs.
+                  {project.description || "This project contains visual assets and collaborative resources."}
                 </p>
                 
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Recent Activity</h3>
-                    <div className="space-y-3">
-                      {[1, 2, 3].map((_, i) => (
-                        <div key={i} className="flex items-start space-x-3 p-3 rounded-md bg-accent/50">
-                          <div className="flex-shrink-0">
-                            <FileText className="h-5 w-5 text-muted-foreground" />
+                    <h3 className="text-lg font-medium flex items-center">
+                      <Image className="h-5 w-5 mr-2 text-muted-foreground" />
+                      Recent Images
+                    </h3>
+                    {isImagesLoading ? (
+                      <div className="flex justify-center py-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    ) : recentImages.length === 0 ? (
+                      <div className="text-center p-6 border border-dashed rounded-md">
+                        <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-muted-foreground">No images uploaded yet</p>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-4"
+                          onClick={() => setActiveTab('images')}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Images
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {recentImages.map((image) => (
+                          <div key={image.path} className="flex gap-3 p-3 bg-accent/50 rounded-md">
+                            <div className="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden">
+                              <img
+                                src={image.url}
+                                alt={image.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate" title={image.name}>
+                                {image.name}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatFileSize(image.size)} • {image.createdAt.toLocaleDateString()}
+                              </p>
+                              {image.summary && (
+                                <div className="mt-1 flex items-center text-xs text-green-600">
+                                  <MessageSquare className="h-3 w-3 mr-1" />
+                                  <span className="truncate">AI Summary available</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium">Activity item {i + 1}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(Date.now() - i * 24 * 60 * 60 * 1000).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                        {projectImages.length > 3 && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full"
+                            onClick={() => setActiveTab('images')}
+                          >
+                            View all {projectImages.length} images
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Key Resources</h3>
+                    <h3 className="text-lg font-medium flex items-center">
+                      <StickyNote className="h-5 w-5 mr-2 text-muted-foreground" />
+                      Project Notes
+                    </h3>
                     <div className="space-y-3">
-                      <div className="flex justify-center items-center p-6 border border-dashed rounded-md">
+                      <div className="p-6 border border-dashed rounded-md">
                         <div className="text-center">
-                          <Plus className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
-                          <p className="text-muted-foreground">Add resources to your project</p>
+                          <StickyNote className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                          <p className="text-muted-foreground mb-4">Capture ideas and keep track of important information</p>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setActiveTab('notes')}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            View Notes
+                          </Button>
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="text-lg font-medium mb-4 flex items-center">
+                    <Users className="h-5 w-5 mr-2 text-muted-foreground" />
+                    Project Members
+                  </h3>
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {members.slice(0, 5).map((member) => (
+                      <Avatar key={member.id} className="border-2 border-background">
+                        {member.avatar && <AvatarImage src={member.avatar} alt={member.name} />}
+                        <AvatarFallback>
+                          {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
+                    
+                    {members.length > 5 && (
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted text-sm font-medium">
+                        +{members.length - 5}
+                      </div>
+                    )}
+                    
+                    {userRole === 'owner' && (
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        className="w-10 h-10 rounded-full"
+                        onClick={handleAddMember}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
