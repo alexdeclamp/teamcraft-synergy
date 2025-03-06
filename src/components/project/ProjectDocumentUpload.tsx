@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,7 +50,6 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
       setUploadProgress(10);
       setConvertedImages([]);
       
-      // Convert file to base64
       const fileReader = new FileReader();
       
       fileReader.onload = async (event) => {
@@ -68,17 +66,12 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
             userId: user.id
           });
           
-          // Send file to edge function for processing
           const { data, error } = await supabase.functions.invoke('extract-pdf-text', {
             body: {
               fileBase64: event.target.result,
               fileName: file.name,
               projectId,
               userId: user.id
-            },
-            // Adding a longer timeout for larger PDFs (30 seconds)
-            options: {
-              timeout: 30000
             }
           });
           
@@ -95,7 +88,6 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
           
           setUploadProgress(90);
           
-          // Set the converted images if they exist
           if (data.images && Array.isArray(data.images)) {
             setConvertedImages(data.images);
           }
@@ -106,8 +98,6 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
           if (onDocumentUploaded && data.document) {
             onDocumentUploaded(data.document);
           }
-          
-          // Don't reset the form immediately so users can see the converted images
           
         } catch (err: any) {
           console.error('Error processing PDF:', err);
@@ -125,7 +115,6 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
         setErrorMessage('Failed to read file');
       };
       
-      // Start reading the file
       fileReader.readAsDataURL(file);
       
     } catch (error: any) {
