@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import SummaryDialog from './SummaryDialog';
+import { useParams } from 'react-router-dom';
 
 interface NoteSummaryButtonProps {
   noteId: string;
@@ -20,10 +21,16 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [summary, setSummary] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { id: projectId } = useParams<{ id: string }>();
 
   const generateSummary = async () => {
     if (!noteContent) {
       toast.error('Cannot generate summary for empty note content');
+      return;
+    }
+
+    if (!projectId) {
+      toast.error('Project ID is required for generating summaries');
       return;
     }
 
@@ -35,6 +42,8 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
         body: {
           type: 'note',
           content: noteContent,
+          projectId: projectId,
+          userId: (await supabase.auth.getUser()).data.user?.id
         },
       });
 
