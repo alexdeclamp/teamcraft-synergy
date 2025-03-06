@@ -5,7 +5,7 @@ import ProjectChat from '@/components/ProjectChat';
 
 interface ProjectChatTabProps {
   projectId: string;
-  projectTitle?: string;
+  projectTitle?: string; // Added optional props to match usage
   aiPersona?: string;
 }
 

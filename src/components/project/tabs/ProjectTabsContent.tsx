@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { TabsContent } from "@/components/ui/tabs";
 import ProjectTabsOverview from './ProjectTabsOverview';
@@ -65,13 +66,14 @@ const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
           members={members}
           userRole={userRole}
           activityPercentage={activityPercentage}
-          daysSinceCreation={daysSinceCreation}
+          daysSinceCreation={daysSinceCreation()}
           imageCount={projectImages.length}
           recentImages={recentImages}
           isImagesLoading={isImagesLoading}
           formatFileSize={formatFileSize}
           onAddMember={handleAddMember}
           onTabChange={setActiveTab}
+          projectId={projectId} // Added projectId
         />
       </TabsContent>
       

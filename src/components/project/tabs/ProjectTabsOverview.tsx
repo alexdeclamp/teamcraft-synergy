@@ -10,13 +10,14 @@ interface ProjectTabsOverviewProps {
   members: any[];
   userRole: string | null;
   activityPercentage: number;
-  daysSinceCreation: () => number;
+  daysSinceCreation: number;
   imageCount: number;
   recentImages: any[];
   isImagesLoading: boolean;
   formatFileSize: (bytes: number) => string;
   onAddMember: () => void;
   onTabChange: (tab: string) => void;
+  projectId: string; // Added projectId to the interface
 }
 
 const ProjectTabsOverview: React.FC<ProjectTabsOverviewProps> = ({
@@ -30,7 +31,8 @@ const ProjectTabsOverview: React.FC<ProjectTabsOverviewProps> = ({
   isImagesLoading,
   formatFileSize,
   onAddMember,
-  onTabChange
+  onTabChange,
+  projectId // Added projectId parameter
 }) => {
   return (
     <div className="space-y-6">
@@ -39,10 +41,11 @@ const ProjectTabsOverview: React.FC<ProjectTabsOverviewProps> = ({
         members={members}
         userRole={userRole}
         activityPercentage={activityPercentage}
-        daysSinceCreation={daysSinceCreation()}
+        daysSinceCreation={daysSinceCreation}
         imageCount={imageCount}
         onAddMember={onAddMember}
         onTabChange={onTabChange}
+        projectId={projectId} // Pass projectId to ProjectOverview
       />
 
       <div className="grid md:grid-cols-2 gap-6">

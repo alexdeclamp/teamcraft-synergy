@@ -74,7 +74,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
       setIsUpdating(true);
       
       for (const path of selectedImages) {
-        // First delete the image from storage
         const { error: storageError } = await supabase
           .storage
           .from('project_images')
@@ -82,7 +81,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
           
         if (storageError) throw storageError;
         
-        // Then delete any associated metadata
         const imageToDelete = images.find(img => img.path === path);
         if (imageToDelete) {
           const { error: metadataError } = await supabase
@@ -95,7 +93,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
         }
       }
       
-      // Update UI
       const updatedImages = images.filter(img => !selectedImages.includes(img.path));
       onImagesUpdated(updatedImages);
       setSelectedImages([]);
@@ -134,7 +131,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
     try {
       setIsUpdating(true);
       
-      // If we already have an entry in image_summaries
       if (image.summary) {
         const { error } = await supabase
           .from('image_summaries')
@@ -147,7 +143,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
           
         if (error) throw error;
       } else {
-        // We need to create a new entry
         const { error } = await supabase
           .from('image_summaries')
           .insert({
@@ -163,7 +158,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
         if (error) throw error;
       }
       
-      // Update UI
       const updatedImages = images.map(img => {
         if (img.url === image.url) {
           return { ...img, is_favorite: !image.is_favorite };
@@ -190,7 +184,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
     try {
       setIsUpdating(true);
       
-      // If we already have an entry in image_summaries
       if (image.summary) {
         const { error } = await supabase
           .from('image_summaries')
@@ -203,7 +196,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
           
         if (error) throw error;
       } else {
-        // We need to create a new entry
         const { error } = await supabase
           .from('image_summaries')
           .insert({
@@ -219,7 +211,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
         if (error) throw error;
       }
       
-      // Update UI
       const updatedImages = images.map(img => {
         if (img.url === image.url) {
           return { ...img, is_archived: !image.is_archived };
@@ -246,7 +237,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
     try {
       setIsUpdating(true);
       
-      // If we already have an entry in image_summaries
       if (image.summary) {
         const { error } = await supabase
           .from('image_summaries')
@@ -259,7 +249,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
           
         if (error) throw error;
       } else {
-        // We need to create a new entry
         const { error } = await supabase
           .from('image_summaries')
           .insert({
@@ -275,7 +264,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
         if (error) throw error;
       }
       
-      // Update UI
       const updatedImages = images.map(img => {
         if (img.url === image.url) {
           return { ...img, is_important: !image.is_important };
@@ -298,7 +286,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
     }
   };
 
-  // Filter images based on selected tab
   const filteredImages = images.filter(img => {
     switch (activeTab) {
       case 'favorites':
@@ -308,7 +295,7 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
       case 'archived':
         return img.is_archived;
       default:
-        return !img.is_archived; // All except archived
+        return !img.is_archived;
     }
   });
 
@@ -442,6 +429,7 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
                 <ImageSummaryButton 
                   imageUrl={image.url}
                   projectId={projectId}
+                  imageName={image.name}
                 />
               </CardFooter>
             </Card>
@@ -449,7 +437,6 @@ const ProjectImagesList: React.FC<ProjectImagesListProps> = ({
         </div>
       )}
       
-      {/* Image Preview Dialog */}
       <Dialog open={!!selectedImage} onOpenChange={(open) => !open && handleCloseImage()}>
         {selectedImage && (
           <DialogContent className="max-w-4xl">
