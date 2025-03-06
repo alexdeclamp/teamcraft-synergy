@@ -38,12 +38,12 @@ const NewProject = () => {
     e.preventDefault();
     
     if (!formData.title.trim()) {
-      toast.error("Please enter a project title");
+      toast.error("Please enter a brain title");
       return;
     }
 
     if (!user) {
-      toast.error("You must be logged in to create a project");
+      toast.error("You must be logged in to create a brain");
       return;
     }
     
@@ -63,11 +63,11 @@ const NewProject = () => {
       
       if (error) throw error;
       
-      toast.success("Project created successfully!");
+      toast.success("Brain created successfully!");
       navigate(`/project/${data.id}`);
     } catch (error: any) {
-      console.error("Error creating project:", error);
-      toast.error(error.message || "Failed to create project. Please try again.");
+      console.error("Error creating brain:", error);
+      toast.error(error.message || "Failed to create brain. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -86,33 +86,33 @@ const NewProject = () => {
             onClick={() => navigate('/dashboard')}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Projects
+            Back to Brains
           </Button>
           
-          <h1 className="text-3xl font-bold">Create a New Project</h1>
+          <h1 className="text-3xl font-bold">Create a New Brain</h1>
           <p className="text-muted-foreground mt-1">
-            Set up your project and start collaborating with your team
+            Set up your brain and start collaborating with your team
           </p>
         </div>
         
         <Card className="shadow-sm">
           <form onSubmit={handleSubmit}>
             <CardHeader>
-              <CardTitle>Project Details</CardTitle>
+              <CardTitle>Brain Details</CardTitle>
               <CardDescription>
-                Enter the basic information about your project
+                Enter the basic information about your brain
               </CardDescription>
             </CardHeader>
             
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <label htmlFor="title" className="text-sm font-medium">
-                  Project Title <span className="text-red-500">*</span>
+                  Brain Title <span className="text-red-500">*</span>
                 </label>
                 <Input
                   id="title"
                   name="title"
-                  placeholder="Enter project title"
+                  placeholder="Enter brain title"
                   value={formData.title}
                   onChange={handleChange}
                   required
@@ -126,7 +126,7 @@ const NewProject = () => {
                 <Textarea
                   id="description"
                   name="description"
-                  placeholder="Enter project description"
+                  placeholder="Enter brain description"
                   rows={4}
                   value={formData.description}
                   onChange={handleChange}
@@ -140,7 +140,7 @@ const NewProject = () => {
                   </div>
                   <div className="ml-3">
                     <p className="text-sm text-blue-800">
-                      After creating your project, you'll be able to add team members and set up permissions.
+                      After creating your brain, you'll be able to add team members and set up permissions.
                     </p>
                   </div>
                 </div>
@@ -159,7 +159,7 @@ const NewProject = () => {
               
               <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Create Project
+                Create Brain
               </Button>
             </CardFooter>
           </form>

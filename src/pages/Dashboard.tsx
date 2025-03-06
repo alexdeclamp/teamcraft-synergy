@@ -161,9 +161,9 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Projects</h1>
+            <h1 className="text-3xl font-bold">Brains</h1>
             <p className="text-muted-foreground mt-1">
-              Manage and organize your team's projects
+              Manage and organize your team's brains
             </p>
           </div>
           
@@ -172,7 +172,7 @@ const Dashboard = () => {
             className="shadow-sm"
           >
             <Plus className="h-4 w-4 mr-2" />
-            New Project
+            New Brain
           </Button>
         </div>
         
@@ -181,7 +181,7 @@ const Dashboard = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search projects..."
+              placeholder="Search brains..."
               className="pl-9"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -240,16 +240,16 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="text-center py-12">
-            <h3 className="text-lg font-medium mb-2">No projects found</h3>
+            <h3 className="text-lg font-medium mb-2">No brains found</h3>
             <p className="text-muted-foreground mb-6">
-              {searchTerm || filter !== 'all' ? 'Try adjusting your search or filters' : 'Get started by creating your first project'}
+              {searchTerm || filter !== 'all' ? 'Try adjusting your search or filters' : 'Get started by creating your first brain'}
             </p>
             {!searchTerm && filter === 'all' && (
               <Button 
                 onClick={() => navigate('/new-project')}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Create Project
+                Create Brain
               </Button>
             )}
           </div>

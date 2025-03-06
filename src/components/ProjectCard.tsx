@@ -92,9 +92,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[180px]">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem>Edit project</DropdownMenuItem>
+              <DropdownMenuItem>Edit brain</DropdownMenuItem>
               <DropdownMenuItem>Manage members</DropdownMenuItem>
-              <DropdownMenuItem>Archive project</DropdownMenuItem>
+              <DropdownMenuItem>Archive brain</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -134,7 +134,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             variant="ghost" 
             className="w-full justify-between hover:bg-accent/50"
           >
-            <span>View project</span>
+            <span>View brain</span>
             <ExternalLink className="h-4 w-4 ml-2" />
           </Button>
         </Link>

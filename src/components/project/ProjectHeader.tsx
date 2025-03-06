@@ -58,7 +58,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     if (!project || userRole !== 'owner') return;
 
     const confirmed = window.confirm(
-      "Are you sure you want to delete this project? This action cannot be undone."
+      "Are you sure you want to delete this brain? This action cannot be undone."
     );
 
     if (!confirmed) return;
@@ -71,11 +71,11 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
       if (error) throw error;
 
-      toast.success("Project deleted successfully");
+      toast.success("Brain deleted successfully");
       navigate('/dashboard');
     } catch (error: any) {
-      console.error("Error deleting project:", error);
-      toast.error("Failed to delete project");
+      console.error("Error deleting brain:", error);
+      toast.error("Failed to delete brain");
     }
   };
 
@@ -96,7 +96,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         onClick={() => navigate('/dashboard')}
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Projects
+        Back to Brains
       </Button>
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -137,11 +137,11 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                 <>
                   <DropdownMenuItem>
                     <Edit className="h-4 w-4 mr-2" />
-                    Edit project
+                    Edit brain
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Settings className="h-4 w-4 mr-2" />
-                    Project settings
+                    Brain settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
@@ -149,7 +149,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                     onClick={handleDeleteProject}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Delete project
+                    Delete brain
                   </DropdownMenuItem>
                 </>
               )}
