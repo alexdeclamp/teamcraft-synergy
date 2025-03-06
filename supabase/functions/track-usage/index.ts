@@ -15,53 +15,90 @@ serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
-    // Create a Supabase client with the Auth context of the request
-    const supabaseClient = createClient(
-      supabaseUrl,
-      supabaseAnonKey,
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    );
-
-    // Get the current user 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    // Create a Supabase admin client with the service role key
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     
-    if (authError || !user) {
-      console.error('Authentication error:', authError);
-      // Return empty/mock data for unauthenticated requests instead of an error
-      return new Response(
-        JSON.stringify({ 
-          apiCalls: 0,
-          storageUsed: "0 KB",
-          activeBrains: 0,
-          status: "unauthenticated",
-          message: "Please log in to see your usage statistics"
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-      );
-    }
-
     // Parse the request body safely
     let body;
     try {
       body = await req.json();
     } catch (e) {
       console.error('Error parsing request body:', e);
-      body = { action: null };
+      body = { action: null, userId: null };
     }
     
-    const { action } = body || {};
+    const { action, userId } = body || {};
+    
+    // If no userId is provided, try to extract from the request header
+    let userIdToUse = userId;
+    if (!userIdToUse) {
+      try {
+        // Create a client using the request's authorization to extract the user
+        const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') || '';
+        const clientWithAuth = createClient(
+          supabaseUrl,
+          supabaseAnonKey,
+          {
+            global: {
+              headers: { Authorization: req.headers.get('Authorization')! },
+            },
+          }
+        );
+        
+        const { data: { user }, error: authError } = await clientWithAuth.auth.getUser();
+        
+        if (authError || !user) {
+          console.error('Authentication error:', authError);
+          // Return empty/mock data for unauthenticated requests
+          return new Response(
+            JSON.stringify({ 
+              apiCalls: 0,
+              storageUsed: "0 KB",
+              activeBrains: 0,
+              status: "unauthenticated",
+              message: "Please log in to see your usage statistics"
+            }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+          );
+        }
+        
+        userIdToUse = user.id;
+      } catch (error) {
+        console.error('Error extracting user from token:', error);
+        // Return empty data if auth fails
+        return new Response(
+          JSON.stringify({ 
+            apiCalls: 0,
+            storageUsed: "0 KB",
+            activeBrains: 0,
+            status: "error",
+            message: "Failed to authenticate user"
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      }
+    }
+    
+    if (!userIdToUse) {
+      return new Response(
+        JSON.stringify({ 
+          apiCalls: 0,
+          storageUsed: "0 KB",
+          activeBrains: 0,
+          status: "error",
+          message: "User ID is required"
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
 
-    // Log the API call if requested
+    // Log the API call if requested - using admin client
     if (action === 'log_api_call') {
       try {
-        const { error: logError } = await supabaseClient.from('user_usage_stats').insert({
-          user_id: user.id,
+        const { error: logError } = await adminClient.from('user_usage_stats').insert({
+          user_id: userIdToUse,
           action_type: 'api_call',
         });
 
@@ -75,17 +112,17 @@ serve(async (req) => {
       }
     }
 
-    // Get user usage statistics
+    // Get user usage statistics - using admin client
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
     // Get API call count for the current month
     let apiCallCount = 0;
     try {
-      const { count, error: apiError } = await supabaseClient
+      const { count, error: apiError } = await adminClient
         .from('user_usage_stats')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
+        .eq('user_id', userIdToUse)
         .eq('action_type', 'api_call')
         .gte('created_at', firstDayOfMonth.toISOString());
       
@@ -101,10 +138,10 @@ serve(async (req) => {
     // Get project count (active brains)
     let activeProjectsCount = 0;
     try {
-      const { count, error: projectsError } = await supabaseClient
+      const { count, error: projectsError } = await adminClient
         .from('projects')
         .select('*', { count: 'exact', head: true })
-        .eq('owner_id', user.id)
+        .eq('owner_id', userIdToUse)
         .is('is_archived', false);
       
       if (!projectsError) {

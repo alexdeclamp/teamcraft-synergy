@@ -52,9 +52,12 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
       try {
         console.log('Fetching user stats...');
         
-        // Call the edge function
+        // Call the edge function with explicit userId
         const { data, error: functionError } = await supabase.functions.invoke('track-usage', {
-          body: { action: 'log_api_call' },
+          body: { 
+            action: 'log_api_call',
+            userId: user.id // Explicitly pass the user ID
+          },
         });
         
         if (functionError) {
