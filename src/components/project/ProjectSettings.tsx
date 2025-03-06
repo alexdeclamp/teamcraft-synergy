@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
   const { toast } = useToast();
 
   // Fetch project details when component mounts
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchProject = async () => {
       try {
         const { data, error } = await supabase

@@ -25,6 +25,7 @@ const NewProject = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    aiPersona: '',
   });
   
   const handleChange = (
@@ -56,6 +57,7 @@ const NewProject = () => {
         .insert({
           title: formData.title.trim(),
           description: formData.description.trim(),
+          ai_persona: formData.aiPersona.trim(),
           owner_id: user.id,
         })
         .select()
@@ -131,6 +133,23 @@ const NewProject = () => {
                   value={formData.description}
                   onChange={handleChange}
                 />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="aiPersona" className="text-sm font-medium">
+                  AI Persona
+                </label>
+                <Textarea
+                  id="aiPersona"
+                  name="aiPersona"
+                  placeholder="Describe how you want the AI assistant to behave"
+                  rows={4}
+                  value={formData.aiPersona}
+                  onChange={handleChange}
+                />
+                <p className="text-xs text-muted-foreground">
+                  This will guide how the AI assistant responds when discussing your project
+                </p>
               </div>
               
               <div className="rounded-md bg-blue-50 p-4">
