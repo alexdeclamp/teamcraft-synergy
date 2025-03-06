@@ -23,7 +23,7 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
-    // Fetch project notes - now only selecting existing columns
+    // Fetch project notes
     const { data: notes } = await supabase
       .from('project_notes')
       .select('content, title, tags')
@@ -34,6 +34,20 @@ serve(async (req) => {
       .from('image_summaries')
       .select('summary')
       .eq('user_id', userId);
+    
+    // Fetch project documents (NEW)
+    const { data: documents } = await supabase
+      .from('project_documents')
+      .select('file_name, content_text')
+      .eq('project_id', projectId);
+    
+    // Fetch project updates (NEW)
+    const { data: updates } = await supabase
+      .from('project_updates')
+      .select('content, created_at, profiles:user_id(full_name)')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false })
+      .limit(10);
 
     // Combine all project context
     const projectContext = `
@@ -42,21 +56,27 @@ serve(async (req) => {
     
     Image Analysis:
     ${imageSummaries?.map(img => img.summary).join('\n') || 'No image summaries available.'}
+    
+    Project Documents:
+    ${documents?.map(doc => `Document: ${doc.file_name}\nContent: ${doc.content_text?.substring(0, 500)}${doc.content_text?.length > 500 ? '...' : ''}`).join('\n\n') || 'No documents available.'}
+    
+    Recent Updates:
+    ${updates?.map(update => `Update by ${update.profiles.full_name || 'Unknown'} on ${new Date(update.created_at).toLocaleDateString()}: ${update.content}`).join('\n') || 'No recent updates.'}
     `;
 
-    console.log('Project context:', projectContext);
+    console.log('Project context assembled from multiple sources');
     console.log('Sending request to OpenAI');
     
     const messages = [
       {
         role: 'system',
         content: `You are a Project Management Officer (PMO) assistant who helps discuss and analyze projects. 
-        Use the following context about the project's notes and images to inform your responses:
+        Use the following context about the project's notes, images, documents and updates to inform your responses:
         
         ${projectContext}
         
         When discussing the project:
-        1. Reference specific notes or images when relevant
+        1. Reference specific notes, images, documents or updates when relevant
         2. Provide actionable insights and suggestions
         3. Stay focused on project management best practices
         4. Be concise but informative

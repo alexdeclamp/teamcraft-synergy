@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import { Loader2, FileWarning } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tabs,
@@ -24,6 +24,8 @@ import ProjectNotesTab from '@/components/project/ProjectNotes';
 import ProjectOverview from '@/components/project/ProjectOverview';
 import ProjectQuickLinks from '@/components/project/ProjectQuickLinks';
 import RecentImagesCard from '@/components/project/RecentImagesCard';
+import ProjectDocumentsTab from '@/components/project/ProjectDocumentsTab';
+import ProjectUpdatesTab from '@/components/project/ProjectUpdatesTab';
 
 interface ProjectMember {
   id: string;
@@ -237,6 +239,18 @@ const Project = () => {
                 Notes
               </div>
             </TabsTrigger>
+            <TabsTrigger value="updates">
+              <div className="flex items-center">
+                <span className="h-4 w-4 mr-2">📢</span>
+                Updates
+              </div>
+            </TabsTrigger>
+            <TabsTrigger value="documents">
+              <div className="flex items-center">
+                <span className="h-4 w-4 mr-2">📄</span>
+                Documents
+              </div>
+            </TabsTrigger>
             <TabsTrigger value="images">
               <div className="flex items-center">
                 <span className="h-4 w-4 mr-2">🖼️</span>
@@ -312,6 +326,16 @@ const Project = () => {
           <TabsContent value="notes" className="space-y-6">
             {/* Project Notes */}
             {project && id && <ProjectNotesTab projectId={id} />}
+          </TabsContent>
+
+          <TabsContent value="updates" className="space-y-6">
+            {/* Project Updates */}
+            {project && id && <ProjectUpdatesTab projectId={id} />}
+          </TabsContent>
+
+          <TabsContent value="documents" className="space-y-6">
+            {/* Project Documents */}
+            {project && id && <ProjectDocumentsTab projectId={id} />}
           </TabsContent>
           
           <TabsContent value="images" className="space-y-6">
