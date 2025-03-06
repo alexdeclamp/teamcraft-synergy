@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+
+import React, { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -119,11 +120,10 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
     }
   }, [projectId, user]);
 
-  React.useEffect(() => {
-    if (isGalleryDialogOpen) {
-      fetchUploadedImages();
-    }
-  }, [isGalleryDialogOpen, fetchUploadedImages]);
+  // Fetch images when component mounts and after uploads
+  useEffect(() => {
+    fetchUploadedImages();
+  }, [fetchUploadedImages]);
 
   const resetUpload = () => {
     setSelectedFile(null);
@@ -300,7 +300,7 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 mb-6">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" className="flex items-center gap-2">
@@ -484,6 +484,86 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
             </div>
           </DialogContent>
         </Dialog>
+      </div>
+      
+      {/* Display uploaded images directly in the component */}
+      <div>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-10">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : uploadedImages.length === 0 ? (
+          <div className="text-center py-10 bg-muted/50 rounded-lg">
+            <FileWarning className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
+            <p className="text-muted-foreground">No images have been uploaded yet</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {uploadedImages.map((image) => (
+              <Card key={image.path} className="overflow-hidden">
+                <div className="relative h-40">
+                  <img 
+                    src={image.url} 
+                    alt={image.name} 
+                    className="w-full h-full object-cover" 
+                  />
+                  <div className="absolute top-2 right-2 flex space-x-1">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="destructive" 
+                            size="icon"
+                            className="h-7 w-7 opacity-80 hover:opacity-100"
+                            onClick={() => handleDeleteImage(image.path)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Delete</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+                <CardContent className="p-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="truncate">
+                      <p className="font-medium text-sm truncate" title={image.name}>
+                        {image.name}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {formatFileSize(image.size)}
+                      </p>
+                    </div>
+                    <div className="flex space-x-1">
+                      <ImageSummaryButton 
+                        imageUrl={image.url}
+                        imageName={image.name}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 flex-shrink-0"
+                        onClick={() => {
+                          navigator.clipboard.writeText(image.url);
+                          toast.success('Image URL copied to clipboard');
+                        }}
+                      >
+                        <Info className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                  <Input
+                    value={image.url}
+                    readOnly
+                    onClick={(e) => e.currentTarget.select()}
+                    className="mt-2 text-xs"
+                  />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
