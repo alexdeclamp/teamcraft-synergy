@@ -23,28 +23,30 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
-    // Fetch project notes
+    // Fetch project notes with favorite and important flags
     const { data: notes } = await supabase
       .from('project_notes')
-      .select('content, title, tags')
-      .eq('project_id', projectId);
+      .select('content, title, tags, is_favorite, is_important, is_archived')
+      .eq('project_id', projectId)
+      .order('is_favorite', { ascending: false })
+      .order('is_important', { ascending: false });
 
-    // Fetch image summaries
+    // Fetch image summaries with metadata
     const { data: imageSummaries } = await supabase
       .from('image_summaries')
-      .select('summary')
+      .select('summary, is_favorite, is_important, is_archived')
       .eq('user_id', userId);
     
-    // Fetch project documents
+    // Fetch project documents with metadata
     const { data: documents } = await supabase
       .from('project_documents')
-      .select('file_name, content_text')
+      .select('file_name, content_text, is_favorite, is_important, is_archived')
       .eq('project_id', projectId);
     
-    // Fetch project updates - get updates first
+    // Fetch project updates
     const { data: updatesData } = await supabase
       .from('project_updates')
-      .select('content, created_at, user_id')
+      .select('content, created_at, user_id, is_important, is_archived')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false })
       .limit(10);
@@ -73,7 +75,9 @@ serve(async (req) => {
       updatesWithUserNames = updatesData.map(update => ({
         content: update.content,
         created_at: update.created_at,
-        user_name: userMap[update.user_id] || 'Unknown User'
+        user_name: userMap[update.user_id] || 'Unknown User',
+        is_important: update.is_important,
+        is_archived: update.is_archived
       }));
     }
 
@@ -83,20 +87,54 @@ serve(async (req) => {
     ${description || 'No project description available.'}
     
     Project Notes:
-    ${notes?.map(note => `Title: ${note.title}\nContent: ${note.content}\nTags: ${note.tags?.join(', ') || 'No tags'}`).join('\n\n') || 'No notes available.'}
+    ${notes?.map(note => {
+      const metadata = [];
+      if (note.is_favorite) metadata.push('FAVORITE');
+      if (note.is_important) metadata.push('IMPORTANT');
+      if (note.is_archived) metadata.push('ARCHIVED');
+      
+      const metadataStr = metadata.length > 0 ? ` [${metadata.join(', ')}]` : '';
+      return `Title: ${note.title}${metadataStr}\nContent: ${note.content}\nTags: ${note.tags?.join(', ') || 'No tags'}`;
+    }).join('\n\n') || 'No notes available.'}
     
     Image Analysis:
-    ${imageSummaries?.map(img => img.summary).join('\n') || 'No image summaries available.'}
+    ${imageSummaries?.map(img => {
+      const metadata = [];
+      if (img.is_favorite) metadata.push('FAVORITE');
+      if (img.is_important) metadata.push('IMPORTANT');
+      if (img.is_archived) metadata.push('ARCHIVED');
+      
+      const metadataStr = metadata.length > 0 ? ` [${metadata.join(', ')}]` : '';
+      return `${img.summary}${metadataStr}`;
+    }).join('\n') || 'No image summaries available.'}
     
     Project Documents:
-    ${documents?.map(doc => `Document: ${doc.file_name}\nContent: ${doc.content_text?.substring(0, 500)}${doc.content_text?.length > 500 ? '...' : ''}`).join('\n\n') || 'No documents available.'}
+    ${documents?.map(doc => {
+      const metadata = [];
+      if (doc.is_favorite) metadata.push('FAVORITE');
+      if (doc.is_important) metadata.push('IMPORTANT');
+      if (doc.is_archived) metadata.push('ARCHIVED');
+      
+      const metadataStr = metadata.length > 0 ? ` [${metadata.join(', ')}]` : '';
+      return `Document: ${doc.file_name}${metadataStr}\nContent: ${doc.content_text?.substring(0, 500)}${doc.content_text?.length > 500 ? '...' : ''}`;
+    }).join('\n\n') || 'No documents available.'}
     
     Recent Updates:
-    ${updatesWithUserNames.map(update => `Update by ${update.user_name} on ${new Date(update.created_at).toLocaleDateString()}: ${update.content}`).join('\n') || 'No recent updates.'}
+    ${updatesWithUserNames.map(update => {
+      const metadata = [];
+      if (update.is_important) metadata.push('IMPORTANT');
+      if (update.is_archived) metadata.push('ARCHIVED');
+      
+      const metadataStr = metadata.length > 0 ? ` [${metadata.join(', ')}]` : '';
+      return `Update by ${update.user_name} on ${new Date(update.created_at).toLocaleDateString()}${metadataStr}: ${update.content}`;
+    }).join('\n') || 'No recent updates.'}
     `;
 
     console.log('Project context assembled from multiple sources');
-    console.log('Sending request to OpenAI');
+    console.log('Information being sent to OpenAI:');
+    console.log('------------------------------');
+    console.log(projectContext);
+    console.log('------------------------------');
     
     // Construct the system message with the AI persona
     let systemMessage = `You are a Project Management Officer (PMO) assistant who helps discuss and analyze projects. 
@@ -106,9 +144,11 @@ serve(async (req) => {
     
     When discussing the project:
     1. Reference specific notes, images, documents or updates when relevant
-    2. Provide actionable insights and suggestions
-    3. Stay focused on project management best practices
-    4. Be concise but informative`;
+    2. Pay special attention to items marked as FAVORITE or IMPORTANT - these are critical project materials
+    3. Be aware of ARCHIVED items but don't focus on them unless explicitly asked
+    4. Provide actionable insights and suggestions
+    5. Stay focused on project management best practices
+    6. Be concise but informative`;
     
     // Add the AI persona if provided
     if (aiPersona) {

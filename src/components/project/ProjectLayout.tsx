@@ -23,6 +23,8 @@ interface ProjectLayoutProps {
   handleAddMember: () => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  showInviteDialog: boolean;
+  setShowInviteDialog: (show: boolean) => void;
 }
 
 const ProjectLayout: React.FC<ProjectLayoutProps> = ({
@@ -40,7 +42,9 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
   handleImagesUpdated,
   handleAddMember,
   activeTab,
-  setActiveTab
+  setActiveTab,
+  showInviteDialog,
+  setShowInviteDialog
 }) => {
   const navigate = useNavigate();
 
@@ -76,6 +80,12 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
           imagesCount={projectImages.length}
           daysSinceCreation={daysSinceCreation()}
           onAddMember={handleAddMember}
+          showInviteDialog={showInviteDialog}
+          setShowInviteDialog={setShowInviteDialog}
+          onInviteSuccess={() => {
+            // Refresh members list when invitation is successful
+            // This would typically trigger a re-fetch
+          }}
         />
         
         <ProjectTabs

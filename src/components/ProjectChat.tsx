@@ -3,11 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card } from '@/components/ui/card';
-import { Loader2, SendHorizontal, MessageSquare } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2, SendHorizontal, MessageSquare, Info } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface Message {
   role: 'user' | 'assistant';
@@ -35,7 +40,9 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
     "Summarize the project notes",
     "What are the key documents in this project?",
     "Show me recent activity",
-    "What's the project status?"
+    "What's the project status?",
+    "What are the important items in this project?",
+    "Show me my favorite documents",
   ];
 
   // Fetch project description and AI persona
@@ -105,6 +112,35 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
 
   return (
     <Card className="flex flex-col h-[600px]">
+      <div className="flex justify-between items-center p-3 border-b">
+        <h3 className="text-lg font-medium">Project Assistant</h3>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Info className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="space-y-2">
+              <h4 className="font-medium">Information sent to AI</h4>
+              <p className="text-sm text-muted-foreground">
+                The AI assistant has access to:
+              </p>
+              <ul className="text-sm space-y-1 list-disc pl-4">
+                <li>Project description</li>
+                <li>Project notes (with favorite/important flags)</li>
+                <li>Image summaries (with favorite/important flags)</li>
+                <li>Document content (with favorite/important flags)</li>
+                <li>Recent updates</li>
+              </ul>
+              <p className="text-sm text-muted-foreground mt-2">
+                Items marked as favorites or important are prioritized in responses.
+                Archived items are included but deprioritized.
+              </p>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message, index) => (

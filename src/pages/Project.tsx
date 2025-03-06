@@ -22,7 +22,9 @@ const Project = () => {
     formatFileSize,
     handleImagesUpdated,
     handleAddMember,
-    fetchProjectImages
+    fetchProjectImages,
+    showInviteDialog,
+    setShowInviteDialog
   } = useProjectPageData(id);
 
   // Update members when they're fetched
@@ -56,6 +58,8 @@ const Project = () => {
       handleAddMember={handleAddMember}
       activeTab={activeTab}
       setActiveTab={setActiveTab}
+      showInviteDialog={showInviteDialog}
+      setShowInviteDialog={setShowInviteDialog}
     />
   );
 };

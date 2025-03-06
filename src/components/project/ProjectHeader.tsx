@@ -1,177 +1,117 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { 
-  ArrowLeft, 
-  CalendarDays, 
-  Clock, 
-  Edit, 
-  MoreHorizontal, 
-  Settings, 
-  Trash2, 
-  UserPlus, 
-  Users,
-  Image 
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
-interface Project {
-  id: string;
-  title: string;
-  description: string | null;
-  created_at: string;
-  updated_at: string;
-  owner_id: string;
-}
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { UserPlus, Star, Users, Calendar, Image } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import ProjectActionsMenu from './ProjectActionsMenu';
+import MemberInvite from '@/components/MemberInvite';
 
 interface ProjectHeaderProps {
-  project: Project;
+  project: {
+    id: string;
+    title: string;
+    description: string | null;
+    created_at: string;
+    is_favorite?: boolean;
+  };
   userRole: string | null;
   membersCount: number;
   imagesCount: number;
   daysSinceCreation: number;
   onAddMember: () => void;
+  showInviteDialog: boolean;
+  setShowInviteDialog: (show: boolean) => void;
+  onInviteSuccess?: () => void;
 }
 
-const ProjectHeader: React.FC<ProjectHeaderProps> = ({ 
-  project, 
-  userRole, 
-  membersCount, 
-  imagesCount, 
+const ProjectHeader: React.FC<ProjectHeaderProps> = ({
+  project,
+  userRole,
+  membersCount,
+  imagesCount,
   daysSinceCreation,
-  onAddMember
+  onAddMember,
+  showInviteDialog,
+  setShowInviteDialog,
+  onInviteSuccess,
 }) => {
-  const navigate = useNavigate();
+  const [favorite, setFavorite] = useState(project.is_favorite || false);
   
-  const handleDeleteProject = async () => {
-    if (!project || userRole !== 'owner') return;
-
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this project? This action cannot be undone."
-    );
-
-    if (!confirmed) return;
-
-    try {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', project.id);
-
-      if (error) throw error;
-
-      toast.success("Project deleted successfully");
-      navigate('/dashboard');
-    } catch (error: any) {
-      console.error("Error deleting project:", error);
-      toast.error("Failed to delete project");
-    }
+  const toggleFavorite = async () => {
+    // This would be implemented with a database update
+    setFavorite(!favorite);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+  const canInvite = userRole === 'owner' || userRole === 'admin';
 
   return (
-    <div className="mb-8">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mb-6"
-        onClick={() => navigate('/dashboard')}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Projects
-      </Button>
-      
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <Badge variant="outline" className={`font-normal ${userRole === 'owner' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-              {userRole === 'owner' ? 'Owner' : 'Member'}
-            </Badge>
-            <Badge variant="outline" className="font-normal bg-purple-100 text-purple-800">
-              Active {daysSinceCreation} days
-            </Badge>
+    <div className="pb-6">
+      <div className="flex justify-between items-start">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight">{project.title}</h1>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={`h-8 w-8 ${favorite ? 'text-yellow-500' : 'text-muted-foreground'}`}
+              onClick={toggleFavorite}
+            >
+              <Star className="h-5 w-5 fill-current" />
+              <span className="sr-only">{favorite ? 'Remove from favorites' : 'Add to favorites'}</span>
+            </Button>
           </div>
-          
-          <h1 className="text-3xl font-bold">{project?.title}</h1>
-          <p className="text-muted-foreground mt-1 max-w-3xl">
-            {project?.description || "No description provided"}
-          </p>
+          <p className="text-muted-foreground">{project.description || "No description provided"}</p>
         </div>
         
-        <div className="flex gap-2">
-          {userRole === 'owner' && (
-            <>
-              <Button variant="outline" onClick={onAddMember}>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Invite
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <MoreHorizontal className="h-4 w-4" />
-                    <span className="sr-only">More options</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[200px]">
-                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                  <DropdownMenuItem>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit project
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Project settings
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    className="text-red-600"
-                    onClick={handleDeleteProject}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete project
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+        <div className="flex items-center gap-2">
+          {canInvite && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1" 
+              onClick={() => setShowInviteDialog(true)}
+            >
+              <UserPlus className="h-4 w-4" />
+              Invite
+            </Button>
           )}
+          <ProjectActionsMenu projectId={project.id} userRole={userRole} />
         </div>
       </div>
       
-      <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm text-muted-foreground">
-        <div className="flex items-center">
-          <CalendarDays className="h-4 w-4 mr-1" />
-          <span>Created: {formatDate(project?.created_at || '')}</span>
-        </div>
-        <div className="flex items-center">
-          <Clock className="h-4 w-4 mr-1" />
-          <span>Last updated: {formatDate(project?.updated_at || '')}</span>
-        </div>
-        <div className="flex items-center">
+      <div className="flex items-center space-x-4 pt-4">
+        <div className="flex items-center text-sm text-muted-foreground">
           <Users className="h-4 w-4 mr-1" />
-          <span>{membersCount} member{membersCount !== 1 ? 's' : ''}</span>
+          <span>{membersCount} Member{membersCount !== 1 ? 's' : ''}</span>
         </div>
-        <div className="flex items-center">
+        <Separator orientation="vertical" className="h-4" />
+        <div className="flex items-center text-sm text-muted-foreground">
           <Image className="h-4 w-4 mr-1" />
-          <span>{imagesCount} image{imagesCount !== 1 ? 's' : ''}</span>
+          <span>{imagesCount} Image{imagesCount !== 1 ? 's' : ''}</span>
         </div>
+        <Separator orientation="vertical" className="h-4" />
+        <div className="flex items-center text-sm text-muted-foreground">
+          <Calendar className="h-4 w-4 mr-1" />
+          <span>Created {format(new Date(project.created_at), 'MMM d, yyyy')}</span>
+        </div>
+        {daysSinceCreation < 7 && (
+          <Badge variant="outline" className="text-xs">New</Badge>
+        )}
       </div>
+      
+      {/* Member Invite Dialog */}
+      {showInviteDialog && (
+        <MemberInvite
+          projectId={project.id}
+          isOpen={showInviteDialog}
+          onClose={() => setShowInviteDialog(false)}
+          onInviteSuccess={() => {
+            if (onInviteSuccess) onInviteSuccess();
+          }}
+        />
+      )}
     </div>
   );
 };
