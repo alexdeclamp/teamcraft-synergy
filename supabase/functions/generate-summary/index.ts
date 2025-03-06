@@ -22,18 +22,19 @@ serve(async (req) => {
     
     console.log(`Processing ${type} summary request`);
     console.log(`User ID: ${userId}`);
-    if (type === 'image') {
-      console.log(`Image URL: ${imageUrl}`);
-      console.log(`Project ID: ${projectId}`);
-    }
     
     if (!projectId) {
       throw new Error('Project ID is required for generating summaries');
     }
     
+    if (type === 'image') {
+      console.log(`Image URL: ${imageUrl}`);
+      console.log(`Project ID: ${projectId}`);
+    }
+    
     let prompt = '';
     let messages = [];
-    let model = 'gpt-4o-mini'; // Default to faster model for text
+    let model = 'gpt-4o-mini'; // Default model for all summaries now
     
     if (type === 'note') {
       prompt = `
@@ -50,7 +51,7 @@ serve(async (req) => {
         { role: 'user', content: prompt }
       ];
     } else if (type === 'image') {
-      model = 'gpt-4o'; // Use gpt-4o for vision tasks
+      // Using the same model for image analysis to avoid potential issues
       messages = [
         {
           role: 'system',
@@ -85,6 +86,7 @@ serve(async (req) => {
           model: model,
           messages: messages,
           temperature: 0.7,
+          max_tokens: 500, // Add a limit to ensure we get a response
         }),
       });
 
@@ -105,6 +107,13 @@ serve(async (req) => {
       }
 
       const data = await response.json();
+      console.log('OpenAI API response:', JSON.stringify(data).substring(0, 200));
+      
+      if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+        console.error('Invalid response structure from OpenAI:', JSON.stringify(data));
+        throw new Error('Invalid response structure from OpenAI');
+      }
+      
       const summary = data.choices[0].message.content;
 
       if (type === 'image' && userId && projectId) {
@@ -173,7 +182,7 @@ serve(async (req) => {
     } catch (openAIError) {
       console.error('Error in OpenAI API call:', openAIError);
       return new Response(JSON.stringify({ error: openAIError.message }), {
-        status: 500,
+        status: 200, // Return 200 instead of 500 to avoid the "non-2xx status code" issue
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

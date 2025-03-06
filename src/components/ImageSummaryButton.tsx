@@ -81,15 +81,26 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         },
       });
 
+      console.log('Response from edge function:', response);
+      
       if (response.error) {
         console.error('Error from edge function:', response.error);
         throw new Error(`Error from edge function: ${response.error.message || response.error}`);
       }
       
       const data = response.data;
+      console.log('Data from edge function:', data);
       
-      if (!data || !data.summary) {
-        console.error('Invalid response from edge function:', data);
+      if (!data) {
+        throw new Error('No data received from edge function');
+      }
+      
+      if (data.error) {
+        throw new Error(`Error from OpenAI: ${data.error}`);
+      }
+      
+      if (!data.summary) {
+        console.error('Invalid response data structure:', data);
         throw new Error('Failed to get a valid summary from the edge function');
       }
       
@@ -97,10 +108,14 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
       setSummary(data.summary);
       setHasSummary(true);
       toast.success('Summary generated and saved successfully');
+      
+      // Refresh the summary data to ensure it was saved properly
+      await fetchExistingSummary();
+      
     } catch (error: any) {
       console.error('Error generating image summary:', error);
-      setSummary(`Failed to generate summary: ${error.message}`);
-      toast.error('Failed to generate image summary');
+      setSummary(`Error: ${error.message}`);
+      toast.error(`Failed to generate summary: ${error.message}`);
     } finally {
       setIsGenerating(false);
     }
