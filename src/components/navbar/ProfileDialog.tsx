@@ -48,13 +48,13 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
       setError(null);
       
       try {
-        console.log('Fetching user stats...');
+        console.log('Fetching user stats for OpenAI usage...');
         
         // Call the edge function with explicit userId
         const { data, error: functionError } = await supabase.functions.invoke('track-usage', {
           body: { 
-            action: 'log_api_call',
-            userId: user.id // Explicitly pass the user ID
+            action: 'get_stats',
+            userId: user.id
           },
         });
         

@@ -107,6 +107,7 @@ serve(async (req) => {
     }
 
     // Get user usage statistics - using admin client
+    // Only count rows where action_type is 'openai_api_call'
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
@@ -117,7 +118,7 @@ serve(async (req) => {
         .from('user_usage_stats')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userIdToUse)
-        .eq('action_type', 'openai_api_call') // Ensure we only count OpenAI API calls
+        .eq('action_type', 'openai_api_call')
         .gte('created_at', firstDayOfMonth.toISOString());
       
       if (!apiError) {

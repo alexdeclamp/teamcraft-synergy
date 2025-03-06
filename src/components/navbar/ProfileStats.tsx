@@ -29,11 +29,14 @@ const ProfileStats = ({ isLoading, error, apiCalls }: ProfileStatsProps) => {
 
   return (
     <div className="w-full space-y-2 mt-2">
-      <div className="text-sm font-medium mb-1">Usage Statistics</div>
+      <div className="text-sm font-medium mb-1">AI Usage Statistics</div>
       <div className="flex justify-between p-3 bg-muted rounded-md">
         <span className="text-sm font-medium">OpenAI API Calls (This Month)</span>
         <span className="text-sm">{apiCalls}</span>
       </div>
+      <p className="text-xs text-muted-foreground">
+        Only counts actual AI calls for document/note summarization and chat responses.
+      </p>
     </div>
   );
 };
