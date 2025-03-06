@@ -68,13 +68,13 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
 
       toast({
         title: 'Success',
-        description: 'Brain settings updated successfully',
+        description: 'Project settings updated successfully',
       });
     } catch (error) {
       console.error('Error updating project:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update brain settings',
+        description: 'Failed to update project settings',
         variant: 'destructive',
       });
     } finally {
@@ -85,22 +85,22 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Brain Settings</CardTitle>
+        <CardTitle>Project Settings</CardTitle>
         <CardDescription>
-          Configure your brain's basic information
+          Configure your project's basic information
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <label htmlFor="title" className="text-sm font-medium">
-              Brain Name
+              Project Name
             </label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter brain name"
+              placeholder="Enter project name"
               className="max-w-md"
               required
             />
@@ -114,7 +114,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter brain description"
+              placeholder="Enter project description"
               className="max-w-md"
               rows={4}
             />

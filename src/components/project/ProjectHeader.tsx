@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -58,7 +57,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     if (!project || userRole !== 'owner') return;
 
     const confirmed = window.confirm(
-      "Are you sure you want to delete this brain? This action cannot be undone."
+      "Are you sure you want to delete this project? This action cannot be undone."
     );
 
     if (!confirmed) return;
@@ -71,11 +70,11 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
       if (error) throw error;
 
-      toast.success("Brain deleted successfully");
+      toast.success("Project deleted successfully");
       navigate('/dashboard');
     } catch (error: any) {
-      console.error("Error deleting brain:", error);
-      toast.error("Failed to delete brain");
+      console.error("Error deleting project:", error);
+      toast.error("Failed to delete project");
     }
   };
 
@@ -96,7 +95,7 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         onClick={() => navigate('/dashboard')}
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Brains
+        Back to Projects
       </Button>
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -118,30 +117,27 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         
         <div className="flex gap-2">
           {userRole === 'owner' && (
-            <Button variant="outline" onClick={onAddMember}>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Invite
-            </Button>
-          )}
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">More options</span>
+            <>
+              <Button variant="outline" onClick={onAddMember}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Invite
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[200px]">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              {userRole === 'owner' && (
-                <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <MoreHorizontal className="h-4 w-4" />
+                    <span className="sr-only">More options</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[200px]">
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuItem>
                     <Edit className="h-4 w-4 mr-2" />
-                    Edit brain
+                    Edit project
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Settings className="h-4 w-4 mr-2" />
-                    Brain settings
+                    Project settings
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
@@ -149,12 +145,12 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
                     onClick={handleDeleteProject}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Delete brain
+                    Delete project
                   </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
         </div>
       </div>
       
