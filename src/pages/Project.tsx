@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -191,7 +190,6 @@ const Project = () => {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  // Generate a random activity percentage (would be replaced with real data in production)
   const activityPercentage = Math.floor(Math.random() * 60) + 40;
 
   if (loading) {
@@ -220,7 +218,6 @@ const Project = () => {
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-        {/* Project Header */}
         <ProjectHeader
           project={project}
           userRole={userRole}
@@ -233,44 +230,18 @@ const Project = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-muted/50">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="notes">
-              <div className="flex items-center">
-                <span className="h-4 w-4 mr-2">📝</span>
-                Notes
-              </div>
-            </TabsTrigger>
-            <TabsTrigger value="updates">
-              <div className="flex items-center">
-                <span className="h-4 w-4 mr-2">📢</span>
-                Updates
-              </div>
-            </TabsTrigger>
-            <TabsTrigger value="documents">
-              <div className="flex items-center">
-                <span className="h-4 w-4 mr-2">📄</span>
-                Documents
-              </div>
-            </TabsTrigger>
-            <TabsTrigger value="images">
-              <div className="flex items-center">
-                <span className="h-4 w-4 mr-2">🖼️</span>
-                Images
-              </div>
-            </TabsTrigger>
+            <TabsTrigger value="notes">Notes</TabsTrigger>
+            <TabsTrigger value="updates">Updates</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+            <TabsTrigger value="images">Images</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
             {userRole === 'owner' && (
               <TabsTrigger value="settings">Settings</TabsTrigger>
             )}
-            <TabsTrigger value="chat">
-              <div className="flex items-center">
-                <span className="h-4 w-4 mr-2">💬</span>
-                Project Chat
-              </div>
-            </TabsTrigger>
+            <TabsTrigger value="chat">Project Chat</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6">
-            {/* Project Overview */}
             <ProjectOverview 
               project={project}
               members={members}
@@ -283,7 +254,6 @@ const Project = () => {
             />
 
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Recent Images */}
               <RecentImagesCard
                 recentImages={recentImages}
                 totalImagesCount={projectImages.length}
@@ -292,7 +262,6 @@ const Project = () => {
                 onViewAllImages={() => setActiveTab('images')}
               />
               
-              {/* Project Notes Card */}
               <div className="space-y-3">
                 <div className="p-6 border border-dashed rounded-md">
                   <div className="text-center">
@@ -319,27 +288,22 @@ const Project = () => {
               </div>
             </div>
               
-            {/* Quick Links */}
             <ProjectQuickLinks onTabChange={setActiveTab} />
           </TabsContent>
           
           <TabsContent value="notes" className="space-y-6">
-            {/* Project Notes */}
             {project && id && <ProjectNotesTab projectId={id} />}
           </TabsContent>
 
           <TabsContent value="updates" className="space-y-6">
-            {/* Project Updates */}
             {project && id && <ProjectUpdatesTab projectId={id} />}
           </TabsContent>
 
           <TabsContent value="documents" className="space-y-6">
-            {/* Project Documents */}
             {project && id && <ProjectDocumentsTab projectId={id} />}
           </TabsContent>
           
           <TabsContent value="images" className="space-y-6">
-            {/* Project Images */}
             {project && id && (
               <ProjectImages 
                 projectId={id} 
@@ -349,7 +313,6 @@ const Project = () => {
           </TabsContent>
           
           <TabsContent value="members" className="space-y-6">
-            {/* Project Members */}
             {project && (
               <ProjectMembers
                 projectId={project.id}
@@ -361,12 +324,10 @@ const Project = () => {
           </TabsContent>
           
           <TabsContent value="settings" className="space-y-6">
-            {/* Project Settings */}
             {project && id && <ProjectSettings projectId={id} />}
           </TabsContent>
           
           <TabsContent value="chat" className="space-y-6">
-            {/* Project Chat */}
             {project && id && <ProjectChatTab projectId={id} />}
           </TabsContent>
         </Tabs>
