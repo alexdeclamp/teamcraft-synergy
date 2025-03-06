@@ -32,6 +32,15 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
       
       try {
         setIsLoadingSaved(true);
+        
+        console.log('Fetching saved summary for note:', noteId);
+        
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) {
+          console.log('No authenticated user found');
+          return;
+        }
+        
         const { data, error } = await supabase
           .from('note_summaries')
           .select('summary')
@@ -39,13 +48,16 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
           .maybeSingle();
         
         if (error) {
-          console.log('Error fetching saved summary:', error.message);
+          console.error('Error fetching saved summary:', error.message);
           return;
         }
         
         if (data?.summary) {
           console.log('Found saved summary for note:', noteId);
           setSavedSummary(data.summary);
+        } else {
+          console.log('No saved summary found for note:', noteId);
+          setSavedSummary(null);
         }
       } catch (error) {
         console.error('Error fetching saved summary:', error);
