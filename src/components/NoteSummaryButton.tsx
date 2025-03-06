@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,7 +24,6 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
   const [savedSummary, setSavedSummary] = useState<string | null>(null);
   const [isLoadingSaved, setIsLoadingSaved] = useState(false);
 
-  // Fetch existing summary if available
   useEffect(() => {
     const fetchSavedSummary = async () => {
       if (!noteId || !projectId) return;
@@ -84,11 +82,10 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
       setIsGenerating(true);
       setIsDialogOpen(true);
       
-      // If we have a saved summary, use it immediately while generating a new one
       if (savedSummary) {
         setSummary(savedSummary);
       } else {
-        setSummary(''); // Reset any previous summary
+        setSummary('');
       }
       
       console.log('Generating summary for note:', noteId);
@@ -105,7 +102,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
           content: noteContent,
           projectId,
           userId,
-          noteId, // Pass noteId to the edge function
+          noteId,
         },
       });
 
@@ -122,7 +119,6 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
       }
       
       setSummary(data.summary);
-      // Update savedSummary state to reflect the latest summary
       setSavedSummary(data.summary);
     } catch (error: any) {
       console.error('Error generating summary:', error);
