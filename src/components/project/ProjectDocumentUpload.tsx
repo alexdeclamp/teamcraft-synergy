@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { FileText, Upload, Loader2, AlertCircle, FileTextIcon } from 'lucide-react';
+import { FileText, Upload, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,14 +19,12 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [summary, setSummary] = useState<string | null>(null);
   const { user } = useAuth();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setErrorMessage(null);
-      setSummary(null);
       
       if (selectedFile.type !== 'application/pdf') {
         toast.error('Only PDF files are supported');
@@ -49,7 +47,6 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
       setIsUploading(true);
       setErrorMessage(null);
       setUploadProgress(10);
-      setSummary(null);
       
       const fileReader = new FileReader();
       
@@ -59,7 +56,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
             throw new Error('Failed to read file');
           }
           
-          setUploadProgress(20);
+          setUploadProgress(30);
           console.log("Calling edge function with params:", {
             fileSize: file.size,
             fileName: file.name,
@@ -80,7 +77,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
           
           if (error) {
             console.error('Edge function error:', error);
-            throw new Error(`Processing failed: ${error.message || 'Unknown error'}`);
+            throw new Error(`Upload failed: ${error.message || 'Unknown error'}`);
           }
           
           if (data.error) {
@@ -89,11 +86,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
           
           setUploadProgress(90);
           
-          if (data.summary) {
-            setSummary(data.summary);
-          }
-          
-          toast.success(`PDF uploaded and summarized successfully`);
+          toast.success(`PDF uploaded successfully`);
           setUploadProgress(100);
           
           if (onDocumentUploaded && data.document) {
@@ -128,7 +121,6 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
 
   const resetForm = () => {
     setFile(null);
-    setSummary(null);
     setErrorMessage(null);
     const inputElement = document.getElementById('pdf-upload') as HTMLInputElement;
     if (inputElement) {
@@ -141,10 +133,10 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          PDF Summary Generator
+          PDF Upload
         </CardTitle>
         <CardDescription>
-          Upload a PDF document to generate an AI summary
+          Upload PDF documents to your project
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -166,12 +158,12 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
               {isUploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing
+                  Uploading...
                 </>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Upload & Summarize
+                  Upload PDF
                 </>
               )}
             </Button>
@@ -196,36 +188,24 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
             <div className="space-y-2">
               <Progress value={uploadProgress} className="h-2" />
               <p className="text-xs text-muted-foreground text-center">
-                {uploadProgress < 20 && "Reading file..."}
-                {uploadProgress >= 20 && uploadProgress < 90 && "Analyzing PDF and generating summary..."}
+                {uploadProgress < 30 && "Reading file..."}
+                {uploadProgress >= 30 && uploadProgress < 90 && "Uploading file..."}
                 {uploadProgress >= 90 && "Finalizing..."}
               </p>
             </div>
           )}
           
-          {summary && (
-            <div className="mt-4 space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="font-medium flex items-center">
-                  <FileTextIcon className="h-4 w-4 mr-2" />
-                  PDF Summary
-                </h3>
-                <Button variant="outline" size="sm" onClick={resetForm}>
-                  Upload Another PDF
-                </Button>
-              </div>
-              
-              <div className="border rounded-md overflow-hidden shadow-sm">
-                <div className="p-3 bg-muted text-sm font-medium">
-                  Summary
-                </div>
-                <div className="p-4 prose max-w-none text-sm">
-                  {summary.split('\n').map((paragraph, idx) => (
-                    paragraph ? <p key={idx}>{paragraph}</p> : <br key={idx} />
-                  ))}
-                </div>
-              </div>
+          {uploadProgress === 100 && !isUploading && (
+            <div className="p-3 rounded-md bg-green-50 text-green-600 text-sm flex items-start">
+              <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+              <div>File uploaded successfully</div>
             </div>
+          )}
+          
+          {uploadProgress === 100 && !isUploading && (
+            <Button variant="outline" size="sm" onClick={resetForm}>
+              Upload Another PDF
+            </Button>
           )}
         </div>
       </CardContent>
