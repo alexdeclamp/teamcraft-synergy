@@ -4,7 +4,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Loader2, Star, Archive } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -17,6 +18,8 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [aiPersona, setAiPersona] = useState('');
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isArchived, setIsArchived] = useState(false);
   const { toast } = useToast();
 
   // Fetch project details when component mounts
@@ -25,7 +28,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
       try {
         const { data, error } = await supabase
           .from('projects')
-          .select('title, description, ai_persona')
+          .select('title, description, ai_persona, is_favorite, is_archived')
           .eq('id', projectId)
           .single();
 
@@ -35,12 +38,14 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
           setTitle(data.title);
           setDescription(data.description || '');
           setAiPersona(data.ai_persona || '');
+          setIsFavorite(data.is_favorite || false);
+          setIsArchived(data.is_archived || false);
         }
       } catch (error) {
         console.error('Error fetching project:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load brain settings',
+          description: 'Failed to load project settings',
           variant: 'destructive',
         });
       }
@@ -60,6 +65,8 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
           title: title.trim(),
           description: description.trim(),
           ai_persona: aiPersona.trim(),
+          is_favorite: isFavorite,
+          is_archived: isArchived,
           updated_at: new Date().toISOString(),
         })
         .eq('id', projectId);
@@ -137,7 +144,33 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="space-y-4 pt-4 border-t">
+            <h3 className="text-sm font-medium">Project Status</h3>
+            
+            <div className="flex items-center justify-between max-w-md">
+              <div className="flex items-center space-x-2">
+                <Star className="h-4 w-4 text-yellow-500" />
+                <span>Favorite Project</span>
+              </div>
+              <Switch
+                checked={isFavorite}
+                onCheckedChange={setIsFavorite}
+              />
+            </div>
+            
+            <div className="flex items-center justify-between max-w-md">
+              <div className="flex items-center space-x-2">
+                <Archive className="h-4 w-4 text-muted-foreground" />
+                <span>Archive Project</span>
+              </div>
+              <Switch
+                checked={isArchived}
+                onCheckedChange={setIsArchived}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 pt-4">
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save Changes

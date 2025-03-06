@@ -14,6 +14,9 @@ export type Database = {
           created_at: string
           id: string
           image_url: string
+          is_archived: boolean
+          is_favorite: boolean
+          is_important: boolean
           project_id: string | null
           summary: string
           updated_at: string
@@ -23,6 +26,9 @@ export type Database = {
           created_at?: string
           id?: string
           image_url: string
+          is_archived?: boolean
+          is_favorite?: boolean
+          is_important?: boolean
           project_id?: string | null
           summary: string
           updated_at?: string
@@ -32,6 +38,9 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string
+          is_archived?: boolean
+          is_favorite?: boolean
+          is_important?: boolean
           project_id?: string | null
           summary?: string
           updated_at?: string
@@ -164,6 +173,9 @@ export type Database = {
           file_size: number | null
           file_url: string
           id: string
+          is_archived: boolean
+          is_favorite: boolean
+          is_important: boolean
           project_id: string
           updated_at: string
           user_id: string
@@ -177,6 +189,9 @@ export type Database = {
           file_size?: number | null
           file_url: string
           id?: string
+          is_archived?: boolean
+          is_favorite?: boolean
+          is_important?: boolean
           project_id: string
           updated_at?: string
           user_id: string
@@ -190,6 +205,9 @@ export type Database = {
           file_size?: number | null
           file_url?: string
           id?: string
+          is_archived?: boolean
+          is_favorite?: boolean
+          is_important?: boolean
           project_id?: string
           updated_at?: string
           user_id?: string
@@ -241,6 +259,9 @@ export type Database = {
           content: string | null
           created_at: string
           id: string
+          is_archived: boolean
+          is_favorite: boolean
+          is_important: boolean
           project_id: string
           tags: string[] | null
           title: string
@@ -251,6 +272,9 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          is_archived?: boolean
+          is_favorite?: boolean
+          is_important?: boolean
           project_id: string
           tags?: string[] | null
           title: string
@@ -261,6 +285,9 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          is_archived?: boolean
+          is_favorite?: boolean
+          is_important?: boolean
           project_id?: string
           tags?: string[] | null
           title?: string
@@ -282,6 +309,8 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          is_archived: boolean
+          is_important: boolean
           project_id: string
           tags: string[] | null
           user_id: string
@@ -290,6 +319,8 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          is_archived?: boolean
+          is_important?: boolean
           project_id: string
           tags?: string[] | null
           user_id: string
@@ -298,6 +329,8 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          is_archived?: boolean
+          is_important?: boolean
           project_id?: string
           tags?: string[] | null
           user_id?: string
@@ -318,6 +351,8 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_archived: boolean
+          is_favorite: boolean
           owner_id: string
           title: string
           updated_at: string
@@ -327,6 +362,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_archived?: boolean
+          is_favorite?: boolean
           owner_id: string
           title: string
           updated_at?: string
@@ -336,6 +373,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_archived?: boolean
+          is_favorite?: boolean
           owner_id?: string
           title?: string
           updated_at?: string

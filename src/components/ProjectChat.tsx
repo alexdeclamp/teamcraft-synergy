@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, SendHorizontal, MessageSquare, Info } from 'lucide-react';
+import { Loader2, SendHorizontal, MessageSquare, Info, Star, AlertTriangle, Archive } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -121,22 +121,38 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80">
-            <div className="space-y-2">
-              <h4 className="font-medium">Information sent to AI</h4>
-              <p className="text-sm text-muted-foreground">
-                The AI assistant has access to:
-              </p>
-              <ul className="text-sm space-y-1 list-disc pl-4">
-                <li>Project description</li>
-                <li>Project notes (with favorite/important flags)</li>
-                <li>Image summaries (with favorite/important flags)</li>
-                <li>Document content (with favorite/important flags)</li>
-                <li>Recent updates</li>
-              </ul>
-              <p className="text-sm text-muted-foreground mt-2">
-                Items marked as favorites or important are prioritized in responses.
-                Archived items are included but deprioritized.
-              </p>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium">Information sent to AI</h4>
+                <p className="text-sm text-muted-foreground">
+                  The AI assistant has access to:
+                </p>
+                <ul className="text-sm space-y-1 list-disc pl-4">
+                  <li>Project description</li>
+                  <li>Project notes (with favorite/important flags)</li>
+                  <li>Image summaries (with favorite/important flags)</li>
+                  <li>Document content (with favorite/important flags)</li>
+                  <li>Recent updates</li>
+                </ul>
+              </div>
+              
+              <div>
+                <h4 className="font-medium">Prioritization</h4>
+                <div className="space-y-2 mt-2">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-yellow-500" />
+                    <span className="text-sm">Favorite items are prioritized in responses</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-red-500" />
+                    <span className="text-sm">Important items are emphasized in responses</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Archive className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">Archived items are included but deprioritized</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </PopoverContent>
         </Popover>

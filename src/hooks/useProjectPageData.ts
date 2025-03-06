@@ -20,6 +20,8 @@ interface Project {
   created_at: string;
   updated_at: string;
   owner_id: string;
+  is_favorite?: boolean;
+  is_archived?: boolean;
 }
 
 interface UploadedImage {
@@ -29,6 +31,9 @@ interface UploadedImage {
   name: string;
   createdAt: Date;
   summary?: string;
+  is_favorite?: boolean;
+  is_important?: boolean;
+  is_archived?: boolean;
 }
 
 interface UseProjectPageDataResult {
@@ -47,6 +52,8 @@ interface UseProjectPageDataResult {
   showInviteDialog: boolean;
   setShowInviteDialog: (show: boolean) => void;
   fetchProjectImages: () => Promise<void>;
+  toggleFavoriteProject: () => Promise<void>;
+  toggleArchiveProject: () => Promise<void>;
 }
 
 export const useProjectPageData = (projectId: string | undefined): UseProjectPageDataResult => {
@@ -189,10 +196,10 @@ export const useProjectPageData = (projectId: string | undefined): UseProjectPag
               .from('project_images')
               .getPublicUrl(`${projectId}/${item.name}`);
             
-            // Fetch summary if exists
-            const { data: summaryData } = await supabase
+            // Fetch summary and metadata if exists
+            const { data: imageMeta } = await supabase
               .from('image_summaries')
-              .select('summary')
+              .select('summary, is_favorite, is_important, is_archived')
               .eq('image_url', urlData.publicUrl)
               .eq('project_id', projectId)
               .single();
@@ -203,7 +210,10 @@ export const useProjectPageData = (projectId: string | undefined): UseProjectPag
               size: item.metadata?.size || 0,
               name: item.name,
               createdAt: new Date(item.created_at || Date.now()),
-              summary: summaryData?.summary || undefined
+              summary: imageMeta?.summary || undefined,
+              is_favorite: imageMeta?.is_favorite || false,
+              is_important: imageMeta?.is_important || false,
+              is_archived: imageMeta?.is_archived || false
             };
           })
         );
@@ -213,7 +223,10 @@ export const useProjectPageData = (projectId: string | undefined): UseProjectPag
         );
 
         setProjectImages(sortedImages);
-        setRecentImages(sortedImages.slice(0, 3));
+        
+        // Filter out archived images for the recent images display
+        const filteredImages = sortedImages.filter(img => !img.is_archived);
+        setRecentImages(filteredImages.slice(0, 3));
       }
     } catch (error: any) {
       console.error('Error fetching images:', error);
@@ -237,6 +250,74 @@ export const useProjectPageData = (projectId: string | undefined): UseProjectPag
 
   const handleAddMember = () => {
     setShowInviteDialog(true);
+  };
+
+  const toggleFavoriteProject = async () => {
+    if (!project || !projectId) return;
+    
+    try {
+      const newFavoriteStatus = !project.is_favorite;
+      
+      const { error } = await supabase
+        .from('projects')
+        .update({ 
+          is_favorite: newFavoriteStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId);
+        
+      if (error) throw error;
+      
+      setProject({
+        ...project,
+        is_favorite: newFavoriteStatus
+      });
+      
+      toast.success(
+        newFavoriteStatus
+          ? 'Project added to favorites'
+          : 'Project removed from favorites'
+      );
+    } catch (error) {
+      console.error('Error toggling favorite status:', error);
+      toast.error('Failed to update project');
+    }
+  };
+  
+  const toggleArchiveProject = async () => {
+    if (!project || !projectId) return;
+    
+    try {
+      const newArchivedStatus = !project.is_archived;
+      
+      const { error } = await supabase
+        .from('projects')
+        .update({ 
+          is_archived: newArchivedStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId);
+        
+      if (error) throw error;
+      
+      setProject({
+        ...project,
+        is_archived: newArchivedStatus
+      });
+      
+      toast.success(
+        newArchivedStatus
+          ? 'Project has been archived'
+          : 'Project has been unarchived'
+      );
+      
+      if (newArchivedStatus) {
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error('Error toggling archive status:', error);
+      toast.error('Failed to update project');
+    }
   };
 
   const daysSinceCreation = () => {
@@ -265,6 +346,8 @@ export const useProjectPageData = (projectId: string | undefined): UseProjectPag
     handleAddMember,
     showInviteDialog,
     setShowInviteDialog,
-    fetchProjectImages
+    fetchProjectImages,
+    toggleFavoriteProject,
+    toggleArchiveProject
   };
 };

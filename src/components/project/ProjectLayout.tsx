@@ -25,6 +25,8 @@ interface ProjectLayoutProps {
   setActiveTab: (tab: string) => void;
   showInviteDialog: boolean;
   setShowInviteDialog: (show: boolean) => void;
+  toggleFavoriteProject?: () => Promise<void>;
+  toggleArchiveProject?: () => Promise<void>;
 }
 
 const ProjectLayout: React.FC<ProjectLayoutProps> = ({
@@ -44,7 +46,9 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
   activeTab,
   setActiveTab,
   showInviteDialog,
-  setShowInviteDialog
+  setShowInviteDialog,
+  toggleFavoriteProject,
+  toggleArchiveProject
 }) => {
   const navigate = useNavigate();
 
@@ -82,6 +86,8 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
           onAddMember={handleAddMember}
           showInviteDialog={showInviteDialog}
           setShowInviteDialog={setShowInviteDialog}
+          onFavoriteToggle={toggleFavoriteProject}
+          onArchiveToggle={toggleArchiveProject}
           onInviteSuccess={() => {
             // Refresh members list when invitation is successful
             // This would typically trigger a re-fetch

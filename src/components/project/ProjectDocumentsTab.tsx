@@ -11,9 +11,9 @@ const ProjectDocumentsTab: React.FC<ProjectDocumentsTabProps> = ({ projectId }) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Brain Documents</CardTitle>
+        <CardTitle>Project Documents</CardTitle>
         <CardDescription>
-          Upload and manage PDF documents for your brain
+          Upload and manage project documents including PDFs, Word files, and more
         </CardDescription>
       </CardHeader>
       <CardContent className="p-6">

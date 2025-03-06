@@ -24,7 +24,9 @@ const Project = () => {
     handleAddMember,
     fetchProjectImages,
     showInviteDialog,
-    setShowInviteDialog
+    setShowInviteDialog,
+    toggleFavoriteProject,
+    toggleArchiveProject
   } = useProjectPageData(id);
 
   // Update members when they're fetched
@@ -60,6 +62,8 @@ const Project = () => {
       setActiveTab={setActiveTab}
       showInviteDialog={showInviteDialog}
       setShowInviteDialog={setShowInviteDialog}
+      toggleFavoriteProject={toggleFavoriteProject}
+      toggleArchiveProject={toggleArchiveProject}
     />
   );
 };
