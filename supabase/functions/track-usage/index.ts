@@ -51,12 +51,10 @@ serve(async (req) => {
         
         if (authError || !user) {
           console.error('Authentication error:', authError);
-          // Return empty/mock data for unauthenticated requests
+          // Return empty data for unauthenticated requests
           return new Response(
             JSON.stringify({ 
               apiCalls: 0,
-              storageUsed: "0 KB",
-              activeBrains: 0,
               status: "unauthenticated",
               message: "Please log in to see your usage statistics"
             }),
@@ -71,8 +69,6 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             apiCalls: 0,
-            storageUsed: "0 KB",
-            activeBrains: 0,
             status: "error",
             message: "Failed to authenticate user"
           }),
@@ -85,8 +81,6 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           apiCalls: 0,
-          storageUsed: "0 KB",
-          activeBrains: 0,
           status: "error",
           message: "User ID is required"
         }),
@@ -99,7 +93,7 @@ serve(async (req) => {
       try {
         const { error: logError } = await adminClient.from('user_usage_stats').insert({
           user_id: userIdToUse,
-          action_type: 'openai_api_call', // Changed from 'api_call' to 'openai_api_call'
+          action_type: 'openai_api_call',
         });
 
         if (logError) {
@@ -123,7 +117,7 @@ serve(async (req) => {
         .from('user_usage_stats')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userIdToUse)
-        .eq('action_type', 'openai_api_call') // Changed from 'api_call' to 'openai_api_call'
+        .eq('action_type', 'openai_api_call')
         .gte('created_at', firstDayOfMonth.toISOString());
       
       if (!apiError) {
@@ -135,33 +129,9 @@ serve(async (req) => {
       console.error('Error in API call count query:', error);
     }
     
-    // Get project count (active brains)
-    let activeProjectsCount = 0;
-    try {
-      const { count, error: projectsError } = await adminClient
-        .from('projects')
-        .select('*', { count: 'exact', head: true })
-        .eq('owner_id', userIdToUse)
-        .is('is_archived', false);
-      
-      if (!projectsError) {
-        activeProjectsCount = count || 0;
-      } else {
-        console.error('Error fetching projects:', projectsError);
-      }
-    } catch (error) {
-      console.error('Error in projects count query:', error);
-    }
-    
-    // For simplicity, provide an estimated storage value
-    // In a real application, you would calculate actual storage usage
-    const storageUsed = "5.2 KB";
-    
     return new Response(
       JSON.stringify({ 
         apiCalls: apiCallCount,
-        storageUsed,
-        activeBrains: activeProjectsCount,
         status: "success"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -172,8 +142,6 @@ serve(async (req) => {
       JSON.stringify({ 
         error: error.message || 'Unknown error occurred',
         apiCalls: 0,
-        storageUsed: "0 KB",
-        activeBrains: 0,
         status: "error"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
