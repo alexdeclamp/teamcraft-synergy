@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import ProjectUpdates from './ProjectUpdates';
 
 interface ProjectUpdatesTabProps {
@@ -10,12 +10,6 @@ interface ProjectUpdatesTabProps {
 const ProjectUpdatesTab: React.FC<ProjectUpdatesTabProps> = ({ projectId }) => {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Project Updates</CardTitle>
-        <CardDescription>
-          Share and view quick status updates with your team
-        </CardDescription>
-      </CardHeader>
       <CardContent className="p-6">
         <ProjectUpdates projectId={projectId} />
       </CardContent>

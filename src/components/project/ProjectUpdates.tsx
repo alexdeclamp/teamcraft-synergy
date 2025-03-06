@@ -1,13 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Loader2, RefreshCw, X, Tag, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import ProjectQuickUpdate from './ProjectQuickUpdate';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Update {
   id: string;
@@ -16,6 +20,7 @@ interface Update {
   user_id: string;
   user_name?: string;
   user_avatar?: string;
+  tags?: string[];
 }
 
 interface ProjectUpdatesProps {
@@ -26,6 +31,9 @@ const ProjectUpdates: React.FC<ProjectUpdatesProps> = ({ projectId }) => {
   const [updates, setUpdates] = useState<Update[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [tagInput, setTagInput] = useState('');
+  const [activeUpdateId, setActiveUpdateId] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const fetchUpdates = async () => {
     try {
@@ -38,7 +46,8 @@ const ProjectUpdates: React.FC<ProjectUpdatesProps> = ({ projectId }) => {
           id,
           content,
           created_at,
-          user_id
+          user_id,
+          tags
         `)
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
@@ -66,7 +75,8 @@ const ProjectUpdates: React.FC<ProjectUpdatesProps> = ({ projectId }) => {
           created_at: update.created_at,
           user_id: update.user_id,
           user_name: profilesMap[update.user_id]?.full_name || 'Unknown User',
-          user_avatar: profilesMap[update.user_id]?.avatar_url
+          user_avatar: profilesMap[update.user_id]?.avatar_url,
+          tags: update.tags || []
         }));
         
         setUpdates(formattedUpdates);
@@ -79,6 +89,91 @@ const ProjectUpdates: React.FC<ProjectUpdatesProps> = ({ projectId }) => {
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
+    }
+  };
+
+  const handleDeleteUpdate = async (updateId: string) => {
+    try {
+      const { error } = await supabase
+        .from('project_updates')
+        .delete()
+        .eq('id', updateId)
+        .eq('user_id', user?.id); // Ensure only the owner can delete
+      
+      if (error) throw error;
+      
+      // Update local state
+      setUpdates(updates.filter(update => update.id !== updateId));
+      toast.success('Update deleted successfully');
+    } catch (error: any) {
+      console.error('Error deleting update:', error);
+      toast.error(`Failed to delete update: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+  const handleAddTag = async (updateId: string) => {
+    if (!tagInput.trim()) return;
+    
+    try {
+      const update = updates.find(u => u.id === updateId);
+      if (!update) return;
+      
+      const currentTags = update.tags || [];
+      const newTag = tagInput.trim();
+      
+      // Don't add duplicate tags
+      if (currentTags.includes(newTag)) {
+        toast.error('Tag already exists');
+        return;
+      }
+      
+      const updatedTags = [...currentTags, newTag];
+      
+      const { error } = await supabase
+        .from('project_updates')
+        .update({ tags: updatedTags })
+        .eq('id', updateId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setUpdates(updates.map(u => 
+        u.id === updateId ? { ...u, tags: updatedTags } : u
+      ));
+      
+      // Reset input
+      setTagInput('');
+      setActiveUpdateId(null);
+      toast.success('Tag added successfully');
+    } catch (error: any) {
+      console.error('Error adding tag:', error);
+      toast.error(`Failed to add tag: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+  const handleRemoveTag = async (updateId: string, tagToRemove: string) => {
+    try {
+      const update = updates.find(u => u.id === updateId);
+      if (!update) return;
+      
+      const updatedTags = (update.tags || []).filter(tag => tag !== tagToRemove);
+      
+      const { error } = await supabase
+        .from('project_updates')
+        .update({ tags: updatedTags })
+        .eq('id', updateId);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setUpdates(updates.map(u => 
+        u.id === updateId ? { ...u, tags: updatedTags } : u
+      ));
+      
+      toast.success('Tag removed successfully');
+    } catch (error: any) {
+      console.error('Error removing tag:', error);
+      toast.error(`Failed to remove tag: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -139,11 +234,91 @@ const ProjectUpdates: React.FC<ProjectUpdatesProps> = ({ projectId }) => {
                     <div className="space-y-1 flex-1">
                       <div className="flex justify-between items-center">
                         <p className="font-medium text-sm">{update.user_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(update.created_at), { addSuffix: true })}
-                        </p>
+                        <div className="flex gap-2 items-center">
+                          <p className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(update.created_at), { addSuffix: true })}
+                          </p>
+                          {user?.id === update.user_id && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-6 w-6 p-0"
+                              onClick={() => handleDeleteUpdate(update.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       <p className="text-sm whitespace-pre-line">{update.content}</p>
+                      
+                      {/* Tags section */}
+                      <div className="mt-2">
+                        <div className="flex flex-wrap gap-1 items-center">
+                          {(update.tags || []).map((tag, tagIndex) => (
+                            <Badge key={tagIndex} variant="secondary" className="text-xs gap-1 py-0">
+                              {tag}
+                              {user?.id === update.user_id && (
+                                <X 
+                                  className="h-3 w-3 cursor-pointer text-muted-foreground hover:text-destructive" 
+                                  onClick={() => handleRemoveTag(update.id, tag)}
+                                />
+                              )}
+                            </Badge>
+                          ))}
+                          
+                          {user?.id === update.user_id && activeUpdateId !== update.id && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-5 w-5 p-0 rounded-full"
+                              onClick={() => setActiveUpdateId(update.id)}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                        
+                        {/* Tag input */}
+                        {activeUpdateId === update.id && (
+                          <div className="flex gap-2 mt-2 items-center">
+                            <Tag className="h-3 w-3 text-muted-foreground" />
+                            <Input
+                              value={tagInput}
+                              onChange={(e) => setTagInput(e.target.value)}
+                              placeholder="Add a tag..."
+                              className="h-7 text-xs py-1"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault();
+                                  handleAddTag(update.id);
+                                } else if (e.key === 'Escape') {
+                                  setActiveUpdateId(null);
+                                  setTagInput('');
+                                }
+                              }}
+                            />
+                            <Button 
+                              size="sm" 
+                              className="h-7 px-2 py-0"
+                              onClick={() => handleAddTag(update.id)}
+                            >
+                              Add
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-7 px-2 py-0"
+                              onClick={() => {
+                                setActiveUpdateId(null);
+                                setTagInput('');
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   {index < updates.length - 1 && <Separator className="my-4" />}
