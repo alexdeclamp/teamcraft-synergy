@@ -75,6 +75,10 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
               fileName: file.name,
               projectId,
               userId: user.id
+            },
+            // Adding a longer timeout for larger PDFs (30 seconds)
+            options: {
+              timeout: 30000
             }
           });
           
@@ -121,6 +125,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
         setErrorMessage('Failed to read file');
       };
       
+      // Start reading the file
       fileReader.readAsDataURL(file);
       
     } catch (error: any) {

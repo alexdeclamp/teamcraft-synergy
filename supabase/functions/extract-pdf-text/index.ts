@@ -59,6 +59,19 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Create storage bucket if it doesn't exist
+    const bucketName = 'project_documents';
+    const { data: bucketData, error: bucketError } = await supabase
+      .storage
+      .getBucket(bucketName);
+      
+    if (bucketError && bucketError.message.includes('The resource was not found')) {
+      console.log(`Creating bucket: ${bucketName}`);
+      await supabase.storage.createBucket(bucketName, {
+        public: true
+      });
+    }
+
     console.log("Decoding PDF data");
     // Remove the base64 prefix (e.g., "data:application/pdf;base64,")
     let base64Data;
@@ -128,7 +141,7 @@ serve(async (req) => {
       console.log(`Uploading page ${i} as PNG to storage`);
       const { data: storageData, error: storageError } = await supabase
         .storage
-        .from('project_documents')
+        .from(bucketName)
         .upload(imagePath, pngUint8Array, {
           contentType: 'image/png',
           upsert: false
@@ -142,7 +155,7 @@ serve(async (req) => {
       // Get public URL for the uploaded file
       const { data: { publicUrl } } = supabase
         .storage
-        .from('project_documents')
+        .from(bucketName)
         .getPublicUrl(imagePath);
       
       images.push({
