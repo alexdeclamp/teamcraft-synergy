@@ -136,7 +136,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
         {isGenerating ? (
           <Loader2 className="h-4 w-4 animate-spin" /> 
         ) : savedSummary ? (
-          <FileText className="h-4 w-4" />
+          <FileText className="h-4 w-4 text-blue-500" />
         ) : (
           <MessageSquare className="h-4 w-4" />
         )}
