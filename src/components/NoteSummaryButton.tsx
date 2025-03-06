@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Loader2 } from 'lucide-react';
+import { MessageSquare, Loader2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import SummaryDialog from './SummaryDialog';
 import { useParams } from 'react-router-dom';
@@ -131,12 +131,15 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
         className="h-8 w-8"
         onClick={generateSummary}
         disabled={isGenerating || !noteContent}
-        title="Generate AI Summary"
+        title={savedSummary ? "View Saved AI Summary" : "Generate AI Summary"}
       >
-        {isGenerating ? 
-          <Loader2 className="h-4 w-4 animate-spin" /> : 
+        {isGenerating ? (
+          <Loader2 className="h-4 w-4 animate-spin" /> 
+        ) : savedSummary ? (
+          <FileText className="h-4 w-4" />
+        ) : (
           <MessageSquare className="h-4 w-4" />
-        }
+        )}
       </Button>
 
       <SummaryDialog
