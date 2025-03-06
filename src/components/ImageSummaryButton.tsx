@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,13 +22,11 @@ interface ImageTag {
 
 interface ImageSummaryButtonProps {
   imageUrl: string;
-  projectId: string;
-  imageName?: string;
+  imageName: string;
 }
 
 const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
   imageUrl,
-  projectId,
   imageName
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -39,13 +38,17 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
   const [isTagPopoverOpen, setIsTagPopoverOpen] = useState(false);
   const { user } = useAuth();
   const params = useParams<{ projectId?: string; id?: string }>();
+  // Use projectId from params or from id (support both formats)
+  const projectId = params.projectId || params.id;
 
+  // Debug logging to identify the issue
   useEffect(() => {
     console.log('Current params:', params);
     console.log('Project ID from params:', projectId);
     console.log('Image URL:', imageUrl);
   }, [params, projectId, imageUrl]);
 
+  // Fetch existing summary when component mounts
   useEffect(() => {
     if (imageUrl && projectId) {
       fetchExistingSummary();
@@ -101,6 +104,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
       console.log('Image tags data:', data);
       
       if (data) {
+        // Ensure data is of the right type by mapping it
         const typedTags: ImageTag[] = data.map(item => ({
           id: item.id,
           tag: item.tag
@@ -116,6 +120,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
     try {
       setIsGenerating(true);
       
+      // If we already have a summary, no need to generate a new one
       if (hasSummary) {
         return;
       }
@@ -123,6 +128,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
       console.log('Generating summary for image:', imageUrl);
       console.log('For project:', projectId);
       
+      // Ensure projectId is included as a string in the request
       if (!projectId) {
         throw new Error('Project ID is missing, cannot generate summary');
       }
@@ -132,7 +138,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
           type: 'image',
           imageUrl: imageUrl,
           userId: user?.id,
-          projectId: projectId
+          projectId: projectId // Make sure projectId is passed here
         },
       });
 
@@ -164,6 +170,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
       setHasSummary(true);
       toast.success('Summary generated and saved successfully');
       
+      // Refresh the summary data to ensure it was saved properly
       await fetchExistingSummary();
       
     } catch (error: any) {
@@ -214,6 +221,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
 
       console.log('Tag added successfully:', data);
       
+      // Ensure the new tag has the correct type
       const newTagObject: ImageTag = {
         id: data.id,
         tag: data.tag

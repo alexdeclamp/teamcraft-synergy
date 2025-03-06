@@ -7,8 +7,9 @@ import {
   CardDescription, 
   CardContent 
 } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
 import ProjectImageUpload from '@/components/ProjectImageUpload';
-import ProjectImagesList from './ProjectImagesList';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface UploadedImage {
@@ -18,27 +19,80 @@ interface UploadedImage {
   name: string;
   createdAt: Date;
   summary?: string;
-  is_favorite?: boolean;
-  is_important?: boolean;
-  is_archived?: boolean;
 }
 
 interface ProjectImagesProps {
   projectId: string;
-  images: UploadedImage[];
-  isLoading: boolean;
-  onImagesUpdated: (images: UploadedImage[]) => void;
-  onUploadComplete: () => Promise<void>;
+  onImagesUpdated: (images: UploadedImage[], recentImages: UploadedImage[]) => void;
 }
 
-const ProjectImages: React.FC<ProjectImagesProps> = ({ 
-  projectId, 
-  images,
-  isLoading,
-  onImagesUpdated,
-  onUploadComplete
-}) => {
+const ProjectImages: React.FC<ProjectImagesProps> = ({ projectId, onImagesUpdated }) => {
   const { user } = useAuth();
+  const [isImagesLoading, setIsImagesLoading] = useState(false);
+
+  // Fetch images when component mounts
+  useEffect(() => {
+    fetchProjectImages();
+  }, [projectId]);
+
+  const fetchProjectImages = async () => {
+    if (!projectId || !user) return;
+
+    try {
+      setIsImagesLoading(true);
+      
+      const { data, error } = await supabase
+        .storage
+        .from('project_images')
+        .list(`${projectId}`);
+
+      if (error) throw error;
+
+      if (data) {
+        const imageUrls = await Promise.all(
+          data.map(async (item) => {
+            const { data: urlData } = await supabase
+              .storage
+              .from('project_images')
+              .getPublicUrl(`${projectId}/${item.name}`);
+            
+            // Fetch summary if exists
+            const { data: summaryData } = await supabase
+              .from('image_summaries')
+              .select('summary')
+              .eq('image_url', urlData.publicUrl)
+              .eq('project_id', projectId)
+              .single();
+
+            return {
+              url: urlData.publicUrl,
+              path: `${projectId}/${item.name}`,
+              size: item.metadata?.size || 0,
+              name: item.name,
+              createdAt: new Date(item.created_at || Date.now()),
+              summary: summaryData?.summary || undefined
+            };
+          })
+        );
+
+        const sortedImages = imageUrls.sort((a, b) => 
+          b.createdAt.getTime() - a.createdAt.getTime()
+        );
+
+        onImagesUpdated(sortedImages, sortedImages.slice(0, 3));
+      }
+    } catch (error: any) {
+      console.error('Error fetching images:', error);
+    } finally {
+      setIsImagesLoading(false);
+    }
+  };
+
+  const handleImageUploadComplete = async (imageUrl: string) => {
+    // Refresh the project images
+    await fetchProjectImages();
+    toast.success('Image uploaded successfully');
+  };
 
   return (
     <Card>
@@ -48,17 +102,10 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({
           Upload and manage images for this project
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent>
         <ProjectImageUpload 
           projectId={projectId} 
-          onUploadComplete={onUploadComplete}
-        />
-        
-        <ProjectImagesList
-          projectId={projectId}
-          images={images}
-          onImagesUpdated={onImagesUpdated}
-          isLoading={isLoading}
+          onUploadComplete={handleImageUploadComplete}
         />
       </CardContent>
     </Card>

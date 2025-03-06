@@ -36,7 +36,7 @@ interface ProjectTabsProps {
   handleImagesUpdated: (images: UploadedImage[], recent: UploadedImage[]) => void;
   handleAddMember: () => void;
   activeTab: string;
-  onTabChange: (tab: string) => void;
+  setActiveTab: (tab: string) => void;
 }
 
 const ProjectTabs: React.FC<ProjectTabsProps> = ({
@@ -54,14 +54,14 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({
   handleImagesUpdated,
   handleAddMember,
   activeTab,
-  onTabChange
+  setActiveTab
 }) => {
   return (
-    <Tabs value={activeTab} onValueChange={onTabChange} className="space-y-6">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
       <ProjectTabsNavigation 
         activeTab={activeTab} 
         userRole={userRole} 
-        onTabChange={onTabChange} 
+        onTabChange={setActiveTab} 
       />
       
       <ProjectTabsContent
@@ -79,7 +79,7 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({
         formatFileSize={formatFileSize}
         handleImagesUpdated={handleImagesUpdated}
         handleAddMember={handleAddMember}
-        setActiveTab={onTabChange}
+        setActiveTab={setActiveTab}
       />
     </Tabs>
   );

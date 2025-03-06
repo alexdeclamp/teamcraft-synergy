@@ -27,15 +27,13 @@ interface MemberInviteProps {
   isOpen: boolean;
   onClose: () => void;
   onInviteSuccess: () => void;
-  onSuccess?: () => void; // Add for compatibility
 }
 
 const MemberInvite: React.FC<MemberInviteProps> = ({ 
   projectId, 
   isOpen, 
   onClose,
-  onInviteSuccess,
-  onSuccess
+  onInviteSuccess
 }) => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('viewer');
@@ -153,7 +151,6 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
       
       toast.success(`User invited successfully with ${role} role`);
       onInviteSuccess();
-      if (onSuccess) onSuccess(); // For backward compatibility
       onClose();
       
     } catch (error: any) {

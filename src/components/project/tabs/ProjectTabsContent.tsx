@@ -10,15 +10,6 @@ import ProjectMembers from '../ProjectMembers';
 import ProjectSettings from '../ProjectSettings';
 import ProjectChatTab from '../ProjectChatTab';
 
-interface UploadedImage {
-  url: string;
-  path: string;
-  size: number;
-  name: string;
-  createdAt: Date;
-  summary?: string;
-}
-
 interface ProjectTabsContentProps {
   activeTab: string;
   projectId: string;
@@ -32,7 +23,7 @@ interface ProjectTabsContentProps {
   daysSinceCreation: () => number;
   activityPercentage: number;
   formatFileSize: (bytes: number) => string;
-  handleImagesUpdated: (images: any[], recent?: any[]) => void;
+  handleImagesUpdated: (images: any[], recent: any[]) => void;
   handleAddMember: () => void;
   setActiveTab: (tab: string) => void;
 }
@@ -54,10 +45,6 @@ const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   handleAddMember,
   setActiveTab
 }) => {
-  const onImagesUpdated = (images: UploadedImage[]) => {
-    handleImagesUpdated(images);
-  };
-
   return (
     <>
       <TabsContent value="overview" className="space-y-6">
@@ -66,14 +53,13 @@ const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
           members={members}
           userRole={userRole}
           activityPercentage={activityPercentage}
-          daysSinceCreation={daysSinceCreation()}
+          daysSinceCreation={daysSinceCreation}
           imageCount={projectImages.length}
           recentImages={recentImages}
           isImagesLoading={isImagesLoading}
           formatFileSize={formatFileSize}
           onAddMember={handleAddMember}
           onTabChange={setActiveTab}
-          projectId={projectId} // Added projectId
         />
       </TabsContent>
       
@@ -93,10 +79,7 @@ const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
         {project && projectId && (
           <ProjectImages 
             projectId={projectId} 
-            images={projectImages}
-            isLoading={isImagesLoading}
-            onImagesUpdated={onImagesUpdated}
-            onUploadComplete={() => {}}
+            onImagesUpdated={handleImagesUpdated}
           />
         )}
       </TabsContent>
