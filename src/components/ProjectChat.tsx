@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
-import { Loader2, SendHorizontal } from 'lucide-react';
+import { Loader2, SendHorizontal, MessageSquare } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,19 +25,28 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const sendMessage = async () => {
-    if (!input.trim() || !user) return;
+  // Predefined questions that users can select
+  const predefinedQuestions = [
+    "What's the latest update on this project?",
+    "Summarize the project notes",
+    "What are the key documents in this project?",
+    "Show me recent activity",
+    "What's the project status?"
+  ];
 
-    const userMessage = input.trim();
+  const sendMessage = async (userMessage?: string) => {
+    if ((!input.trim() && !userMessage) || !user) return;
+
+    const messageToSend = userMessage || input.trim();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setMessages(prev => [...prev, { role: 'user', content: messageToSend }]);
     setIsLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('project-chat', {
         body: {
           projectId,
-          message: userMessage,
+          message: messageToSend,
           userId: user.id
         }
       });
@@ -55,6 +64,11 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePredefinedQuestion = (question: string) => {
+    setInput(question);
+    sendMessage(question);
   };
 
   return (
@@ -87,7 +101,42 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
         </div>
       </ScrollArea>
       
+      {messages.length === 0 && !isLoading && (
+        <div className="px-4 py-6 flex flex-col items-center justify-center text-center">
+          <MessageSquare className="h-12 w-12 text-muted-foreground mb-3" />
+          <h3 className="text-lg font-medium">Project Assistant</h3>
+          <p className="text-muted-foreground mb-4">Ask questions about your project or select a suggested question below.</p>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {predefinedQuestions.map((question, index) => (
+              <Button 
+                key={index} 
+                variant="outline" 
+                className="text-sm" 
+                onClick={() => handlePredefinedQuestion(question)}
+              >
+                {question}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="p-4 border-t">
+        {messages.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {predefinedQuestions.map((question, index) => (
+              <Button 
+                key={index} 
+                variant="outline" 
+                size="sm"
+                className="text-xs"
+                onClick={() => handlePredefinedQuestion(question)}
+              >
+                {question}
+              </Button>
+            ))}
+          </div>
+        )}
         <div className="flex gap-2">
           <Textarea
             value={input}
@@ -102,7 +151,7 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
             }}
           />
           <Button
-            onClick={sendMessage}
+            onClick={() => sendMessage()}
             disabled={isLoading || !input.trim()}
             className="px-3"
           >
