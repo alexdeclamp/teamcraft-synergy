@@ -42,7 +42,13 @@ serve(async (req) => {
         action_type: 'api_call',
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error logging API call:', error);
+        return new Response(
+          JSON.stringify({ error: error.message }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+        );
+      }
     }
 
     // Get user usage statistics
@@ -50,14 +56,20 @@ serve(async (req) => {
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
     // Get API call count for the current month
-    const { data: apiCalls, error: apiError } = await supabaseClient
+    const { data: apiCallsData, error: apiError, count: apiCallCount } = await supabaseClient
       .from('user_usage_stats')
       .select('*', { count: 'exact' })
       .eq('user_id', user.id)
       .eq('action_type', 'api_call')
       .gte('created_at', firstDayOfMonth.toISOString());
     
-    if (apiError) throw apiError;
+    if (apiError) {
+      console.error('Error fetching API calls:', apiError);
+      return new Response(
+        JSON.stringify({ error: apiError.message }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
     
     // Get storage usage
     const { data: projectsData, error: projectsError } = await supabaseClient
@@ -66,35 +78,46 @@ serve(async (req) => {
       .eq('owner_id', user.id)
       .is('is_archived', false);
     
-    if (projectsError) throw projectsError;
+    if (projectsError) {
+      console.error('Error fetching projects:', projectsError);
+      return new Response(
+        JSON.stringify({ error: projectsError.message }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
     
-    const projectIds = projectsData.map(project => project.id);
+    const projectIds = projectsData?.map(project => project.id) || [];
     
     let totalStorageBytes = 0;
     
     // For each project, get the storage usage
     for (const projectId of projectIds) {
-      const { data: storageBucket, error: storageError } = await supabaseClient
-        .storage
-        .from('project_images')
-        .list(projectId);
-      
-      if (!storageError && storageBucket) {
-        for (const file of storageBucket) {
-          totalStorageBytes += file.metadata?.size || 0;
+      try {
+        const { data: storageBucket, error: storageError } = await supabaseClient
+          .storage
+          .from('project_images')
+          .list(projectId);
+        
+        if (!storageError && storageBucket) {
+          for (const file of storageBucket) {
+            totalStorageBytes += file.metadata?.size || 0;
+          }
         }
-      }
-      
-      // Also check documents storage
-      const { data: documentsBucket, error: documentsError } = await supabaseClient
-        .storage
-        .from('project_documents')
-        .list(projectId);
-      
-      if (!documentsError && documentsBucket) {
-        for (const file of documentsBucket) {
-          totalStorageBytes += file.metadata?.size || 0;
+        
+        // Also check documents storage
+        const { data: documentsBucket, error: documentsError } = await supabaseClient
+          .storage
+          .from('project_documents')
+          .list(projectId);
+        
+        if (!documentsError && documentsBucket) {
+          for (const file of documentsBucket) {
+            totalStorageBytes += file.metadata?.size || 0;
+          }
         }
+      } catch (storageErr) {
+        console.error(`Error fetching storage for project ${projectId}:`, storageErr);
+        // Continue with other projects instead of failing completely
       }
     }
     
@@ -110,7 +133,7 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        apiCalls: apiCalls.length,
+        apiCalls: apiCallsData?.length || 0,
         storageUsed,
         activeBrains: projectIds.length
       }),

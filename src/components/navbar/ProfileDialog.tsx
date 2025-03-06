@@ -27,6 +27,7 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
   const [activeBrains, setActiveBrains] = useState(0);
   const [apiCalls, setApiCalls] = useState(0);
   const [storageUsed, setStorageUsed] = useState('0 KB');
+  const [error, setError] = useState<string | null>(null);
 
   // Get user initials for avatar fallback
   const getInitials = () => {
@@ -46,19 +47,32 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
       if (!user || !open) return;
       
       setStatsLoading(true);
+      setError(null);
+      
       try {
         // Call the edge function to get usage statistics
         const { data, error } = await supabase.functions.invoke('track-usage', {
           body: { action: 'log_api_call' },
         });
         
-        if (error) throw error;
+        if (error) {
+          console.error('Error fetching user stats:', error);
+          setError('Failed to fetch statistics');
+          toast.error('Failed to load user statistics');
+          return;
+        }
         
-        setActiveBrains(data.activeBrains);
-        setApiCalls(data.apiCalls);
-        setStorageUsed(data.storageUsed);
+        if (!data) {
+          setError('No data returned from server');
+          return;
+        }
+        
+        setActiveBrains(data.activeBrains || 0);
+        setApiCalls(data.apiCalls || 0);
+        setStorageUsed(data.storageUsed || '0 KB');
       } catch (error) {
         console.error('Error fetching user stats:', error);
+        setError('An unexpected error occurred');
         toast.error('Failed to load user statistics');
       } finally {
         setStatsLoading(false);
@@ -102,6 +116,7 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
           
           <ProfileStats 
             isLoading={statsLoading}
+            error={error}
             activeBrains={activeBrains}
             apiCalls={apiCalls}
             storageUsed={storageUsed}
