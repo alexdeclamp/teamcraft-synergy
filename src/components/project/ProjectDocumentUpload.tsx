@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { FileText, Upload, Loader2, AlertCircle, Image as ImageIcon } from 'lucide-react';
+import { FileText, Upload, Loader2, AlertCircle, FileTextIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,14 +19,14 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [convertedImages, setConvertedImages] = useState<Array<{page: number, url: string}>>([]);
+  const [summary, setSummary] = useState<string | null>(null);
   const { user } = useAuth();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setErrorMessage(null);
-      setConvertedImages([]);
+      setSummary(null);
       
       if (selectedFile.type !== 'application/pdf') {
         toast.error('Only PDF files are supported');
@@ -48,7 +49,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
       setIsUploading(true);
       setErrorMessage(null);
       setUploadProgress(10);
-      setConvertedImages([]);
+      setSummary(null);
       
       const fileReader = new FileReader();
       
@@ -66,7 +67,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
             userId: user.id
           });
           
-          const { data, error } = await supabase.functions.invoke('extract-pdf-text', {
+          const { data, error } = await supabase.functions.invoke('summarize-pdf', {
             body: {
               fileBase64: event.target.result,
               fileName: file.name,
@@ -88,11 +89,11 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
           
           setUploadProgress(90);
           
-          if (data.images && Array.isArray(data.images)) {
-            setConvertedImages(data.images);
+          if (data.summary) {
+            setSummary(data.summary);
           }
           
-          toast.success(`PDF converted to ${data.pages || 0} image(s) successfully`);
+          toast.success(`PDF uploaded and summarized successfully`);
           setUploadProgress(100);
           
           if (onDocumentUploaded && data.document) {
@@ -127,7 +128,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
 
   const resetForm = () => {
     setFile(null);
-    setConvertedImages([]);
+    setSummary(null);
     setErrorMessage(null);
     const inputElement = document.getElementById('pdf-upload') as HTMLInputElement;
     if (inputElement) {
@@ -140,10 +141,10 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-5 w-5" />
-          Convert PDF to Images
+          PDF Summary Generator
         </CardTitle>
         <CardDescription>
-          Upload a PDF document to convert it to images
+          Upload a PDF document to generate an AI summary
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -165,12 +166,12 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
               {isUploading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Converting
+                  Processing
                 </>
               ) : (
                 <>
                   <Upload className="mr-2 h-4 w-4" />
-                  Convert
+                  Upload & Summarize
                 </>
               )}
             </Button>
@@ -196,39 +197,33 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
               <Progress value={uploadProgress} className="h-2" />
               <p className="text-xs text-muted-foreground text-center">
                 {uploadProgress < 20 && "Reading file..."}
-                {uploadProgress >= 20 && uploadProgress < 90 && "Converting PDF to images..."}
+                {uploadProgress >= 20 && uploadProgress < 90 && "Analyzing PDF and generating summary..."}
                 {uploadProgress >= 90 && "Finalizing..."}
               </p>
             </div>
           )}
           
-          {convertedImages.length > 0 && (
+          {summary && (
             <div className="mt-4 space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-medium flex items-center">
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  Converted Images ({convertedImages.length})
+                  <FileTextIcon className="h-4 w-4 mr-2" />
+                  PDF Summary
                 </h3>
                 <Button variant="outline" size="sm" onClick={resetForm}>
                   Upload Another PDF
                 </Button>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto p-2">
-                {convertedImages.map((image, index) => (
-                  <div key={index} className="border rounded-md overflow-hidden shadow-sm">
-                    <div className="p-2 bg-muted text-sm font-medium">
-                      Page {image.page}
-                    </div>
-                    <a href={image.url} target="_blank" rel="noopener noreferrer">
-                      <img 
-                        src={image.url} 
-                        alt={`Page ${image.page}`} 
-                        className="w-full h-auto object-contain hover:opacity-90 transition-opacity"
-                      />
-                    </a>
-                  </div>
-                ))}
+              <div className="border rounded-md overflow-hidden shadow-sm">
+                <div className="p-3 bg-muted text-sm font-medium">
+                  Summary
+                </div>
+                <div className="p-4 prose max-w-none text-sm">
+                  {summary.split('\n').map((paragraph, idx) => (
+                    paragraph ? <p key={idx}>{paragraph}</p> : <br key={idx} />
+                  ))}
+                </div>
               </div>
             </div>
           )}
