@@ -1,13 +1,16 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   Calendar, 
   MoreHorizontal, 
   Users, 
   ExternalLink,
-  Tag
+  Tag,
+  Pencil,
+  UserPlus,
+  Archive
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 export interface ProjectCardProps {
   id: string;
@@ -52,6 +56,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   tags = [],
   className,
 }) => {
+  const navigate = useNavigate();
   const statusColors = {
     active: 'bg-green-100 text-green-800',
     archived: 'bg-gray-100 text-gray-800',
@@ -63,6 +68,25 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     day: 'numeric',
     year: 'numeric',
   });
+
+  const handleEditBrain = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/project/${id}?edit=true`);
+  };
+
+  const handleManageMembers = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/project/${id}?tab=members`);
+  };
+
+  const handleArchiveBrain = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // This would be implemented in a future update
+    toast.info("Archive functionality coming soon");
+  };
 
   return (
     <Card className={cn(
@@ -92,9 +116,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-[180px]">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem>Edit brain</DropdownMenuItem>
-              <DropdownMenuItem>Manage members</DropdownMenuItem>
-              <DropdownMenuItem>Archive brain</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleEditBrain}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit brain
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleManageMembers}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Manage members
+              </DropdownMenuItem>
+              {isOwner && (
+                <DropdownMenuItem onClick={handleArchiveBrain}>
+                  <Archive className="h-4 w-4 mr-2" />
+                  Archive brain
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
