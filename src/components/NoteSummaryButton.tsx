@@ -30,14 +30,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
       
       try {
         setIsLoadingSaved(true);
-        
         console.log('Fetching saved summary for note:', noteId);
-        
-        const { data: user } = await supabase.auth.getUser();
-        if (!user.user) {
-          console.log('No authenticated user found');
-          return;
-        }
         
         const { data, error } = await supabase
           .from('note_summaries')
@@ -53,9 +46,11 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
         if (data?.summary) {
           console.log('Found saved summary for note:', noteId);
           setSavedSummary(data.summary);
+          setSummary(data.summary);
         } else {
           console.log('No saved summary found for note:', noteId);
           setSavedSummary(null);
+          setSummary('');
         }
       } catch (error) {
         console.error('Error fetching saved summary:', error);
@@ -82,26 +77,18 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
       setIsGenerating(true);
       setIsDialogOpen(true);
       
-      if (savedSummary) {
-        setSummary(savedSummary);
-      } else {
-        setSummary('');
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
+        toast.error('You must be logged in to generate summaries');
+        return;
       }
-      
-      console.log('Generating summary for note:', noteId);
-      console.log('Project ID:', projectId);
-      
-      const user = await supabase.auth.getUser();
-      const userId = user.data.user?.id;
-      
-      console.log('User ID:', userId);
       
       const { data, error } = await supabase.functions.invoke('generate-summary', {
         body: {
           type: 'note',
           content: noteContent,
           projectId,
-          userId,
+          userId: user.user.id,
           noteId,
         },
       });
@@ -111,10 +98,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
         throw error;
       }
       
-      console.log('Summary response:', data);
-      
       if (!data || !data.summary) {
-        console.error('Unexpected response format:', data);
         throw new Error('Received empty or invalid response from the summary generator');
       }
       
