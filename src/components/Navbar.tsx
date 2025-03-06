@@ -30,6 +30,7 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
@@ -49,6 +50,11 @@ const Navbar = () => {
 
   const handleSignOut = async () => {
     await signOut();
+  };
+
+  const handleOpenSettings = () => {
+    setProfileDialogOpen(false);
+    setSettingsDialogOpen(true);
   };
 
   const navLinks = [
@@ -213,9 +219,73 @@ const Navbar = () => {
             <Button variant="outline" size="sm" className="mr-2" onClick={() => setProfileDialogOpen(false)}>
               Close
             </Button>
-            <Button size="sm" variant="outline" className="gap-1">
+            <Button size="sm" variant="outline" className="gap-1" onClick={handleOpenSettings}>
               <Settings className="h-4 w-4" />
               Settings
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Account Settings</DialogTitle>
+            <DialogDescription>
+              Manage your account preferences
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Personal Information</h3>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-muted-foreground">Email</label>
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-md">
+                    <span className="text-sm">{user?.email}</span>
+                    <Button size="sm" variant="ghost" className="h-7">Change</Button>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+                  <div className="flex items-center justify-between p-3 bg-muted rounded-md">
+                    <span className="text-sm">{profile?.full_name || 'Not set'}</span>
+                    <Button size="sm" variant="ghost" className="h-7">Edit</Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Preferences</h3>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-md">
+                  <div>
+                    <p className="text-sm font-medium">Email Notifications</p>
+                    <p className="text-xs text-muted-foreground">Receive updates about your projects</p>
+                  </div>
+                  <Button size="sm" variant="ghost" className="h-7">Configure</Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Account Security</h3>
+              <div className="grid grid-cols-1 gap-3">
+                <div className="flex items-center justify-between p-3 bg-muted rounded-md">
+                  <p className="text-sm font-medium">Password</p>
+                  <Button size="sm" variant="ghost" className="h-7">Change</Button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-between">
+            <Button variant="destructive" size="sm">
+              Delete Account
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setSettingsDialogOpen(false)}>
+              Close
             </Button>
           </div>
         </DialogContent>
