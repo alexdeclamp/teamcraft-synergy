@@ -31,14 +31,22 @@ serve(async (req) => {
     // Decode base64 PDF
     const binaryPdf = Uint8Array.from(atob(fileBase64.split(',')[1]), c => c.charCodeAt(0));
     
-    // Use pdfjs-dist to extract text - updated import to use a more reliable version
-    const pdfjs = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js');
+    // Load PDF.js directly from a CDN that's compatible with Deno
+    const pdfjsLib = await import('https://cdn.skypack.dev/pdfjs-dist@2.16.105/build/pdf.js');
     
-    // Configure the worker
-    pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.worker.min.js';
+    // Configure the worker - in Deno edge functions we need to use a different approach
+    // We'll use a minimal fake worker implementation since we're in a serverless environment
+    const pdfjsWorker = {
+      WorkerMessageHandler: {
+        setup: () => {},
+      },
+    };
+    
+    // Set up the worker
+    pdfjsLib.GlobalWorkerOptions.workerPort = pdfjsWorker;
     
     // Load PDF data
-    const loadingTask = pdfjs.getDocument({ data: binaryPdf });
+    const loadingTask = pdfjsLib.getDocument({ data: binaryPdf });
     const pdf = await loadingTask.promise;
     
     // Extract text from all pages
