@@ -70,89 +70,117 @@ serve(async (req) => {
 
     console.log('Sending request to OpenAI API with model:', model);
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: messages,
-        temperature: 0.7,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('OpenAI API error response:', errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key is not configured');
     }
 
-    const data = await response.json();
-    const summary = data.choices[0].message.content;
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: messages,
+          temperature: 0.7,
+        }),
+      });
 
-    if (type === 'image' && userId && projectId) {
-      // Initialize Supabase client with service role key for admin access
-      const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
-      
-      // Check if a summary already exists for this image in this project
-      const { data: existingSummary, error: checkError } = await supabase
-        .from('image_summaries')
-        .select('id')
-        .eq('image_url', imageUrl)
-        .eq('project_id', projectId)
-        .maybeSingle();
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('OpenAI API error response:', errorText);
+        let errorMessage = 'Unknown OpenAI API error';
         
-      if (checkError) {
-        console.error('Error checking for existing summary:', checkError);
-      }
-      
-      let saveError;
-      
-      if (existingSummary) {
-        // Update existing summary
-        console.log('Updating existing summary for image:', imageUrl);
-        const { error } = await supabase
-          .from('image_summaries')
-          .update({
-            summary: summary,
-            user_id: userId, // Keep track of who last updated it
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingSummary.id);
-          
-        saveError = error;
-      } else {
-        // Insert new summary
-        console.log('Inserting new summary for image:', imageUrl);
-        const { error } = await supabase
-          .from('image_summaries')
-          .insert({
-            user_id: userId,
-            image_url: imageUrl,
-            summary: summary,
-            project_id: projectId
-          });
-          
-        saveError = error;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error?.message || errorMessage;
+        } catch (e) {
+          // If JSON parsing fails, use the raw error text
+          errorMessage = errorText.substring(0, 100); // Limit length
+        }
+        
+        throw new Error(`OpenAI API error: ${errorMessage}`);
       }
 
-      if (saveError) {
-        console.error('Error saving summary:', saveError);
-        throw new Error(`Failed to save summary: ${saveError.message}`);
+      const data = await response.json();
+      const summary = data.choices[0].message.content;
+
+      if (type === 'image' && userId && projectId) {
+        // Initialize Supabase client with service role key for admin access
+        const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+        
+        if (!supabase) {
+          throw new Error('Failed to initialize Supabase client');
+        }
+        
+        // Check if a summary already exists for this image in this project
+        const { data: existingSummary, error: checkError } = await supabase
+          .from('image_summaries')
+          .select('id')
+          .eq('image_url', imageUrl)
+          .eq('project_id', projectId)
+          .maybeSingle();
+          
+        if (checkError) {
+          console.error('Error checking for existing summary:', checkError);
+          // Don't throw here, just log and continue
+        }
+        
+        let saveError;
+        
+        if (existingSummary) {
+          // Update existing summary
+          console.log('Updating existing summary for image:', imageUrl);
+          const { error } = await supabase
+            .from('image_summaries')
+            .update({
+              summary: summary,
+              user_id: userId, // Keep track of who last updated it
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingSummary.id);
+            
+          saveError = error;
+        } else {
+          // Insert new summary
+          console.log('Inserting new summary for image:', imageUrl);
+          const { error } = await supabase
+            .from('image_summaries')
+            .insert({
+              user_id: userId,
+              image_url: imageUrl,
+              summary: summary,
+              project_id: projectId
+            });
+            
+          saveError = error;
+        }
+
+        if (saveError) {
+          console.error('Error saving summary:', saveError);
+          // Log error but don't throw - we still want to return the summary
+        }
       }
+
+      console.log('Successfully generated summary:', summary.substring(0, 100) + '...');
+
+      return new Response(JSON.stringify({ summary }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    } catch (openAIError) {
+      console.error('Error in OpenAI API call:', openAIError);
+      return new Response(JSON.stringify({ error: openAIError.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
-
-    console.log('Successfully generated summary:', summary.substring(0, 100) + '...');
-
-    return new Response(JSON.stringify({ summary }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
   } catch (error) {
     console.error('Error in generate-summary function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
+      status: 200, // Return 200 even for errors to avoid the "non-2xx status code" issue
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

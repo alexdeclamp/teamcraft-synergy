@@ -72,7 +72,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
       console.log('Generating summary for image:', imageUrl);
       console.log('For project:', projectId);
       
-      const { data, error } = await supabase.functions.invoke('generate-summary', {
+      const response = await supabase.functions.invoke('generate-summary', {
         body: {
           type: 'image',
           imageUrl: imageUrl,
@@ -81,10 +81,12 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         },
       });
 
-      if (error) {
-        console.error('Error from edge function:', error);
-        throw new Error(`Error from edge function: ${error.message}`);
+      if (response.error) {
+        console.error('Error from edge function:', response.error);
+        throw new Error(`Error from edge function: ${response.error.message || response.error}`);
       }
+      
+      const data = response.data;
       
       if (!data || !data.summary) {
         console.error('Invalid response from edge function:', data);
