@@ -41,7 +41,8 @@ serve(async (req) => {
         { role: 'user', content: prompt }
       ];
     } else if (type === 'image') {
-      // For images, we'll use GPT-4's vision capabilities with the correct format
+      // For images, we need to be careful about the format
+      // The error was due to using image_url incorrectly
       messages = [
         {
           role: 'system',
@@ -51,7 +52,8 @@ serve(async (req) => {
           role: 'user',
           content: [
             { type: 'text', text: 'Please provide a concise, accurate description of this project-related image. Focus only on what you can clearly see in the image. If the image is not clear or you cannot identify key elements, state that directly. Do not make assumptions about the purpose or context if they are not visually apparent.' },
-            { type: 'image_url', url: imageUrl }
+            // This is the correct format for GPT-4o's vision capability
+            { type: 'image_url', image_url: { url: imageUrl } }
           ]
         }
       ];
