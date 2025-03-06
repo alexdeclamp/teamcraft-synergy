@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { FileText, Upload, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { FileText, Upload, Loader2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,11 +18,13 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { user } = useAuth();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
+      setErrorMessage(null);
       
       if (selectedFile.type !== 'application/pdf') {
         toast.error('Only PDF files are supported');
@@ -43,6 +45,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
     
     try {
       setIsUploading(true);
+      setErrorMessage(null);
       setUploadProgress(10);
       
       // Convert file to base64
@@ -66,15 +69,16 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
             }
           });
           
-          setUploadProgress(90);
-          
           if (error) {
-            throw error;
+            console.error('Edge function error:', error);
+            throw new Error(`Processing failed: ${error.message || 'Unknown error'}`);
           }
           
           if (data.error) {
             throw new Error(data.error);
           }
+          
+          setUploadProgress(90);
           
           toast.success(`PDF processed with ${data.textLength} characters extracted`);
           setUploadProgress(100);
@@ -92,6 +96,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
           
         } catch (err: any) {
           console.error('Error processing PDF:', err);
+          setErrorMessage(err.message || 'Unknown error occurred');
           toast.error(`Failed to process PDF: ${err.message || 'Unknown error'}`);
         } finally {
           setIsUploading(false);
@@ -101,6 +106,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
       fileReader.onerror = () => {
         toast.error('Failed to read file');
         setIsUploading(false);
+        setErrorMessage('Failed to read file');
       };
       
       fileReader.readAsDataURL(file);
@@ -108,6 +114,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
     } catch (error: any) {
       console.error('Error uploading document:', error);
       toast.error(`Upload failed: ${error.message || 'Unknown error'}`);
+      setErrorMessage(error.message || 'Unknown error occurred');
       setIsUploading(false);
     }
   };
@@ -158,6 +165,13 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
               <FileText className="mr-2 h-4 w-4" />
               <span className="truncate max-w-[300px]">{file.name}</span>
               <span className="ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
+            </div>
+          )}
+          
+          {errorMessage && (
+            <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm flex items-start">
+              <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+              <div>{errorMessage}</div>
             </div>
           )}
           
