@@ -2,27 +2,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import * as pdfJs from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.14.305/build/pdf.js';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-// Configure the worker
-// We'll use a bare minimum fake worker for Deno environment
-const fakeWorker = {
-  postMessage: async function(obj) {
-    // Simplified worker implementation
-    if (this.onmessage) {
-      await this.onmessage({ data: { callback: obj.data?.callback, result: 0 } });
-    }
-  },
-  onmessage: null
-};
-
-// Set the worker
-pdfJs.GlobalWorkerOptions.workerPort = fakeWorker;
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -31,7 +15,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Starting PDF extraction process");
+    console.log("Starting PDF to PNG conversion process");
     
     // First validate the request body
     let requestBody;
@@ -99,102 +83,65 @@ serve(async (req) => {
       );
     }
     
-    console.log("Loading PDF document");
-    try {
-      // Initialize PDF document
-      const loadingTask = pdfJs.getDocument({ data: binaryPdf });
-      const pdf = await loadingTask.promise;
+    // Store the PDF in Supabase Storage
+    const timestamp = new Date().getTime();
+    const filePath = `${userId}/${projectId}/${timestamp}_${fileName}`;
+    
+    console.log("Uploading PDF to storage");
+    // Upload PDF to storage
+    const { data: storageData, error: storageError } = await supabase
+      .storage
+      .from('project_documents')
+      .upload(filePath, binaryPdf, {
+        contentType: 'application/pdf',
+        upsert: false
+      });
       
-      console.log(`PDF loaded with ${pdf.numPages} pages`);
-      
-      // Extract text from all pages
-      let extractedText = '';
-      for (let i = 1; i <= pdf.numPages; i++) {
-        console.log(`Processing page ${i}`);
-        const page = await pdf.getPage(i);
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items.map((item) => item.str).join(' ');
-        extractedText += pageText + '\n';
-      }
-      
-      console.log(`Extracted ${extractedText.length} characters of text from PDF`);
-      
-      if (extractedText.length === 0) {
-        console.error("No text extracted from PDF");
-        return new Response(
-          JSON.stringify({ error: 'No text could be extracted from the PDF' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      // Store the PDF in Supabase Storage
-      const timestamp = new Date().getTime();
-      const filePath = `${userId}/${projectId}/${timestamp}_${fileName}`;
-      
-      console.log("Uploading PDF to storage");
-      // Upload PDF to storage
-      const { data: storageData, error: storageError } = await supabase
-        .storage
-        .from('project_documents')
-        .upload(filePath, binaryPdf, {
-          contentType: 'application/pdf',
-          upsert: false
-        });
-        
-      if (storageError) {
-        console.error('Error uploading PDF to storage:', storageError);
-        return new Response(
-          JSON.stringify({ error: `Storage error: ${storageError.message}` }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      // Get public URL for the uploaded file
-      const { data: { publicUrl } } = supabase
-        .storage
-        .from('project_documents')
-        .getPublicUrl(filePath);
-      
-      console.log("Saving document info to database");  
-      // Save PDF document info and text to the database
-      const { data: documentData, error: documentError } = await supabase
-        .from('project_documents')
-        .insert({
-          project_id: projectId,
-          user_id: userId,
-          file_name: fileName,
-          file_url: publicUrl,
-          file_path: filePath,
-          content_text: extractedText,
-          document_type: 'pdf'
-        })
-        .select()
-        .single();
-        
-      if (documentError) {
-        console.error('Error saving document to database:', documentError);
-        return new Response(
-          JSON.stringify({ error: `Database error: ${documentError.message}` }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      console.log("PDF processing completed successfully");
+    if (storageError) {
+      console.error('Error uploading PDF to storage:', storageError);
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          document: documentData,
-          textLength: extractedText.length
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    } catch (pdfError) {
-      console.error("Error processing PDF document:", pdfError);
-      return new Response(
-        JSON.stringify({ error: `PDF processing error: ${pdfError.message || 'Unknown error'}` }),
+        JSON.stringify({ error: `Storage error: ${storageError.message}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    // Get public URL for the uploaded file
+    const { data: { publicUrl } } = supabase
+      .storage
+      .from('project_documents')
+      .getPublicUrl(filePath);
+    
+    console.log("Saving document info to database");  
+    // Save PDF document info to the database
+    const { data: documentData, error: documentError } = await supabase
+      .from('project_documents')
+      .insert({
+        project_id: projectId,
+        user_id: userId,
+        file_name: fileName,
+        file_url: publicUrl,
+        file_path: filePath,
+        document_type: 'pdf'
+      })
+      .select()
+      .single();
+      
+    if (documentError) {
+      console.error('Error saving document to database:', documentError);
+      return new Response(
+        JSON.stringify({ error: `Database error: ${documentError.message}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log("PDF processing completed successfully");
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        document: documentData,
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('Error in extract-pdf-text function:', error);
     return new Response(

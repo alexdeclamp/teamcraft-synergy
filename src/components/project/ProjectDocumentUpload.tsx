@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -88,7 +87,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
           
           setUploadProgress(90);
           
-          toast.success(`PDF processed with ${data.textLength} characters extracted`);
+          toast.success(`PDF uploaded successfully`);
           setUploadProgress(100);
           
           if (onDocumentUploaded && data.document) {
@@ -136,7 +135,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
           Upload Document
         </CardTitle>
         <CardDescription>
-          Upload a PDF document to extract text for your project
+          Upload a PDF document to your project
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -189,7 +188,7 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({ projectId
               <Progress value={uploadProgress} className="h-2" />
               <p className="text-xs text-muted-foreground text-center">
                 {uploadProgress < 30 && "Reading file..."}
-                {uploadProgress >= 30 && uploadProgress < 90 && "Extracting text from PDF..."}
+                {uploadProgress >= 30 && uploadProgress < 90 && "Uploading PDF..."}
                 {uploadProgress >= 90 && "Finalizing..."}
               </p>
             </div>
