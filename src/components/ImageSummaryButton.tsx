@@ -2,11 +2,24 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Loader2 } from 'lucide-react';
+import { MessageSquare, Loader2, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import SummaryDialog from './SummaryDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useParams } from 'react-router-dom';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
+
+interface ImageTag {
+  id: string;
+  tag: string;
+}
 
 interface ImageSummaryButtonProps {
   imageUrl: string;
@@ -21,9 +34,12 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
   const [summary, setSummary] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hasSummary, setHasSummary] = useState(false);
+  const [tags, setTags] = useState<ImageTag[]>([]);
+  const [newTag, setNewTag] = useState('');
+  const [isTagPopoverOpen, setIsTagPopoverOpen] = useState(false);
   const { user } = useAuth();
-  const params = useParams<{ projectId: string }>();
-  const projectId = params.projectId || params.id; // Try both possible param names
+  const params = useParams<{ projectId?: string }>();
+  const projectId = params.projectId;
 
   // Debug logging to identify the issue
   useEffect(() => {
@@ -36,6 +52,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
   useEffect(() => {
     if (imageUrl && projectId) {
       fetchExistingSummary();
+      fetchImageTags();
     } else {
       console.error('Missing required data to fetch summary:', { imageUrl, projectId });
     }
@@ -66,6 +83,27 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
       }
     } catch (error) {
       console.error('Error checking for existing summary:', error);
+    }
+  };
+
+  const fetchImageTags = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('image_tags')
+        .select('*')
+        .eq('image_url', imageUrl)
+        .eq('project_id', projectId);
+
+      if (error) {
+        console.error('Error fetching image tags:', error);
+        return;
+      }
+
+      if (data) {
+        setTags(data);
+      }
+    } catch (error) {
+      console.error('Error checking for existing tags:', error);
     }
   };
 
@@ -147,21 +185,130 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
     }
   };
 
+  const addTag = async () => {
+    if (!newTag.trim() || !projectId || !user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('image_tags')
+        .insert({
+          project_id: projectId,
+          image_url: imageUrl,
+          tag: newTag.trim(),
+          user_id: user.id
+        })
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error('Error adding tag:', error);
+        toast.error('Failed to add tag');
+        return;
+      }
+
+      setTags([...tags, data]);
+      setNewTag('');
+      toast.success('Tag added successfully');
+    } catch (error) {
+      console.error('Error adding tag:', error);
+      toast.error('Failed to add tag');
+    }
+  };
+
+  const removeTag = async (tagId: string) => {
+    try {
+      const { error } = await supabase
+        .from('image_tags')
+        .delete()
+        .eq('id', tagId);
+
+      if (error) {
+        console.error('Error removing tag:', error);
+        toast.error('Failed to remove tag');
+        return;
+      }
+
+      setTags(tags.filter(tag => tag.id !== tagId));
+      toast.success('Tag removed successfully');
+    } catch (error) {
+      console.error('Error removing tag:', error);
+      toast.error('Failed to remove tag');
+    }
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag();
+    }
+  };
+
   return (
     <>
-      <Button 
-        variant="ghost" 
-        size="icon"
-        className={`h-7 w-7 ${hasSummary ? 'text-green-500' : ''}`}
-        onClick={handleButtonClick}
-        disabled={isGenerating || !projectId}
-        title={hasSummary ? "View AI Summary" : "Generate AI Summary"}
-      >
-        {isGenerating ? 
-          <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 
-          <MessageSquare className="h-3.5 w-3.5" />
-        }
-      </Button>
+      <div className="flex space-x-1">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className={`h-7 w-7 ${hasSummary ? 'text-green-500' : ''}`}
+          onClick={handleButtonClick}
+          disabled={isGenerating || !projectId}
+          title={hasSummary ? "View AI Summary" : "Generate AI Summary"}
+        >
+          {isGenerating ? 
+            <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 
+            <MessageSquare className="h-3.5 w-3.5" />
+          }
+        </Button>
+
+        <Popover open={isTagPopoverOpen} onOpenChange={setIsTagPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-7 w-7"
+              title="Manage Tags"
+            >
+              <Tag className="h-3.5 w-3.5" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-3" side="top">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Image Tags</h3>
+              
+              <div className="flex flex-wrap gap-1 min-h-[40px]">
+                {tags.length > 0 ? (
+                  tags.map(tag => (
+                    <Badge key={tag.id} className="flex items-center gap-1 text-xs">
+                      {tag.tag}
+                      <button 
+                        onClick={() => removeTag(tag.id)} 
+                        className="text-xs hover:text-destructive transition-colors"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground">No tags added yet</p>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Input
+                  value={newTag}
+                  onChange={(e) => setNewTag(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  placeholder="Add a tag..."
+                  className="text-xs h-7"
+                />
+                <Button size="sm" className="h-7 text-xs px-2" onClick={addTag}>
+                  Add
+                </Button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
 
       <SummaryDialog
         isOpen={isDialogOpen}

@@ -39,9 +39,11 @@ import {
   Trash2,
   Ban,
   Info,
+  Tag
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ImageSummaryButton from './ImageSummaryButton';
+import { Badge } from '@/components/ui/badge';
 
 interface ProjectImageUploadProps {
   projectId: string;
@@ -57,6 +59,7 @@ interface UploadedImage {
   size: number;
   name: string;
   createdAt: Date;
+  tags?: Array<{id: string, tag: string}>;
 }
 
 const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
@@ -92,24 +95,38 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
       if (error) throw error;
 
       if (data) {
-        const imageUrls = await Promise.all(
+        const imagesWithPaths = await Promise.all(
           data.map(async (item) => {
             const { data: urlData } = await supabase
               .storage
               .from('project_images')
               .getPublicUrl(`${projectId}/${item.name}`);
 
+            const imagePath = `${projectId}/${item.name}`;
+            const imageUrl = urlData.publicUrl;
+
+            const { data: tagData, error: tagError } = await supabase
+              .from('image_tags')
+              .select('*')
+              .eq('image_url', imageUrl)
+              .eq('project_id', projectId);
+
+            if (tagError) {
+              console.error('Error fetching tags for image:', tagError);
+            }
+
             return {
-              url: urlData.publicUrl,
-              path: `${projectId}/${item.name}`,
+              url: imageUrl,
+              path: imagePath,
               size: item.metadata?.size || 0,
               name: item.name,
               createdAt: new Date(item.created_at || Date.now()),
+              tags: tagData || []
             };
           })
         );
 
-        setUploadedImages(imageUrls);
+        setUploadedImages(imagesWithPaths);
       }
     } catch (error: any) {
       console.error('Error fetching images:', error);
@@ -443,6 +460,20 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
                             <p className="text-muted-foreground text-xs">
                               {formatFileSize(image.size)}
                             </p>
+                            {image.tags && image.tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {image.tags.slice(0, 3).map(tag => (
+                                  <Badge key={tag.id} variant="outline" className="text-xs px-1 py-0">
+                                    {tag.tag}
+                                  </Badge>
+                                ))}
+                                {image.tags.length > 3 && (
+                                  <Badge variant="outline" className="text-xs px-1 py-0">
+                                    +{image.tags.length - 3}
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
                           </div>
                           <div className="flex space-x-1">
                             <ImageSummaryButton 
@@ -525,6 +556,20 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
                       <p className="text-muted-foreground text-xs">
                         {formatFileSize(image.size)}
                       </p>
+                      {image.tags && image.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {image.tags.slice(0, 3).map(tag => (
+                            <Badge key={tag.id} variant="outline" className="text-xs px-1 py-0">
+                              {tag.tag}
+                            </Badge>
+                          ))}
+                          {image.tags.length > 3 && (
+                            <Badge variant="outline" className="text-xs px-1 py-0">
+                              +{image.tags.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="flex space-x-1">
                       <ImageSummaryButton 
