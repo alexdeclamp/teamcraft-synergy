@@ -56,7 +56,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
@@ -64,20 +64,20 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="mt-4">
+        <div className="mt-4 overflow-y-auto flex-grow">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-8 space-y-4">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">Generating summary...</p>
             </div>
           ) : (
-            <div className="p-4 bg-accent/20 rounded-md whitespace-pre-wrap">
+            <div className="p-4 bg-accent/20 rounded-md whitespace-pre-wrap max-h-[50vh] overflow-y-auto">
               {summary}
             </div>
           )}
         </div>
         
-        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2">
+        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 mt-4">
           <div className="flex items-center space-x-2 mt-4 sm:mt-0">
             {!isLoading && !feedbackGiven && (
               <>
