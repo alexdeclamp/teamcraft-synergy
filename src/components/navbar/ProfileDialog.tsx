@@ -13,6 +13,7 @@ import { Settings, LogOut } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import ProfileStats from './ProfileStats';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 type ProfileDialogProps = {
   open: boolean;
@@ -46,28 +47,19 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
       
       setStatsLoading(true);
       try {
-        // Count projects (brains)
-        const { data: projects, error: projectsError } = await supabase
-          .from('projects')
-          .select('id')
-          .eq('owner_id', user.id)
-          .is('is_archived', false);
+        // Call the edge function to get usage statistics
+        const { data, error } = await supabase.functions.invoke('track-usage', {
+          body: { action: 'log_api_call' },
+        });
         
-        if (projectsError) throw projectsError;
+        if (error) throw error;
         
-        // For demo purposes, generate random values for API calls and storage
-        // In a real app, you would fetch these from your database
-        const monthlyApiCalls = Math.floor(Math.random() * 500);
-        const storageInKB = Math.floor(Math.random() * 10000);
-        const formattedStorage = storageInKB >= 1024 
-          ? `${(storageInKB / 1024).toFixed(2)} MB` 
-          : `${storageInKB} KB`;
-        
-        setActiveBrains(projects?.length || 0);
-        setApiCalls(monthlyApiCalls);
-        setStorageUsed(formattedStorage);
+        setActiveBrains(data.activeBrains);
+        setApiCalls(data.apiCalls);
+        setStorageUsed(data.storageUsed);
       } catch (error) {
         console.error('Error fetching user stats:', error);
+        toast.error('Failed to load user statistics');
       } finally {
         setStatsLoading(false);
       }
