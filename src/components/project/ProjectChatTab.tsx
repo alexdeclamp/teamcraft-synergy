@@ -5,9 +5,15 @@ import ProjectChat from '@/components/ProjectChat';
 
 interface ProjectChatTabProps {
   projectId: string;
+  projectTitle?: string;
+  aiPersona?: string;
 }
 
-const ProjectChatTab: React.FC<ProjectChatTabProps> = ({ projectId }) => {
+const ProjectChatTab: React.FC<ProjectChatTabProps> = ({ 
+  projectId,
+  projectTitle,
+  aiPersona
+}) => {
   return (
     <Card>
       <CardHeader>

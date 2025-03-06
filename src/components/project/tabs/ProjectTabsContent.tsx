@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TabsContent } from "@/components/ui/tabs";
 import ProjectTabsOverview from './ProjectTabsOverview';
@@ -9,6 +8,15 @@ import ProjectImages from '../ProjectImages';
 import ProjectMembers from '../ProjectMembers';
 import ProjectSettings from '../ProjectSettings';
 import ProjectChatTab from '../ProjectChatTab';
+
+interface UploadedImage {
+  url: string;
+  path: string;
+  size: number;
+  name: string;
+  createdAt: Date;
+  summary?: string;
+}
 
 interface ProjectTabsContentProps {
   activeTab: string;
@@ -23,7 +31,7 @@ interface ProjectTabsContentProps {
   daysSinceCreation: () => number;
   activityPercentage: number;
   formatFileSize: (bytes: number) => string;
-  handleImagesUpdated: (images: any[], recent: any[]) => void;
+  handleImagesUpdated: (images: any[], recent?: any[]) => void;
   handleAddMember: () => void;
   setActiveTab: (tab: string) => void;
 }
@@ -45,6 +53,10 @@ const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   handleAddMember,
   setActiveTab
 }) => {
+  const onImagesUpdated = (images: UploadedImage[]) => {
+    handleImagesUpdated(images);
+  };
+
   return (
     <>
       <TabsContent value="overview" className="space-y-6">
@@ -79,7 +91,10 @@ const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
         {project && projectId && (
           <ProjectImages 
             projectId={projectId} 
-            onImagesUpdated={handleImagesUpdated}
+            images={projectImages}
+            isLoading={isImagesLoading}
+            onImagesUpdated={onImagesUpdated}
+            onUploadComplete={() => {}}
           />
         )}
       </TabsContent>

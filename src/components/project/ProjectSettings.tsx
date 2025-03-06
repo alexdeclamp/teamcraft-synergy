@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,9 +10,19 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface ProjectSettingsProps {
   projectId: string;
+  project?: any;
+  members?: any[];
+  setMembers?: React.Dispatch<React.SetStateAction<any[]>>;
+  userRole?: string;
 }
 
-const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
+const ProjectSettings: React.FC<ProjectSettingsProps> = ({ 
+  projectId,
+  project: initialProject,
+  members,
+  setMembers,
+  userRole
+}) => {
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -22,8 +31,16 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
   const [isArchived, setIsArchived] = useState(false);
   const { toast } = useToast();
 
-  // Fetch project details when component mounts
   useEffect(() => {
+    if (initialProject) {
+      setTitle(initialProject.title);
+      setDescription(initialProject.description || '');
+      setAiPersona(initialProject.ai_persona || '');
+      setIsFavorite(initialProject.is_favorite || false);
+      setIsArchived(initialProject.is_archived || false);
+      return;
+    }
+    
     const fetchProject = async () => {
       try {
         const { data, error } = await supabase
@@ -52,7 +69,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({ projectId }) => {
     };
 
     fetchProject();
-  }, [projectId, toast]);
+  }, [projectId, initialProject, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

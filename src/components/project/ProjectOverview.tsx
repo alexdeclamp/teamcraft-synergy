@@ -14,6 +14,15 @@ interface ProjectMember {
   avatar?: string;
 }
 
+interface UploadedImage {
+  url: string;
+  path: string;
+  size: number;
+  name: string;
+  createdAt: Date;
+  summary?: string;
+}
+
 interface ProjectOverviewProps {
   project: {
     title: string;
@@ -21,23 +30,27 @@ interface ProjectOverviewProps {
     created_at: string;
   };
   members: ProjectMember[];
+  recentImages?: UploadedImage[];
   userRole: string | null;
   activityPercentage: number;
   daysSinceCreation: number;
   imageCount: number;
   onAddMember: () => void;
   onTabChange: (tab: string) => void;
+  projectId: string;
 }
 
 const ProjectOverview: React.FC<ProjectOverviewProps> = ({
   project,
   members,
+  recentImages,
   userRole,
   activityPercentage,
   daysSinceCreation,
   imageCount,
   onAddMember,
-  onTabChange
+  onTabChange,
+  projectId
 }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

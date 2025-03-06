@@ -92,6 +92,19 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
       <ProjectTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        projectId={project.id}
+        project={project}
+        members={members}
+        setMembers={setMembers}
+        userRole={userRole}
+        projectImages={projectImages}
+        recentImages={recentImages}
+        isImagesLoading={isImagesLoading}
+        daysSinceCreation={daysSinceCreation}
+        activityPercentage={activityPercentage}
+        formatFileSize={formatFileSize}
+        handleImagesUpdated={handleImagesUpdated}
+        handleAddMember={handleAddMember}
       />
 
       {activeTab === 'overview' && (
@@ -100,8 +113,12 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
           members={members}
           recentImages={recentImages}
           activityPercentage={activityPercentage}
+          daysSinceCreation={daysSinceCreation()}
+          imageCount={projectImages.length}
           handleAddMember={handleAddMember}
           projectId={project.id}
+          userRole={userRole}
+          onTabChange={setActiveTab}
         />
       )}
 
@@ -124,8 +141,6 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
       {activeTab === 'chat' && (
         <ProjectChatTab
           projectId={project.id}
-          projectTitle={project.title}
-          aiPersona={project.ai_persona}
         />
       )}
 
@@ -143,11 +158,11 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
 
       {activeTab === 'settings' && (
         <ProjectSettings
+          projectId={project.id}
           project={project}
           members={members}
           setMembers={setMembers}
           userRole={userRole}
-          projectId={project.id}
         />
       )}
 
@@ -156,7 +171,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
         projectId={project.id}
         isOpen={showInviteDialog}
         onClose={() => setShowInviteDialog(false)}
-        onSuccess={handleInviteSuccess}
+        onInviteSuccess={handleInviteSuccess}
       />
     </div>
   );

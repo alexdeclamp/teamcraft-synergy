@@ -64,6 +64,7 @@ const Project = () => {
       setShowInviteDialog={setShowInviteDialog}
       toggleFavoriteProject={toggleFavoriteProject}
       toggleArchiveProject={toggleArchiveProject}
+      fetchProjectImages={fetchProjectImages}
     />
   );
 };
