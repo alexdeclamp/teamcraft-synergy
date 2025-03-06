@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -481,7 +480,6 @@ const Project = () => {
     });
   };
 
-  // Calculate days since project creation
   const daysSinceCreation = () => {
     if (!project) return 0;
     const creationDate = new Date(project.created_at);
@@ -490,7 +488,6 @@ const Project = () => {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  // Generate a sample activity percentage between 40-100%
   const activityPercentage = Math.floor(Math.random() * 60) + 40;
 
   return (
@@ -611,7 +608,6 @@ const Project = () => {
           
           <TabsContent value="overview" className="space-y-6">
             <div className="grid md:grid-cols-3 gap-6">
-              {/* Project Stats */}
               <Card className="md:col-span-1">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center">
@@ -649,7 +645,6 @@ const Project = () => {
                 </CardContent>
               </Card>
 
-              {/* Project Info & Recent Activity */}
               <Card className="md:col-span-2">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center">
@@ -733,7 +728,6 @@ const Project = () => {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {/* Recent Images */}
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center">
@@ -802,7 +796,6 @@ const Project = () => {
                 </CardContent>
               </Card>
               
-              {/* Project Notes */}
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center">
@@ -840,7 +833,6 @@ const Project = () => {
               </Card>
             </div>
               
-            {/* Resources and Quick Links */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex items-center">
@@ -1014,7 +1006,8 @@ const Project = () => {
                     <MemberInvite 
                       projectId={project.id} 
                       onClose={() => setShowInviteDialog(false)}
-                      onSuccess={handleInviteSuccess}
+                      onInviteSuccess={handleInviteSuccess}
+                      isOpen={showInviteDialog}
                     />
                   )}
                 </div>
