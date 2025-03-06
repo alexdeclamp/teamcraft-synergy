@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -928,3 +929,134 @@ const Project = () => {
                 <div>
                   <CardTitle>Project Members</CardTitle>
                   <CardDescription>
+                    Manage project team and permissions
+                  </CardDescription>
+                </div>
+                {userRole === 'owner' && (
+                  <Button variant="outline" size="sm" onClick={handleAddMember}>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Invite
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {members.length === 0 ? (
+                    <div className="text-center p-6 border border-dashed rounded-md">
+                      <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-muted-foreground">No members yet</p>
+                      {userRole === 'owner' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-4"
+                          onClick={handleAddMember}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Members
+                        </Button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {members.map((member) => (
+                        <div 
+                          key={member.id} 
+                          className="flex items-center justify-between p-3 rounded-md hover:bg-accent/40"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-8 w-8">
+                              {member.avatar && <AvatarImage src={member.avatar} alt={member.name} />}
+                              <AvatarFallback>
+                                {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium text-sm">{member.name}</p>
+                              <p className="text-xs text-muted-foreground">{member.role}</p>
+                            </div>
+                          </div>
+                          
+                          {userRole === 'owner' && member.role !== 'owner' && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-[160px]">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => handleUpdateMemberRole(member.id, 'admin')}>
+                                  Make admin
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleUpdateMemberRole(member.id, 'editor')}>
+                                  Make editor
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleUpdateMemberRole(member.id, 'viewer')}>
+                                  Make viewer
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  className="text-red-600"
+                                  onClick={() => handleRemoveMember(member.id)}
+                                >
+                                  Remove
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {showInviteDialog && (
+                    <MemberInvite 
+                      projectId={project.id} 
+                      onClose={() => setShowInviteDialog(false)}
+                      onSuccess={handleInviteSuccess}
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="settings" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Settings</CardTitle>
+                <CardDescription>
+                  Configure project preferences and options
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center p-6">
+                  <Settings className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-muted-foreground mb-2">Project settings are coming soon</p>
+                  <p className="text-sm text-muted-foreground">Check back later for options to customize your project</p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="chat" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Project Chat</CardTitle>
+                <CardDescription>
+                  Chat with AI about this project
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                {project && id && <ProjectChat projectId={id} />}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </main>
+    </div>
+  );
+};
+
+export default Project;
