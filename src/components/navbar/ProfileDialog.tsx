@@ -50,20 +50,29 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
       setError(null);
       
       try {
-        // Call the edge function to get usage statistics
-        const { data, error } = await supabase.functions.invoke('track-usage', {
+        console.log('Fetching user stats...');
+        
+        // Call the edge function
+        const { data, error: functionError } = await supabase.functions.invoke('track-usage', {
           body: { action: 'log_api_call' },
         });
         
-        if (error) {
-          console.error('Error fetching user stats:', error);
+        if (functionError) {
+          console.error('Error invoking edge function:', functionError);
           setError('Failed to fetch statistics');
-          toast.error('Failed to load user statistics');
+          toast.error('Could not load usage statistics');
           return;
         }
         
+        console.log('Edge function response:', data);
+        
         if (!data) {
           setError('No data returned from server');
+          return;
+        }
+        
+        if (data.status === 'error') {
+          setError(data.error || 'An error occurred');
           return;
         }
         

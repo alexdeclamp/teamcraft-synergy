@@ -24,6 +24,7 @@ const ProfileStats = ({ isLoading, error, activeBrains, apiCalls, storageUsed }:
       <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
         <AlertCircle className="h-5 w-5 mb-2 text-amber-500" />
         <p className="text-sm text-center">Statistics unavailable</p>
+        <p className="text-xs text-center text-muted-foreground mt-1">Try again later</p>
       </div>
     );
   }
