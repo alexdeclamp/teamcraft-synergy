@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -18,11 +19,12 @@ serve(async (req) => {
 
   try {
     const requestBody = await req.json();
-    const { type, content, imageUrl, userId, projectId } = requestBody;
+    const { type, content, imageUrl, userId, projectId, noteId } = requestBody;
     
     console.log(`Processing ${type} summary request`);
     console.log(`User ID: ${userId}`);
     console.log(`Project ID: ${projectId}`);
+    console.log(`Note ID: ${noteId || 'not provided'}`);
     console.log(`Content length: ${content ? content.length : 0}`);
     
     if (!projectId) {
@@ -145,18 +147,19 @@ serve(async (req) => {
       const summary = data.choices[0].message.content;
       console.log('Generated summary:', summary.substring(0, 100) + '...');
 
+      // Initialize Supabase client with service role key for admin access
+      const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+      
+      if (!supabase) {
+        console.error('Failed to initialize Supabase client');
+        return new Response(JSON.stringify({ error: 'Failed to initialize Supabase client' }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Save the summary to the appropriate table based on type
       if (type === 'image' && userId && projectId) {
-        // Initialize Supabase client with service role key for admin access
-        const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
-        
-        if (!supabase) {
-          console.error('Failed to initialize Supabase client');
-          return new Response(JSON.stringify({ error: 'Failed to initialize Supabase client' }), {
-            status: 200,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        
         // Check if a summary already exists for this image in this project
         const { data: existingSummary, error: checkError } = await supabase
           .from('image_summaries')
@@ -202,7 +205,56 @@ serve(async (req) => {
         }
 
         if (saveError) {
-          console.error('Error saving summary:', saveError);
+          console.error('Error saving image summary:', saveError);
+          // Log error but don't fail the request - we still want to return the summary
+        }
+      } else if (type === 'note' && userId && projectId && noteId) {
+        // Save note summary to note_summaries table
+        console.log('Saving summary for note:', noteId);
+        
+        // Check if a summary already exists for this note
+        const { data: existingNoteSummary, error: checkNoteError } = await supabase
+          .from('note_summaries')
+          .select('id')
+          .eq('note_id', noteId)
+          .maybeSingle();
+          
+        if (checkNoteError) {
+          console.error('Error checking for existing note summary:', checkNoteError);
+          // Don't throw here, just log and continue
+        }
+        
+        let noteSaveError;
+        
+        if (existingNoteSummary) {
+          // Update existing note summary
+          console.log('Updating existing summary for note:', noteId);
+          const { error } = await supabase
+            .from('note_summaries')
+            .update({
+              summary: summary,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingNoteSummary.id);
+            
+          noteSaveError = error;
+        } else {
+          // Insert new note summary
+          console.log('Inserting new summary for note:', noteId);
+          const { error } = await supabase
+            .from('note_summaries')
+            .insert({
+              user_id: userId,
+              note_id: noteId,
+              project_id: projectId,
+              summary: summary
+            });
+            
+          noteSaveError = error;
+        }
+
+        if (noteSaveError) {
+          console.error('Error saving note summary:', noteSaveError);
           // Log error but don't fail the request - we still want to return the summary
         }
       }

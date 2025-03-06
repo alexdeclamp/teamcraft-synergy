@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Loader2 } from 'lucide-react';
@@ -22,6 +22,40 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
   const [summary, setSummary] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { id: projectId } = useParams<{ id: string }>();
+  const [savedSummary, setSavedSummary] = useState<string | null>(null);
+  const [isLoadingSaved, setIsLoadingSaved] = useState(false);
+
+  // Fetch existing summary if available
+  useEffect(() => {
+    const fetchSavedSummary = async () => {
+      if (!noteId || !projectId) return;
+      
+      try {
+        setIsLoadingSaved(true);
+        const { data, error } = await supabase
+          .from('note_summaries')
+          .select('summary')
+          .eq('note_id', noteId)
+          .single();
+        
+        if (error) {
+          console.log('No saved summary found or error fetching:', error.message);
+          return;
+        }
+        
+        if (data?.summary) {
+          console.log('Found saved summary for note:', noteId);
+          setSavedSummary(data.summary);
+        }
+      } catch (error) {
+        console.error('Error fetching saved summary:', error);
+      } finally {
+        setIsLoadingSaved(false);
+      }
+    };
+    
+    fetchSavedSummary();
+  }, [noteId, projectId]);
 
   const generateSummary = async () => {
     if (!noteContent) {
@@ -37,7 +71,13 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
     try {
       setIsGenerating(true);
       setIsDialogOpen(true);
-      setSummary(''); // Reset any previous summary
+      
+      // If we have a saved summary, use it immediately while generating a new one
+      if (savedSummary) {
+        setSummary(savedSummary);
+      } else {
+        setSummary(''); // Reset any previous summary
+      }
       
       console.log('Generating summary for note:', noteId);
       console.log('Project ID:', projectId);
@@ -53,6 +93,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
           content: noteContent,
           projectId,
           userId,
+          noteId, // Pass noteId to the edge function
         },
       });
 
@@ -69,10 +110,14 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
       }
       
       setSummary(data.summary);
+      // Update savedSummary state to reflect the latest summary
+      setSavedSummary(data.summary);
     } catch (error: any) {
       console.error('Error generating summary:', error);
       toast.error(`Failed to generate summary: ${error.message || 'Unknown error'}`);
-      setIsDialogOpen(false);
+      if (!savedSummary) {
+        setIsDialogOpen(false);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -99,7 +144,8 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
         onClose={() => setIsDialogOpen(false)}
         title={`Summary of "${noteTitle}"`}
         summary={summary}
-        isLoading={isGenerating}
+        isLoading={isGenerating && !savedSummary}
+        hasSavedVersion={!!savedSummary}
       />
     </>
   );

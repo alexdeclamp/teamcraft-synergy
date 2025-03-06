@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Loader2, Download, Copy, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Loader2, Download, Copy, ThumbsUp, ThumbsDown, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SummaryDialogProps {
@@ -19,6 +19,7 @@ interface SummaryDialogProps {
   title: string;
   summary: string;
   isLoading: boolean;
+  hasSavedVersion?: boolean;
 }
 
 const SummaryDialog: React.FC<SummaryDialogProps> = ({
@@ -26,7 +27,8 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   onClose,
   title,
   summary,
-  isLoading
+  isLoading,
+  hasSavedVersion = false
 }) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
 
@@ -68,7 +70,9 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            AI-generated summary to help you remember key elements and learnings.
+            {hasSavedVersion && !isLoading 
+              ? 'AI-generated summary is saved and available instantly.'
+              : 'AI-generated summary to help you remember key elements and learnings.'}
           </DialogDescription>
         </DialogHeader>
         
@@ -79,9 +83,17 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
               <p className="text-sm text-muted-foreground">Generating summary...</p>
             </div>
           ) : summary ? (
-            <div className="p-4 bg-accent/20 rounded-md whitespace-pre-wrap max-h-[50vh] overflow-y-auto">
-              {summary}
-            </div>
+            <>
+              {hasSavedVersion && (
+                <div className="mb-2 px-2 text-sm text-muted-foreground flex items-center">
+                  <Save className="h-3 w-3 mr-1" />
+                  <span>Summary is saved and will be available instantly next time</span>
+                </div>
+              )}
+              <div className="p-4 bg-accent/20 rounded-md whitespace-pre-wrap max-h-[50vh] overflow-y-auto">
+                {summary}
+              </div>
+            </>
           ) : (
             <div className="p-4 bg-accent/10 rounded-md flex items-center justify-center h-32">
               <p className="text-muted-foreground">No summary available yet.</p>
