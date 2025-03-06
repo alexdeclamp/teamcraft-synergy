@@ -14,6 +14,7 @@ export type Database = {
           created_at: string
           id: string
           image_url: string
+          project_id: string | null
           summary: string
           updated_at: string
           user_id: string
@@ -22,6 +23,7 @@ export type Database = {
           created_at?: string
           id?: string
           image_url: string
+          project_id?: string | null
           summary: string
           updated_at?: string
           user_id: string
@@ -30,11 +32,20 @@ export type Database = {
           created_at?: string
           id?: string
           image_url?: string
+          project_id?: string | null
           summary?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "image_summaries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
