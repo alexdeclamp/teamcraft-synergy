@@ -25,6 +25,7 @@ serve(async (req) => {
     
     let prompt = '';
     let messages = [];
+    let model = 'gpt-4o-mini'; // Default to faster model for text
     
     if (type === 'note') {
       prompt = `
@@ -41,8 +42,7 @@ serve(async (req) => {
         { role: 'user', content: prompt }
       ];
     } else if (type === 'image') {
-      // For images, we need to be careful about the format
-      // The error was due to using image_url incorrectly
+      model = 'gpt-4o'; // Use more powerful model for vision tasks
       messages = [
         {
           role: 'system',
@@ -52,7 +52,6 @@ serve(async (req) => {
           role: 'user',
           content: [
             { type: 'text', text: 'Please provide a concise, accurate description of this project-related image. Focus only on what you can clearly see in the image. If the image is not clear or you cannot identify key elements, state that directly. Do not make assumptions about the purpose or context if they are not visually apparent.' },
-            // This is the correct format for GPT-4o's vision capability
             { type: 'image_url', image_url: { url: imageUrl } }
           ]
         }
@@ -61,7 +60,8 @@ serve(async (req) => {
       throw new Error('Invalid summary type requested');
     }
 
-    console.log('Sending request to OpenAI API with messages:', JSON.stringify(messages));
+    console.log('Sending request to OpenAI API with model:', model);
+    console.log('Messages:', JSON.stringify(messages));
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -70,7 +70,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: type === 'image' ? 'gpt-4o' : 'gpt-4o-mini',
+        model: model,
         messages: messages,
         temperature: 0.7,
       }),
