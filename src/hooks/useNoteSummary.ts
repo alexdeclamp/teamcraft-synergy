@@ -16,6 +16,21 @@ export function useNoteSummary({ noteId, noteContent, projectId }: UseNoteSummar
   const [isLoadingSaved, setIsLoadingSaved] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Reset dialog state when component unmounts or route changes
+  useEffect(() => {
+    return () => {
+      setIsDialogOpen(false);
+      setIsGenerating(false);
+    };
+  }, []);
+
+  // Reset dialog when noteId changes
+  useEffect(() => {
+    setIsDialogOpen(false);
+    setSummary('');
+    setSavedSummary(null);
+  }, [noteId]);
+
   useEffect(() => {
     const fetchSavedSummary = async () => {
       if (!noteId || !projectId) return;

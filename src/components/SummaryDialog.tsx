@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -31,6 +31,15 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   hasSavedVersion = false
 }) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
+  
+  // Add effect to reset dialog state when unmounting
+  useEffect(() => {
+    return () => {
+      if (isOpen) {
+        onClose();
+      }
+    };
+  }, [isOpen, onClose]);
 
   const handleCopy = () => {
     if (!summary) {

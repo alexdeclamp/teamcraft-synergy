@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Loader2, FileText } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import SummaryDialog from './SummaryDialog';
 import { useNoteSummary } from '@/hooks/useNoteSummary';
 
@@ -18,6 +18,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
   noteContent
 }) => {
   const { id: projectId } = useParams<{ id: string }>();
+  const location = useLocation();
   
   const {
     isGenerating,
@@ -31,6 +32,15 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
     noteContent,
     projectId
   });
+  
+  // Close dialog when navigation happens
+  useEffect(() => {
+    return () => {
+      if (isDialogOpen) {
+        setIsDialogOpen(false);
+      }
+    };
+  }, [location.pathname, isDialogOpen, setIsDialogOpen]);
 
   return (
     <>
