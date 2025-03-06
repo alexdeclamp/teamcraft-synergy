@@ -66,8 +66,8 @@ const ProjectDocuments: React.FC<ProjectDocumentsProps> = ({ projectId }) => {
         onDocumentUploaded={handleDocumentUploaded}
       />
       
-      <div className="bg-accent/20 rounded-lg">
-        <div className="flex items-center justify-between p-4 border-b">
+      <div className="border rounded-lg shadow-sm">
+        <div className="flex items-center justify-between p-4 border-b bg-muted/40">
           <h3 className="font-medium text-lg">Uploaded Documents</h3>
           <Button 
             variant="outline" 
@@ -94,10 +94,10 @@ const ProjectDocuments: React.FC<ProjectDocumentsProps> = ({ projectId }) => {
               <p className="text-sm mt-1">Upload your first document above</p>
             </div>
           ) : (
-            <ScrollArea className="h-[400px] pr-4">
+            <ScrollArea className="h-[350px] pr-4">
               <div className="space-y-2">
                 {documents.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 rounded-md bg-background hover:bg-accent/40 transition-colors">
+                  <div key={doc.id} className="flex items-center justify-between p-3 rounded-md bg-accent/30 hover:bg-accent/50 transition-colors">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <FileText className="h-5 w-5 flex-shrink-0 text-primary/70" />
                       <div className="flex-1 min-w-0">
