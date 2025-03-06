@@ -34,31 +34,53 @@ const ProjectUpdates: React.FC<ProjectUpdatesProps> = ({ projectId }) => {
       const isInitialLoad = isLoading;
       if (!isInitialLoad) setIsRefreshing(true);
       
-      // Fixed query - use a proper join between project_updates and profiles
-      const { data, error } = await supabase
+      // Get project updates - using a different approach that doesn't rely on direct table relationships
+      const { data: updateData, error } = await supabase
         .from('project_updates')
         .select(`
           id,
           content,
           created_at,
-          user_id,
-          profiles (full_name, avatar_url)
+          user_id
         `)
         .eq('project_id', projectId)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
       
-      const formattedUpdates = data.map((update: any) => ({
-        id: update.id,
-        content: update.content,
-        created_at: update.created_at,
-        user_id: update.user_id,
-        user_name: update.profiles?.full_name || 'Unknown User',
-        user_avatar: update.profiles?.avatar_url
-      }));
-      
-      setUpdates(formattedUpdates);
+      // If we have updates, fetch the corresponding user profiles separately
+      if (updateData && updateData.length > 0) {
+        // Get unique user IDs from updates
+        const userIds = [...new Set(updateData.map(update => update.user_id))];
+        
+        // Fetch profiles for these users
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .in('id', userIds);
+          
+        if (profilesError) throw profilesError;
+        
+        // Create a map of user_id to profile data for easier lookup
+        const profilesMap = (profilesData || []).reduce((map, profile) => {
+          map[profile.id] = profile;
+          return map;
+        }, {});
+        
+        // Join the data manually
+        const formattedUpdates = updateData.map((update: any) => ({
+          id: update.id,
+          content: update.content,
+          created_at: update.created_at,
+          user_id: update.user_id,
+          user_name: profilesMap[update.user_id]?.full_name || 'Unknown User',
+          user_avatar: profilesMap[update.user_id]?.avatar_url
+        }));
+        
+        setUpdates(formattedUpdates);
+      } else {
+        setUpdates([]);
+      }
     } catch (error: any) {
       console.error('Error fetching updates:', error);
       toast.error(`Failed to load updates: ${error.message || 'Unknown error'}`);

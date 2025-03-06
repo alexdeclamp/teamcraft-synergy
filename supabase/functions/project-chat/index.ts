@@ -41,13 +41,41 @@ serve(async (req) => {
       .select('file_name, content_text')
       .eq('project_id', projectId);
     
-    // Fetch project updates with proper join to profiles
-    const { data: updates } = await supabase
+    // Fetch project updates - get updates first
+    const { data: updatesData } = await supabase
       .from('project_updates')
-      .select('content, created_at, profiles:user_id(full_name)')
+      .select('content, created_at, user_id')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false })
       .limit(10);
+    
+    // Process updates if they exist
+    let updatesWithUserNames = [];
+    if (updatesData && updatesData.length > 0) {
+      // Extract user IDs
+      const userIds = [...new Set(updatesData.map(update => update.user_id))];
+      
+      // Fetch profiles for these users
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', userIds);
+      
+      // Create a user map
+      const userMap = {};
+      if (profilesData) {
+        profilesData.forEach(profile => {
+          userMap[profile.id] = profile.full_name;
+        });
+      }
+      
+      // Join the data manually
+      updatesWithUserNames = updatesData.map(update => ({
+        content: update.content,
+        created_at: update.created_at,
+        user_name: userMap[update.user_id] || 'Unknown User'
+      }));
+    }
 
     // Combine all project context
     const projectContext = `
@@ -61,7 +89,7 @@ serve(async (req) => {
     ${documents?.map(doc => `Document: ${doc.file_name}\nContent: ${doc.content_text?.substring(0, 500)}${doc.content_text?.length > 500 ? '...' : ''}`).join('\n\n') || 'No documents available.'}
     
     Recent Updates:
-    ${updates?.map(update => `Update by ${update.profiles?.full_name || 'Unknown'} on ${new Date(update.created_at).toLocaleDateString()}: ${update.content}`).join('\n') || 'No recent updates.'}
+    ${updatesWithUserNames.map(update => `Update by ${update.user_name} on ${new Date(update.created_at).toLocaleDateString()}: ${update.content}`).join('\n') || 'No recent updates.'}
     `;
 
     console.log('Project context assembled from multiple sources');
