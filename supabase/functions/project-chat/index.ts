@@ -23,10 +23,10 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
-    // Fetch project notes
+    // Fetch project notes - now only selecting existing columns
     const { data: notes } = await supabase
       .from('project_notes')
-      .select('content, summary')
+      .select('content, title, tags')
       .eq('project_id', projectId);
 
     // Fetch image summaries
@@ -37,13 +37,16 @@ serve(async (req) => {
 
     // Combine all project context
     const projectContext = `
-    Project Notes and Summaries:
-    ${notes?.map(note => `Note: ${note.content}\nSummary: ${note.summary}`).join('\n\n') || 'No notes available.'}
+    Project Notes:
+    ${notes?.map(note => `Title: ${note.title}\nContent: ${note.content}\nTags: ${note.tags?.join(', ') || 'No tags'}`).join('\n\n') || 'No notes available.'}
     
     Image Analysis:
     ${imageSummaries?.map(img => img.summary).join('\n') || 'No image summaries available.'}
     `;
 
+    console.log('Project context:', projectContext);
+    console.log('Sending request to OpenAI');
+    
     const messages = [
       {
         role: 'system',
@@ -65,7 +68,6 @@ serve(async (req) => {
       }
     ];
 
-    console.log('Sending request to OpenAI');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
