@@ -1,13 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { cn } from "@/lib/utils";
-import { Menu, X, Plus, LogOut } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 
-// Import smaller components
+// Import the smaller components
 import Logo from './navbar/Logo';
+import NavLinks from './navbar/NavLinks';
+import ProfileButton from './navbar/ProfileButton';
+import SignOutButton from './navbar/SignOutButton';
+import MobileMenu from './navbar/MobileMenu';
 import ProfileDialog from './navbar/ProfileDialog';
 import SettingsDialog from './navbar/SettingsDialog';
 
@@ -17,7 +20,7 @@ const Navbar = () => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,51 +52,16 @@ const Navbar = () => {
       )}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        {/* Left section with logo and main navigation */}
-        <div className="flex items-center space-x-4">
-          <Logo />
+        <Logo />
+
+        {/* Desktop Menu */}
+        <nav className="hidden md:flex items-center space-x-1">
+          <NavLinks />
           
-          {location.pathname === '/dashboard' && (
-            <Button variant="default" className="flex items-center" asChild>
-              <Link to="/dashboard">
-                Dashboard
-              </Link>
-            </Button>
-          )}
-
-          {user && (
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/new-project" className="flex items-center gap-1">
-                <Plus className="h-4 w-4" />
-                New Project
-              </Link>
-            </Button>
-          )}
-        </div>
-
-        {/* Right section with user actions */}
-        {user && (
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => setProfileDialogOpen(true)}
-            >
-              {user.email ? user.email.substring(0, 2).toUpperCase() : 'AS'}
-              <span className="ml-2">Profile</span>
-            </Button>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-muted-foreground"
-              onClick={handleSignOut}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        )}
+          <ProfileButton onClick={() => setProfileDialogOpen(true)} />
+          
+          <SignOutButton onClick={handleSignOut} />
+        </nav>
 
         {/* Mobile menu button */}
         <button 
@@ -109,44 +77,11 @@ const Navbar = () => {
       </div>
 
       {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white animate-fade-in border-t mt-3">
-          <div className="py-3 px-4 space-y-3">
-            {user && (
-              <>
-                <Link 
-                  to="/dashboard" 
-                  className="flex items-center px-3 py-2 rounded-md transition-colors hover:bg-accent"
-                >
-                  Dashboard
-                </Link>
-                <Link 
-                  to="/new-project"
-                  className="flex items-center px-3 py-2 rounded-md transition-colors hover:bg-accent"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Project
-                </Link>
-                <div className="border-t my-2 pt-2">
-                  <button
-                    onClick={() => setProfileDialogOpen(true)}
-                    className="w-full flex items-center px-3 py-2 rounded-md hover:bg-accent text-left"
-                  >
-                    Profile
-                  </button>
-                  <button 
-                    className="w-full flex items-center px-3 py-2 rounded-md hover:bg-accent text-muted-foreground text-left"
-                    onClick={handleSignOut}
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <MobileMenu 
+        isOpen={mobileMenuOpen}
+        onProfileClick={() => setProfileDialogOpen(true)}
+        onSignOutClick={handleSignOut}
+      />
 
       {/* Profile Dialog */}
       <ProfileDialog 
