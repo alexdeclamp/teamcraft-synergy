@@ -5,7 +5,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Info, Activity, BarChart, Plus, StickyNote, Image, MessageSquare } from 'lucide-react';
 
 interface ProjectMember {
   id: string;
@@ -52,10 +51,7 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
     <div className="grid md:grid-cols-3 gap-6">
       <Card className="md:col-span-1">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center">
-            <BarChart className="h-5 w-5 mr-2 text-primary" />
-            Project Statistics
-          </CardTitle>
+          <CardTitle className="text-lg">Project Statistics</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -89,10 +85,7 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
 
       <Card className="md:col-span-2">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg flex items-center">
-            <Info className="h-5 w-5 mr-2 text-primary" />
-            Project Overview
-          </CardTitle>
+          <CardTitle className="text-lg">Project Overview</CardTitle>
           <CardDescription>
             Key information about this project
           </CardDescription>
@@ -131,7 +124,7 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
                     className="w-10 h-10 rounded-full"
                     onClick={onAddMember}
                   >
-                    <Plus className="h-4 w-4" />
+                    +
                   </Button>
                 )}
               </div>
@@ -151,15 +144,12 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
               <h3 className="font-medium">Quick Actions</h3>
               <div className="flex flex-wrap gap-2">
                 <Button size="sm" variant="outline" onClick={() => onTabChange('notes')}>
-                  <StickyNote className="h-4 w-4 mr-2" />
                   View Notes
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => onTabChange('images')}>
-                  <Image className="h-4 w-4 mr-2" />
                   Manage Images
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => onTabChange('chat')}>
-                  <MessageSquare className="h-4 w-4 mr-2" />
                   Project Chat
                 </Button>
               </div>

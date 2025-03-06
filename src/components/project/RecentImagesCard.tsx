@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Image as ImageIcon, Loader2, CheckCircle, Plus } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 
 interface UploadedImage {
   url: string;
@@ -31,10 +31,7 @@ const RecentImagesCard: React.FC<RecentImagesCardProps> = ({
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center">
-          <ImageIcon className="h-5 w-5 mr-2 text-primary" />
-          Recent Images
-        </CardTitle>
+        <CardTitle className="text-lg">Recent Images</CardTitle>
       </CardHeader>
       <CardContent>
         {isImagesLoading ? (
@@ -43,7 +40,6 @@ const RecentImagesCard: React.FC<RecentImagesCardProps> = ({
           </div>
         ) : recentImages.length === 0 ? (
           <div className="text-center p-6 border border-dashed rounded-md">
-            <ImageIcon className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
             <p className="text-muted-foreground">No images uploaded yet</p>
             <Button 
               variant="outline" 
@@ -51,7 +47,6 @@ const RecentImagesCard: React.FC<RecentImagesCardProps> = ({
               className="mt-4"
               onClick={onViewAllImages}
             >
-              <Plus className="h-4 w-4 mr-2" />
               Add Images
             </Button>
           </div>
