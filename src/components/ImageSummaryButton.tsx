@@ -35,15 +35,20 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
 
       if (error) {
         console.error('Error from edge function:', error);
-        throw error;
+        throw new Error(`Error from edge function: ${error.message}`);
+      }
+      
+      if (!data || !data.summary) {
+        console.error('Invalid response from edge function:', data);
+        throw new Error('Failed to get a valid summary from the edge function');
       }
       
       console.log('Received summary data:', data);
       setSummary(data.summary);
     } catch (error: any) {
       console.error('Error generating image summary:', error);
+      setSummary(`Failed to generate summary: ${error.message}`);
       toast.error('Failed to generate image summary');
-      setIsDialogOpen(false);
     } finally {
       setIsGenerating(false);
     }

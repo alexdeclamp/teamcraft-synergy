@@ -18,6 +18,11 @@ serve(async (req) => {
   try {
     const { type, content, imageUrl } = await req.json();
     
+    console.log(`Processing ${type} summary request`);
+    if (type === 'image') {
+      console.log(`Image URL: ${imageUrl}`);
+    }
+    
     let prompt = '';
     let messages = [];
     
@@ -71,7 +76,7 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
+      console.error('OpenAI API error response:', errorData);
       throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
     }
 
