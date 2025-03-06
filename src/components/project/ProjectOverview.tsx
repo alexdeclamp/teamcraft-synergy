@@ -4,7 +4,6 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 
 interface ProjectMember {
   id: string;
@@ -54,14 +53,6 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
           <CardTitle className="text-lg">Project Statistics</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Activity</span>
-              <span className="font-medium">{activityPercentage}%</span>
-            </div>
-            <Progress value={activityPercentage} className="h-2" />
-          </div>
-          
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div className="space-y-1 border rounded-md p-3">
               <div className="text-xl font-bold text-primary">{imageCount}</div>

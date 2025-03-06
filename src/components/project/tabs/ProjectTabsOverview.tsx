@@ -1,7 +1,6 @@
 
 import React from 'react';
 import ProjectOverview from '../ProjectOverview';
-import RecentImagesCard from '../RecentImagesCard';
 import ProjectQuickLinks from '../ProjectQuickLinks';
 import { Button } from '@/components/ui/button';
 
@@ -46,14 +45,6 @@ const ProjectTabsOverview: React.FC<ProjectTabsOverviewProps> = ({
       />
 
       <div className="grid md:grid-cols-2 gap-6">
-        <RecentImagesCard
-          recentImages={recentImages}
-          totalImagesCount={imageCount}
-          isImagesLoading={isImagesLoading}
-          formatFileSize={formatFileSize}
-          onViewAllImages={() => onTabChange('images')}
-        />
-        
         <div className="space-y-3">
           <div className="p-6 border border-dashed rounded-md">
             <div className="text-center">
