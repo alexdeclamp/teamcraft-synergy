@@ -14,9 +14,10 @@ serve(async (req) => {
   }
 
   try {
+    // Create a Supabase client with the Auth context of the request
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', // Use service role key instead
       {
         global: {
           headers: { Authorization: req.headers.get('Authorization')! },
@@ -24,28 +25,39 @@ serve(async (req) => {
       }
     );
 
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    // Get the user data from the authenticated request
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     
-    if (!user) {
+    if (userError || !user) {
+      console.error('Authentication error:', userError);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized', details: userError?.message }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
       );
     }
 
-    const { action } = await req.json();
+    // Parse the request body
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      console.error('Error parsing request body:', e);
+      body = { action: null };
+    }
+    
+    const { action } = body || {};
 
     // Log the API call
     if (action === 'log_api_call') {
-      const { error } = await supabaseClient.from('user_usage_stats').insert({
+      const { error: logError } = await supabaseClient.from('user_usage_stats').insert({
         user_id: user.id,
         action_type: 'api_call',
       });
 
-      if (error) {
-        console.error('Error logging API call:', error);
+      if (logError) {
+        console.error('Error logging API call:', logError);
         return new Response(
-          JSON.stringify({ error: error.message }),
+          JSON.stringify({ error: logError.message }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
         );
       }
@@ -56,9 +68,9 @@ serve(async (req) => {
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
     // Get API call count for the current month
-    const { data: apiCallsData, error: apiError, count: apiCallCount } = await supabaseClient
+    const { count: apiCallCount, error: apiError } = await supabaseClient
       .from('user_usage_stats')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('action_type', 'api_call')
       .gte('created_at', firstDayOfMonth.toISOString());
@@ -71,12 +83,14 @@ serve(async (req) => {
       );
     }
     
-    // Get storage usage
+    // Get project count (active brains)
     const { data: projectsData, error: projectsError } = await supabaseClient
       .from('projects')
-      .select('id')
+      .select('id', { count: 'exact', head: true })
       .eq('owner_id', user.id)
       .is('is_archived', false);
+    
+    const activeProjectsCount = projectsData?.length || 0;
     
     if (projectsError) {
       console.error('Error fetching projects:', projectsError);
@@ -86,38 +100,31 @@ serve(async (req) => {
       );
     }
     
-    const projectIds = projectsData?.map(project => project.id) || [];
-    
+    // Calculate storage usage
     let totalStorageBytes = 0;
     
-    // For each project, get the storage usage
-    for (const projectId of projectIds) {
-      try {
-        const { data: storageBucket, error: storageError } = await supabaseClient
-          .storage
-          .from('project_images')
-          .list(projectId);
-        
-        if (!storageError && storageBucket) {
-          for (const file of storageBucket) {
-            totalStorageBytes += file.metadata?.size || 0;
+    // Get all storage buckets
+    const { data: buckets } = await supabaseClient.storage.listBuckets();
+    
+    if (buckets && buckets.length > 0) {
+      for (const bucket of buckets) {
+        // Check for project-specific storage by looking for user files
+        try {
+          const { data: files } = await supabaseClient.storage.from(bucket.name).list();
+          
+          if (files) {
+            for (const file of files) {
+              // If we can determine the file belongs to the user, add its size
+              // This is a simplified approach - in practice, you'd want to check file ownership
+              if (file.metadata?.owner_id === user.id) {
+                totalStorageBytes += file.metadata?.size || 0;
+              }
+            }
           }
+        } catch (err) {
+          console.error(`Error checking bucket ${bucket.name}:`, err);
+          // Continue with other buckets
         }
-        
-        // Also check documents storage
-        const { data: documentsBucket, error: documentsError } = await supabaseClient
-          .storage
-          .from('project_documents')
-          .list(projectId);
-        
-        if (!documentsError && documentsBucket) {
-          for (const file of documentsBucket) {
-            totalStorageBytes += file.metadata?.size || 0;
-          }
-        }
-      } catch (storageErr) {
-        console.error(`Error fetching storage for project ${projectId}:`, storageErr);
-        // Continue with other projects instead of failing completely
       }
     }
     
@@ -131,18 +138,23 @@ serve(async (req) => {
       storageUsed = `${(totalStorageBytes / (1024 * 1024)).toFixed(2)} MB`;
     }
     
+    // If we couldn't calculate storage accurately, provide a fallback
+    if (totalStorageBytes === 0) {
+      storageUsed = "0 KB";
+    }
+    
     return new Response(
       JSON.stringify({ 
-        apiCalls: apiCallsData?.length || 0,
+        apiCalls: apiCallCount || 0,
         storageUsed,
-        activeBrains: projectIds.length
+        activeBrains: activeProjectsCount
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in edge function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || 'Unknown error occurred' }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }

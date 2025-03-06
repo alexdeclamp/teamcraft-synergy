@@ -67,9 +67,10 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
           return;
         }
         
-        setActiveBrains(data.activeBrains || 0);
-        setApiCalls(data.apiCalls || 0);
-        setStorageUsed(data.storageUsed || '0 KB');
+        // Set the stats with fallbacks for any missing data
+        setActiveBrains(data.activeBrains ?? 0);
+        setApiCalls(data.apiCalls ?? 0);
+        setStorageUsed(data.storageUsed ?? '0 KB');
       } catch (error) {
         console.error('Error fetching user stats:', error);
         setError('An unexpected error occurred');
