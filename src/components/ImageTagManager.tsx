@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Tag, X, Plus } from 'lucide-react';
+import { Tag, X, Plus, Filter, ArrowUpAZ, ArrowDownAZ, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Popover,
@@ -13,6 +13,19 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface ImageTag {
   id: string;
@@ -36,10 +49,15 @@ const TAG_COLORS = [
   'bg-teal-100 text-teal-800 border-teal-200 hover:bg-teal-200',
 ];
 
+type SortOption = 'a-z' | 'z-a' | 'newest' | 'oldest';
+
 const ImageTagManager: React.FC<ImageTagManagerProps> = ({ imageUrl, projectId }) => {
   const [tags, setTags] = useState<ImageTag[]>([]);
+  const [filteredTags, setFilteredTags] = useState<ImageTag[]>([]);
   const [newTag, setNewTag] = useState('');
   const [isTagPopoverOpen, setIsTagPopoverOpen] = useState(false);
+  const [filterText, setFilterText] = useState('');
+  const [sortOption, setSortOption] = useState<SortOption>('a-z');
   const { user } = useAuth();
 
   useEffect(() => {
@@ -47,6 +65,38 @@ const ImageTagManager: React.FC<ImageTagManagerProps> = ({ imageUrl, projectId }
       fetchImageTags();
     }
   }, [imageUrl, projectId]);
+
+  // Apply filtering and sorting whenever tags, filterText, or sortOption changes
+  useEffect(() => {
+    let result = [...tags];
+    
+    // Apply filter
+    if (filterText) {
+      result = result.filter(tag => 
+        tag.tag.toLowerCase().includes(filterText.toLowerCase())
+      );
+    }
+    
+    // Apply sorting
+    switch (sortOption) {
+      case 'a-z':
+        result = result.sort((a, b) => a.tag.localeCompare(b.tag));
+        break;
+      case 'z-a':
+        result = result.sort((a, b) => b.tag.localeCompare(a.tag));
+        break;
+      case 'newest':
+        // We don't have a created_at field in our data model, so we'll use the array order
+        // which is already sorted by most recently added (since we add new tags to the beginning)
+        break;
+      case 'oldest':
+        // Reverse the array for oldest first
+        result = [...result].reverse();
+        break;
+    }
+    
+    setFilteredTags(result);
+  }, [tags, filterText, sortOption]);
 
   const fetchImageTags = async () => {
     try {
@@ -150,10 +200,24 @@ const ImageTagManager: React.FC<ImageTagManagerProps> = ({ imageUrl, projectId }
     }
   };
 
+  const handleFilterKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setFilterText('');
+    }
+  };
+
   // Function to get a consistent color for a tag based on its content
   const getTagColor = (tag: string) => {
     const index = tag.length % TAG_COLORS.length;
     return TAG_COLORS[index];
+  };
+
+  const handleSortChange = (value: SortOption) => {
+    setSortOption(value);
+  };
+
+  const clearFilter = () => {
+    setFilterText('');
   };
 
   return (
@@ -171,16 +235,86 @@ const ImageTagManager: React.FC<ImageTagManagerProps> = ({ imageUrl, projectId }
           <Tag className="h-3.5 w-3.5" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-72 p-3 animate-scale-in" side="top">
+      <PopoverContent className="w-80 p-3 animate-scale-in" side="top">
         <div className="space-y-3">
-          <h3 className="text-sm font-medium flex items-center gap-1.5">
-            <Tag className="h-3.5 w-3.5" />
-            Image Tags
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium flex items-center gap-1.5">
+              <Tag className="h-3.5 w-3.5" />
+              Image Tags
+              {tags.length > 0 && (
+                <Badge variant="secondary" className="ml-1.5 px-1.5 h-5">
+                  {tags.length}
+                </Badge>
+              )}
+            </h3>
+            
+            {/* Sort and Filter Controls */}
+            <div className="flex items-center gap-1">
+              {/* Sort Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" title="Sort Tags">
+                    {sortOption.includes('a-z') ? 
+                      <ArrowUpAZ className="h-3.5 w-3.5" /> :
+                      <ArrowDownAZ className="h-3.5 w-3.5" />
+                    }
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-36">
+                  <DropdownMenuItem 
+                    className={cn("text-xs", sortOption === 'a-z' && "bg-accent")}
+                    onClick={() => handleSortChange('a-z')}
+                  >
+                    <ArrowUpAZ className="mr-2 h-3.5 w-3.5" />
+                    A to Z
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className={cn("text-xs", sortOption === 'z-a' && "bg-accent")}
+                    onClick={() => handleSortChange('z-a')}
+                  >
+                    <ArrowDownAZ className="mr-2 h-3.5 w-3.5" />
+                    Z to A
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className={cn("text-xs", sortOption === 'newest' && "bg-accent")}
+                    onClick={() => handleSortChange('newest')}
+                  >
+                    Newest First
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className={cn("text-xs", sortOption === 'oldest' && "bg-accent")}
+                    onClick={() => handleSortChange('oldest')}
+                  >
+                    Oldest First
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
           
-          <div className="flex flex-wrap gap-1.5 min-h-[40px] max-h-[120px] overflow-y-auto p-1">
-            {tags.length > 0 ? (
-              tags.map(tag => (
+          {/* Filter Input */}
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+              onKeyDown={handleFilterKeyDown}
+              placeholder="Filter tags..."
+              className="pl-8 pr-8 text-xs h-8"
+            />
+            {filterText && (
+              <button 
+                onClick={clearFilter}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full hover:bg-muted-foreground/10 p-0.5"
+              >
+                <X className="h-3.5 w-3.5 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+          
+          <div className="flex flex-wrap gap-1.5 min-h-[40px] max-h-[120px] overflow-y-auto p-1 rounded-md border bg-background/50">
+            {filteredTags.length > 0 ? (
+              filteredTags.map(tag => (
                 <Badge 
                   key={tag.id} 
                   variant="outline"
@@ -199,8 +333,10 @@ const ImageTagManager: React.FC<ImageTagManagerProps> = ({ imageUrl, projectId }
                   </button>
                 </Badge>
               ))
+            ) : filterText ? (
+              <p className="text-xs text-muted-foreground italic px-1 w-full text-center py-2">No matching tags found</p>
             ) : (
-              <p className="text-xs text-muted-foreground italic px-1">No tags added yet</p>
+              <p className="text-xs text-muted-foreground italic px-1 w-full text-center py-2">No tags added yet</p>
             )}
           </div>
           
