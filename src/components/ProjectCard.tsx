@@ -6,7 +6,8 @@ import {
   Calendar, 
   MoreHorizontal, 
   Users, 
-  ExternalLink
+  ExternalLink,
+  Tag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,7 +35,8 @@ export interface ProjectCardProps {
   updatedAt: string;
   status: 'active' | 'archived' | 'completed';
   memberCount: number;
-  isOwner?: boolean; // Added isOwner property with optional flag
+  isOwner?: boolean;
+  tags?: string[];
   className?: string;
 }
 
@@ -47,6 +49,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   status,
   memberCount,
   isOwner,
+  tags = [],
   className,
 }) => {
   const statusColors = {
@@ -97,7 +100,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
       </CardHeader>
       <CardContent className="pb-4">
-        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+        <div className="flex items-center space-x-4 text-sm text-muted-foreground mb-3">
           <div className="flex items-center">
             <Calendar className="h-4 w-4 mr-1" />
             <span>{createdDate}</span>
@@ -107,6 +110,23 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             <span>{memberCount} member{memberCount !== 1 ? 's' : ''}</span>
           </div>
         </div>
+        
+        {tags && tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            <div className="flex items-center text-xs text-muted-foreground mr-1">
+              <Tag className="h-3 w-3 mr-1" />
+            </div>
+            {tags.map((tag, index) => (
+              <Badge 
+                key={`${tag}-${index}`} 
+                variant="secondary" 
+                className="text-xs px-2 py-0 bg-secondary/40"
+              >
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
       </CardContent>
       <CardFooter className="pt-0">
         <Link to={`/project/${id}`} className="w-full">
