@@ -54,6 +54,7 @@ import {
   Underline 
 } from 'lucide-react';
 import { toast } from 'sonner';
+import NoteSummaryButton from './NoteSummaryButton';
 
 interface Note {
   id: string;
@@ -517,6 +518,19 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
                   
                   {note.user_id === user?.id && (
                     <div className="flex space-x-1 ml-2" onClick={e => e.stopPropagation()}>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <NoteSummaryButton 
+                              noteId={note.id} 
+                              noteTitle={note.title}
+                              noteContent={note.content}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>Generate Summary</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>

@@ -1,0 +1,88 @@
+
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { type, content, imageUrl } = await req.json();
+    
+    let prompt = '';
+    let messages = [];
+    
+    if (type === 'note') {
+      prompt = `
+      You are a project manager and data protection officer. Create a concise summary of the following project note.
+      Focus on key elements, main takeaways, and important learnings that would help someone remember what this note was about.
+      Make your summary professional, clear, and highlight any action items or decisions if present.
+      
+      NOTE CONTENT:
+      ${content}
+      `;
+      
+      messages = [
+        { role: 'system', content: 'You are a professional project manager and data protection officer assistant that specializes in creating concise summaries of project materials.' },
+        { role: 'user', content: prompt }
+      ];
+    } else if (type === 'image') {
+      prompt = `
+      You are a project manager and data protection officer. Create a concise description of the following image.
+      Focus on describing what's in the image professionally and highlight its relevance to a project context.
+      Keep your description clear and mention any key elements that would help someone remember what this image was about.
+      
+      IMAGE URL:
+      ${imageUrl}
+      `;
+      
+      messages = [
+        { role: 'system', content: 'You are a professional project manager and data protection officer assistant that specializes in creating concise descriptions of project images.' },
+        { role: 'user', content: prompt }
+      ];
+    } else {
+      throw new Error('Invalid summary type requested');
+    }
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: messages,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('OpenAI API error:', errorData);
+      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
+    const summary = data.choices[0].message.content;
+
+    return new Response(JSON.stringify({ summary }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error in generate-summary function:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});

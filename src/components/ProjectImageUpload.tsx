@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,6 +41,7 @@ import {
   Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ImageSummaryButton from './ImageSummaryButton';
 
 interface ProjectImageUploadProps {
   projectId: string;
@@ -452,17 +452,23 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
                               {formatFileSize(image.size)}
                             </p>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 flex-shrink-0"
-                            onClick={() => {
-                              navigator.clipboard.writeText(image.url);
-                              toast.success('Image URL copied to clipboard');
-                            }}
-                          >
-                            <Info className="h-3.5 w-3.5" />
-                          </Button>
+                          <div className="flex space-x-1">
+                            <ImageSummaryButton 
+                              imageUrl={image.url}
+                              imageName={image.name}
+                            />
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 flex-shrink-0"
+                              onClick={() => {
+                                navigator.clipboard.writeText(image.url);
+                                toast.success('Image URL copied to clipboard');
+                              }}
+                            >
+                              <Info className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
                         </div>
                         <Input
                           value={image.url}
