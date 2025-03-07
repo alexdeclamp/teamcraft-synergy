@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,8 +26,8 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
         return;
       }
       
-      if (selectedFile.size > 3 * 1024 * 1024) { // Reduced to 3MB limit
-        toast.error('File size exceeds 3MB limit for edge function processing');
+      if (selectedFile.size > 10 * 1024 * 1024) { // 10MB limit
+        toast.error('File size exceeds 10MB limit');
         return;
       }
       
@@ -46,102 +45,77 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
     try {
       setIsUploading(true);
       setErrorMessage(null);
-      setUploadProgress(10);
+      setUploadProgress(20);
       
-      const fileReader = new FileReader();
+      // Define file path in storage
+      const timestamp = new Date().getTime();
+      const pdfPath = `${userId}/${projectId}/${timestamp}_${file.name}`;
+      const bucketName = 'project_documents';
       
-      fileReader.onload = async (event) => {
-        try {
-          if (!event.target?.result) {
-            throw new Error('Failed to read file');
-          }
-          
-          setUploadProgress(30);
-          console.log("Calling edge function with params:", {
-            fileSize: file.size,
-            fileName: file.name,
-            projectId,
-            userId
-          });
-          
-          // Set a timeout for the edge function call
-          let edgeFunctionResponse: any = null;
-          let edgeFunctionError: any = null;
-          
-          try {
-            // Define a promise that will be rejected after timeout
-            const timeoutPromise = new Promise((_, reject) => {
-              setTimeout(() => reject(new Error('Request timed out after 25 seconds')), 25000);
-            });
-            
-            // Create the supabase function invoke promise
-            const functionPromise = supabase.functions.invoke('extract-pdf-text', {
-              body: {
-                fileBase64: event.target.result,
-                fileName: file.name,
-                projectId,
-                userId,
-                createNote: false // Always set to false
-              }
-            });
-            
-            // Race between the function call and the timeout
-            edgeFunctionResponse = await Promise.race([functionPromise, timeoutPromise]);
-          } catch (err: any) {
-            console.error('Edge function call error:', err);
-            edgeFunctionError = err;
-          }
-          
-          if (edgeFunctionError) {
-            throw new Error(`Upload failed: ${edgeFunctionError.message || 'Unknown error'}`);
-          }
-          
-          const { data, error } = edgeFunctionResponse || { data: null, error: null };
-          
-          console.log("Edge function response:", data, error);
-          
-          if (error) {
-            console.error('Edge function error:', error);
-            throw new Error(`Upload failed: ${error.message || 'Unknown error'}`);
-          }
-          
-          if (data?.error) {
-            throw new Error(data.error);
-          }
-          
-          setUploadProgress(90);
-          
-          let successMessage = `PDF uploaded successfully`;
-          
-          toast.success(successMessage);
-          setUploadProgress(100);
-          
-          if (onDocumentUploaded && data?.document) {
-            onDocumentUploaded(data.document);
-          }
-          
-        } catch (err: any) {
-          console.error('Error processing PDF:', err);
-          setErrorMessage(err.message || 'Unknown error occurred');
-          toast.error(`Failed to process PDF: ${err.message || 'Unknown error'}`);
-        } finally {
-          setIsUploading(false);
-        }
-      };
+      // Upload the PDF file directly to Supabase Storage
+      setUploadProgress(40);
+      console.log(`Uploading PDF to storage: ${pdfPath}`);
       
-      fileReader.onerror = (event) => {
-        console.error('FileReader error:', event);
-        toast.error('Failed to read file');
-        setIsUploading(false);
-        setErrorMessage('Failed to read file');
-      };
+      const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from(bucketName)
+        .upload(pdfPath, file, {
+          contentType: 'application/pdf',
+          upsert: false
+        });
       
-      fileReader.readAsDataURL(file);
+      if (uploadError) {
+        console.error('Error uploading file to storage:', uploadError);
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
+      
+      setUploadProgress(70);
+      
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase
+        .storage
+        .from(bucketName)
+        .getPublicUrl(pdfPath);
+      
+      // Save document info in the database
+      setUploadProgress(85);
+      console.log("Saving document info to database");
+      
+      const { data: documentData, error: documentError } = await supabase
+        .from('project_documents')
+        .insert({
+          project_id: projectId,
+          user_id: userId,
+          file_name: file.name,
+          file_url: publicUrl,
+          file_path: pdfPath,
+          document_type: 'pdf',
+          file_size: file.size,
+          metadata: {
+            pdf_url: publicUrl
+          }
+        })
+        .select()
+        .single();
+      
+      if (documentError) {
+        console.error('Error saving document to database:', documentError);
+        throw new Error(`Database error: ${documentError.message}`);
+      }
+      
+      setUploadProgress(100);
+      toast.success('PDF uploaded successfully');
+      
+      if (onDocumentUploaded && documentData) {
+        onDocumentUploaded(documentData);
+      }
       
     } catch (error: any) {
       console.error('Error uploading document:', error);
       toast.error(`Upload failed: ${error.message || 'Unknown error'}`);
       setErrorMessage(error.message || 'Unknown error occurred');
+      setIsUploading(false);
+    } finally {
       setIsUploading(false);
     }
   };
