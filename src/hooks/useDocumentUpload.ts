@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,7 +15,6 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [createNote, setCreateNote] = useState(true);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -38,7 +36,7 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
   };
 
   const handleCreateNoteChange = (checked: boolean) => {
-    setCreateNote(checked);
+    // Keeping this method for interface compatibility
   };
 
   const uploadDocument = async () => {
@@ -62,8 +60,7 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
             fileSize: file.size,
             fileName: file.name,
             projectId,
-            userId,
-            createNote
+            userId
           });
           
           // Set a timeout for the edge function call
@@ -83,7 +80,7 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
                 fileName: file.name,
                 projectId,
                 userId,
-                createNote
+                createNote: false // Always set to false
               }
             });
             
@@ -114,21 +111,12 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
           setUploadProgress(90);
           
           let successMessage = `PDF uploaded successfully`;
-          if (data?.noteId) {
-            successMessage += ` and note created`;
-          }
           
           toast.success(successMessage);
           setUploadProgress(100);
           
           if (onDocumentUploaded && data?.document) {
             onDocumentUploaded(data.document);
-          }
-          
-          if (data?.noteId) {
-            setTimeout(() => {
-              navigate(`/project/${projectId}/notes/${data.noteId}`);
-            }, 1500);
           }
           
         } catch (err: any) {
@@ -171,9 +159,9 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
     isUploading,
     uploadProgress,
     errorMessage,
-    createNote,
+    createNote: false, // Always return false for createNote
     handleFileChange,
-    handleCreateNoteChange,
+    handleCreateNoteChange, // Keep for interface compatibility
     uploadDocument,
     resetForm
   };
