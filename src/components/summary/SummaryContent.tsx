@@ -20,7 +20,7 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
     );
   }
 
-  if (summary) {
+  if (summary && summary.trim() !== '') {
     return (
       <>
         <div className="mb-2 px-2 text-sm text-muted-foreground flex items-center">
