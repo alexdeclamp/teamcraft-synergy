@@ -41,13 +41,17 @@ serve(async (req) => {
       throw new Error(`Failed to download PDF: ${pdfResponse.status} ${pdfResponse.statusText}`);
     }
     
+    // Read the PDF as an ArrayBuffer and convert to base64
     const pdfBuffer = await pdfResponse.arrayBuffer();
     const pdfBase64 = btoa(
       new Uint8Array(pdfBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
     );
     
+    console.log(`PDF downloaded and converted to base64 (${pdfBase64.length} chars)`);
+    
     // Call Claude API with improved error handling
     try {
+      console.log("Calling Claude API with opus model...");
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -97,6 +101,8 @@ serve(async (req) => {
       }
       
       const data = await response.json();
+      console.log("Claude API response received:", JSON.stringify(data).slice(0, 200) + "...");
+      
       if (!data.content || !data.content[0] || !data.content[0].text) {
         console.error('Invalid response from Claude API:', data);
         return new Response(
