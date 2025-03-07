@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, RefreshCw } from 'lucide-react';
-import { DocumentItem } from './DocumentItem';
+import DocumentItem from './DocumentItem';
 
 interface Document {
   id: string;
