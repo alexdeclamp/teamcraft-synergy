@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useRouter } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface UseDocumentUploadProps {
   projectId: string;
@@ -11,7 +10,7 @@ interface UseDocumentUploadProps {
 }
 
 export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: UseDocumentUploadProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -101,11 +100,9 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
             onDocumentUploaded(data.document);
           }
           
-          // Navigate to the created note if available
           if (data.noteId) {
-            // Optional: Add a delay so the user sees the success message
             setTimeout(() => {
-              router.navigate(`/project/${projectId}/notes/${data.noteId}`);
+              navigate(`/project/${projectId}/notes/${data.noteId}`);
             }, 1500);
           }
           
