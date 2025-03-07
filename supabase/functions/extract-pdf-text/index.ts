@@ -171,11 +171,36 @@ serve(async (req) => {
       });
     }
 
+    // Also upload the original PDF file for Claude to access directly
+    const pdfPath = `${userId}/${projectId}/${timestamp}_${fileName}`;
+    console.log(`Uploading original PDF to storage: ${pdfPath}`);
+    const { data: pdfStorageData, error: pdfStorageError } = await supabase
+      .storage
+      .from(bucketName)
+      .upload(pdfPath, binaryPdf, {
+        contentType: 'application/pdf',
+        upsert: false
+      });
+      
+    if (pdfStorageError) {
+      console.error(`Error uploading PDF to storage:`, pdfStorageError);
+      return new Response(
+        JSON.stringify({ error: `Storage error: ${pdfStorageError.message}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Get public URL for the uploaded PDF
+    const { data: { publicUrl: pdfPublicUrl } } = supabase
+      .storage
+      .from(bucketName)
+      .getPublicUrl(pdfPath);
+    
     let noteId = null;
     let summary = null;
 
     // Generate note using Claude API if requested
-    if (createNote && extractedText) {
+    if (createNote) {
       try {
         console.log("Generating note summary using Claude API");
         const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
@@ -185,12 +210,8 @@ serve(async (req) => {
           throw new Error('Anthropic API key not configured');
         }
 
-        // Trim text if too large (Claude has context limits)
-        const maxChars = 25000;
-        const trimmedText = extractedText.length > maxChars 
-          ? extractedText.substring(0, maxChars) + "... [content truncated due to length]" 
-          : extractedText;
-
+        // Send the PDF URL directly to Claude
+        console.log("Sending PDF URL to Claude:", pdfPublicUrl);
         const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
@@ -205,18 +226,27 @@ serve(async (req) => {
             messages: [
               {
                 role: 'user',
-                content: `Here is the text content extracted from a PDF document titled "${fileNameWithoutExt}". 
-                Please analyze this content and create a structured note with the following:
-                
-                1. A brief summary of the main content (2-3 paragraphs)
-                2. Key points or takeaways (bullet points)
-                3. Any important data, dates, or numbers mentioned
-                4. Suggested next actions (if applicable)
-                
-                Please be concise and focus on the most valuable information.
-                
-                Here's the PDF content:
-                ${trimmedText}`
+                content: [
+                  {
+                    type: "text",
+                    text: `Please analyze the PDF document at this URL: ${pdfPublicUrl}
+                    
+                    Create a structured note with the following:
+                    
+                    1. A brief summary of the main content (2-3 paragraphs)
+                    2. Key points or takeaways (bullet points)
+                    3. Any important data, dates, or numbers mentioned
+                    4. Suggested next actions (if applicable)
+                    
+                    Please be concise and focus on the most valuable information.`
+                  },
+                  {
+                    type: "file_url",
+                    file_url: {
+                      url: pdfPublicUrl
+                    }
+                  }
+                ]
               }
             ]
           })
@@ -268,7 +298,7 @@ serve(async (req) => {
         user_id: userId,
         file_name: fileName,
         file_url: images.length > 0 ? images[0].url : null, // Use first image as main URL
-        file_path: `${userId}/${projectId}/${timestamp}_${fileName}`, // Original reference path
+        file_path: pdfPath, // Path to the original PDF
         document_type: 'png',
         content_text: extractedText,
         metadata: {
@@ -277,6 +307,7 @@ serve(async (req) => {
             url: img.url,
             path: img.path
           })),
+          pdf_url: pdfPublicUrl,
           totalPages: pdf.numPages,
           associatedNoteId: noteId
         }
@@ -299,6 +330,7 @@ serve(async (req) => {
         document: documentData,
         pages: images.length,
         images: images,
+        pdfUrl: pdfPublicUrl,
         noteId: noteId,
         summary: summary
       }),
