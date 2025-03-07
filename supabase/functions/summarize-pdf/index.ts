@@ -35,23 +35,9 @@ serve(async (req) => {
     console.log(`Summarizing PDF: ${fileName}`);
     console.log(`PDF URL: ${pdfUrl}`);
     
-    // Download the PDF first
-    const pdfResponse = await fetch(pdfUrl);
-    if (!pdfResponse.ok) {
-      throw new Error(`Failed to download PDF: ${pdfResponse.status} ${pdfResponse.statusText}`);
-    }
-    
-    // Read the PDF as an ArrayBuffer and convert to base64
-    const pdfBuffer = await pdfResponse.arrayBuffer();
-    const pdfBase64 = btoa(
-      new Uint8Array(pdfBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-    );
-    
-    console.log(`PDF downloaded and converted to base64 (${pdfBase64.length} chars)`);
-    
     // Call Claude API with improved error handling
     try {
-      console.log("Calling Claude API with opus model...");
+      console.log("Calling Claude API...");
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -68,7 +54,7 @@ serve(async (req) => {
               content: [
                 {
                   type: "text",
-                  text: `Please provide a comprehensive summary of this PDF document. 
+                  text: `Please provide a comprehensive summary of this PDF document (${pdfUrl}). 
                   
                   Include the following in your summary:
                   1. The main purpose and key points of the document
@@ -76,14 +62,6 @@ serve(async (req) => {
                   3. Any conclusions or recommendations
                   
                   Format your response in a clear, structured way using paragraphs, bullet points, and headings as appropriate.`
-                },
-                {
-                  type: "image",
-                  source: {
-                    type: "base64",
-                    media_type: "application/pdf",
-                    data: pdfBase64
-                  }
                 }
               ]
             }
