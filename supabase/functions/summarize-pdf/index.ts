@@ -35,6 +35,17 @@ serve(async (req) => {
     console.log(`Summarizing PDF: ${fileName}`);
     console.log(`PDF URL: ${pdfUrl}`);
     
+    // Download the PDF first
+    const pdfResponse = await fetch(pdfUrl);
+    if (!pdfResponse.ok) {
+      throw new Error(`Failed to download PDF: ${pdfResponse.status} ${pdfResponse.statusText}`);
+    }
+    
+    const pdfBuffer = await pdfResponse.arrayBuffer();
+    const pdfBase64 = btoa(
+      new Uint8Array(pdfBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+    );
+    
     // Call Claude API with improved error handling
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -45,7 +56,7 @@ serve(async (req) => {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: "claude-3-opus-20240229",  // Changed to opus model which supports PDF
+          model: "claude-3-opus-20240229",
           max_tokens: 1500,
           messages: [
             {
@@ -63,10 +74,11 @@ serve(async (req) => {
                   Format your response in a clear, structured way using paragraphs, bullet points, and headings as appropriate.`
                 },
                 {
-                  type: "file_url",
-                  file_url: {
-                    url: pdfUrl,
-                    mime_type: "application/pdf"
+                  type: "image",
+                  source: {
+                    type: "base64",
+                    media_type: "application/pdf",
+                    data: pdfBase64
                   }
                 }
               ]
