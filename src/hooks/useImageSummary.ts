@@ -15,7 +15,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
   const [hasSummary, setHasSummary] = useState(false);
   const { user } = useAuth();
 
-  // Fetch existing summary when component mounts
+  // Fetch existing summary when component mounts or when imageUrl/projectId changes
   useEffect(() => {
     if (imageUrl && projectId) {
       fetchExistingSummary();
@@ -29,6 +29,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       console.log('Fetching existing summary for image:', imageUrl);
       console.log('Project ID:', projectId);
       
+      // Use exact equality for image_url and project_id when querying
       const { data, error } = await supabase
         .from('image_summaries')
         .select('summary')
@@ -46,6 +47,9 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       if (data && data.summary) {
         setSummary(data.summary);
         setHasSummary(true);
+      } else {
+        setSummary('');
+        setHasSummary(false);
       }
     } catch (error) {
       console.error('Error checking for existing summary:', error);
@@ -113,8 +117,10 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       setHasSummary(true);
       toast.success('Summary generated and saved successfully');
       
-      // Refresh the summary data to ensure it was saved properly
-      await fetchExistingSummary();
+      // Wait a bit before fetching to ensure the database has time to update
+      setTimeout(() => {
+        fetchExistingSummary();
+      }, 1000);
       
     } catch (error: any) {
       console.error('Error generating image summary:', error);

@@ -32,6 +32,13 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
 }) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   
+  // Reset feedback state when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setFeedbackGiven(false);
+    }
+  }, [isOpen]);
+  
   // Add effect to reset dialog state when unmounting
   useEffect(() => {
     return () => {
@@ -93,12 +100,10 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
             </div>
           ) : summary ? (
             <>
-              {hasSavedVersion && (
-                <div className="mb-2 px-2 text-sm text-muted-foreground flex items-center">
-                  <Save className="h-3 w-3 mr-1" />
-                  <span>Summary is saved and will be available instantly next time</span>
-                </div>
-              )}
+              <div className="mb-2 px-2 text-sm text-muted-foreground flex items-center">
+                <Save className="h-3 w-3 mr-1" />
+                <span>Summary is saved and will be available instantly next time</span>
+              </div>
               <div className="p-4 bg-accent/20 rounded-md whitespace-pre-wrap max-h-[50vh] overflow-y-auto">
                 {summary}
               </div>
