@@ -92,15 +92,14 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
     try {
       console.log('Sending question about document:', document.file_name);
       console.log('Question:', question);
-      console.log('Document context available:', documentContent ? 'Yes' : 'No');
+      console.log('Document URL:', document.file_url);
       
       const { data, error } = await supabase.functions.invoke('chat-with-pdf', {
         body: {
           pdfUrl: document.file_url,
           fileName: document.file_name,
           message: question,
-          documentContext: documentContent || document.content_text || '',
-          projectId
+          documentContext: documentContent || document.content_text || ''
         }
       });
       
