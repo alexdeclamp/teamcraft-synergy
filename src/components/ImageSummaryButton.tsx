@@ -73,6 +73,8 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         summary={summary}
         isLoading={isGenerating}
         hasSavedVersion={hasSummary}
+        projectId={projectId}
+        imageName={imageName}
       />
     </>
   );

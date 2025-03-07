@@ -10,8 +10,10 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Loader2, Download, Copy, ThumbsUp, ThumbsDown, Save } from 'lucide-react';
+import { Loader2, Download, Copy, ThumbsUp, ThumbsDown, Save, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SummaryDialogProps {
   isOpen: boolean;
@@ -20,6 +22,8 @@ interface SummaryDialogProps {
   summary: string;
   isLoading: boolean;
   hasSavedVersion?: boolean;
+  projectId?: string;
+  imageName?: string;
 }
 
 const SummaryDialog: React.FC<SummaryDialogProps> = ({
@@ -28,9 +32,13 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   title,
   summary,
   isLoading,
-  hasSavedVersion = false
+  hasSavedVersion = false,
+  projectId,
+  imageName
 }) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
+  const [isCreatingNote, setIsCreatingNote] = useState(false);
+  const { user } = useAuth();
   
   // Reset feedback state when dialog opens
   useEffect(() => {
@@ -78,6 +86,44 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     // In a real app, you might want to send this feedback to your backend
     toast.success(`Thank you for your feedback!`);
     setFeedbackGiven(true);
+  };
+
+  const handleCreateNote = async () => {
+    if (!summary || !projectId || !user) {
+      toast.error("Cannot create note from this summary");
+      return;
+    }
+
+    try {
+      setIsCreatingNote(true);
+      
+      // Create a note title based on image name or a default
+      const noteTitle = imageName 
+        ? `Image Description: ${imageName}` 
+        : "Image Description";
+      
+      const { data, error } = await supabase
+        .from('project_notes')
+        .insert({
+          title: noteTitle,
+          content: summary,
+          project_id: projectId,
+          user_id: user.id,
+          tags: ['image', 'ai-generated']
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success('Note created successfully from image description');
+      onClose(); // Close the dialog after creating the note
+    } catch (error: any) {
+      console.error('Error creating note:', error);
+      toast.error(`Failed to create note: ${error.message}`);
+    } finally {
+      setIsCreatingNote(false);
+    }
   };
 
   return (
@@ -146,6 +192,19 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           <div className="flex space-x-2">
             {!isLoading && summary && (
               <>
+                <Button 
+                  onClick={handleCreateNote} 
+                  size="sm" 
+                  disabled={isCreatingNote || !projectId}
+                  className="gap-1"
+                >
+                  {isCreatingNote ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileText className="h-4 w-4" />
+                  )}
+                  Create Note
+                </Button>
                 <Button onClick={handleCopy} size="sm" variant="outline">
                   <Copy className="h-4 w-4 mr-2" />
                   Copy
