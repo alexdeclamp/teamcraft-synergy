@@ -42,9 +42,15 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({ document, projectId 
     }
   };
 
-  // Only show extract button for PDF documents that have a pdf_url in metadata or are direct PDFs
-  const isPdf = document.document_type === 'pdf';
+  // Check if this is a PDF document
+  const isPdf = document.document_type === 'pdf' || 
+                document.file_name.toLowerCase().endsWith('.pdf') ||
+                document.file_url.toLowerCase().includes('.pdf');
+  
+  // Also check if we have a PDF URL in metadata
   const hasPdfUrl = document.metadata?.pdf_url !== undefined;
+  
+  // Show extract button for PDF documents
   const showExtractButton = isPdf || hasPdfUrl;
 
   return (

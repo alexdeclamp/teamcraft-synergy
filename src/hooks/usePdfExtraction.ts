@@ -43,7 +43,6 @@ export const usePdfExtraction = (document: Document, projectId: string) => {
 
       try {
         // Call the edge function to extract information using Claude
-        // Note: Removed the signal property which was causing the TS error
         const { data, error } = await supabase.functions.invoke('extract-pdf-info', {
           body: {
             pdfUrl,
