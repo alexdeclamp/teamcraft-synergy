@@ -66,29 +66,33 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
             createNote
           });
           
-          // Add error handling with timeout for edge function call
-          const functionPromise = supabase.functions.invoke('extract-pdf-text', {
-            body: {
-              fileBase64: event.target.result,
-              fileName: file.name,
-              projectId,
-              userId,
-              createNote
+          // Add timeout handling for edge function call
+          const functionPromise = new Promise(async (resolve, reject) => {
+            try {
+              // Add a timeout for the edge function call
+              const timeoutId = setTimeout(() => {
+                reject(new Error('Edge function request timed out after 60 seconds'));
+              }, 60000);
+              
+              const result = await supabase.functions.invoke('extract-pdf-text', {
+                body: {
+                  fileBase64: event.target.result,
+                  fileName: file.name,
+                  projectId,
+                  userId,
+                  createNote
+                }
+              });
+              
+              clearTimeout(timeoutId);
+              resolve(result);
+            } catch (err) {
+              reject(err);
             }
           });
           
-          // Set a timeout for the edge function call
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Edge function request timed out after 60 seconds')), 60000);
-          });
-          
           // Race the function call against the timeout
-          const { data, error } = await Promise.race([functionPromise, timeoutPromise])
-            .then(result => result as { data: any, error: any })
-            .catch(err => {
-              console.error('Edge function error:', err);
-              return { data: null, error: err };
-            });
+          const { data, error } = await functionPromise as { data: any, error: any };
           
           console.log("Edge function response:", data, error);
           

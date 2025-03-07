@@ -2,7 +2,7 @@
 import React from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, FileText } from 'lucide-react';
+import { AlertCircle, FileText, Loader2 } from 'lucide-react';
 
 interface DocumentUploadStatusProps {
   isUploading: boolean;
@@ -22,18 +22,28 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
       {errorMessage && (
         <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm flex items-start">
           <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-          <div>{errorMessage}</div>
+          <div>
+            <p className="font-medium mb-1">Error uploading document</p>
+            <p>{errorMessage}</p>
+            <p className="mt-2 text-xs">If this error persists, please check your network connection or try a different file.</p>
+          </div>
         </div>
       )}
       
       {isUploading && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <Progress value={uploadProgress} className="h-2" />
-          <p className="text-xs text-muted-foreground text-center">
-            {uploadProgress < 30 && "Reading file..."}
-            {uploadProgress >= 30 && uploadProgress < 60 && "Processing PDF..."}
-            {uploadProgress >= 60 && uploadProgress < 90 && uploadProgress > 30 && "Generating note..."}
-            {uploadProgress >= 90 && "Finalizing..."}
+          <div className="flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <p className="text-sm text-muted-foreground">
+              {uploadProgress < 30 && "Reading file..."}
+              {uploadProgress >= 30 && uploadProgress < 60 && "Processing PDF..."}
+              {uploadProgress >= 60 && uploadProgress < 90 && uploadProgress > 30 && "Generating note..."}
+              {uploadProgress >= 90 && "Finalizing..."}
+            </p>
+          </div>
+          <p className="text-xs text-center text-muted-foreground">
+            This may take a moment for larger files
           </p>
         </div>
       )}
