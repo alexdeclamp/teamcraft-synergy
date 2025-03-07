@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import SummaryDialog from './SummaryDialog';
+import SummaryDialog from './summary/SummaryDialog';
 import { useParams } from 'react-router-dom';
 import ImageTagManager from './ImageTagManager';
 import { useImageSummary } from '@/hooks/useImageSummary';
