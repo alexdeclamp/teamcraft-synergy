@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,8 +28,8 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
         return;
       }
       
-      if (selectedFile.size > 10 * 1024 * 1024) { // 10MB limit
-        toast.error('File size exceeds 10MB limit');
+      if (selectedFile.size > 6 * 1024 * 1024) { // Reduced to 6MB limit for edge function
+        toast.error('File size exceeds 6MB limit for edge function processing');
         return;
       }
       
@@ -65,7 +66,8 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
             createNote
           });
           
-          const { data, error } = await supabase.functions.invoke('extract-pdf-text', {
+          // Add error handling with timeout for edge function call
+          const functionPromise = supabase.functions.invoke('extract-pdf-text', {
             body: {
               fileBase64: event.target.result,
               fileName: file.name,
@@ -75,6 +77,19 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
             }
           });
           
+          // Set a timeout for the edge function call
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Edge function request timed out after 60 seconds')), 60000);
+          });
+          
+          // Race the function call against the timeout
+          const { data, error } = await Promise.race([functionPromise, timeoutPromise])
+            .then(result => result as { data: any, error: any })
+            .catch(err => {
+              console.error('Edge function error:', err);
+              return { data: null, error: err };
+            });
+          
           console.log("Edge function response:", data, error);
           
           if (error) {
@@ -82,25 +97,25 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
             throw new Error(`Upload failed: ${error.message || 'Unknown error'}`);
           }
           
-          if (data.error) {
+          if (data?.error) {
             throw new Error(data.error);
           }
           
           setUploadProgress(90);
           
           let successMessage = `PDF uploaded successfully`;
-          if (data.noteId) {
+          if (data?.noteId) {
             successMessage += ` and note created`;
           }
           
           toast.success(successMessage);
           setUploadProgress(100);
           
-          if (onDocumentUploaded && data.document) {
+          if (onDocumentUploaded && data?.document) {
             onDocumentUploaded(data.document);
           }
           
-          if (data.noteId) {
+          if (data?.noteId) {
             setTimeout(() => {
               navigate(`/project/${projectId}/notes/${data.noteId}`);
             }, 1500);
