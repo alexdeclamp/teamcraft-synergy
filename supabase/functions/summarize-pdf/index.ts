@@ -45,19 +45,12 @@ serve(async (req) => {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: "claude-3-haiku-20240307",
+          model: "claude-3-opus-20240229",  // Changed to opus model which supports PDF
           max_tokens: 1500,
           messages: [
             {
               role: "user",
               content: [
-                {
-                  type: "document",
-                  source: {
-                    type: "url",
-                    url: pdfUrl
-                  }
-                },
                 {
                   type: "text",
                   text: `Please provide a comprehensive summary of this PDF document. 
@@ -68,6 +61,13 @@ serve(async (req) => {
                   3. Any conclusions or recommendations
                   
                   Format your response in a clear, structured way using paragraphs, bullet points, and headings as appropriate.`
+                },
+                {
+                  type: "file_url",
+                  file_url: {
+                    url: pdfUrl,
+                    mime_type: "application/pdf"
+                  }
                 }
               ]
             }
