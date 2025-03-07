@@ -37,9 +37,91 @@ serve(async (req) => {
     console.log(`User message: ${message}`);
     console.log(`Document context length: ${documentContext ? documentContext.length : 0} characters`);
     
-    // Call Claude API with the file URL
+    // First attempt to fetch the PDF content as binary data
+    let pdfBinaryContent;
     try {
-      console.log("Calling Claude API with file_url...");
+      const pdfResponse = await fetch(pdfUrl);
+      if (pdfResponse.ok) {
+        pdfBinaryContent = await pdfResponse.arrayBuffer();
+      } else {
+        console.error(`Failed to fetch PDF: ${pdfResponse.status}`);
+      }
+    } catch (error) {
+      console.error(`Error fetching PDF binary: ${error.message}`);
+    }
+
+    // Call Claude API with PDF binary data if available
+    if (pdfBinaryContent) {
+      try {
+        console.log("Calling Claude API with PDF binary data...");
+        const formData = new FormData();
+        
+        // Prepare messages part
+        const messagesJson = JSON.stringify({
+          model: "claude-3-7-sonnet-20250219",
+          max_tokens: 1500,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `This is a PDF document named "${fileName}". Please answer my following question about this document: ${message}`
+                }
+              ]
+            }
+          ]
+        });
+        
+        formData.append("messages", messagesJson);
+        
+        // Add the PDF file
+        const pdfBlob = new Blob([new Uint8Array(pdfBinaryContent)], { type: 'application/pdf' });
+        formData.append("file", pdfBlob, fileName);
+        
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': anthropicApiKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: formData
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Claude API error with binary PDF: ${response.status}`, errorText);
+          // We'll fall back to the text approach below
+        } else {
+          const data = await response.json();
+          if (data.content && data.content[0] && data.content[0].text) {
+            const answer = data.content[0].text;
+            
+            console.log("Answer generated successfully using PDF binary approach");
+            
+            return new Response(
+              JSON.stringify({ 
+                success: true, 
+                answer: answer,
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Error calling Claude API with binary PDF:', error);
+        // We'll fall back to the text approach below
+      }
+    }
+    
+    // Fallback to text-based approach if we have document content
+    if (documentContext && documentContext.trim() !== '') {
+      return await handleWithDocumentContext(pdfUrl, fileName, message, documentContext);
+    }
+    
+    // Final fallback: try using the document URL directly (older API approach)
+    try {
+      console.log("Falling back to text-only approach...");
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -56,13 +138,13 @@ serve(async (req) => {
               content: [
                 {
                   type: "text",
-                  text: `This is a PDF document named "${fileName}". Please answer my following question about this document: ${message}`
-                },
-                {
-                  type: "file_url",
-                  file_url: {
-                    url: pdfUrl
-                  }
+                  text: `I have a PDF document named "${fileName}". Please answer the following question about this document: ${message}
+
+Here's my question: ${message}
+
+The document is available at this URL: ${pdfUrl}
+
+If you can't access the document directly, please let me know that you need more information about the document content to answer my question.`
                 }
               ]
             }
@@ -72,14 +154,7 @@ serve(async (req) => {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Claude API error: ${response.status}`, errorText);
-        
-        // Fallback to text-based approach if file_url fails
-        if (documentContext && documentContext.trim() !== '') {
-          console.log('File URL approach failed, falling back to document context approach...');
-          return await handleWithDocumentContext(pdfUrl, fileName, message, documentContext);
-        }
-        
+        console.error(`Claude API error with text-only approach: ${response.status}`, errorText);
         return new Response(
           JSON.stringify({ error: `Claude API error: ${response.status}. Details: ${errorText}` }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -87,17 +162,8 @@ serve(async (req) => {
       }
       
       const data = await response.json();
-      console.log("Claude API response received:", JSON.stringify(data).slice(0, 200) + "...");
-      
       if (!data.content || !data.content[0] || !data.content[0].text) {
-        console.error('Invalid response from Claude API:', data);
-        
-        // Fallback to text-based approach if response format is invalid
-        if (documentContext && documentContext.trim() !== '') {
-          console.log('Invalid response format, falling back to document context approach...');
-          return await handleWithDocumentContext(pdfUrl, fileName, message, documentContext);
-        }
-        
+        console.error('Invalid response from Claude API with text-only approach:', data);
         return new Response(
           JSON.stringify({ error: 'Invalid response format from Claude API' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -105,8 +171,7 @@ serve(async (req) => {
       }
       
       const answer = data.content[0].text;
-      
-      console.log("Answer generated successfully using file_url approach");
+      console.log("Answer generated successfully using text-only approach");
       
       return new Response(
         JSON.stringify({ 
@@ -116,17 +181,10 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } catch (apiError) {
-      console.error('Error calling Claude API with file_url:', apiError);
-      
-      // Fallback to text-based approach if there's an error
-      if (documentContext && documentContext.trim() !== '') {
-        console.log('Error with file_url approach, falling back to document context approach...');
-        return await handleWithDocumentContext(pdfUrl, fileName, message, documentContext);
-      }
-      
+      console.error('Error with text-only approach:', apiError);
       return new Response(
         JSON.stringify({ 
-          error: `Error calling Claude API: ${apiError.message || 'Unknown API error'}`,
+          error: `All approaches failed. Last error: ${apiError.message || 'Unknown API error'}`,
           details: apiError.stack || ''
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -147,7 +205,7 @@ serve(async (req) => {
 
 // Helper function to handle PDF chat using text-based approach
 async function handleWithDocumentContext(pdfUrl, fileName, message, documentContext) {
-  console.log("Using document context approach as fallback...");
+  console.log("Using document context approach...");
   
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
