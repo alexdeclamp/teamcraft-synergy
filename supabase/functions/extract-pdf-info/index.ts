@@ -43,19 +43,12 @@ serve(async (req) => {
     
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-haiku-20240307',
+        model: 'claude-3-opus-20240229',
         max_tokens: 1500,
         messages: [
           {
             role: 'user',
             content: [
-              {
-                type: 'document',
-                source: {
-                  type: 'url',
-                  url: pdfUrl,
-                },
-              },
               {
                 type: 'text',
                 text: `Please analyze this PDF document and extract the most important information.
@@ -68,6 +61,13 @@ serve(async (req) => {
                 4. CONCLUSIONS & NEXT STEPS: Final conclusions and potential action items
                 
                 Be concise, focus on the most valuable information, and maintain the document's original meaning.`
+              },
+              {
+                type: 'document',
+                source: {
+                  type: 'url',
+                  url: pdfUrl,
+                },
               },
             ],
           },
