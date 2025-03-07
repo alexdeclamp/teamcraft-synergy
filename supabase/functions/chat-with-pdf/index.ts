@@ -57,7 +57,7 @@ serve(async (req) => {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: "claude-3-7-sonnet-20250219",
+          model: "claude-3-7-sonnet-20250219",  // Updated model name to match
           max_tokens: 1500,
           messages: [
             {

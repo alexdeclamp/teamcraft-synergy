@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -80,10 +81,15 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Function invocation error:', error);
+        throw new Error(`Error calling function: ${error.message}`);
+      }
       
       if (!data || !data.success || !data.answer) {
-        throw new Error('Invalid response from chat service');
+        const errorMsg = data?.error || 'Invalid response from chat service';
+        console.error('Service error:', errorMsg);
+        throw new Error(errorMsg);
       }
       
       // Add assistant message to chat
@@ -116,6 +122,9 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
       <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Chat with "{document.file_name}"</DialogTitle>
+          <DialogDescription>
+            Ask questions about this document to get AI-powered answers
+          </DialogDescription>
         </DialogHeader>
         
         <div className="flex flex-col h-[500px]">
