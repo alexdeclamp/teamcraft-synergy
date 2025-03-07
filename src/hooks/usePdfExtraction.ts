@@ -32,25 +32,47 @@ export const usePdfExtraction = (document: Document, projectId: string) => {
         throw new Error('No PDF URL available for this document');
       }
 
-      // Call the edge function to extract information using Claude
-      const { data, error } = await supabase.functions.invoke('extract-pdf-info', {
-        body: {
-          pdfUrl,
-          documentId: document.id,
-          projectId,
-          userId: user.id
+      console.log('Extracting information from PDF:', pdfUrl);
+      console.log('Document ID:', document.id);
+      console.log('Project ID:', projectId);
+      console.log('User ID:', user.id);
+
+      // Add a timeout to the edge function call to prevent hanging
+      const abortController = new AbortController();
+      const timeout = setTimeout(() => abortController.abort(), 60000); // 60 second timeout
+
+      try {
+        // Call the edge function to extract information using Claude
+        const { data, error } = await supabase.functions.invoke('extract-pdf-info', {
+          body: {
+            pdfUrl,
+            documentId: document.id,
+            projectId,
+            userId: user.id
+          },
+          signal: abortController.signal
+        });
+
+        clearTimeout(timeout);
+
+        if (error) {
+          console.error('Supabase function error:', error);
+          throw new Error(`Failed to extract information: ${error.message}`);
         }
-      });
 
-      if (error) {
-        throw new Error(`Failed to extract information: ${error.message}`);
-      }
-
-      if (data?.summary) {
-        setExtractedInfo(data.summary);
-        toast.success('Successfully extracted information from PDF');
-      } else {
-        throw new Error('No information was extracted');
+        if (data?.summary) {
+          setExtractedInfo(data.summary);
+          toast.success('Successfully extracted information from PDF');
+        } else {
+          console.error('No summary returned from function:', data);
+          throw new Error('No information was extracted');
+        }
+      } catch (functionError: any) {
+        clearTimeout(timeout);
+        if (functionError.name === 'AbortError') {
+          throw new Error('Function timed out after 60 seconds');
+        }
+        throw functionError;
       }
     } catch (error: any) {
       console.error('Error extracting PDF information:', error);

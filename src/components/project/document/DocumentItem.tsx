@@ -16,6 +16,7 @@ interface Document {
   metadata?: {
     pdf_url?: string;
     associatedNoteId?: string;
+    extractedInfoNoteId?: string;
   };
 }
 
@@ -33,15 +34,18 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({ document, projectId 
   } = usePdfExtraction(document, projectId);
 
   const handleExtractClick = async () => {
-    await extractInformation();
-    setIsDialogOpen(true);
+    try {
+      await extractInformation();
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error('Error in handleExtractClick:', error);
+    }
   };
 
-  // Only show extract button for PDF documents that have a pdf_url in metadata
-  const showExtractButton = document.document_type === 'pdf' || 
-    (document.document_type === 'png' && document.metadata?.pdf_url);
-
-  const pdfUrl = document.metadata?.pdf_url || document.file_url;
+  // Only show extract button for PDF documents that have a pdf_url in metadata or are direct PDFs
+  const isPdf = document.document_type === 'pdf';
+  const hasPdfUrl = document.metadata?.pdf_url !== undefined;
+  const showExtractButton = isPdf || hasPdfUrl;
 
   return (
     <div className="flex items-center justify-between p-3 rounded-md bg-accent/30 hover:bg-accent/50 transition-colors">
@@ -66,14 +70,15 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({ document, projectId 
             title="Extract Information with Claude"
           >
             <FileSearch className="h-4 w-4" />
+            {isExtracting && <span className="sr-only">Extracting...</span>}
           </Button>
         )}
         <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0">
-          <a href={document.file_url} target="_blank" rel="noopener noreferrer">
+          <a href={document.file_url} target="_blank" rel="noopener noreferrer" title="View Document">
             <Eye className="h-4 w-4" />
           </a>
         </Button>
-        <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0">
+        <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0" title="Download Document">
           <a href={document.file_url} download={document.file_name}>
             <Download className="h-4 w-4" />
           </a>
