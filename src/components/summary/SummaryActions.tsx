@@ -11,6 +11,7 @@ interface SummaryActionsProps {
   onCreateNote: () => void;
   isCreatingNote: boolean;
   projectId?: string;
+  hasSummary?: boolean;
 }
 
 const SummaryActions: React.FC<SummaryActionsProps> = ({
@@ -19,9 +20,10 @@ const SummaryActions: React.FC<SummaryActionsProps> = ({
   onDownload,
   onCreateNote,
   isCreatingNote,
-  projectId
+  projectId,
+  hasSummary = false
 }) => {
-  if (!summary) {
+  if (!hasSummary) {
     return (
       <DialogClose asChild>
         <Button variant="outline" size="sm">Close</Button>

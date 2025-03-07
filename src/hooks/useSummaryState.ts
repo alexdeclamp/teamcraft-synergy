@@ -11,11 +11,13 @@ export function useSummaryState({ noteId, projectId }: UseSummaryStateProps) {
   const [summary, setSummary] = useState('');
   const [savedSummary, setSavedSummary] = useState<string | null>(null);
   const [isLoadingSaved, setIsLoadingSaved] = useState(false);
+  const [hasSummary, setHasSummary] = useState(false);
 
   // Reset summary when noteId changes
   useEffect(() => {
     setSummary('');
     setSavedSummary(null);
+    setHasSummary(false);
   }, [noteId]);
 
   // Fetch saved summary
@@ -42,10 +44,12 @@ export function useSummaryState({ noteId, projectId }: UseSummaryStateProps) {
           console.log('Found saved summary for note:', noteId);
           setSavedSummary(data.summary);
           setSummary(data.summary);
+          setHasSummary(true);
         } else {
           console.log('No saved summary found for note:', noteId);
           setSavedSummary(null);
           setSummary('');
+          setHasSummary(false);
         }
       } catch (error) {
         console.error('Error fetching saved summary:', error);
@@ -62,6 +66,8 @@ export function useSummaryState({ noteId, projectId }: UseSummaryStateProps) {
     setSummary,
     savedSummary,
     setSavedSummary,
-    isLoadingSaved
+    isLoadingSaved,
+    hasSummary,
+    setHasSummary
   };
 }

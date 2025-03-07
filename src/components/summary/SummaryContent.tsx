@@ -5,11 +5,13 @@ import { Loader2, Save } from 'lucide-react';
 interface SummaryContentProps {
   isLoading: boolean;
   summary: string;
+  hasSummary?: boolean;
 }
 
 const SummaryContent: React.FC<SummaryContentProps> = ({
   isLoading,
-  summary
+  summary,
+  hasSummary = false
 }) => {
   if (isLoading) {
     return (
@@ -20,7 +22,8 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
     );
   }
 
-  if (summary && summary.trim() !== '') {
+  // Only show summary if hasSummary is true (don't depend on string check)
+  if (hasSummary) {
     return (
       <>
         <div className="mb-2 px-2 text-sm text-muted-foreground flex items-center">

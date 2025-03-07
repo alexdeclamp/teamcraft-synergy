@@ -126,12 +126,16 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
         />
         
         <div className="mt-4 overflow-y-auto flex-grow">
-          <SummaryContent isLoading={isLoading} summary={summary} />
+          <SummaryContent 
+            isLoading={isLoading} 
+            summary={summary} 
+            hasSummary={hasSavedVersion || (summary.trim() !== '' && !isLoading)} 
+          />
         </div>
         
         <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 mt-4">
           <div className="flex items-center space-x-2 mt-4 sm:mt-0">
-            {!isLoading && summary && !feedbackGiven && (
+            {!isLoading && hasSavedVersion && !feedbackGiven && (
               <SummaryFeedback 
                 feedbackGiven={feedbackGiven} 
                 onFeedback={handleFeedback} 
@@ -149,6 +153,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
             onCreateNote={handleCreateNote}
             isCreatingNote={isCreatingNote}
             projectId={projectId}
+            hasSummary={hasSavedVersion || (summary.trim() !== '' && !isLoading)}
           />
         </DialogFooter>
       </DialogContent>
