@@ -36,8 +36,19 @@ serve(async (req) => {
     console.log(`PDF URL: ${pdfUrl}`);
     console.log(`User message: ${message}`);
     
+    // Prepare the context for Claude
+    let contextContent = '';
+    if (documentContext && documentContext.trim() !== '') {
+      contextContent = documentContext;
+      console.log('Using provided document context');
+    } else {
+      // We could implement fetching/extracting context here if needed
+      console.log('No document context provided');
+    }
+    
+    // Call Claude API
     try {
-      console.log("Calling Claude API with file_url parameter...");
+      console.log("Calling Claude API...");
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -48,21 +59,17 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "claude-3-7-sonnet-20250219",
           max_tokens: 1500,
+          system: `You are an AI assistant that helps users chat with PDF documents. 
+              The current document is: "${fileName}".
+              Use the following content from the document to answer the user's questions. 
+              If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
+              
+              Document content:
+              ${contextContent}`,
           messages: [
             {
               role: "user",
-              content: [
-                {
-                  type: "text",
-                  text: `Please answer my question about this PDF document named "${fileName}": ${message}`
-                },
-                {
-                  type: "file_url", 
-                  file_url: {
-                    url: pdfUrl
-                  }
-                }
-              ]
+              content: message
             }
           ]
         })
@@ -70,18 +77,27 @@ serve(async (req) => {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Claude API error with file_url: ${response.status}`, errorText);
-        throw new Error(`Claude API error: ${response.status}. Details: ${errorText}`);
+        console.error(`Claude API error: ${response.status}`, errorText);
+        return new Response(
+          JSON.stringify({ error: `Claude API error: ${response.status}. Details: ${errorText}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
       
       const data = await response.json();
+      console.log("Claude API response received:", JSON.stringify(data).slice(0, 200) + "...");
+      
       if (!data.content || !data.content[0] || !data.content[0].text) {
-        console.error('Invalid response from Claude API with file_url:', data);
-        throw new Error('Invalid response format from Claude API');
+        console.error('Invalid response from Claude API:', data);
+        return new Response(
+          JSON.stringify({ error: 'Invalid response format from Claude API' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
       
       const answer = data.content[0].text;
-      console.log("Answer generated successfully using file_url approach");
+      
+      console.log("Answer generated successfully");
       
       return new Response(
         JSON.stringify({ 
@@ -91,15 +107,16 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } catch (apiError) {
-      console.error('Error calling Claude API with file_url:', apiError);
-      
-      // Fallback to using document context if available
-      if (documentContext && documentContext.trim() !== '') {
-        return await handleWithDocumentContext(pdfUrl, fileName, message, documentContext);
-      } else {
-        throw apiError; // Re-throw if we can't use the fallback
-      }
+      console.error('Error calling Claude API:', apiError);
+      return new Response(
+        JSON.stringify({ 
+          error: `Error calling Claude API: ${apiError.message || 'Unknown API error'}`,
+          details: apiError.stack || ''
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+    
   } catch (error) {
     console.error('Error in chat-with-pdf function:', error);
     return new Response(
@@ -111,76 +128,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Helper function to handle PDF chat using text-based approach
-async function handleWithDocumentContext(pdfUrl, fileName, message, documentContext) {
-  console.log("Falling back to document context approach...");
-  
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': Deno.env.get('ANTHROPIC_API_KEY'),
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: "claude-3-7-sonnet-20250219",
-        max_tokens: 1500,
-        system: `You are an AI assistant that helps users chat with PDF documents. 
-            The current document is: "${fileName}".
-            Use the following content from the document to answer the user's questions. 
-            If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
-            
-            Document content:
-            ${documentContext}`,
-        messages: [
-          {
-            role: "user",
-            content: message
-          }
-        ]
-      })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Claude API error with document context approach: ${response.status}`, errorText);
-      return new Response(
-        JSON.stringify({ error: `Claude API error: ${response.status}. Details: ${errorText}` }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    const data = await response.json();
-    
-    if (!data.content || !data.content[0] || !data.content[0].text) {
-      console.error('Invalid response from Claude API with document context approach:', data);
-      return new Response(
-        JSON.stringify({ error: 'Invalid response format from Claude API' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    const answer = data.content[0].text;
-    
-    console.log("Answer generated successfully using document context approach");
-    
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        answer: answer,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    console.error('Error in document context approach:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: `Error with document context approach: ${error.message || 'Unknown error'}`,
-        details: error.stack || '' 
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
-}

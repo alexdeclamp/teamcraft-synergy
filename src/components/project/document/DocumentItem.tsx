@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { File, MoreVertical, Download, Trash2, Eye, MessageSquare, HelpCircle } from 'lucide-react';
+import { File, MoreVertical, Download, Trash2, Eye, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,7 +13,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import SummaryDialog from '@/components/summary/SummaryDialog';
 import DocumentChatDialog from './DocumentChatDialog';
-import DocumentQuestionDialog from './DocumentQuestionDialog';
 
 interface DocumentItemProps {
   document: {
@@ -40,7 +39,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
   const [summary, setSummary] = useState('');
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isQuestionDialogOpen, setIsQuestionDialogOpen] = useState(false);
 
   const fileExtension = document.file_name.split('.').pop()?.toLowerCase();
   const isPdf = fileExtension === 'pdf';
@@ -132,15 +130,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
     setIsChatOpen(true);
   };
 
-  const handleAskQuestion = () => {
-    if (!isPdf) {
-      toast.error('Questions are only available for PDF files');
-      return;
-    }
-    
-    setIsQuestionDialogOpen(true);
-  };
-
   return (
     <>
       <div className="flex items-center justify-between p-4 border rounded-lg mb-2 bg-card">
@@ -168,16 +157,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
               >
                 <Eye className="h-4 w-4" />
                 <span className="hidden sm:inline">Summarize</span>
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={handleAskQuestion}
-              >
-                <HelpCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">Ask Question</span>
               </Button>
               
               <Button 
@@ -225,13 +204,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
       <DocumentChatDialog
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
-        document={document}
-        projectId={projectId}
-      />
-      
-      <DocumentQuestionDialog
-        isOpen={isQuestionDialogOpen}
-        onClose={() => setIsQuestionDialogOpen(false)}
         document={document}
         projectId={projectId}
       />
