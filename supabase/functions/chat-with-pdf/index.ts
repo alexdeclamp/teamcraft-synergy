@@ -16,7 +16,7 @@ serve(async (req) => {
   }
 
   try {
-    const { pdfUrl, fileName, message, documentContext } = await req.json();
+    const { pdfUrl, fileName, message, documentContext, projectId } = await req.json();
     
     if (!pdfUrl) {
       return new Response(
@@ -35,6 +35,7 @@ serve(async (req) => {
     console.log(`Chat with PDF: ${fileName}`);
     console.log(`PDF URL: ${pdfUrl}`);
     console.log(`User message: ${message}`);
+    console.log(`Document context length: ${documentContext ? documentContext.length : 0} characters`);
     
     // Prepare the context for Claude
     let contextContent = '';
@@ -42,8 +43,7 @@ serve(async (req) => {
       contextContent = documentContext;
       console.log('Using provided document context');
     } else {
-      // We could implement fetching/extracting context here if needed
-      console.log('No document context provided');
+      console.log('No document context provided - Claude may not be able to answer questions about this document');
     }
     
     // Call Claude API

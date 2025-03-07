@@ -36,6 +36,7 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [documentContent, setDocumentContent] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   // Add welcome message when dialog opens
@@ -47,8 +48,41 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
           content: `👋 I'm your PDF assistant for "${document.file_name}". Ask me anything about this document!` 
         }
       ]);
+      
+      // Attempt to fetch document content if not already available
+      if (!document.content_text && !documentContent) {
+        fetchDocumentContent();
+      } else if (document.content_text) {
+        setDocumentContent(document.content_text);
+      }
     }
-  }, [isOpen, document.file_name]);
+  }, [isOpen, document.file_name, document.content_text]);
+  
+  // Fetch document content text if not already available
+  const fetchDocumentContent = async () => {
+    try {
+      console.log('Attempting to fetch document content for:', document.id);
+      const { data, error } = await supabase
+        .from('project_documents')
+        .select('content_text')
+        .eq('id', document.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching document content:', error);
+        throw error;
+      }
+      
+      if (data && data.content_text) {
+        console.log('Document content fetched successfully');
+        setDocumentContent(data.content_text);
+      } else {
+        console.log('No document content found in database, will rely on file_url');
+      }
+    } catch (error) {
+      console.error('Failed to fetch document content:', error);
+    }
+  };
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -71,12 +105,14 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
     setIsLoading(true);
     
     try {
+      console.log('Sending chat request with document context:', documentContent ? 'Available' : 'Not available');
+      
       const { data, error } = await supabase.functions.invoke('chat-with-pdf', {
         body: {
           pdfUrl: document.file_url,
           fileName: document.file_name,
           message: userMessage,
-          documentContext: document.content_text || '',
+          documentContext: documentContent || document.content_text || '',
           projectId
         }
       });
