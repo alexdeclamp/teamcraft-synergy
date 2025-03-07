@@ -95,16 +95,33 @@ serve(async (req) => {
         // Create data URL
         const dataUrl = `data:${contentType};base64,${base64Image}`;
         
-        // Set up messages for OpenAI with image
+        // Set up messages for OpenAI with image - improved detailed prompt
         messages = [
           {
             role: 'system',
-            content: 'You are an AI assistant that describes images. Create a detailed but concise description of what you see in the image. Focus on the main subject, colors, style, and any notable features.'
+            content: `You are an AI assistant specialized in comprehensive image analysis. Analyze the provided image in full detail, extracting ALL information present:
+
+1. For text content: Extract ALL text visible in the image accurately, maintaining original formatting
+2. For tables/structured data: Reproduce the entire table structure with ALL rows and columns
+3. For charts: Describe type, axes, data points, trends, and numerical values
+4. For diagrams: Detail all components, connections, and text labels
+5. For photographs: Identify subjects, environment, actions, and relevant details
+6. For UI screenshots: Describe all interface elements, controls, and visible data
+7. For document images: Extract headings, paragraphs, and page structure
+
+Format your response appropriately:
+- For tables: Use structured markdown table format
+- For lists: Use proper bullet or numbered formatting
+- For hierarchical data: Use headings and subheadings
+- For paragraphs: Maintain original spacing and structure
+
+IMPORTANT: Do not omit ANY information visible in the image. If data appears cut off, mention what is visible and that it's truncated.
+Your goal is to produce a comprehensive, well-structured textual representation of EVERYTHING in the image.`
           },
           {
             role: 'user',
             content: [
-              { type: 'text', text: 'Please describe what you see in this image.' },
+              { type: 'text', text: 'Please provide a complete and detailed description of everything in this image, extracting all visible information. Format structured data appropriately with tables, lists, and proper spacing.' },
               { type: 'image_url', image_url: { url: dataUrl } }
             ]
           }
@@ -136,10 +153,10 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: messages,
         temperature: 0.7,
-        max_tokens: 300,
+        max_tokens: 1000,
       }),
     });
     
