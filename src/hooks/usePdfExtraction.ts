@@ -66,6 +66,14 @@ export const usePdfExtraction = (document: Document, projectId: string) => {
       if (data.summary) {
         setExtractedInfo(data.summary);
         toast.success('Successfully extracted information from PDF');
+        
+        // If note ID is provided, show additional success message
+        if (data.noteId) {
+          toast.success('Created note with extracted information', {
+            description: 'You can find it in your project notes',
+            duration: 5000
+          });
+        }
       } else {
         console.error('No summary returned from function:', data);
         throw new Error('No information was extracted');

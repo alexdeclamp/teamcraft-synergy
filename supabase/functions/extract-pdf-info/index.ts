@@ -39,9 +39,54 @@ serve(async (req) => {
       apiKey: anthropicApiKey
     });
 
-    console.log('Calling Claude API with URL:', pdfUrl);
+    console.log('Preparing to process PDF:', pdfUrl);
     
     try {
+      // First, download the PDF file to get its bytes
+      console.log('Downloading PDF from URL:', pdfUrl);
+      const pdfResponse = await fetch(pdfUrl);
+      if (!pdfResponse.ok) {
+        console.error('Failed to download PDF:', pdfResponse.status, pdfResponse.statusText);
+        throw new Error(`Failed to download PDF: ${pdfResponse.status} ${pdfResponse.statusText}`);
+      }
+      
+      // Get the PDF as a blob
+      const pdfBlob = await pdfResponse.blob();
+      console.log('PDF downloaded successfully, size:', pdfBlob.size);
+      
+      // Create FormData for Anthropic file upload
+      const formData = new FormData();
+      formData.append('file', pdfBlob, 'document.pdf');
+      formData.append('purpose', 'message_attachment');
+      
+      // Upload the PDF to Anthropic
+      console.log('Uploading PDF to Anthropic');
+      const uploadResponse = await fetch('https://api.anthropic.com/v1/files', {
+        method: 'POST',
+        headers: {
+          'x-api-key': anthropicApiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: formData
+      });
+      
+      if (!uploadResponse.ok) {
+        const errorText = await uploadResponse.text();
+        console.error('Failed to upload PDF to Anthropic:', uploadResponse.status, errorText);
+        throw new Error(`File upload failed: ${uploadResponse.status} ${errorText}`);
+      }
+      
+      const uploadData = await uploadResponse.json();
+      console.log('PDF uploaded to Anthropic, file_id:', uploadData.id);
+      
+      if (!uploadData.id) {
+        console.error('No file_id returned from Anthropic upload');
+        throw new Error('No file_id returned from Anthropic upload');
+      }
+      
+      // Now that we have the file_id, make the Claude API call
+      console.log('Calling Claude API with file_id:', uploadData.id);
+      
       const response = await anthropic.messages.create({
         model: 'claude-3-opus-20240229',
         max_tokens: 1500,
@@ -63,11 +108,8 @@ serve(async (req) => {
                 Be concise, focus on the most valuable information, and maintain the document's original meaning.`
               },
               {
-                type: 'document',
-                source: {
-                  type: 'url',
-                  url: pdfUrl,
-                },
+                type: 'file',
+                file_id: uploadData.id
               },
             ],
           },
