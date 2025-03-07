@@ -57,20 +57,16 @@ serve(async (req) => {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: "claude-3-7-sonnet-20250219",  // Updated model name to match
+          model: "claude-3-7-sonnet-20250219",
           max_tokens: 1500,
-          messages: [
-            {
-              role: "system",
-              content: `You are an AI assistant that helps users chat with PDF documents. 
+          system: `You are an AI assistant that helps users chat with PDF documents. 
               The current document is: "${fileName}".
               Use the following content from the document to answer the user's questions. 
               If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
               
               Document content:
-              ${contextContent}
-              `
-            },
+              ${contextContent}`,
+          messages: [
             {
               role: "user",
               content: message
