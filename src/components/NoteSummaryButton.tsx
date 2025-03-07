@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Loader2, FileText } from 'lucide-react';
 import { useParams, useLocation } from 'react-router-dom';
-import SummaryDialog from './SummaryDialog';
+import SummaryDialog from './summary/SummaryDialog';
 import { useNoteSummary } from '@/hooks/useNoteSummary';
 
 interface NoteSummaryButtonProps {
@@ -23,7 +23,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
   const {
     isGenerating,
     summary,
-    savedSummary,
+    hasSummary,
     isDialogOpen,
     setIsDialogOpen,
     generateSummary
@@ -49,18 +49,18 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
         size="icon" 
         className="h-8 w-8"
         onClick={() => {
-          if (savedSummary) {
+          if (hasSummary) {
             setIsDialogOpen(true);
           } else {
             generateSummary();
           }
         }}
         disabled={isGenerating || !noteContent}
-        title={savedSummary ? "View Saved AI Summary" : "Generate AI Summary"}
+        title={hasSummary ? "View Saved AI Summary" : "Generate AI Summary"}
       >
         {isGenerating ? (
           <Loader2 className="h-4 w-4 animate-spin" /> 
-        ) : savedSummary ? (
+        ) : hasSummary ? (
           <FileText className="h-4 w-4 text-blue-500" />
         ) : (
           <MessageSquare className="h-4 w-4" />
@@ -72,8 +72,9 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
         onClose={() => setIsDialogOpen(false)}
         title={`Summary of "${noteTitle}"`}
         summary={summary}
-        isLoading={isGenerating && !savedSummary}
-        hasSavedVersion={!!savedSummary}
+        isLoading={isGenerating && !hasSummary}
+        hasSavedVersion={hasSummary}
+        projectId={projectId}
       />
     </>
   );

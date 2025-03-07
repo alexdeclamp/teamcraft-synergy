@@ -11,13 +11,23 @@ interface UseNoteSummaryProps {
 
 export function useNoteSummary({ noteId, noteContent, projectId }: UseNoteSummaryProps) {
   const { isDialogOpen, setIsDialogOpen, openDialog } = useDialog();
-  const { summary, setSummary, savedSummary, setSavedSummary, isLoadingSaved } = useSummaryState({ noteId, projectId });
+  const { 
+    summary, 
+    setSummary, 
+    savedSummary, 
+    setSavedSummary, 
+    isLoadingSaved, 
+    hasSummary,
+    setHasSummary 
+  } = useSummaryState({ noteId, projectId });
+  
   const { isGenerating, generateSummary } = useGenerateSummary({
     noteContent,
     projectId,
     noteId,
     setSummary,
     setSavedSummary,
+    setHasSummary,
     openDialog
   });
 
@@ -25,6 +35,7 @@ export function useNoteSummary({ noteId, noteContent, projectId }: UseNoteSummar
     isGenerating,
     summary,
     savedSummary,
+    hasSummary,
     isDialogOpen,
     setIsDialogOpen,
     generateSummary

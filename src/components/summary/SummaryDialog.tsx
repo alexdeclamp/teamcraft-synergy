@@ -114,6 +114,9 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     }
   };
 
+  // Determine if we have a summary available 
+  const hasSummary = hasSavedVersion || (!isLoading && summary.trim() !== '');
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
@@ -129,7 +132,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           <SummaryContent 
             isLoading={isLoading} 
             summary={summary} 
-            hasSummary={hasSavedVersion || (summary.trim() !== '' && !isLoading)} 
+            hasSummary={hasSummary} 
           />
         </div>
         
@@ -153,7 +156,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
             onCreateNote={handleCreateNote}
             isCreatingNote={isCreatingNote}
             projectId={projectId}
-            hasSummary={hasSavedVersion || (summary.trim() !== '' && !isLoading)}
+            hasSummary={hasSummary}
           />
         </DialogFooter>
       </DialogContent>

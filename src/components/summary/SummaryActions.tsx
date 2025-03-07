@@ -11,7 +11,7 @@ interface SummaryActionsProps {
   onCreateNote: () => void;
   isCreatingNote: boolean;
   projectId?: string;
-  hasSummary?: boolean;
+  hasSummary: boolean;
 }
 
 const SummaryActions: React.FC<SummaryActionsProps> = ({
@@ -21,7 +21,7 @@ const SummaryActions: React.FC<SummaryActionsProps> = ({
   onCreateNote,
   isCreatingNote,
   projectId,
-  hasSummary = false
+  hasSummary
 }) => {
   if (!hasSummary) {
     return (

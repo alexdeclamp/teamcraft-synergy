@@ -29,6 +29,12 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       console.log('Fetching existing summary for image:', imageUrl);
       console.log('Project ID:', projectId);
       
+      if (!imageUrl || !projectId) {
+        setHasSummary(false);
+        setSummary('');
+        return;
+      }
+      
       // Use exact equality for image_url and project_id when querying
       const { data, error } = await supabase
         .from('image_summaries')
@@ -39,6 +45,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
 
       if (error) {
         console.error('Error fetching summary:', error);
+        setHasSummary(false);
         return;
       }
 
@@ -53,17 +60,14 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       }
     } catch (error) {
       console.error('Error checking for existing summary:', error);
+      setHasSummary(false);
     }
   };
 
   const generateSummary = async () => {
     try {
       setIsGenerating(true);
-      
-      // If we already have a summary, no need to generate a new one
-      if (hasSummary) {
-        return;
-      }
+      setHasSummary(false); // Reset state while generating
       
       console.log('Generating summary for image:', imageUrl);
       console.log('For project:', projectId);
@@ -125,6 +129,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
     } catch (error: any) {
       console.error('Error generating image summary:', error);
       setSummary(`Error: ${error.message}`);
+      setHasSummary(false);
       toast.error(`Failed to generate summary: ${error.message}`);
     } finally {
       setIsGenerating(false);

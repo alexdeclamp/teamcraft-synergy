@@ -41,7 +41,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
     }
 
     setIsDialogOpen(true);
-    if (!hasSummary && !summary) {
+    if (!hasSummary && !isGenerating) {
       generateSummary();
     }
   };
