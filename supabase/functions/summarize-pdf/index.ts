@@ -1,11 +1,8 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -35,56 +32,12 @@ serve(async (req) => {
       );
     }
     
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return new Response(
-        JSON.stringify({ error: 'Supabase credentials are not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
     console.log(`Summarizing PDF: ${fileName}`);
     console.log(`PDF URL: ${pdfUrl}`);
     
-    // Initialize Supabase client to access storage with service role
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Extract the path from the URL
-    const urlObj = new URL(pdfUrl);
-    const pathParts = urlObj.pathname.split('/');
-    const bucketName = pathParts[1]; // The bucket name is usually after the first slash
-    const filePath = pathParts.slice(2).join('/'); // The rest is the file path
-    
-    console.log(`Extracted bucket: ${bucketName}, path: ${filePath}`);
-    
-    // Download the PDF file
-    const { data: fileData, error: fileError } = await supabase
-      .storage
-      .from(bucketName)
-      .download(filePath);
-      
-    if (fileError) {
-      console.error('Error downloading PDF:', fileError);
-      return new Response(
-        JSON.stringify({ error: `Failed to download PDF: ${fileError.message}` }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Convert the file to base64
-    const reader = new FileReader();
-    const base64Promise = new Promise((resolve, reject) => {
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-    });
-    reader.readAsDataURL(fileData);
-    const base64Data = await base64Promise;
-    const base64String = String(base64Data).split(',')[1]; // Remove the data URL prefix
-    
-    console.log("PDF downloaded and converted to base64");
-    
     // Call Claude API with improved error handling
     try {
-      console.log("Calling Claude API with base64 PDF data...");
+      console.log("Calling Claude API...");
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -101,7 +54,7 @@ serve(async (req) => {
               content: [
                 {
                   type: "text",
-                  text: `Please provide a comprehensive summary of this PDF document. 
+                  text: `Please provide a comprehensive summary of this PDF document (${pdfUrl}). 
                   
                   Include the following in your summary:
                   1. The main purpose and key points of the document
@@ -109,14 +62,6 @@ serve(async (req) => {
                   3. Any conclusions or recommendations
                   
                   Format your response in a clear, structured way using paragraphs, bullet points, and headings as appropriate.`
-                },
-                {
-                  type: "image",
-                  source: {
-                    type: "base64",
-                    media_type: "application/pdf",
-                    data: base64String
-                  }
                 }
               ]
             }
