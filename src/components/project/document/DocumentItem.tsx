@@ -1,131 +1,214 @@
+
 import React, { useState } from 'react';
+import { File, MoreVertical, Download, Trash2, Eye, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { FileText, Download, Eye, Clock, FileSearch } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import SummaryDialog from '@/components/summary/SummaryDialog';
-
-interface Document {
-  id: string;
-  file_name: string;
-  file_url: string;
-  created_at: string;
-  document_type: string;
-  file_size?: number;
-  metadata?: {
-    pdf_url?: string;
-    associatedNoteId?: string;
-    extractedInfoNoteId?: string;
-  };
-}
+import DocumentChatDialog from './DocumentChatDialog';
 
 interface DocumentItemProps {
-  document: Document;
+  document: {
+    id: string;
+    file_name: string;
+    file_url: string;
+    created_at: string;
+    document_type?: string;
+    file_size?: number;
+    content_text?: string;
+  };
+  onDelete?: (id: string) => void;
+  onRefresh?: () => void;
   projectId: string;
 }
 
-export const DocumentItem: React.FC<DocumentItemProps> = ({ document, projectId }) => {
-  const [isSummarizing, setIsSummarizing] = useState(false);
-  const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
-  const [summary, setSummary] = useState("");
+const DocumentItem: React.FC<DocumentItemProps> = ({ 
+  document, 
+  onDelete, 
+  onRefresh,
+  projectId
+}) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [summary, setSummary] = useState('');
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
+  const fileExtension = document.file_name.split('.').pop()?.toLowerCase();
+  const isPdf = fileExtension === 'pdf';
   
-  // Check if there's a PDF URL in metadata or use the file_url
-  const pdfUrl = document.metadata?.pdf_url || document.file_url;
-  
-  const handleSummarize = async () => {
-    if (!pdfUrl) {
-      toast.error("No PDF URL available");
-      return;
+  const formatDate = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Unknown date';
     }
+  };
+
+  const handleDownload = () => {
+    if (document.file_url) {
+      window.open(document.file_url, '_blank');
+    } else {
+      toast.error('Download link not available');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    
+    const confirmed = window.confirm(`Are you sure you want to delete "${document.file_name}"?`);
+    if (!confirmed) return;
     
     try {
-      setIsSummarizing(true);
-      setSummaryDialogOpen(true); // Open dialog immediately to show loading state
+      // Delete from database
+      const { error } = await supabase
+        .from('project_documents')
+        .delete()
+        .eq('id', document.id);
       
-      // Call the Supabase Edge Function to summarize the PDF
-      const { data, error } = await supabase.functions.invoke('summarize-pdf', {
-        body: {
-          pdfUrl,
-          fileName: document.file_name,
-          projectId,
-        }
-      });
+      if (error) throw error;
       
-      if (error) {
-        console.error("Error from Edge Function:", error);
-        throw new Error(error.message || "Failed to call summary function");
-      }
+      toast.success(`"${document.file_name}" deleted successfully`);
+      onDelete(document.id);
       
-      if (data?.error) {
-        console.error("Error in summarize-pdf function:", data.error);
-        throw new Error(data.error);
-      }
-      
-      if (data?.summary) {
-        setSummary(data.summary);
-      } else {
-        throw new Error("No summary was generated");
+      if (onRefresh) {
+        onRefresh();
       }
     } catch (error: any) {
-      console.error("Error summarizing PDF:", error);
-      toast.error(`Failed to summarize PDF: ${error.message || "Unknown error"}`);
-      // Keep dialog open to show error state
-    } finally {
-      setIsSummarizing(false);
+      console.error('Error deleting document:', error);
+      toast.error(`Failed to delete document: ${error.message}`);
     }
   };
   
+  const handleGenerateSummary = async () => {
+    if (!isPdf) {
+      toast.error('Summary generation is only available for PDF files');
+      return;
+    }
+    
+    setIsGenerating(true);
+    setSummary('');
+    setIsSummaryOpen(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('summarize-pdf', {
+        body: {
+          pdfUrl: document.file_url,
+          fileName: document.file_name,
+          projectId
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (!data.success || !data.summary) {
+        throw new Error('Failed to generate summary');
+      }
+      
+      setSummary(data.summary);
+    } catch (error: any) {
+      console.error('Error generating summary:', error);
+      toast.error(`Failed to generate summary: ${error.message}`);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleChatWithPdf = () => {
+    if (!isPdf) {
+      toast.error('Chat is only available for PDF files');
+      return;
+    }
+    
+    setIsChatOpen(true);
+  };
+
   return (
     <>
-      <div className="flex items-center justify-between p-3 rounded-md bg-accent/30 hover:bg-accent/50 transition-colors">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <FileText className="h-5 w-5 flex-shrink-0 text-primary/70" />
-          <div className="flex-1 min-w-0">
-            <p className="font-medium truncate">{document.file_name}</p>
-            <div className="flex items-center text-xs text-muted-foreground mt-1">
-              <Clock className="h-3 w-3 mr-1" />
-              <span>{formatDistanceToNow(new Date(document.created_at), { addSuffix: true })}</span>
-            </div>
+      <div className="flex items-center justify-between p-4 border rounded-lg mb-2 bg-card">
+        <div className="flex items-center space-x-4">
+          <div className="p-2 bg-muted rounded-md">
+            <File className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <div>
+            <h4 className="font-medium">{document.file_name}</h4>
+            <p className="text-sm text-muted-foreground">
+              {formatDate(document.created_at)}
+            </p>
           </div>
         </div>
-        <div className="flex gap-2 ml-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 w-8 p-0"
-            disabled={isSummarizing}
-            onClick={handleSummarize}
-            title="Summarize PDF"
-          >
-            {isSummarizing ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            ) : (
-              <FileSearch className="h-4 w-4" />
-            )}
-          </Button>
-          <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0">
-            <a href={pdfUrl} target="_blank" rel="noopener noreferrer" title="View Document">
-              <Eye className="h-4 w-4" />
-            </a>
-          </Button>
-          <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0" title="Download Document">
-            <a href={pdfUrl} download={document.file_name}>
-              <Download className="h-4 w-4" />
-            </a>
-          </Button>
+        
+        <div className="flex items-center gap-2">
+          {isPdf && (
+            <>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={handleGenerateSummary}
+                disabled={isGenerating}
+              >
+                <Eye className="h-4 w-4" />
+                <span className="hidden sm:inline">Summarize</span>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={handleChatWithPdf}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="hidden sm:inline">Chat</span>
+              </Button>
+            </>
+          )}
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleDownload}>
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       
       <SummaryDialog
-        isOpen={summaryDialogOpen}
-        onClose={() => setSummaryDialogOpen(false)}
-        title={`Summary: ${document.file_name}`}
+        isOpen={isSummaryOpen}
+        onClose={() => setIsSummaryOpen(false)}
+        title={document.file_name}
         summary={summary}
-        isLoading={isSummarizing}
-        hasSavedVersion={!isSummarizing && summary !== ""}
+        isLoading={isGenerating}
+        projectId={projectId}
+        imageName={document.file_name}
+      />
+      
+      <DocumentChatDialog
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        document={document}
         projectId={projectId}
       />
     </>
   );
 };
+
+export default DocumentItem;
