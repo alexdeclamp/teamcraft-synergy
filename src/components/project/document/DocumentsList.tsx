@@ -12,6 +12,10 @@ interface Document {
   created_at: string;
   document_type: string;
   file_size?: number;
+  metadata?: {
+    pdf_url?: string;
+    associatedNoteId?: string;
+  };
 }
 
 interface DocumentsListProps {
@@ -19,13 +23,15 @@ interface DocumentsListProps {
   isLoading: boolean;
   isRefreshing: boolean;
   onRefresh: () => void;
+  projectId: string;
 }
 
 export const DocumentsList: React.FC<DocumentsListProps> = ({
   documents,
   isLoading,
   isRefreshing,
-  onRefresh
+  onRefresh,
+  projectId
 }) => {
   return (
     <div className="border rounded-lg shadow-sm">
@@ -59,7 +65,7 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
           <ScrollArea className="h-[350px] pr-4">
             <div className="space-y-2">
               {documents.map((doc) => (
-                <DocumentItem key={doc.id} document={doc} />
+                <DocumentItem key={doc.id} document={doc} projectId={projectId} />
               ))}
             </div>
           </ScrollArea>

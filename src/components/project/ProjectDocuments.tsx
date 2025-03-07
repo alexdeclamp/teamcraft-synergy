@@ -29,6 +29,7 @@ const ProjectDocuments: React.FC<ProjectDocumentsProps> = ({ projectId }) => {
         isLoading={isLoading}
         isRefreshing={isRefreshing}
         onRefresh={fetchDocuments}
+        projectId={projectId}
       />
     </div>
   );
