@@ -61,23 +61,73 @@ serve(async (req) => {
     
     // Initialize the OpenAI API client
     console.log('Generating summary for:', type);
-    console.log('Content length:', content.length);
+    
+    if (type === 'image') {
+      console.log('Processing image URL:', imageUrl);
+    } else {
+      console.log('Content length:', content.length);
+    }
+    
     console.log('Project ID:', projectId);
     
-    const messages = [
-      {
-        role: 'system',
-        content: type === 'note' ? 
-          'You are an AI assistant that summarizes text notes. Create a concise 2-3 sentence summary that captures the key points.' : 
-          'You are an AI assistant that describes images. Create a detailed but concise description of what you see in the image. Focus on the main subject, colors, style, and any notable features.'
-      },
-      {
-        role: 'user',
-        content: type === 'note' ?
-          `Please summarize the following note: ${content}` :
-          `Please describe what you see in this image URL: ${content}`
+    let messages;
+    
+    if (type === 'image') {
+      // For image analysis, we need to send the image as a base64 data URL
+      try {
+        // Download the image from the URL
+        const imageResponse = await fetch(imageUrl);
+        
+        if (!imageResponse.ok) {
+          throw new Error(`Failed to fetch image: ${imageResponse.status} ${imageResponse.statusText}`);
+        }
+        
+        // Get the image as a blob
+        const imageBlob = await imageResponse.blob();
+        
+        // Convert the blob to base64
+        const imageArrayBuffer = await imageBlob.arrayBuffer();
+        const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageArrayBuffer)));
+        
+        // Determine content type
+        const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+        
+        // Create data URL
+        const dataUrl = `data:${contentType};base64,${base64Image}`;
+        
+        // Set up messages for OpenAI with image
+        messages = [
+          {
+            role: 'system',
+            content: 'You are an AI assistant that describes images. Create a detailed but concise description of what you see in the image. Focus on the main subject, colors, style, and any notable features.'
+          },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Please describe what you see in this image.' },
+              { type: 'image_url', image_url: { url: dataUrl } }
+            ]
+          }
+        ];
+        
+        console.log('Successfully converted image to base64 data URL');
+      } catch (error) {
+        console.error('Error processing image:', error);
+        throw new Error(`Error processing image: ${error.message}`);
       }
-    ];
+    } else {
+      // For text notes
+      messages = [
+        {
+          role: 'system',
+          content: 'You are an AI assistant that summarizes text notes. Create a concise 2-3 sentence summary that captures the key points.'
+        },
+        {
+          role: 'user',
+          content: `Please summarize the following note: ${content}`
+        }
+      ];
+    }
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

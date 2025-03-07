@@ -74,7 +74,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       }
       
       // For image summarization, we need to send the image URL
-      // The edge function will process it with OpenAI
+      // The edge function will now download and process the image
       const response = await supabase.functions.invoke('generate-summary', {
         body: {
           type: 'image',
