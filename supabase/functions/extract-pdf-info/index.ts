@@ -69,6 +69,20 @@ serve(async (req) => {
     }
 
     try {
+      // Fetch the PDF file and convert to base64
+      console.log('Fetching PDF from URL:', pdfUrl);
+      const pdfResponse = await fetch(pdfUrl);
+      
+      if (!pdfResponse.ok) {
+        throw new Error(`Failed to fetch PDF: ${pdfResponse.status} ${pdfResponse.statusText}`);
+      }
+      
+      const pdfArrayBuffer = await pdfResponse.arrayBuffer();
+      const pdfBase64 = btoa(String.fromCharCode(...new Uint8Array(pdfArrayBuffer)));
+      
+      console.log('PDF fetched and converted to base64, length:', pdfBase64.length);
+
+      // Call Claude API using the document type with base64 encoding
       const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -85,8 +99,16 @@ serve(async (req) => {
               role: 'user',
               content: [
                 {
+                  type: 'document',
+                  source: {
+                    type: 'base64',
+                    media_type: 'application/pdf',
+                    data: pdfBase64
+                  }
+                },
+                {
                   type: "text",
-                  text: `Please analyze the PDF document at this URL and extract the most important information.
+                  text: `Please analyze this PDF document and extract the most important information.
                   
                   Create a structured summary with:
                   
@@ -96,12 +118,6 @@ serve(async (req) => {
                   4. CONCLUSIONS & NEXT STEPS: Final conclusions and potential action items
                   
                   Be concise, focus on the most valuable information, and maintain the document's original meaning.`
-                },
-                {
-                  type: "file_url",
-                  file_url: {
-                    url: pdfUrl
-                  }
                 }
               ]
             }

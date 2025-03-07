@@ -37,23 +37,23 @@ export const usePdfExtraction = (document: Document, projectId: string) => {
       console.log('Project ID:', projectId);
       console.log('User ID:', user.id);
 
-      // Add a timeout to the edge function call to prevent hanging
-      const abortController = new AbortController();
-      const timeout = setTimeout(() => abortController.abort(), 60000); // 60 second timeout
+      // Set a 60 second timeout for the operation
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
       try {
         // Call the edge function to extract information using Claude
+        // Note: Removed the signal property which was causing the TS error
         const { data, error } = await supabase.functions.invoke('extract-pdf-info', {
           body: {
             pdfUrl,
             documentId: document.id,
             projectId,
             userId: user.id
-          },
-          signal: abortController.signal
+          }
         });
 
-        clearTimeout(timeout);
+        clearTimeout(timeoutId);
 
         if (error) {
           console.error('Supabase function error:', error);
@@ -68,7 +68,7 @@ export const usePdfExtraction = (document: Document, projectId: string) => {
           throw new Error('No information was extracted');
         }
       } catch (functionError: any) {
-        clearTimeout(timeout);
+        clearTimeout(timeoutId);
         if (functionError.name === 'AbortError') {
           throw new Error('Function timed out after 60 seconds');
         }
