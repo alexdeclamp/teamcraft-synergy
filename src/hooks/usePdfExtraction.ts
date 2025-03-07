@@ -37,41 +37,37 @@ export const usePdfExtraction = (document: Document, projectId: string) => {
       console.log('Project ID:', projectId);
       console.log('User ID:', user.id);
 
-      // Set a 60 second timeout for the operation
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
-
-      try {
-        // Call the edge function to extract information using Claude
-        const { data, error } = await supabase.functions.invoke('extract-pdf-info', {
-          body: {
-            pdfUrl,
-            documentId: document.id,
-            projectId,
-            userId: user.id
-          }
-        });
-
-        clearTimeout(timeoutId);
-
-        if (error) {
-          console.error('Supabase function error:', error);
-          throw new Error(`Failed to extract information: ${error.message}`);
+      // Call the edge function to extract information using Claude
+      const { data, error } = await supabase.functions.invoke('extract-pdf-info', {
+        body: {
+          pdfUrl,
+          documentId: document.id,
+          projectId,
+          userId: user.id
         }
+      });
 
-        if (data?.summary) {
-          setExtractedInfo(data.summary);
-          toast.success('Successfully extracted information from PDF');
-        } else {
-          console.error('No summary returned from function:', data);
-          throw new Error('No information was extracted');
-        }
-      } catch (functionError: any) {
-        clearTimeout(timeoutId);
-        if (functionError.name === 'AbortError') {
-          throw new Error('Function timed out after 60 seconds');
-        }
-        throw functionError;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw new Error(`Failed to extract information: ${error.message}`);
+      }
+
+      if (!data) {
+        console.error('No data returned from function');
+        throw new Error('No data returned from function');
+      }
+
+      if (data.error) {
+        console.error('Function returned error:', data.error);
+        throw new Error(`Failed to extract information: ${data.error}`);
+      }
+
+      if (data.summary) {
+        setExtractedInfo(data.summary);
+        toast.success('Successfully extracted information from PDF');
+      } else {
+        console.error('No summary returned from function:', data);
+        throw new Error('No information was extracted');
       }
     } catch (error: any) {
       console.error('Error extracting PDF information:', error);

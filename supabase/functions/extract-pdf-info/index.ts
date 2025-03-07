@@ -44,7 +44,7 @@ serve(async (req) => {
     // Get document details
     const { data: documentData, error: documentError } = await supabase
       .from('project_documents')
-      .select('file_name')
+      .select('file_name, metadata')
       .eq('id', documentId)
       .single();
       
@@ -69,7 +69,7 @@ serve(async (req) => {
     }
 
     try {
-      // Fetch the PDF file and convert to base64
+      // Fetch the PDF file
       console.log('Fetching PDF from URL:', pdfUrl);
       const pdfResponse = await fetch(pdfUrl);
       
@@ -82,7 +82,7 @@ serve(async (req) => {
       
       console.log('PDF fetched and converted to base64, length:', pdfBase64.length);
 
-      // Call Claude API using the document type with base64 encoding
+      // Call Claude API with PDF as base64
       const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -128,19 +128,14 @@ serve(async (req) => {
       if (!claudeResponse.ok) {
         const errorText = await claudeResponse.text();
         console.error('Claude API error:', claudeResponse.status, errorText);
-        return new Response(
-          JSON.stringify({ error: `Claude API error: ${claudeResponse.status} - ${errorText}` }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        throw new Error(`Claude API error: ${claudeResponse.status} - ${errorText}`);
       }
       
       const claudeData = await claudeResponse.json();
-      if (!claudeData.content || !claudeData.content[0] || !claudeData.content[0].text) {
+      
+      if (!claudeData.content || claudeData.content.length === 0 || !claudeData.content[0].text) {
         console.error('Invalid response from Claude:', claudeData);
-        return new Response(
-          JSON.stringify({ error: 'Invalid response from Claude API' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        throw new Error('Invalid response from Claude API');
       }
       
       const summary = claudeData.content[0].text;
@@ -166,13 +161,14 @@ serve(async (req) => {
       } else {
         console.log('Created note with extracted information, ID:', noteData.id);
         
-        // Update the document with a reference to the note
+        // Update the document metadata
+        let updatedMetadata = { ...documentData.metadata } || {};
+        updatedMetadata.extractedInfoNoteId = noteData.id;
+        
         const { error: updateError } = await supabase
           .from('project_documents')
           .update({
-            metadata: {
-              extractedInfoNoteId: noteData.id
-            }
+            metadata: updatedMetadata
           })
           .eq('id', documentId);
           
@@ -181,26 +177,45 @@ serve(async (req) => {
         }
       }
       
+      // Return success response with summary and note ID
       return new Response(
         JSON.stringify({ 
           success: true, 
           summary,
           noteId: noteData?.id
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
-    } catch (claudeError: any) {
-      console.error('Error calling Claude API:', claudeError);
+      
+    } catch (claudeError) {
+      console.error('Error processing PDF with Claude:', claudeError);
+      
+      // Return error response with proper status and headers
       return new Response(
-        JSON.stringify({ error: `Claude API error: ${claudeError.message}` }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: claudeError instanceof Error ? claudeError.message : 'Unknown error processing PDF' 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
-  } catch (error: any) {
-    console.error('Error in extract-pdf-info function:', error);
+  } catch (error) {
+    console.error('Unhandled error in edge function:', error);
+    
+    // Return error response with proper status and headers
     return new Response(
-      JSON.stringify({ error: error.message || 'Unknown error occurred' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });
