@@ -25,7 +25,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           <div>
             <p className="font-medium mb-1">Error uploading document</p>
             <p>{errorMessage}</p>
-            <p className="mt-2 text-xs">If this error persists, please check your network connection or try a different file.</p>
+            <p className="mt-2 text-xs">If this error persists, please try a smaller PDF file (under 3MB) or check your network connection.</p>
           </div>
         </div>
       )}
@@ -38,12 +38,12 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
             <p className="text-sm text-muted-foreground">
               {uploadProgress < 30 && "Reading file..."}
               {uploadProgress >= 30 && uploadProgress < 60 && "Processing PDF..."}
-              {uploadProgress >= 60 && uploadProgress < 90 && uploadProgress > 30 && "Generating note..."}
+              {uploadProgress >= 60 && uploadProgress < 90 && "Converting PDF to images..."}
               {uploadProgress >= 90 && "Finalizing..."}
             </p>
           </div>
           <p className="text-xs text-center text-muted-foreground">
-            This may take a moment for larger files
+            This may take up to 25 seconds for processing
           </p>
         </div>
       )}

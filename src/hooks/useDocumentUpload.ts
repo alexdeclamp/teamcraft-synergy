@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,8 +27,8 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
         return;
       }
       
-      if (selectedFile.size > 5 * 1024 * 1024) { // Reduced to 5MB limit
-        toast.error('File size exceeds 5MB limit for edge function processing');
+      if (selectedFile.size > 3 * 1024 * 1024) { // Reduced to 3MB limit
+        toast.error('File size exceeds 3MB limit for edge function processing');
         return;
       }
       
@@ -70,7 +71,7 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
           try {
             // Define a promise that will be rejected after timeout
             const timeoutPromise = new Promise((_, reject) => {
-              setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000);
+              setTimeout(() => reject(new Error('Request timed out after 25 seconds')), 25000);
             });
             
             // Create the supabase function invoke promise
