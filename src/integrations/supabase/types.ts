@@ -176,6 +176,7 @@ export type Database = {
           is_archived: boolean
           is_favorite: boolean
           is_important: boolean
+          metadata: Json | null
           project_id: string
           updated_at: string
           user_id: string
@@ -192,6 +193,7 @@ export type Database = {
           is_archived?: boolean
           is_favorite?: boolean
           is_important?: boolean
+          metadata?: Json | null
           project_id: string
           updated_at?: string
           user_id: string
@@ -208,6 +210,7 @@ export type Database = {
           is_archived?: boolean
           is_favorite?: boolean
           is_important?: boolean
+          metadata?: Json | null
           project_id?: string
           updated_at?: string
           user_id?: string

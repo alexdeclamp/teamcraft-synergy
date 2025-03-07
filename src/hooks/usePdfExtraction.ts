@@ -10,6 +10,7 @@ interface Document {
   file_url: string;
   metadata?: {
     pdf_url?: string;
+    extractedInfoNoteId?: string;
   };
 }
 
