@@ -35,71 +35,93 @@ serve(async (req) => {
     console.log(`Summarizing PDF: ${fileName}`);
     console.log(`PDF URL: ${pdfUrl}`);
     
-    // Call Claude API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': anthropicApiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: "claude-3-haiku-20240307",
-        max_tokens: 1500,
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "document",
-                source: {
-                  type: "url",
-                  url: pdfUrl
+    // Call Claude API with improved error handling
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicApiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: "claude-3-haiku-20240307",
+          max_tokens: 1500,
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "document",
+                  source: {
+                    type: "url",
+                    url: pdfUrl
+                  }
+                },
+                {
+                  type: "text",
+                  text: `Please provide a comprehensive summary of this PDF document. 
+                  
+                  Include the following in your summary:
+                  1. The main purpose and key points of the document
+                  2. Important facts, figures, and findings
+                  3. Any conclusions or recommendations
+                  
+                  Format your response in a clear, structured way using paragraphs, bullet points, and headings as appropriate.`
                 }
-              },
-              {
-                type: "text",
-                text: `Please provide a comprehensive summary of this PDF document. 
-                
-                Include the following in your summary:
-                1. The main purpose and key points of the document
-                2. Important facts, figures, and findings
-                3. Any conclusions or recommendations
-                
-                Format your response in a clear, structured way using paragraphs, bullet points, and headings as appropriate.`
-              }
-            ]
-          }
-        ]
-      })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Claude API error: ${response.status}`, errorText);
+              ]
+            }
+          ]
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Claude API error: ${response.status}`, errorText);
+        return new Response(
+          JSON.stringify({ error: `Claude API error: ${response.status}. Details: ${errorText}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      const data = await response.json();
+      if (!data.content || !data.content[0] || !data.content[0].text) {
+        console.error('Invalid response from Claude API:', data);
+        return new Response(
+          JSON.stringify({ error: 'Invalid response format from Claude API' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      const summary = data.content[0].text;
+      
+      console.log("Summary generated successfully");
+      
       return new Response(
-        JSON.stringify({ error: `Claude API error: ${response.status}` }),
+        JSON.stringify({ 
+          success: true, 
+          summary: summary,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (apiError) {
+      console.error('Error calling Claude API:', apiError);
+      return new Response(
+        JSON.stringify({ 
+          error: `Error calling Claude API: ${apiError.message || 'Unknown API error'}`,
+          details: apiError.stack || ''
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    const data = await response.json();
-    const summary = data.content[0].text;
-    
-    console.log("Summary generated successfully");
-    
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        summary: summary,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-    
   } catch (error) {
     console.error('Error in summarize-pdf function:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Unknown error occurred' }),
+      JSON.stringify({ 
+        error: error.message || 'Unknown error occurred',
+        details: error.stack || '' 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

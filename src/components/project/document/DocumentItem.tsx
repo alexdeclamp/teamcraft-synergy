@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileText, Download, Eye, Clock, FileSearch } from 'lucide-react';
@@ -31,7 +30,7 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({ document, projectId 
   const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
   const [summary, setSummary] = useState("");
   
-  // Check if there's a PDF URL in metadata
+  // Check if there's a PDF URL in metadata or use the file_url
   const pdfUrl = document.metadata?.pdf_url || document.file_url;
   
   const handleSummarize = async () => {
@@ -42,6 +41,7 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({ document, projectId 
     
     try {
       setIsSummarizing(true);
+      setSummaryDialogOpen(true); // Open dialog immediately to show loading state
       
       // Call the Supabase Edge Function to summarize the PDF
       const { data, error } = await supabase.functions.invoke('summarize-pdf', {
@@ -53,18 +53,24 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({ document, projectId 
       });
       
       if (error) {
-        throw error;
+        console.error("Error from Edge Function:", error);
+        throw new Error(error.message || "Failed to call summary function");
+      }
+      
+      if (data?.error) {
+        console.error("Error in summarize-pdf function:", data.error);
+        throw new Error(data.error);
       }
       
       if (data?.summary) {
         setSummary(data.summary);
-        setSummaryDialogOpen(true);
       } else {
         throw new Error("No summary was generated");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error summarizing PDF:", error);
       toast.error(`Failed to summarize PDF: ${error.message || "Unknown error"}`);
+      // Keep dialog open to show error state
     } finally {
       setIsSummarizing(false);
     }
@@ -92,7 +98,11 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({ document, projectId 
             onClick={handleSummarize}
             title="Summarize PDF"
           >
-            <FileSearch className="h-4 w-4" />
+            {isSummarizing ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            ) : (
+              <FileSearch className="h-4 w-4" />
+            )}
           </Button>
           <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0">
             <a href={pdfUrl} target="_blank" rel="noopener noreferrer" title="View Document">
@@ -107,17 +117,15 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({ document, projectId 
         </div>
       </div>
       
-      {summaryDialogOpen && (
-        <SummaryDialog
-          isOpen={summaryDialogOpen}
-          onClose={() => setSummaryDialogOpen(false)}
-          title={`Summary: ${document.file_name}`}
-          summary={summary}
-          isLoading={false}
-          hasSavedVersion={true}
-          projectId={projectId}
-        />
-      )}
+      <SummaryDialog
+        isOpen={summaryDialogOpen}
+        onClose={() => setSummaryDialogOpen(false)}
+        title={`Summary: ${document.file_name}`}
+        summary={summary}
+        isLoading={isSummarizing}
+        hasSavedVersion={!isSummarizing && summary !== ""}
+        projectId={projectId}
+      />
     </>
   );
 };
