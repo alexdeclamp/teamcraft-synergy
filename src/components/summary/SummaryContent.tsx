@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Loader2, Save } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface SummaryContentProps {
   isLoading: boolean;
@@ -22,6 +23,76 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
     );
   }
 
+  // Format the summary content if it contains tabular data
+  const formatSummaryContent = (content: string) => {
+    // Check if content might contain a table structure (has multiple lines with consistent separators)
+    const lines = content.split('\n');
+    const potentialTableLines = lines.filter(line => 
+      line.includes('|') || 
+      line.includes('\t') || 
+      (line.includes(':') && line.split(':').length > 1)
+    );
+    
+    // If we detect a potential table structure
+    if (potentialTableLines.length > 3 && potentialTableLines.length / lines.length > 0.4) {
+      return (
+        <div className="prose max-w-none">
+          {lines.map((line, index) => {
+            // Check if line looks like a table header or separator
+            if (line.includes('--') && line.includes('|')) {
+              return <hr key={index} className="my-1" />;
+            }
+            // Check if line looks like a table row
+            else if (line.includes('|')) {
+              const cells = line.split('|').filter(cell => cell.trim() !== '');
+              return (
+                <div key={index} className="grid grid-cols-12 gap-2 py-1 border-b border-border/50">
+                  {cells.map((cell, cellIndex) => (
+                    <div 
+                      key={`${index}-${cellIndex}`}
+                      className={cn(
+                        "px-2", 
+                        cellIndex === 0 ? "col-span-3 font-medium" : "col-span-9/cells.length",
+                        index === 0 ? "font-semibold" : ""
+                      )}
+                    >
+                      {cell.trim()}
+                    </div>
+                  ))}
+                </div>
+              );
+            } 
+            // Format other content with proper paragraph styling
+            else if (line.trim() !== '') {
+              // Check if this is a heading (starts with # symbols)
+              if (line.trim().startsWith('#')) {
+                const level = line.trim().match(/^#+/)[0].length;
+                const text = line.trim().replace(/^#+\s*/, '');
+                const headingClass = cn(
+                  "font-semibold", 
+                  level === 1 ? "text-xl mt-4 mb-2" : 
+                  level === 2 ? "text-lg mt-3 mb-2" : 
+                  "text-base mt-2 mb-1"
+                );
+                return <div key={index} className={headingClass}>{text}</div>;
+              }
+              // Check if this is a list item
+              else if (line.trim().match(/^[-*•]\s/)) {
+                return <div key={index} className="ml-4 flex"><span className="mr-2">•</span>{line.trim().replace(/^[-*•]\s/, '')}</div>;
+              }
+              // Regular paragraph
+              return <p key={index} className="my-1">{line}</p>;
+            }
+            return null;
+          }).filter(Boolean)}
+        </div>
+      );
+    }
+    
+    // Default rendering with pre-wrap
+    return <div className="whitespace-pre-wrap">{content}</div>;
+  };
+
   // Only show the summary content if we explicitly know we have a summary
   if (hasSummary && summary.trim() !== '') {
     return (
@@ -30,8 +101,8 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
           <Save className="h-3 w-3 mr-1" />
           <span>Summary is saved and will be available instantly next time</span>
         </div>
-        <div className="p-4 bg-accent/20 rounded-md whitespace-pre-wrap max-h-[50vh] overflow-y-auto">
-          {summary}
+        <div className="p-4 bg-accent/20 rounded-md overflow-y-auto max-h-[50vh]">
+          {formatSummaryContent(summary)}
         </div>
       </>
     );
