@@ -69,9 +69,12 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
         throw new Error('Project ID is missing, cannot generate summary');
       }
       
+      // For image summarization, we need to send the image URL
+      // The edge function will fetch and process the image
       const response = await supabase.functions.invoke('generate-summary', {
         body: {
           type: 'image',
+          content: imageUrl, // Send the URL as content for images
           imageUrl: imageUrl,
           userId: user?.id,
           projectId: projectId
