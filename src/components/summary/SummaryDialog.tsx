@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -38,7 +37,6 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   const [isCreatingNote, setIsCreatingNote] = useState(false);
   const { user } = useAuth();
   
-  // Reset feedback state when dialog opens
   useEffect(() => {
     if (isOpen) {
       setFeedbackGiven(false);
@@ -85,7 +83,6 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     try {
       setIsCreatingNote(true);
       
-      // Create a note title based on image name or a default
       const noteTitle = imageName 
         ? `Image Description: ${imageName}` 
         : "Image Description";
@@ -105,7 +102,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
       if (error) throw error;
 
       toast.success('Note created successfully from image description');
-      onClose(); // Close the dialog after creating the note
+      onClose();
     } catch (error: any) {
       console.error('Error creating note:', error);
       toast.error(`Failed to create note: ${error.message}`);
@@ -114,14 +111,13 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     }
   };
 
-  // Determine if we have a summary available - use the explicit hasSavedVersion prop
   const hasSummary = hasSavedVersion || (summary.trim() !== '' && !isLoading);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
     }}>
-      <DialogContent className="sm:max-w-[550px] max-h-[85vh] flex flex-col">
+      <DialogContent className="sm:max-w-[750px] max-h-[85vh] flex flex-col">
         <SummaryDialogHeader 
           title={title} 
           hasSavedVersion={hasSavedVersion} 
