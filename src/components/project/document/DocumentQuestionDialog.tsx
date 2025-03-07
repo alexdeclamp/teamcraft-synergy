@@ -40,6 +40,7 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
   const [answer, setAnswer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [feedbackGiven, setFeedbackGiven] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const answerRef = useRef<HTMLDivElement>(null);
   
@@ -130,14 +131,12 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
     try {
       const { data, error } = await supabase
         .from('project_notes')
-        .insert([
-          {
-            project_id: projectId,
-            title: `Question about ${document.file_name}`,
-            content: `**Question:** ${userQuestion}\n\n**Answer:** ${answer}`,
-            is_ai_generated: true
-          }
-        ])
+        .insert({
+          project_id: projectId,
+          title: `Question about ${document.file_name}`,
+          content: `**Question:** ${userQuestion}\n\n**Answer:** ${answer}`,
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        })
         .select()
         .single();
         
@@ -154,6 +153,11 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
   const handleReset = () => {
     setCurrentStep('question');
     setAnswer('');
+  };
+
+  const handleFeedback = (isPositive: boolean) => {
+    setFeedbackGiven(true);
+    toast.success('Thanks for your feedback!');
   };
   
   return (
@@ -255,11 +259,19 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
               </div>
               
               {!isLoading && answer && (
-                <SummaryFeedback 
-                  type="question"
-                  onThumbsUp={() => toast.success('Thanks for your feedback!')}
-                  onThumbsDown={() => toast.success('Thanks for your feedback! We\'ll work to improve.')}
-                />
+                <div className="flex items-center justify-start mt-4">
+                  {feedbackGiven ? (
+                    <p className="text-sm text-muted-foreground">Thanks for your feedback!</p>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground mr-2">Was this answer helpful?</p>
+                      <SummaryFeedback 
+                        feedbackGiven={feedbackGiven}
+                        onFeedback={handleFeedback}
+                      />
+                    </>
+                  )}
+                </div>
               )}
             </div>
           )}
