@@ -36,7 +36,6 @@ serve(async (req) => {
     console.log(`PDF URL: ${pdfUrl}`);
     console.log(`User message: ${message}`);
     
-    // Call Claude API with the PDF URL in the correct format
     try {
       console.log("Calling Claude API with file_url parameter...");
       const response = await fetch('https://api.anthropic.com/v1/messages', {
