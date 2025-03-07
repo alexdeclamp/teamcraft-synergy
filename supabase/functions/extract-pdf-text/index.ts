@@ -35,7 +35,7 @@ serve(async (req) => {
       );
     }
     
-    const { fileBase64, fileName, projectId, userId } = requestBody;
+    const { fileBase64, fileName, projectId, userId, createNote = false } = requestBody;
     
     if (!fileBase64 || !projectId || !userId) {
       console.error("Missing required parameters");
@@ -109,11 +109,17 @@ serve(async (req) => {
     const timestamp = new Date().getTime();
     const fileNameWithoutExt = fileName.replace(/\.pdf$/i, '');
     const images = [];
+    let extractedText = '';
     
     // Process each page of the PDF
     for (let i = 1; i <= pdf.numPages; i++) {
       console.log(`Processing page ${i} of ${pdf.numPages}`);
       const page = await pdf.getPage(i);
+      
+      // Extract text content from the page
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map((item: any) => item.str).join(' ');
+      extractedText += `--- Page ${i} ---\n${pageText}\n\n`;
       
       // Set scale for better resolution
       const viewport = page.getViewport({ scale: 1.5 });
@@ -165,6 +171,94 @@ serve(async (req) => {
       });
     }
 
+    let noteId = null;
+    let summary = null;
+
+    // Generate note using Claude API if requested
+    if (createNote && extractedText) {
+      try {
+        console.log("Generating note summary using Claude API");
+        const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+        
+        if (!anthropicApiKey) {
+          console.error("Missing Anthropic API key");
+          throw new Error('Anthropic API key not configured');
+        }
+
+        // Trim text if too large (Claude has context limits)
+        const maxChars = 25000;
+        const trimmedText = extractedText.length > maxChars 
+          ? extractedText.substring(0, maxChars) + "... [content truncated due to length]" 
+          : extractedText;
+
+        const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': anthropicApiKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-haiku-20240307',
+            max_tokens: 1500,
+            temperature: 0.2,
+            messages: [
+              {
+                role: 'user',
+                content: `Here is the text content extracted from a PDF document titled "${fileNameWithoutExt}". 
+                Please analyze this content and create a structured note with the following:
+                
+                1. A brief summary of the main content (2-3 paragraphs)
+                2. Key points or takeaways (bullet points)
+                3. Any important data, dates, or numbers mentioned
+                4. Suggested next actions (if applicable)
+                
+                Please be concise and focus on the most valuable information.
+                
+                Here's the PDF content:
+                ${trimmedText}`
+              }
+            ]
+          })
+        });
+        
+        if (!claudeResponse.ok) {
+          const errorData = await claudeResponse.text();
+          console.error("Claude API error:", errorData);
+          throw new Error(`Claude API error: ${claudeResponse.status}`);
+        }
+        
+        const claudeData = await claudeResponse.json();
+        summary = claudeData.content[0].text;
+        
+        console.log("Successfully generated note summary");
+        
+        // Create note in database
+        const { data: noteData, error: noteError } = await supabase
+          .from('project_notes')
+          .insert({
+            title: `PDF Summary: ${fileNameWithoutExt}`,
+            content: summary,
+            project_id: projectId,
+            user_id: userId,
+            tags: ['pdf', 'ai-generated']
+          })
+          .select()
+          .single();
+          
+        if (noteError) {
+          console.error('Error creating note:', noteError);
+          throw noteError;
+        }
+        
+        noteId = noteData.id;
+        console.log(`Created note with ID: ${noteId}`);
+      } catch (error) {
+        console.error('Error generating note:', error);
+        // Continue with file processing even if note generation fails
+      }
+    }
+
     // Save document info in the database with references to all pages
     console.log("Saving document info to database");
     const { data: documentData, error: documentError } = await supabase
@@ -176,13 +270,15 @@ serve(async (req) => {
         file_url: images.length > 0 ? images[0].url : null, // Use first image as main URL
         file_path: `${userId}/${projectId}/${timestamp}_${fileName}`, // Original reference path
         document_type: 'png',
+        content_text: extractedText,
         metadata: {
           pages: images.map(img => ({ 
             page: img.page, 
             url: img.url,
             path: img.path
           })),
-          totalPages: pdf.numPages
+          totalPages: pdf.numPages,
+          associatedNoteId: noteId
         }
       })
       .select()
@@ -202,7 +298,9 @@ serve(async (req) => {
         success: true, 
         document: documentData,
         pages: images.length,
-        images: images
+        images: images,
+        noteId: noteId,
+        summary: summary
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

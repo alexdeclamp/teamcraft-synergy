@@ -3,18 +3,24 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Upload, Loader2, FileText } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 interface DocumentUploadFormProps {
   file: File | null;
   isUploading: boolean;
+  createNote: boolean;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onCreateNoteChange: (checked: boolean) => void;
   onUpload: () => void;
 }
 
 export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
   file,
   isUploading,
+  createNote,
   onFileChange,
+  onCreateNoteChange,
   onUpload
 }) => {
   return (
@@ -47,6 +53,21 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
             </>
           )}
         </Button>
+      </div>
+      
+      <div className="flex items-center space-x-2">
+        <Checkbox 
+          id="create-note" 
+          checked={createNote}
+          onCheckedChange={onCreateNoteChange}
+          disabled={isUploading}
+        />
+        <Label 
+          htmlFor="create-note" 
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Generate a note from PDF content using Claude AI
+        </Label>
       </div>
       
       {file && (

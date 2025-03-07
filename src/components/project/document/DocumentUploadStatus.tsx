@@ -31,7 +31,8 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           <Progress value={uploadProgress} className="h-2" />
           <p className="text-xs text-muted-foreground text-center">
             {uploadProgress < 30 && "Reading file..."}
-            {uploadProgress >= 30 && uploadProgress < 90 && "Uploading file..."}
+            {uploadProgress >= 30 && uploadProgress < 60 && "Processing PDF..."}
+            {uploadProgress >= 60 && uploadProgress < 90 && uploadProgress > 30 && "Generating note..."}
             {uploadProgress >= 90 && "Finalizing..."}
           </p>
         </div>

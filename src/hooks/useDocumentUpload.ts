@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useRouter } from 'react-router-dom';
 
 interface UseDocumentUploadProps {
   projectId: string;
@@ -10,10 +11,12 @@ interface UseDocumentUploadProps {
 }
 
 export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: UseDocumentUploadProps) {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [createNote, setCreateNote] = useState(true);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -32,6 +35,10 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
       
       setFile(selectedFile);
     }
+  };
+
+  const handleCreateNoteChange = (checked: boolean) => {
+    setCreateNote(checked);
   };
 
   const uploadDocument = async () => {
@@ -55,15 +62,17 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
             fileSize: file.size,
             fileName: file.name,
             projectId,
-            userId
+            userId,
+            createNote
           });
           
-          const { data, error } = await supabase.functions.invoke('summarize-pdf', {
+          const { data, error } = await supabase.functions.invoke('extract-pdf-text', {
             body: {
               fileBase64: event.target.result,
               fileName: file.name,
               projectId,
-              userId
+              userId,
+              createNote
             }
           });
           
@@ -80,11 +89,24 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
           
           setUploadProgress(90);
           
-          toast.success(`PDF uploaded successfully`);
+          let successMessage = `PDF uploaded successfully`;
+          if (data.noteId) {
+            successMessage += ` and note created`;
+          }
+          
+          toast.success(successMessage);
           setUploadProgress(100);
           
           if (onDocumentUploaded && data.document) {
             onDocumentUploaded(data.document);
+          }
+          
+          // Navigate to the created note if available
+          if (data.noteId) {
+            // Optional: Add a delay so the user sees the success message
+            setTimeout(() => {
+              router.navigate(`/project/${projectId}/notes/${data.noteId}`);
+            }, 1500);
           }
           
         } catch (err: any) {
@@ -127,7 +149,9 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
     isUploading,
     uploadProgress,
     errorMessage,
+    createNote,
     handleFileChange,
+    handleCreateNoteChange,
     uploadDocument,
     resetForm
   };

@@ -21,7 +21,9 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({
     isUploading,
     uploadProgress,
     errorMessage,
+    createNote,
     handleFileChange,
+    handleCreateNoteChange,
     uploadDocument,
     resetForm
   } = useDocumentUpload({
@@ -41,7 +43,9 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({
         <DocumentUploadForm 
           file={file}
           isUploading={isUploading}
+          createNote={createNote}
           onFileChange={handleFileChange}
+          onCreateNoteChange={handleCreateNoteChange}
           onUpload={uploadDocument}
         />
         
