@@ -38,12 +38,17 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
-  // Clear messages when dialog opens
+  // Add welcome message when dialog opens
   useEffect(() => {
     if (isOpen) {
-      setMessages([]);
+      setMessages([
+        { 
+          role: 'assistant', 
+          content: `👋 I'm your PDF assistant for "${document.file_name}". Ask me anything about this document!` 
+        }
+      ]);
     }
-  }, [isOpen]);
+  }, [isOpen, document.file_name]);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -125,12 +130,6 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
         <div className="flex flex-col h-[500px]">
           <ScrollArea ref={scrollAreaRef} className="flex-1 pr-4">
             <div className="space-y-4 p-2">
-              {messages.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>Ask a question about "{document.file_name}" to get started</p>
-                </div>
-              )}
-              
               {messages.map((message, index) => (
                 <ProjectChatMessage key={index} message={message} />
               ))}
@@ -154,7 +153,6 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
                 className="min-h-[60px]"
                 onKeyDown={handleKeyDown}
                 disabled={isLoading}
-                autoFocus
               />
               <Button
                 onClick={handleSendMessage}

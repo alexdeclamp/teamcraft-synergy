@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { File, MoreVertical, Download, Trash2, MessageSquare } from 'lucide-react';
+import { File, MoreVertical, Download, Trash2, Eye, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import SummaryDialog from '@/components/summary/SummaryDialog';
 import DocumentChatDialog from './DocumentChatDialog';
 
 interface DocumentItemProps {
@@ -34,6 +35,9 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
   onRefresh,
   projectId
 }) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [summary, setSummary] = useState('');
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   const fileExtension = document.file_name.split('.').pop()?.toLowerCase();
@@ -82,6 +86,40 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
       toast.error(`Failed to delete document: ${error.message}`);
     }
   };
+  
+  const handleGenerateSummary = async () => {
+    if (!isPdf) {
+      toast.error('Summary generation is only available for PDF files');
+      return;
+    }
+    
+    setIsGenerating(true);
+    setSummary('');
+    setIsSummaryOpen(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('summarize-pdf', {
+        body: {
+          pdfUrl: document.file_url,
+          fileName: document.file_name,
+          projectId
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (!data.success || !data.summary) {
+        throw new Error('Failed to generate summary');
+      }
+      
+      setSummary(data.summary);
+    } catch (error: any) {
+      console.error('Error generating summary:', error);
+      toast.error(`Failed to generate summary: ${error.message}`);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleChatWithPdf = () => {
     if (!isPdf) {
@@ -109,15 +147,28 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
         
         <div className="flex items-center gap-2">
           {isPdf && (
-            <Button 
-              variant="default" 
-              size="sm" 
-              className="flex items-center gap-1"
-              onClick={handleChatWithPdf}
-            >
-              <MessageSquare className="h-4 w-4" />
-              <span className="sm:inline">Chat with PDF</span>
-            </Button>
+            <>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={handleGenerateSummary}
+                disabled={isGenerating}
+              >
+                <Eye className="h-4 w-4" />
+                <span className="hidden sm:inline">Summarize</span>
+              </Button>
+              
+              <Button 
+                variant="default" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={handleChatWithPdf}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="sm:inline">Chat with PDF</span>
+              </Button>
+            </>
           )}
           
           <DropdownMenu>
@@ -139,6 +190,16 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
           </DropdownMenu>
         </div>
       </div>
+      
+      <SummaryDialog
+        isOpen={isSummaryOpen}
+        onClose={() => setIsSummaryOpen(false)}
+        title={document.file_name}
+        summary={summary}
+        isLoading={isGenerating}
+        projectId={projectId}
+        imageName={document.file_name}
+      />
       
       <DocumentChatDialog
         isOpen={isChatOpen}
