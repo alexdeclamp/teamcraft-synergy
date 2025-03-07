@@ -1,10 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { FileText, Download, Eye, Clock, FileSearch } from 'lucide-react';
+import { FileText, Download, Eye, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import SummaryDialog from '@/components/summary/SummaryDialog';
-import { usePdfExtraction } from '@/hooks/usePdfExtraction';
 
 interface Document {
   id: string;
@@ -25,34 +23,7 @@ interface DocumentItemProps {
   projectId: string;
 }
 
-export const DocumentItem: React.FC<DocumentItemProps> = ({ document, projectId }) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const {
-    isExtracting,
-    extractedInfo,
-    extractInformation
-  } = usePdfExtraction(document, projectId);
-
-  const handleExtractClick = async () => {
-    try {
-      await extractInformation();
-      setIsDialogOpen(true);
-    } catch (error) {
-      console.error('Error in handleExtractClick:', error);
-    }
-  };
-
-  // Check if this is a PDF document
-  const isPdf = document.document_type === 'pdf' || 
-                document.file_name.toLowerCase().endsWith('.pdf') ||
-                document.file_url.toLowerCase().includes('.pdf');
-  
-  // Also check if we have a PDF URL in metadata
-  const hasPdfUrl = document.metadata?.pdf_url !== undefined;
-  
-  // Show extract button for PDF documents
-  const showExtractButton = isPdf || hasPdfUrl;
-
+export const DocumentItem: React.FC<DocumentItemProps> = ({ document }) => {
   return (
     <div className="flex items-center justify-between p-3 rounded-md bg-accent/30 hover:bg-accent/50 transition-colors">
       <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -66,19 +37,6 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({ document, projectId 
         </div>
       </div>
       <div className="flex gap-2 ml-2">
-        {showExtractButton && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleExtractClick}
-            className="h-8 w-8 p-0"
-            disabled={isExtracting}
-            title="Extract Information with Claude"
-          >
-            <FileSearch className="h-4 w-4" />
-            {isExtracting && <span className="sr-only">Extracting...</span>}
-          </Button>
-        )}
         <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0">
           <a href={document.file_url} target="_blank" rel="noopener noreferrer" title="View Document">
             <Eye className="h-4 w-4" />
@@ -90,17 +48,6 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({ document, projectId 
           </a>
         </Button>
       </div>
-
-      <SummaryDialog
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-        title={`Information from "${document.file_name}"`}
-        summary={extractedInfo}
-        isLoading={isExtracting}
-        hasSavedVersion={extractedInfo !== ''}
-        projectId={projectId}
-        imageName={document.file_name}
-      />
     </div>
   );
 };
