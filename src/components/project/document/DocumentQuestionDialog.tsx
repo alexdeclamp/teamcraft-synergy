@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
@@ -116,12 +115,12 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
     
     const blob = new Blob([`Question: ${userQuestion}\n\nAnswer: ${answer}`], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = window.document.createElement('a');
     a.href = url;
     a.download = `${document.file_name.replace(/\.[^/.]+$/, '')}-question.txt`;
-    document.body.appendChild(a);
+    window.document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    window.document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
   
