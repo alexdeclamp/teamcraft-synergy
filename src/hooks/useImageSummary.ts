@@ -15,12 +15,12 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
   const [hasSummary, setHasSummary] = useState(false);
   const { user } = useAuth();
 
-  // Fetch existing summary when component mounts or when imageUrl/projectId changes
+  // Reset states when props change
   useEffect(() => {
-    if (imageUrl && projectId) {
+    if (imageUrl) {
+      setSummary('');
+      setHasSummary(false);
       fetchExistingSummary();
-    } else {
-      console.error('Missing required data to fetch summary:', { imageUrl, projectId });
     }
   }, [imageUrl, projectId]);
 
@@ -51,7 +51,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
 
       console.log('Summary data:', data);
 
-      if (data && data.summary) {
+      if (data && data.summary && data.summary.trim() !== '') {
         setSummary(data.summary);
         setHasSummary(true);
       } else {
@@ -66,8 +66,10 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
 
   const generateSummary = async () => {
     try {
+      // Reset states at the beginning of generation
       setIsGenerating(true);
-      setHasSummary(false); // Reset state while generating
+      setHasSummary(false);
+      setSummary('');
       
       console.log('Generating summary for image:', imageUrl);
       console.log('For project:', projectId);
@@ -111,7 +113,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
         throw new Error(`Error from OpenAI: ${data.error}`);
       }
       
-      if (!data.summary) {
+      if (!data.summary || data.summary.trim() === '') {
         console.error('Invalid response data structure:', data);
         throw new Error('Failed to get a valid summary from the edge function');
       }
@@ -121,14 +123,9 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       setHasSummary(true);
       toast.success('Summary generated and saved successfully');
       
-      // Wait a bit before fetching to ensure the database has time to update
-      setTimeout(() => {
-        fetchExistingSummary();
-      }, 1000);
-      
     } catch (error: any) {
       console.error('Error generating image summary:', error);
-      setSummary(`Error: ${error.message}`);
+      setSummary('');
       setHasSummary(false);
       toast.error(`Failed to generate summary: ${error.message}`);
     } finally {

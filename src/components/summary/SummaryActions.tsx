@@ -23,7 +23,7 @@ const SummaryActions: React.FC<SummaryActionsProps> = ({
   projectId,
   hasSummary
 }) => {
-  if (!hasSummary) {
+  if (!hasSummary || summary.trim() === '') {
     return (
       <DialogClose asChild>
         <Button variant="outline" size="sm">Close</Button>
@@ -36,7 +36,7 @@ const SummaryActions: React.FC<SummaryActionsProps> = ({
       <Button 
         onClick={onCreateNote} 
         size="sm" 
-        disabled={isCreatingNote || !projectId}
+        disabled={isCreatingNote || !projectId || summary.trim() === ''}
         className="gap-1"
       >
         {isCreatingNote ? (
@@ -46,11 +46,21 @@ const SummaryActions: React.FC<SummaryActionsProps> = ({
         )}
         Create Note
       </Button>
-      <Button onClick={onCopy} size="sm" variant="outline">
+      <Button 
+        onClick={onCopy} 
+        size="sm" 
+        variant="outline" 
+        disabled={summary.trim() === ''}
+      >
         <Copy className="h-4 w-4 mr-2" />
         Copy
       </Button>
-      <Button onClick={onDownload} size="sm" variant="outline">
+      <Button 
+        onClick={onDownload} 
+        size="sm" 
+        variant="outline" 
+        disabled={summary.trim() === ''}
+      >
         <Download className="h-4 w-4 mr-2" />
         Download
       </Button>

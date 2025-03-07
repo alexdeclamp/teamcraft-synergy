@@ -22,7 +22,8 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
     );
   }
 
-  if (hasSummary) {
+  // Only show the summary content if we explicitly know we have a summary
+  if (hasSummary && summary.trim() !== '') {
     return (
       <>
         <div className="mb-2 px-2 text-sm text-muted-foreground flex items-center">
@@ -36,6 +37,7 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
     );
   }
 
+  // Default "no summary" state
   return (
     <div className="p-4 bg-accent/10 rounded-md flex items-center justify-center h-32">
       <p className="text-muted-foreground">No summary available yet.</p>

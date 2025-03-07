@@ -46,7 +46,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   }, [isOpen]);
 
   const handleCopy = () => {
-    if (!summary) {
+    if (!summary || summary.trim() === '') {
       toast.error("No summary available to copy");
       return;
     }
@@ -55,7 +55,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   };
 
   const handleDownload = () => {
-    if (!summary) {
+    if (!summary || summary.trim() === '') {
       toast.error("No summary available to download");
       return;
     }
@@ -77,7 +77,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   };
 
   const handleCreateNote = async () => {
-    if (!summary || !projectId || !user) {
+    if (!summary || summary.trim() === '' || !projectId || !user) {
       toast.error("Cannot create note from this summary");
       return;
     }
@@ -114,8 +114,8 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     }
   };
 
-  // Determine if we have a summary available 
-  const hasSummary = hasSavedVersion || (!isLoading && summary.trim() !== '');
+  // Determine if we have a summary available - use the explicit hasSavedVersion prop
+  const hasSummary = hasSavedVersion || (summary.trim() !== '' && !isLoading);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
