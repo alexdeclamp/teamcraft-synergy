@@ -3,9 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
@@ -13,6 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2, SendHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import SummaryDialogHeader from '@/components/summary/SummaryDialogHeader';
+import SummaryContent from '@/components/summary/SummaryContent';
+import SummaryActions from '@/components/summary/SummaryActions';
+import SummaryFeedback from '@/components/summary/SummaryFeedback';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DocumentQuestionDialogProps {
   isOpen: boolean;
@@ -36,6 +38,9 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
   const [answer, setAnswer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [documentContent, setDocumentContent] = useState<string | null>(null);
+  const [feedbackGiven, setFeedbackGiven] = useState(false);
+  const [isCreatingNote, setIsCreatingNote] = useState(false);
+  const { user } = useAuth();
   
   // Fetch document content if not already available
   useEffect(() => {
@@ -49,6 +54,7 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
     if (isOpen) {
       setQuestion('');
       setAnswer('');
+      setFeedbackGiven(false);
     }
   }, [isOpen, document.content_text]);
   
@@ -125,62 +131,176 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
     }
   };
 
-  return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) onClose();
-    }}>
-      <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Ask Question About "{document.file_name}"</DialogTitle>
-          <DialogDescription>
-            Ask a specific question about this document to get an AI-powered answer
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="mt-4 flex flex-col gap-4">
-          <div>
-            <h3 className="text-sm font-medium mb-2">Your Question</h3>
+  const handleCopy = () => {
+    if (!answer || answer.trim() === '') {
+      toast.error("No answer available to copy");
+      return;
+    }
+    navigator.clipboard.writeText(answer);
+    toast.success('Answer copied to clipboard');
+  };
+
+  const handleDownload = () => {
+    if (!answer || answer.trim() === '') {
+      toast.error("No answer available to download");
+      return;
+    }
+    const blob = new Blob([answer], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${document.file_name.replace(/\s+/g, '-').toLowerCase()}-answer.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Answer downloaded successfully');
+  };
+
+  const handleFeedback = (isPositive: boolean) => {
+    toast.success(`Thank you for your feedback!`);
+    setFeedbackGiven(true);
+  };
+
+  const handleCreateNote = async () => {
+    if (!answer || answer.trim() === '' || !projectId || !user) {
+      toast.error("Cannot create note from this answer");
+      return;
+    }
+
+    try {
+      setIsCreatingNote(true);
+      
+      const { data, error } = await supabase
+        .from('project_notes')
+        .insert({
+          title: `Q&A: ${question.length > 30 ? question.substring(0, 30) + '...' : question}`,
+          content: `Question: ${question}\n\nAnswer: ${answer}`,
+          project_id: projectId,
+          user_id: user.id,
+          tags: ['document', 'question', 'ai-generated']
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success('Note created successfully from Q&A');
+      onClose();
+    } catch (error: any) {
+      console.error('Error creating note:', error);
+      toast.error(`Failed to create note: ${error.message}`);
+    } finally {
+      setIsCreatingNote(false);
+    }
+  };
+
+  // First page of the dialog - asking the question
+  if (!isLoading && !answer) {
+    return (
+      <Dialog open={isOpen} onOpenChange={(open) => {
+        if (!open) onClose();
+      }}>
+        <DialogContent className="sm:max-w-[600px]">
+          <SummaryDialogHeader
+            title={`Ask about "${document.file_name}"`}
+            hasSavedVersion={false}
+            isLoading={false}
+          />
+          
+          <div className="mt-4">
             <Textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="What would you like to know about this document?"
-              className="min-h-[80px]"
+              className="min-h-[120px]"
               onKeyDown={handleKeyDown}
-              disabled={isLoading}
             />
           </div>
           
-          {(answer || isLoading) && (
-            <div>
-              <h3 className="text-sm font-medium mb-2">Answer</h3>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <span className="ml-2 text-sm text-muted-foreground">Analyzing document...</span>
-                </div>
-              ) : (
-                <div className="bg-muted p-4 rounded-md whitespace-pre-wrap">
-                  {answer}
-                </div>
-              )}
-            </div>
-          )}
+          <DialogFooter className="mt-4">
+            <Button onClick={onClose} variant="outline">Cancel</Button>
+            <Button 
+              onClick={handleAskQuestion} 
+              disabled={!question.trim()}
+              className="gap-2"
+            >
+              <SendHorizontal className="h-4 w-4" />
+              Ask Question
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Second page - showing the answer (or loading)
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
+      <DialogContent className="sm:max-w-[750px] max-h-[85vh] flex flex-col">
+        <SummaryDialogHeader 
+          title={`Answer about "${document.file_name}"`}
+          hasSavedVersion={false}
+          isLoading={isLoading}
+        />
+        
+        <div className="mt-4 overflow-y-auto flex-grow">
+          <div className="mb-3 text-sm text-muted-foreground">
+            <strong>Your question:</strong> {question}
+          </div>
+          <SummaryContent 
+            isLoading={isLoading}
+            summary={answer}
+            hasSummary={!!answer && !isLoading}
+          />
         </div>
         
-        <DialogFooter className="mt-6">
-          <Button onClick={onClose} variant="outline">Close</Button>
-          <Button 
-            onClick={handleAskQuestion} 
-            disabled={!question.trim() || isLoading}
-            className="gap-2"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <SendHorizontal className="h-4 w-4" />
+        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 mt-4">
+          <div className="flex items-center space-x-2 mt-4 sm:mt-0">
+            {!isLoading && answer && !feedbackGiven && (
+              <SummaryFeedback 
+                feedbackGiven={feedbackGiven}
+                onFeedback={handleFeedback}
+              />
             )}
-            Ask Question
-          </Button>
+            {feedbackGiven && (
+              <p className="text-sm text-muted-foreground">Thanks for your feedback!</p>
+            )}
+          </div>
+          
+          <div className="flex space-x-2">
+            <Button 
+              onClick={handleCreateNote} 
+              size="sm" 
+              disabled={isCreatingNote || !answer.trim()}
+              className="gap-1"
+            >
+              {isCreatingNote ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <span>Create Note</span>
+              )}
+            </Button>
+            <Button 
+              onClick={handleCopy}
+              size="sm" 
+              variant="outline" 
+              disabled={!answer.trim()}
+            >
+              Copy
+            </Button>
+            <Button 
+              onClick={handleDownload}
+              size="sm" 
+              variant="outline" 
+              disabled={!answer.trim()}
+            >
+              Download
+            </Button>
+            <Button onClick={onClose} variant="outline" size="sm">Close</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
