@@ -75,7 +75,7 @@ serve(async (req) => {
         role: 'user',
         content: type === 'note' ?
           `Please summarize the following note: ${content}` :
-          `Please describe what you see in this image (image content encoded): ${content}`
+          `Please describe what you see in this image URL: ${content}`
       }
     ];
     
