@@ -28,8 +28,8 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
         return;
       }
       
-      if (selectedFile.size > 6 * 1024 * 1024) { // Reduced to 6MB limit for edge function
-        toast.error('File size exceeds 6MB limit for edge function processing');
+      if (selectedFile.size > 5 * 1024 * 1024) { // Reduced to 5MB limit
+        toast.error('File size exceeds 5MB limit for edge function processing');
         return;
       }
       
@@ -66,33 +66,39 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
             createNote
           });
           
-          // Add timeout handling for edge function call
-          const functionPromise = new Promise(async (resolve, reject) => {
-            try {
-              // Add a timeout for the edge function call
-              const timeoutId = setTimeout(() => {
-                reject(new Error('Edge function request timed out after 60 seconds'));
-              }, 60000);
-              
-              const result = await supabase.functions.invoke('extract-pdf-text', {
-                body: {
-                  fileBase64: event.target.result,
-                  fileName: file.name,
-                  projectId,
-                  userId,
-                  createNote
-                }
-              });
-              
-              clearTimeout(timeoutId);
-              resolve(result);
-            } catch (err) {
-              reject(err);
-            }
-          });
+          // Set a timeout for the edge function call
+          let edgeFunctionResponse: any = null;
+          let edgeFunctionError: any = null;
           
-          // Race the function call against the timeout
-          const { data, error } = await functionPromise as { data: any, error: any };
+          try {
+            // Define a promise that will be rejected after timeout
+            const timeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000);
+            });
+            
+            // Create the supabase function invoke promise
+            const functionPromise = supabase.functions.invoke('extract-pdf-text', {
+              body: {
+                fileBase64: event.target.result,
+                fileName: file.name,
+                projectId,
+                userId,
+                createNote
+              }
+            });
+            
+            // Race between the function call and the timeout
+            edgeFunctionResponse = await Promise.race([functionPromise, timeoutPromise]);
+          } catch (err: any) {
+            console.error('Edge function call error:', err);
+            edgeFunctionError = err;
+          }
+          
+          if (edgeFunctionError) {
+            throw new Error(`Upload failed: ${edgeFunctionError.message || 'Unknown error'}`);
+          }
+          
+          const { data, error } = edgeFunctionResponse || { data: null, error: null };
           
           console.log("Edge function response:", data, error);
           
