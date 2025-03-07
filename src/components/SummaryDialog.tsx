@@ -47,14 +47,14 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     }
   }, [isOpen]);
   
-  // Add effect to reset dialog state when unmounting
-  useEffect(() => {
-    return () => {
-      if (isOpen) {
-        onClose();
-      }
-    };
-  }, [isOpen, onClose]);
+  // Remove this effect that was causing the dialog to close prematurely
+  // useEffect(() => {
+  //   return () => {
+  //     if (isOpen) {
+  //       onClose();
+  //     }
+  //   };
+  // }, [isOpen, onClose]);
 
   const handleCopy = () => {
     if (!summary) {
@@ -127,7 +127,9 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
       <DialogContent className="sm:max-w-[550px] max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

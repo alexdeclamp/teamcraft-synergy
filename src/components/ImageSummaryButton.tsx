@@ -46,6 +46,10 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
     }
   };
 
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+  };
+
   return (
     <>
       <div className="flex space-x-1">
@@ -68,7 +72,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
 
       <SummaryDialog
         isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        onClose={handleDialogClose}
         title={`Description of "${imageName}"`}
         summary={summary}
         isLoading={isGenerating}
