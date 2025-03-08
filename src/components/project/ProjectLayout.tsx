@@ -18,6 +18,9 @@ interface ProjectLayoutProps {
   isImagesLoading: boolean;
   daysSinceCreation: () => number;
   activityPercentage: number;
+  noteCount: number;
+  documentCount: number;
+  recentUpdatesCount: number;
   formatFileSize: (bytes: number) => string;
   handleImagesUpdated: (images: any[], recent: any[]) => void;
   handleAddMember: () => void;
@@ -38,6 +41,9 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
   isImagesLoading,
   daysSinceCreation,
   activityPercentage,
+  noteCount,
+  documentCount,
+  recentUpdatesCount,
   formatFileSize,
   handleImagesUpdated,
   handleAddMember,
@@ -99,6 +105,9 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
           isImagesLoading={isImagesLoading}
           daysSinceCreation={daysSinceCreation}
           activityPercentage={activityPercentage}
+          noteCount={noteCount}
+          documentCount={documentCount}
+          recentUpdatesCount={recentUpdatesCount}
           formatFileSize={formatFileSize}
           handleImagesUpdated={handleImagesUpdated}
           handleAddMember={handleAddMember}
