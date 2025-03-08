@@ -11,6 +11,7 @@ export type TutorialStep = {
 export type TutorialConfig = {
   steps: TutorialStep[];
   onComplete?: () => void;
+  autoScroll?: boolean; // New option to control auto-scrolling
 };
 
 export const useTutorial = (config: TutorialConfig) => {
@@ -52,14 +53,14 @@ export const useTutorial = (config: TutorialConfig) => {
   const isFirstStep = currentStepIndex === 0;
 
   useEffect(() => {
-    // Scroll to the current step target element
-    if (isActive && currentStep) {
+    // Only scroll if autoScroll is explicitly set to true
+    if (isActive && currentStep && config.autoScroll === true) {
       const element = document.getElementById(currentStep.targetId);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-  }, [isActive, currentStep]);
+  }, [isActive, currentStep, config.autoScroll]);
 
   return {
     isActive,

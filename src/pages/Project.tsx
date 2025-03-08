@@ -44,6 +44,13 @@ const Project = () => {
     }
   }, [project, id, fetchProjectImages]);
 
+  // Handle tab change - ensure we're at the top of the tab content
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    // Reset scroll position when changing tabs
+    window.scrollTo(0, 0);
+  };
+
   return (
     <ProjectLayout
       loading={loading}
@@ -63,7 +70,7 @@ const Project = () => {
       handleImagesUpdated={handleImagesUpdated}
       handleAddMember={handleAddMember}
       activeTab={activeTab}
-      setActiveTab={setActiveTab}
+      setActiveTab={handleTabChange}
       showInviteDialog={showInviteDialog}
       setShowInviteDialog={setShowInviteDialog}
     />
