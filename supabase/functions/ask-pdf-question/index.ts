@@ -55,32 +55,64 @@ serve(async (req) => {
       );
     }
     
-    // Check document context
-    if (!documentContext || documentContext.trim() === '') {
-      console.log('No document context provided - attempting to extract text directly');
-      
-      // For direct PDF processing, you'd add code here to fetch the PDF and extract text
-      // This is a placeholder for now
-      return new Response(
-        JSON.stringify({ 
-          error: 'Document content is not available. The PDF extraction is still in progress or failed.',
-          success: false
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    console.log('Using document context to answer the question...');
-    console.log(`Document context length: ${documentContext.length} characters`);
-    
     try {
-      // Limit document context length to prevent exceeding token limits
-      const maxContextLength = 80000; // reduce from 90K for safety
-      const truncatedContext = documentContext.length > maxContextLength
-        ? documentContext.substring(0, maxContextLength) + "... [Content truncated due to length]"
-        : documentContext;
+      console.log("Calling Claude API");
       
-      console.log(`Calling Claude API with context of ${truncatedContext.length} characters`);
+      // Prepare system message and messages for Claude API
+      let systemMessage = `You are an AI assistant that helps users answer questions about PDF documents. 
+          The current document is: "${fileName}".`;
+          
+      // Create messages array
+      let messages = [];
+      
+      // If we have document context, use it in the system message
+      if (documentContext && documentContext.trim() !== '') {
+        console.log(`Using provided document context (${documentContext.length} chars)`);
+        
+        // Limit document context length to prevent exceeding token limits
+        const maxContextLength = 80000; // reduce from 90K for safety
+        const truncatedContext = documentContext.length > maxContextLength
+          ? documentContext.substring(0, maxContextLength) + "... [Content truncated due to length]"
+          : documentContext;
+        
+        systemMessage += `\nUse the following content from the document to answer the user's questions. 
+            If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
+            
+            Document content:
+            ${truncatedContext}`;
+            
+        // Standard message format with text context
+        messages = [
+          {
+            role: "user",
+            content: userQuestion
+          }
+        ];
+      } else {
+        // No document context provided, use file_url approach with Claude vision
+        console.log("No document context provided, using file_url with Claude vision API");
+        
+        // Using file_url in content for Claude to analyze the PDF directly
+        messages = [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: `Please answer this question about the PDF document: ${userQuestion}`
+              },
+              {
+                type: "file_url",
+                file_url: {
+                  url: pdfUrl
+                }
+              }
+            ]
+          }
+        ];
+      }
+      
+      console.log(`Calling Claude API with ${documentContext ? 'text context' : 'file_url'} approach`);
       
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -92,19 +124,8 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "claude-3-haiku-20240307",
           max_tokens: 1500,
-          system: `You are an AI assistant that helps users answer questions about PDF documents. 
-              The current document is: "${fileName}".
-              Use the following content from the document to answer the user's questions. 
-              If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
-              
-              Document content:
-              ${truncatedContext}`,
-          messages: [
-            {
-              role: "user",
-              content: userQuestion
-            }
-          ]
+          system: systemMessage,
+          messages: messages
         })
       });
       

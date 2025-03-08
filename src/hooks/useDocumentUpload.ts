@@ -60,43 +60,91 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
       const fileBase64 = await fileBase64Promise;
       setUploadProgress(40);
       
-      // Call the extract-pdf-text edge function to process the PDF
-      console.log("Calling extract-pdf-text function");
-      setUploadProgress(60);
-      const { data: extractionData, error: extractionError } = await supabase.functions.invoke(
-        'extract-pdf-text',
-        {
-          body: {
-            fileBase64,
-            fileName: file.name,
-            projectId,
-            userId,
-            createNote
-          }
-        }
-      );
+      // Upload the file directly to storage first
+      const timestamp = new Date().getTime();
+      const filePath = `${userId}/${projectId}/${timestamp}_${file.name}`;
       
-      if (extractionError) {
-        console.error('Error calling extract-pdf-text function:', extractionError);
-        throw new Error(`Extraction failed: ${extractionError.message}`);
+      // Extract base64 data
+      const base64Data = fileBase64.split(',')[1];
+      const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+      
+      // Upload to storage
+      const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from('project_documents')
+        .upload(filePath, binaryData, {
+          contentType: 'application/pdf',
+          upsert: false
+        });
+        
+      if (uploadError) {
+        throw new Error(`Storage upload error: ${uploadError.message}`);
       }
       
-      if (!extractionData || !extractionData.success) {
-        console.error('Extraction function returned error:', extractionData?.error || 'Unknown error');
-        throw new Error(extractionData?.error || 'Unknown error occurred during PDF processing');
+      // Get public URL
+      const { data: { publicUrl } } = supabase
+        .storage
+        .from('project_documents')
+        .getPublicUrl(filePath);
+      
+      setUploadProgress(60);
+      
+      // Create a document record in the database
+      const { data: documentData, error: documentError } = await supabase
+        .from('project_documents')
+        .insert({
+          project_id: projectId,
+          user_id: userId,
+          file_name: file.name,
+          file_url: publicUrl,
+          file_path: filePath,
+          document_type: 'pdf',
+          file_size: file.size,
+          metadata: {
+            pdf_url: publicUrl
+          }
+        })
+        .select()
+        .single();
+        
+      if (documentError) {
+        throw new Error(`Database error: ${documentError.message}`);
+      }
+      
+      setUploadProgress(75);
+      
+      // Optionally start text extraction in the background
+      if (createNote) {
+        console.log("Calling extract-pdf-text function for background processing");
+        setUploadProgress(85);
+        
+        // This will run in the background but we won't wait for it
+        supabase.functions.invoke(
+          'extract-pdf-text',
+          {
+            body: {
+              fileBase64,
+              fileName: file.name,
+              projectId,
+              userId,
+              createNote
+            }
+          }
+        ).then(({ data, error }) => {
+          if (error) {
+            console.error('Background extraction error:', error);
+            toast.error('Background document processing encountered an error, but the document was uploaded successfully');
+          } else if (data?.noteId) {
+            toast.success('PDF summary note was created successfully');
+          }
+        });
       }
       
       setUploadProgress(100);
-      console.log("PDF processed successfully:", extractionData);
+      toast.success('PDF uploaded successfully');
       
-      if (extractionData.textExtracted) {
-        toast.success('PDF uploaded and text extracted successfully');
-      } else {
-        toast.success('PDF uploaded successfully, but no text could be extracted');
-      }
-      
-      if (onDocumentUploaded && extractionData.document) {
-        onDocumentUploaded(extractionData.document);
+      if (onDocumentUploaded && documentData) {
+        onDocumentUploaded(documentData);
       }
       
     } catch (error: any) {
