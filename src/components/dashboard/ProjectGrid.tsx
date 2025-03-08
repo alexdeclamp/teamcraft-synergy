@@ -3,7 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ProjectCard, { ProjectCardProps } from '@/components/ProjectCard';
+import ProjectCard, { ProjectCardProps } from '@/components/project-card/ProjectCard';
 
 interface ProjectGridProps {
   projects: ProjectCardProps[];
