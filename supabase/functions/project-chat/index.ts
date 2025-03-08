@@ -1,8 +1,10 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -17,25 +19,26 @@ serve(async (req) => {
   }
 
   try {
-    const { projectId, message, userId, description, aiPersona } = await req.json();
+    const { projectId, message, userId, description, aiPersona, model = 'openai' } = await req.json();
     
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
-    // Log an OpenAI API call before making the request
+    // Log an API call before making the request
+    const apiType = model === 'claude' ? 'claude_api_call' : 'openai_api_call';
     try {
       const { error: logError } = await supabase
         .from('user_usage_stats')
         .insert({
           user_id: userId,
-          action_type: 'openai_api_call',
+          action_type: apiType,
         });
       
       if (logError) {
-        console.error('Error logging OpenAI API call:', logError);
+        console.error(`Error logging ${apiType}:`, logError);
       }
     } catch (error) {
-      console.error('Error inserting OpenAI API call record:', error);
+      console.error(`Error inserting ${apiType} record:`, error);
     }
     
     // Fetch project notes with favorite and important flags
@@ -146,10 +149,7 @@ serve(async (req) => {
     `;
 
     console.log('Project context assembled from multiple sources');
-    console.log('Information being sent to OpenAI:');
-    console.log('------------------------------');
-    console.log(projectContext);
-    console.log('------------------------------');
+    console.log('Selected model:', model);
     
     // Construct the system message with the AI persona
     let systemMessage = `You are a Project Management Officer (PMO) assistant who helps discuss and analyze projects. 
@@ -171,36 +171,72 @@ serve(async (req) => {
       systemMessage += `\n\nAdditional persona instructions: ${aiPersona}`;
     }
     
-    const messages = [
-      {
-        role: 'system',
-        content: systemMessage
-      },
-      {
-        role: 'user',
-        content: message
+    let aiResponse;
+    
+    if (model === 'claude' && anthropicApiKey) {
+      // Use Claude API
+      console.log('Using Claude API');
+      const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicApiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: "claude-3-7-sonnet-20250219",
+          max_tokens: 1500,
+          system: systemMessage,
+          messages: [
+            {
+              role: "user",
+              content: message
+            }
+          ]
+        })
+      });
+      
+      if (!claudeResponse.ok) {
+        throw new Error(`Claude API error: ${claudeResponse.statusText}`);
       }
-    ];
+      
+      const claudeData = await claudeResponse.json();
+      aiResponse = claudeData.content[0].text;
+      
+    } else {
+      // Default to OpenAI API
+      console.log('Using OpenAI API');
+      const openaiMessages = [
+        {
+          role: 'system',
+          content: systemMessage
+        },
+        {
+          role: 'user',
+          content: message
+        }
+      ];
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: messages,
-        temperature: 0.7,
-      }),
-    });
+      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: openaiMessages,
+          temperature: 0.7,
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      if (!openaiResponse.ok) {
+        throw new Error(`OpenAI API error: ${openaiResponse.statusText}`);
+      }
+
+      const openaiData = await openaiResponse.json();
+      aiResponse = openaiData.choices[0].message.content;
     }
-
-    const data = await response.json();
-    const aiResponse = data.choices[0].message.content;
 
     return new Response(JSON.stringify({ response: aiResponse }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -33,6 +33,11 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
     }
   }, [messages, disableAutoScroll]);
 
+  // Handler for predefined questions that defaults to openai
+  const handlePredefinedQuestion = (question: string) => {
+    sendMessage(question, 'openai');
+  };
+
   return (
     <>
       <Card className="flex flex-col h-[600px] border shadow-sm">
@@ -97,7 +102,7 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
         {messages.length === 0 && !isLoading && (
           <ProjectChatWelcome 
             questions={predefinedQuestions} 
-            onSelectQuestion={sendMessage} 
+            onSelectQuestion={handlePredefinedQuestion} 
           />
         )}
 
@@ -106,7 +111,7 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
             <div className="mb-3">
               <ProjectChatSuggestions 
                 questions={predefinedQuestions} 
-                onSelectQuestion={sendMessage} 
+                onSelectQuestion={handlePredefinedQuestion} 
                 compact 
               />
             </div>

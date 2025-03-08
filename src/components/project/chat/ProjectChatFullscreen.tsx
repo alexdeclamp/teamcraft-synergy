@@ -30,6 +30,11 @@ const ProjectChatFullscreen: React.FC<ProjectChatFullscreenProps> = ({
     }
   }, [messages]);
 
+  // Handler for predefined questions that defaults to openai
+  const handlePredefinedQuestion = (question: string) => {
+    sendMessage(question, 'openai');
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl h-[90vh] p-0 flex flex-col">
@@ -62,7 +67,7 @@ const ProjectChatFullscreen: React.FC<ProjectChatFullscreenProps> = ({
             <div className="mb-3">
               <ProjectChatSuggestions 
                 questions={predefinedQuestions} 
-                onSelectQuestion={sendMessage} 
+                onSelectQuestion={handlePredefinedQuestion} 
                 compact 
               />
             </div>

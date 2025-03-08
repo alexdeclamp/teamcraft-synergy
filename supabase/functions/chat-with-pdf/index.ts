@@ -3,6 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { pdfUrl, fileName, message, documentContext } = await req.json();
+    const { pdfUrl, fileName, message, documentContext, model = 'claude' } = await req.json();
     
     if (!pdfUrl) {
       return new Response(
@@ -25,9 +26,11 @@ serve(async (req) => {
       );
     }
     
-    if (!anthropicApiKey) {
+    // Check if the requested model's API key is available
+    if ((model === 'claude' && !anthropicApiKey) || (model === 'openai' && !openAIApiKey)) {
+      const missingKey = model === 'claude' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY';
       return new Response(
-        JSON.stringify({ error: 'ANTHROPIC_API_KEY is not configured' }),
+        JSON.stringify({ error: `${missingKey} is not configured` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -35,8 +38,9 @@ serve(async (req) => {
     console.log(`Chat with PDF: ${fileName}`);
     console.log(`PDF URL: ${pdfUrl}`);
     console.log(`User message: ${message}`);
+    console.log(`Using model: ${model}`);
     
-    // Prepare the context for Claude
+    // Prepare the context for the AI
     let contextContent = '';
     if (documentContext && documentContext.trim() !== '') {
       contextContent = documentContext;
@@ -46,71 +50,108 @@ serve(async (req) => {
       console.log('No document context provided');
     }
     
-    // Call Claude API
+    // System message for both models
+    const systemMessage = `You are an AI assistant that helps users chat with PDF documents. 
+      The current document is: "${fileName}".
+      Use the following content from the document to answer the user's questions. 
+      If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
+      
+      Document content:
+      ${contextContent}`;
+
+    // Call the selected API
     try {
-      console.log("Calling Claude API...");
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': anthropicApiKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: "claude-3-7-sonnet-20250219",
-          max_tokens: 1500,
-          system: `You are an AI assistant that helps users chat with PDF documents. 
-              The current document is: "${fileName}".
-              Use the following content from the document to answer the user's questions. 
-              If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
-              
-              Document content:
-              ${contextContent}`,
-          messages: [
-            {
-              role: "user",
-              content: message
-            }
-          ]
-        })
-      });
+      console.log(`Calling ${model.toUpperCase()} API...`);
+      let data;
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Claude API error: ${response.status}`, errorText);
+      if (model === 'claude') {
+        // Call Claude API
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': anthropicApiKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: "claude-3-7-sonnet-20250219",
+            max_tokens: 1500,
+            system: systemMessage,
+            messages: [
+              {
+                role: "user",
+                content: message
+              }
+            ]
+          })
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Claude API error: ${response.status}`, errorText);
+          throw new Error(`Claude API error: ${response.status}. Details: ${errorText}`);
+        }
+        
+        data = await response.json();
+        
+        if (!data.content || !data.content[0] || !data.content[0].text) {
+          console.error('Invalid response from Claude API:', data);
+          throw new Error('Invalid response format from Claude API');
+        }
+        
         return new Response(
-          JSON.stringify({ error: `Claude API error: ${response.status}. Details: ${errorText}` }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ 
+            success: true, 
+            answer: data.content[0].text,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } else {
+        // Call OpenAI API
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAIApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content: systemMessage
+              },
+              {
+                role: 'user',
+                content: message
+              }
+            ],
+            temperature: 0.7,
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`OpenAI API error: ${response.status}`, errorText);
+          throw new Error(`OpenAI API error: ${response.status}. Details: ${errorText}`);
+        }
+        
+        data = await response.json();
+        
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            answer: data.choices[0].message.content,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      const data = await response.json();
-      console.log("Claude API response received:", JSON.stringify(data).slice(0, 200) + "...");
-      
-      if (!data.content || !data.content[0] || !data.content[0].text) {
-        console.error('Invalid response from Claude API:', data);
-        return new Response(
-          JSON.stringify({ error: 'Invalid response format from Claude API' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      const answer = data.content[0].text;
-      
-      console.log("Answer generated successfully");
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          answer: answer,
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
     } catch (apiError) {
-      console.error('Error calling Claude API:', apiError);
+      console.error(`Error calling ${model.toUpperCase()} API:`, apiError);
       return new Response(
         JSON.stringify({ 
-          error: `Error calling Claude API: ${apiError.message || 'Unknown API error'}`,
+          error: `Error calling ${model.toUpperCase()} API: ${apiError.message || 'Unknown API error'}`,
           details: apiError.stack || ''
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
