@@ -57,10 +57,13 @@ serve(async (req) => {
     
     // Check document context
     if (!documentContext || documentContext.trim() === '') {
-      console.log('No document context provided');
+      console.log('No document context provided - attempting to extract text directly');
+      
+      // For direct PDF processing, you'd add code here to fetch the PDF and extract text
+      // This is a placeholder for now
       return new Response(
         JSON.stringify({ 
-          error: 'No document content available. The document may still be processing.',
+          error: 'Document content is not available. The PDF extraction is still in progress or failed.',
           success: false
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -72,12 +75,12 @@ serve(async (req) => {
     
     try {
       // Limit document context length to prevent exceeding token limits
-      const maxContextLength = 90000; // reduce slightly from 100K
+      const maxContextLength = 80000; // reduce from 90K for safety
       const truncatedContext = documentContext.length > maxContextLength
         ? documentContext.substring(0, maxContextLength) + "... [Content truncated due to length]"
         : documentContext;
       
-      console.log(`Calling Claude API with truncated context of ${truncatedContext.length} characters`);
+      console.log(`Calling Claude API with context of ${truncatedContext.length} characters`);
       
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -112,10 +115,10 @@ serve(async (req) => {
       }
       
       const data = await response.json();
-      console.log("Claude API response received");
+      console.log("Claude API response received successfully");
       
       if (!data.content || !data.content[0] || !data.content[0].text) {
-        console.error('Invalid response format from Claude API:', data);
+        console.error('Invalid response format from Claude API:', JSON.stringify(data));
         throw new Error('Invalid response format from Claude API');
       }
       
