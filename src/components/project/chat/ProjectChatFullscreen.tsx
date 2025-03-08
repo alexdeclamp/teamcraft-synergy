@@ -32,7 +32,7 @@ const ProjectChatFullscreen: React.FC<ProjectChatFullscreenProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl h-[90vh] p-0 flex flex-col" hideCloseButton>
+      <DialogContent className="max-w-4xl h-[90vh] p-0 flex flex-col">
         <div className="flex justify-between items-center p-3 border-b">
           <h2 className="text-lg font-medium">Project Assistant</h2>
           <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full hover:bg-gray-100">
