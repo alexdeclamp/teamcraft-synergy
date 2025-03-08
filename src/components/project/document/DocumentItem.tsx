@@ -143,7 +143,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
 
   return (
     <>
-      <div className="flex items-center justify-between p-4 border rounded-lg mb-2 bg-card">
+      <div className="flex items-center justify-between p-4 border rounded-lg mb-2 bg-card w-full">
         <div className="flex items-center space-x-4">
           <div className="p-2 bg-muted rounded-md">
             <File className="h-6 w-6 text-muted-foreground" />
