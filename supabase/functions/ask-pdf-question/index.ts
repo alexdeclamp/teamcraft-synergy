@@ -43,21 +43,12 @@ serve(async (req) => {
     console.log(`PDF URL: ${pdfUrl}`);
     console.log(`User Question: ${userQuestion}`);
     
+    // Use the fallback approach directly as the primary method
+    // since we know the file_url approach doesn't work with Claude's API
     if (documentContext && documentContext.trim() !== '') {
       console.log('Using document context to answer the question...');
       
       try {
-        const combinedText = `You are an AI assistant that helps users answer questions about PDF documents.
-The current document is: "${fileName}".
-Use the following content from the document to answer the user's questions.
-If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
-
-Document content:
-${documentContext}
-
-User Question:
-${userQuestion}`;
-        
         const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
@@ -66,17 +57,19 @@ ${userQuestion}`;
             'anthropic-version': '2023-06-01'
           },
           body: JSON.stringify({
-            model: "claude-3-haiku-20240307",
+            model: "claude-3-7-sonnet-20250219",
             max_tokens: 1500,
+            system: `You are an AI assistant that helps users answer questions about PDF documents. 
+                The current document is: "${fileName}".
+                Use the following content from the document to answer the user's questions. 
+                If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
+                
+                Document content:
+                ${documentContext}`,
             messages: [
               {
                 role: "user",
-                content: [
-                  {
-                    type: "text",
-                    text: combinedText
-                  }
-                ]
+                content: userQuestion
               }
             ]
           })
@@ -109,17 +102,16 @@ ${userQuestion}`;
         return new Response(
           JSON.stringify({ 
             error: `Error calling Claude API: ${apiError.message || 'Unknown API error'}`,
-            details: apiError.stack || '',
-            success: false
+            details: apiError.stack || ''
           }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
     } else {
+      // If no document context is provided
       return new Response(
         JSON.stringify({ 
-          error: "No document context provided. Unable to process the request.",
-          success: false
+          error: `No document context provided. Unable to process the request.`
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -130,8 +122,7 @@ ${userQuestion}`;
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Unknown error occurred',
-        details: error.stack || '',
-        success: false 
+        details: error.stack || '' 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

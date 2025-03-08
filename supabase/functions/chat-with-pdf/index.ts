@@ -16,37 +16,18 @@ serve(async (req) => {
   }
 
   try {
-    const reqBody = await req.json();
-    const { pdfUrl, fileName, message, documentContext } = reqBody;
+    const { pdfUrl, fileName, message, documentContext } = await req.json();
     
-    // Input validation
     if (!pdfUrl) {
       return new Response(
-        JSON.stringify({ 
-          error: 'PDF URL is required',
-          success: false 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    if (!message) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Message is required',
-          success: false 
-        }),
+        JSON.stringify({ error: 'PDF URL is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
     if (!anthropicApiKey) {
-      console.error('ANTHROPIC_API_KEY environment variable is not set');
       return new Response(
-        JSON.stringify({ 
-          error: 'ANTHROPIC_API_KEY is not configured',
-          success: false
-        }),
+        JSON.stringify({ error: 'ANTHROPIC_API_KEY is not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -55,36 +36,19 @@ serve(async (req) => {
     console.log(`PDF URL: ${pdfUrl}`);
     console.log(`User message: ${message}`);
     
-    // Check document context
-    if (!documentContext || documentContext.trim() === '') {
-      console.log('No document context provided - attempting to extract text directly');
-      
-      // For direct PDF processing, you'd add code here to fetch the PDF and extract text
-      // This is a placeholder for now
-      return new Response(
-        JSON.stringify({ 
-          error: 'Document content is not available. The PDF extraction is still in progress or failed.',
-          success: false
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Prepare the context for Claude
+    let contextContent = '';
+    if (documentContext && documentContext.trim() !== '') {
+      contextContent = documentContext;
+      console.log('Using provided document context');
+    } else {
+      // We could implement fetching/extracting context here if needed
+      console.log('No document context provided');
     }
-    
-    console.log('Using document context for chat');
-    console.log(`Document context length: ${documentContext.length} characters`);
     
     // Call Claude API
     try {
       console.log("Calling Claude API...");
-      
-      // Limit document context length to prevent exceeding token limits
-      const maxContextLength = 80000; // reduced from 90K for more safety margin
-      const truncatedContext = documentContext.length > maxContextLength
-        ? documentContext.substring(0, maxContextLength) + "... [Content truncated due to length]"
-        : documentContext;
-      
-      console.log(`Using truncated context of ${truncatedContext.length} characters`);
-      
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -93,7 +57,7 @@ serve(async (req) => {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: "claude-3-haiku-20240307",
+          model: "claude-3-7-sonnet-20250219",
           max_tokens: 1500,
           system: `You are an AI assistant that helps users chat with PDF documents. 
               The current document is: "${fileName}".
@@ -101,7 +65,7 @@ serve(async (req) => {
               If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
               
               Document content:
-              ${truncatedContext}`,
+              ${contextContent}`,
           messages: [
             {
               role: "user",
@@ -114,15 +78,21 @@ serve(async (req) => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Claude API error: ${response.status}`, errorText);
-        throw new Error(`Claude API error: ${response.status}. Details: ${errorText}`);
+        return new Response(
+          JSON.stringify({ error: `Claude API error: ${response.status}. Details: ${errorText}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
       
       const data = await response.json();
-      console.log("Claude API response received successfully");
+      console.log("Claude API response received:", JSON.stringify(data).slice(0, 200) + "...");
       
       if (!data.content || !data.content[0] || !data.content[0].text) {
-        console.error('Invalid response from Claude API:', JSON.stringify(data));
-        throw new Error('Invalid response format from Claude API');
+        console.error('Invalid response from Claude API:', data);
+        return new Response(
+          JSON.stringify({ error: 'Invalid response format from Claude API' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
       
       const answer = data.content[0].text;
@@ -141,8 +111,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: `Error calling Claude API: ${apiError.message || 'Unknown API error'}`,
-          details: apiError.stack || '',
-          success: false
+          details: apiError.stack || ''
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -153,8 +122,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Unknown error occurred',
-        details: error.stack || '',
-        success: false 
+        details: error.stack || '' 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

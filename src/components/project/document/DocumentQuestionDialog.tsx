@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
@@ -11,7 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { SendHorizontal, Loader2, Copy, Download, ArrowRight, AlertTriangle } from 'lucide-react';
+import { SendHorizontal, Loader2, Copy, Download, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useDialog } from '@/hooks/useDialog';
@@ -25,9 +24,6 @@ interface DocumentQuestionDialogProps {
     file_name: string;
     file_url: string;
     content_text?: string;
-    metadata?: {
-      pdf_url?: string;
-    };
   };
   projectId: string;
 }
@@ -47,7 +43,6 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const answerRef = useRef<HTMLDivElement>(null);
   
-  // Focus on textarea when dialog opens
   useEffect(() => {
     if (isOpen && currentStep === 'question' && textareaRef.current) {
       setTimeout(() => {
@@ -63,17 +58,12 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
     setCurrentStep('answer');
     
     try {
-      console.log(`Asking question about "${document.file_name}": ${userQuestion.trim()}`);
-      
-      // Get the PDF URL from either the document metadata or the regular file URL
-      const pdfUrl = document.metadata?.pdf_url || document.file_url;
-      
       const { data, error } = await supabase.functions.invoke('ask-pdf-question', {
         body: {
-          pdfUrl: pdfUrl,
+          pdfUrl: document.file_url,
           fileName: document.file_name,
           userQuestion: userQuestion.trim(),
-          documentContext: document.content_text || null
+          documentContext: document.content_text || ''
         }
       });
       
@@ -82,14 +72,10 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
         throw new Error(`Error calling function: ${error.message}`);
       }
       
-      if (data?.error) {
-        console.error('Service error:', data.error);
-        throw new Error(data.error);
-      }
-      
       if (!data || !data.success || !data.answer) {
-        console.error('Invalid response:', data);
-        throw new Error('Invalid response from service');
+        const errorMsg = data?.error || 'Invalid response from service';
+        console.error('Service error:', errorMsg);
+        throw new Error(errorMsg);
       }
       
       setAnswer(data.answer);

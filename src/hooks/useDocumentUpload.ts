@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,7 +15,6 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [createNote, setCreateNote] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -38,7 +36,7 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
   };
 
   const handleCreateNoteChange = (checked: boolean) => {
-    setCreateNote(checked);
+    // Keeping this method for interface compatibility
   };
 
   const uploadDocument = async () => {
@@ -49,47 +47,40 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
       setErrorMessage(null);
       setUploadProgress(20);
       
-      // Convert file to base64
-      const reader = new FileReader();
-      const fileBase64Promise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error('Failed to read file'));
-        reader.readAsDataURL(file);
-      });
-      
-      const fileBase64 = await fileBase64Promise;
-      setUploadProgress(40);
-      
-      // Upload the file directly to storage first
+      // Define file path in storage
       const timestamp = new Date().getTime();
-      const filePath = `${userId}/${projectId}/${timestamp}_${file.name}`;
+      const pdfPath = `${userId}/${projectId}/${timestamp}_${file.name}`;
+      const bucketName = 'project_documents';
       
-      // Extract base64 data
-      const base64Data = fileBase64.split(',')[1];
-      const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+      // Upload the PDF file directly to Supabase Storage
+      setUploadProgress(40);
+      console.log(`Uploading PDF to storage: ${pdfPath}`);
       
-      // Upload to storage
       const { data: uploadData, error: uploadError } = await supabase
         .storage
-        .from('project_documents')
-        .upload(filePath, binaryData, {
+        .from(bucketName)
+        .upload(pdfPath, file, {
           contentType: 'application/pdf',
           upsert: false
         });
-        
+      
       if (uploadError) {
-        throw new Error(`Storage upload error: ${uploadError.message}`);
+        console.error('Error uploading file to storage:', uploadError);
+        throw new Error(`Upload failed: ${uploadError.message}`);
       }
       
-      // Get public URL
+      setUploadProgress(70);
+      
+      // Get the public URL for the uploaded file
       const { data: { publicUrl } } = supabase
         .storage
-        .from('project_documents')
-        .getPublicUrl(filePath);
+        .from(bucketName)
+        .getPublicUrl(pdfPath);
       
-      setUploadProgress(60);
+      // Save document info in the database
+      setUploadProgress(85);
+      console.log("Saving document info to database");
       
-      // Create a document record in the database
       const { data: documentData, error: documentError } = await supabase
         .from('project_documents')
         .insert({
@@ -97,7 +88,7 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
           user_id: userId,
           file_name: file.name,
           file_url: publicUrl,
-          file_path: filePath,
+          file_path: pdfPath,
           document_type: 'pdf',
           file_size: file.size,
           metadata: {
@@ -106,38 +97,10 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
         })
         .select()
         .single();
-        
+      
       if (documentError) {
+        console.error('Error saving document to database:', documentError);
         throw new Error(`Database error: ${documentError.message}`);
-      }
-      
-      setUploadProgress(75);
-      
-      // Optionally start text extraction in the background
-      if (createNote) {
-        console.log("Calling extract-pdf-text function for background processing");
-        setUploadProgress(85);
-        
-        // This will run in the background but we won't wait for it
-        supabase.functions.invoke(
-          'extract-pdf-text',
-          {
-            body: {
-              fileBase64,
-              fileName: file.name,
-              projectId,
-              userId,
-              createNote
-            }
-          }
-        ).then(({ data, error }) => {
-          if (error) {
-            console.error('Background extraction error:', error);
-            toast.error('Background document processing encountered an error, but the document was uploaded successfully');
-          } else if (data?.noteId) {
-            toast.success('PDF summary note was created successfully');
-          }
-        });
       }
       
       setUploadProgress(100);
@@ -160,7 +123,6 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
   const resetForm = () => {
     setFile(null);
     setErrorMessage(null);
-    setCreateNote(false);
     const inputElement = document.getElementById('pdf-upload') as HTMLInputElement;
     if (inputElement) {
       inputElement.value = '';
@@ -172,9 +134,9 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
     isUploading,
     uploadProgress,
     errorMessage,
-    createNote,
+    createNote: false, // Always return false for createNote
     handleFileChange,
-    handleCreateNoteChange,
+    handleCreateNoteChange, // Keep for interface compatibility
     uploadDocument,
     resetForm
   };
