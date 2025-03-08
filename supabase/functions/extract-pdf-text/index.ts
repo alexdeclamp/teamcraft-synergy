@@ -20,7 +20,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Starting PDF to PNG conversion process");
+    console.log("Starting PDF extraction process");
     
     // First validate the request body
     let requestBody;
@@ -103,8 +103,17 @@ serve(async (req) => {
 
     // Load the PDF using PDF.js
     console.log("Loading PDF with PDF.js");
-    const pdf = await pdfjs.getDocument({ data: binaryPdf }).promise;
-    console.log(`PDF loaded successfully. Number of pages: ${pdf.numPages}`);
+    let pdf;
+    try {
+      pdf = await pdfjs.getDocument({ data: binaryPdf }).promise;
+      console.log(`PDF loaded successfully. Number of pages: ${pdf.numPages}`);
+    } catch (error) {
+      console.error("Failed to load PDF:", error);
+      return new Response(
+        JSON.stringify({ error: 'Failed to parse PDF document' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     const timestamp = new Date().getTime();
     const fileNameWithoutExt = fileName.replace(/\.pdf$/i, '');
@@ -117,9 +126,15 @@ serve(async (req) => {
       const page = await pdf.getPage(i);
       
       // Extract text content from the page
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items.map((item: any) => item.str).join(' ');
-      extractedText += `--- Page ${i} ---\n${pageText}\n\n`;
+      try {
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(' ');
+        extractedText += `--- Page ${i} ---\n${pageText}\n\n`;
+        console.log(`Extracted ${pageText.length} characters of text from page ${i}`);
+      } catch (error) {
+        console.error(`Error extracting text from page ${i}:`, error);
+        // Continue processing other pages even if text extraction fails
+      }
       
       // Set scale for better resolution
       const viewport = page.getViewport({ scale: 1.5 });
@@ -169,6 +184,14 @@ serve(async (req) => {
         url: publicUrl,
         path: imagePath
       });
+    }
+
+    // Validate extracted text
+    if (!extractedText || extractedText.trim() === '') {
+      console.warn("No text was extracted from the PDF. The document might be image-based or secured.");
+      extractedText = "No text content could be extracted from this PDF. It may be an image-based document or have security restrictions.";
+    } else {
+      console.log(`Total extracted text: ${extractedText.length} characters`);
     }
 
     // Also upload the original PDF file for Claude to access directly
@@ -290,7 +313,7 @@ serve(async (req) => {
     }
 
     // Save document info in the database with references to all pages
-    console.log("Saving document info to database");
+    console.log("Saving document info to database with extracted text");
     const { data: documentData, error: documentError } = await supabase
       .from('project_documents')
       .insert({
@@ -299,8 +322,9 @@ serve(async (req) => {
         file_name: fileName,
         file_url: images.length > 0 ? images[0].url : null, // Use first image as main URL
         file_path: pdfPath, // Path to the original PDF
-        document_type: 'png',
+        document_type: 'pdf',
         content_text: extractedText,
+        file_size: binaryPdf.length,
         metadata: {
           pages: images.map(img => ({ 
             page: img.page, 
@@ -309,7 +333,8 @@ serve(async (req) => {
           })),
           pdf_url: pdfPublicUrl,
           totalPages: pdf.numPages,
-          associatedNoteId: noteId
+          associatedNoteId: noteId,
+          extractedTextLength: extractedText.length
         }
       })
       .select()
@@ -323,7 +348,7 @@ serve(async (req) => {
       );
     }
     
-    console.log("PDF to PNG conversion completed successfully");
+    console.log("PDF extraction completed successfully");
     return new Response(
       JSON.stringify({ 
         success: true, 
@@ -332,12 +357,13 @@ serve(async (req) => {
         images: images,
         pdfUrl: pdfPublicUrl,
         noteId: noteId,
-        summary: summary
+        summary: summary,
+        textExtracted: extractedText.length > 0
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error in PDF to PNG conversion function:', error);
+    console.error('Error in PDF extraction function:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'Unknown error occurred' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

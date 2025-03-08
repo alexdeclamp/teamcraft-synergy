@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { SendHorizontal, Loader2, Copy, Download, ArrowRight } from 'lucide-react';
+import { SendHorizontal, Loader2, Copy, Download, ArrowRight, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useDialog } from '@/hooks/useDialog';
@@ -41,39 +41,85 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [feedbackGiven, setFeedbackGiven] = useState(false);
+  const [isDocumentReady, setIsDocumentReady] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const answerRef = useRef<HTMLDivElement>(null);
   
+  // Check if document has content on load
   useEffect(() => {
-    if (isOpen && currentStep === 'question' && textareaRef.current) {
-      setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 100);
+    if (isOpen) {
+      const hasContent = document.content_text && document.content_text.trim() !== '';
+      setIsDocumentReady(hasContent);
+      
+      if (currentStep === 'question' && textareaRef.current) {
+        setTimeout(() => {
+          textareaRef.current?.focus();
+        }, 100);
+      }
     }
-  }, [isOpen, currentStep]);
+  }, [isOpen, currentStep, document.content_text]);
+  
+  // Refresh document content if not initially available
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+    
+    if (isOpen && !isDocumentReady) {
+      intervalId = setInterval(async () => {
+        try {
+          const { data, error } = await supabase
+            .from('project_documents')
+            .select('content_text')
+            .eq('id', document.id)
+            .single();
+            
+          if (error) throw error;
+          
+          if (data && data.content_text && data.content_text.trim() !== '') {
+            setIsDocumentReady(true);
+            clearInterval(intervalId);
+          }
+        } catch (error) {
+          console.error('Error checking document content:', error);
+        }
+      }, 5000); // Check every 5 seconds
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isOpen, isDocumentReady, document.id]);
   
   const handleAskQuestion = async () => {
-    if (!userQuestion.trim() || isLoading) return;
+    if (!userQuestion.trim() || isLoading || !isDocumentReady) return;
     
     setIsLoading(true);
     setCurrentStep('answer');
     
     try {
-      // First check if we have document content
-      if (!document.content_text || document.content_text.trim() === '') {
-        console.log("Document content is missing:", document);
-        throw new Error('Document content is not available. The document may still be processing.');
+      // Fetch latest document content
+      const { data: documentData, error: documentError } = await supabase
+        .from('project_documents')
+        .select('content_text')
+        .eq('id', document.id)
+        .single();
+      
+      if (documentError) throw new Error('Could not fetch document content');
+      
+      // Check if we have document content
+      if (!documentData?.content_text || documentData.content_text.trim() === '') {
+        console.log("Document content is missing or empty");
+        throw new Error('Document content is not available. The PDF extraction is still in progress or failed.');
       }
       
       console.log(`Asking question about "${document.file_name}": ${userQuestion.trim()}`);
-      console.log(`Document content available: ${document.content_text.length} characters`);
+      console.log(`Document content available: ${documentData.content_text.length} characters`);
       
       const { data, error } = await supabase.functions.invoke('ask-pdf-question', {
         body: {
           pdfUrl: document.file_url,
           fileName: document.file_name,
           userQuestion: userQuestion.trim(),
-          documentContext: document.content_text
+          documentContext: documentData.content_text
         }
       });
       
@@ -187,6 +233,15 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
+        {!isDocumentReady && (
+          <div className="mb-4 p-3 border rounded-md bg-amber-50 text-amber-800 flex items-center">
+            <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0" />
+            <p className="text-sm">
+              The text extraction for this PDF is still in progress. You'll be able to ask questions once processing is complete.
+            </p>
+          </div>
+        )}
+        
         <div className="flex-1 overflow-hidden">
           {currentStep === 'question' ? (
             <div className="space-y-4 py-4">
@@ -197,11 +252,12 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
                 placeholder="What would you like to know about this document?"
                 className="min-h-[150px] text-base"
                 onKeyDown={handleKeyDown}
+                disabled={!isDocumentReady}
               />
               <Button 
                 onClick={handleAskQuestion} 
                 className="w-full"
-                disabled={!userQuestion.trim() || isLoading}
+                disabled={!userQuestion.trim() || isLoading || !isDocumentReady}
               >
                 <ArrowRight className="mr-2 h-4 w-4" />
                 Get Answer

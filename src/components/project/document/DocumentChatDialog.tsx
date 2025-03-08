@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { SendHorizontal, Loader2 } from 'lucide-react';
+import { SendHorizontal, Loader2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Textarea } from '@/components/ui/textarea';
@@ -36,19 +36,58 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDocumentReady, setIsDocumentReady] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
-  // Add welcome message when dialog opens
+  // Check if document has content on load
   useEffect(() => {
     if (isOpen) {
-      setMessages([
-        { 
-          role: 'assistant', 
-          content: `👋 I'm your PDF assistant for "${document.file_name}". Ask me anything about this document!` 
-        }
-      ]);
+      const hasContent = document.content_text && document.content_text.trim() !== '';
+      setIsDocumentReady(hasContent);
+      
+      // Initial welcome message
+      setMessages([{ 
+        role: 'assistant', 
+        content: hasContent
+          ? `👋 I'm your PDF assistant for "${document.file_name}". Ask me anything about this document!` 
+          : `👋 Welcome! It looks like the text extraction for "${document.file_name}" is not complete yet. Please try again in a few moments, or try re-uploading the PDF.`
+      }]);
     }
-  }, [isOpen, document.file_name]);
+  }, [isOpen, document]);
+  
+  // Refresh document content if not initially available
+  useEffect(() => {
+    let intervalId: ReturnType<typeof setInterval>;
+    
+    if (isOpen && !isDocumentReady) {
+      intervalId = setInterval(async () => {
+        try {
+          const { data, error } = await supabase
+            .from('project_documents')
+            .select('content_text')
+            .eq('id', document.id)
+            .single();
+            
+          if (error) throw error;
+          
+          if (data && data.content_text && data.content_text.trim() !== '') {
+            setIsDocumentReady(true);
+            setMessages([{ 
+              role: 'assistant', 
+              content: `👋 I'm your PDF assistant for "${document.file_name}". Ask me anything about this document!` 
+            }]);
+            clearInterval(intervalId);
+          }
+        } catch (error) {
+          console.error('Error checking document content:', error);
+        }
+      }, 5000); // Check every 5 seconds
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isOpen, isDocumentReady, document.id, document.file_name]);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -61,7 +100,7 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!messageInput.trim() || isLoading) return;
+    if (!messageInput.trim() || isLoading || !isDocumentReady) return;
     
     const userMessage = messageInput.trim();
     setMessageInput('');
@@ -71,19 +110,28 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
     setIsLoading(true);
     
     try {
+      // Fetch latest document content
+      const { data: documentData, error: documentError } = await supabase
+        .from('project_documents')
+        .select('content_text')
+        .eq('id', document.id)
+        .single();
+      
+      if (documentError) throw new Error('Could not fetch document content');
+      
       // Check if we have document content
-      if (!document.content_text || document.content_text.trim() === '') {
-        throw new Error('Document content is not available. Please try again later.');
+      if (!documentData?.content_text || documentData.content_text.trim() === '') {
+        throw new Error('Document content is not available. The PDF extraction is still in progress or failed.');
       }
       
-      console.log(`Chatting with "${document.file_name}": ${userMessage}`);
+      console.log(`Chatting with "${document.file_name}" using ${documentData.content_text.length} characters of text`);
       
       const { data, error } = await supabase.functions.invoke('chat-with-pdf', {
         body: {
           pdfUrl: document.file_url,
           fileName: document.file_name,
           message: userMessage,
-          documentContext: document.content_text || '',
+          documentContext: documentData.content_text,
           projectId
         }
       });
@@ -112,7 +160,7 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
       // Add error message
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "I'm sorry, I encountered an error processing your request. Please try again." 
+        content: error.message || "I'm sorry, I encountered an error processing your request. Please try again." 
       }]);
     } finally {
       setIsLoading(false);
@@ -137,6 +185,15 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
             Ask questions about this document to get AI-powered answers
           </DialogDescription>
         </DialogHeader>
+        
+        {!isDocumentReady && (
+          <div className="mb-4 p-3 border rounded-md bg-amber-50 text-amber-800 flex items-center">
+            <AlertTriangle className="h-5 w-5 mr-2 flex-shrink-0" />
+            <p className="text-sm">
+              The text extraction for this PDF is still in progress. You'll be able to chat with it once processing is complete.
+            </p>
+          </div>
+        )}
         
         <div className="flex flex-col h-[500px]">
           <ScrollArea ref={scrollAreaRef} className="flex-1 pr-4">
@@ -163,11 +220,11 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
                 placeholder="Ask a question about this document..."
                 className="min-h-[60px]"
                 onKeyDown={handleKeyDown}
-                disabled={isLoading}
+                disabled={isLoading || !isDocumentReady}
               />
               <Button
                 onClick={handleSendMessage}
-                disabled={isLoading || !messageInput.trim()}
+                disabled={isLoading || !messageInput.trim() || !isDocumentReady}
                 className="px-3"
               >
                 <SendHorizontal className="h-5 w-5" />
