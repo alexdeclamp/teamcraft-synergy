@@ -32,6 +32,9 @@ interface ProjectTabsProps {
   isImagesLoading: boolean;
   daysSinceCreation: () => number;
   activityPercentage: number;
+  noteCount: number;
+  documentCount: number;
+  recentUpdatesCount: number;
   formatFileSize: (bytes: number) => string;
   handleImagesUpdated: (images: UploadedImage[], recent: UploadedImage[]) => void;
   handleAddMember: () => void;
@@ -50,6 +53,9 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({
   isImagesLoading,
   daysSinceCreation,
   activityPercentage,
+  noteCount,
+  documentCount,
+  recentUpdatesCount,
   formatFileSize,
   handleImagesUpdated,
   handleAddMember,
@@ -76,6 +82,9 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({
         isImagesLoading={isImagesLoading}
         daysSinceCreation={daysSinceCreation}
         activityPercentage={activityPercentage}
+        noteCount={noteCount}
+        documentCount={documentCount}
+        recentUpdatesCount={recentUpdatesCount}
         formatFileSize={formatFileSize}
         handleImagesUpdated={handleImagesUpdated}
         handleAddMember={handleAddMember}
