@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Loader2, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DocumentItem from './DocumentItem';
 import { useBatchSummarize } from '@/hooks/useBatchSummarize';
@@ -13,6 +13,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface DocumentsListProps {
   documents: any[];
@@ -31,7 +45,8 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
 }) => {
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
   const [aiModel, setAiModel] = useState<'claude' | 'openai'>('claude');
-  const { isProcessing, progress, summarizeDocuments } = useBatchSummarize({ 
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const { isProcessing, progress, results, errors, summarizeDocuments } = useBatchSummarize({ 
     projectId,
     model: aiModel
   });
@@ -55,7 +70,10 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
   const handleGenerateSummaries = async () => {
     const selectedDocuments = documents.filter(doc => selectedDocs.includes(doc.id));
     await summarizeDocuments(selectedDocuments);
-    setSelectedDocs([]);
+    // Don't clear selected docs immediately in case user wants to retry failed ones
+    if (errors?.length === 0) {
+      setSelectedDocs([]);
+    }
   };
 
   if (isLoading) {
@@ -105,6 +123,18 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
             </Button>
           )}
           
+          {errors?.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowErrorDialog(true)}
+              className="h-8 text-destructive border-destructive hover:bg-destructive/10"
+            >
+              <AlertCircle className="h-4 w-4 mr-1" />
+              View Errors
+            </Button>
+          )}
+          
           {selectedDocs.length > 0 && (
             <>
               <Select value={aiModel} onValueChange={(value: 'claude' | 'openai') => setAiModel(value)}>
@@ -117,25 +147,34 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
                 </SelectContent>
               </Select>
               
-              <Button 
-                variant="default" 
-                size="sm" 
-                disabled={isProcessing} 
-                onClick={handleGenerateSummaries}
-                className="h-8"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Summarize Selected
-                  </>
-                )}
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      disabled={isProcessing} 
+                      onClick={handleGenerateSummaries}
+                      className="h-8"
+                    >
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                          Summarize Selected
+                        </>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Generate summaries and save them as notes</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </>
           )}
         </div>
@@ -170,6 +209,33 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
           </div>
         ))}
       </div>
+
+      <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2" />
+              Document Processing Errors
+            </DialogTitle>
+            <DialogDescription>
+              The following documents could not be processed successfully:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[300px] overflow-y-auto">
+            <ul className="space-y-2">
+              {errors?.map((error, index) => (
+                <li key={index} className="border rounded-md p-3">
+                  <div className="font-medium">{error.fileName}</div>
+                  <div className="text-sm text-muted-foreground">Error: {error.error}</div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowErrorDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

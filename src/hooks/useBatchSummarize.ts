@@ -9,11 +9,24 @@ interface UseBatchSummarizeProps {
   model?: 'claude' | 'openai';
 }
 
+interface SummaryResult {
+  fileName: string;
+  pdfUrl: string;
+  summary: string;
+}
+
+interface ErrorResult {
+  fileName: string;
+  pdfUrl: string;
+  error: string;
+}
+
 export function useBatchSummarize({ projectId, model = 'claude' }: UseBatchSummarizeProps) {
   const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<SummaryResult[]>([]);
+  const [errors, setErrors] = useState<ErrorResult[]>([]);
 
   const summarizeDocuments = async (documents: any[]) => {
     if (!documents.length || !user) {
@@ -25,6 +38,7 @@ export function useBatchSummarize({ projectId, model = 'claude' }: UseBatchSumma
       setIsProcessing(true);
       setProgress(10);
       setResults([]);
+      setErrors([]);
       
       const pdfUrls = documents.map(doc => doc.file_url);
       const fileNames = documents.map(doc => doc.file_name);
@@ -53,7 +67,8 @@ export function useBatchSummarize({ projectId, model = 'claude' }: UseBatchSumma
         throw new Error('Failed to summarize documents');
       }
       
-      setResults(data.results);
+      setResults(data.results || []);
+      setErrors(data.errors || []);
       
       // Create notes from summaries
       const createdNotes = [];
@@ -73,6 +88,11 @@ export function useBatchSummarize({ projectId, model = 'claude' }: UseBatchSumma
           
         if (noteError) {
           console.error(`Error creating note for ${result.fileName}:`, noteError);
+          setErrors(prev => [...prev, {
+            fileName: result.fileName,
+            pdfUrl: result.pdfUrl,
+            error: `Failed to create note: ${noteError.message}`
+          }]);
           continue;
         }
         
@@ -81,19 +101,34 @@ export function useBatchSummarize({ projectId, model = 'claude' }: UseBatchSumma
       
       setProgress(100);
       
-      const successCount = data.totalProcessed - data.totalErrors;
+      const successCount = data.results?.length || 0;
+      const errorCount = data.errors?.length || 0;
+      
       if (successCount > 0) {
         toast.success(`Successfully created ${successCount} note(s) from document summaries`);
       }
       
-      if (data.totalErrors > 0) {
-        toast.error(`Failed to process ${data.totalErrors} document(s)`);
+      if (errorCount > 0) {
+        // Show more informative error toast with details
+        const errorMessage = data.errors.map(err => err.fileName).join(', ');
+        toast.error(
+          `Failed to process ${errorCount} document(s): ${errorMessage.length > 50 ? 
+            errorMessage.substring(0, 50) + '...' : 
+            errorMessage}`, 
+          {
+            description: "Check the documents for issues like encryption, corrupt files, or unsupported formats.",
+            duration: 5000
+          }
+        );
       }
       
       return createdNotes;
     } catch (error: any) {
       console.error('Error summarizing documents:', error);
-      toast.error(`Failed to summarize documents: ${error.message || 'Unknown error'}`);
+      toast.error(`Failed to summarize documents: ${error.message || 'Unknown error'}`, {
+        description: "Try selecting fewer documents or check your network connection",
+        duration: 5000
+      });
       return null;
     } finally {
       setIsProcessing(false);
@@ -104,6 +139,7 @@ export function useBatchSummarize({ projectId, model = 'claude' }: UseBatchSumma
     isProcessing,
     progress,
     results,
+    errors,
     summarizeDocuments
   };
 }
