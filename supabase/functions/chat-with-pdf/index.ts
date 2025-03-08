@@ -88,7 +88,7 @@ serve(async (req) => {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model: "claude-3-7-sonnet-20250219",
+          model: "claude-3-haiku-20240307",
           max_tokens: 1500,
           system: `You are an AI assistant that helps users chat with PDF documents. 
               The current document is: "${fileName}".
