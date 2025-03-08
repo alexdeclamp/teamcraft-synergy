@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,25 +23,36 @@ interface ProjectChatProps {
 const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
   const { messages, isLoading, predefinedQuestions, sendMessage } = useProjectChat(projectId);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll to bottom when new messages are added
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   return (
     <>
-      <Card className="flex flex-col h-[600px]">
+      <Card className="flex flex-col h-[600px] border shadow-sm">
         <div className="flex justify-between items-center p-3 border-b">
           <h3 className="text-lg font-medium">Project Assistant</h3>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-1">
             <Button 
               variant="ghost" 
               size="icon"
               onClick={() => setIsFullscreen(true)}
               title="Expand chat"
+              className="rounded-full hover:bg-gray-100"
             >
               <Maximize2 className="h-4 w-4" />
+              <span className="sr-only">Expand chat</span>
             </Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="rounded-full hover:bg-gray-100">
                   <Info className="h-4 w-4" />
+                  <span className="sr-only">Information</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80">
@@ -78,6 +89,7 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
         
@@ -88,7 +100,7 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
           />
         )}
 
-        <div className="p-4 border-t">
+        <div className="p-4 border-t bg-muted/30">
           {messages.length > 0 && (
             <div className="mb-3">
               <ProjectChatSuggestions 
