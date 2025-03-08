@@ -130,21 +130,6 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
                 </Badge>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <h3 className="font-medium">Quick Actions</h3>
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={() => onTabChange('notes')}>
-                  View Notes
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => onTabChange('images')}>
-                  Manage Images
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => onTabChange('chat')}>
-                  Project Chat
-                </Button>
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>
