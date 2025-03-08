@@ -10,7 +10,8 @@ import {
   Tag,
   Pencil,
   UserPlus,
-  Archive
+  Archive,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -30,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface ProjectCardProps {
   id: string;
@@ -42,6 +44,7 @@ export interface ProjectCardProps {
   isOwner?: boolean;
   tags?: string[];
   className?: string;
+  isFavorite?: boolean;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -55,8 +58,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   isOwner,
   tags = [],
   className,
+  isFavorite = false,
 }) => {
   const navigate = useNavigate();
+  const [favorite, setFavorite] = React.useState(isFavorite);
   const statusColors = {
     active: 'bg-green-100 text-green-800',
     archived: 'bg-gray-100 text-gray-800',
@@ -88,6 +93,28 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     toast.info("Archive functionality coming soon");
   };
 
+  const toggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      const newFavoriteStatus = !favorite;
+      
+      const { error } = await supabase
+        .from('projects')
+        .update({ is_favorite: newFavoriteStatus })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      setFavorite(newFavoriteStatus);
+      toast.success(newFavoriteStatus ? 'Added to favorites' : 'Removed from favorites');
+    } catch (error) {
+      console.error('Error toggling favorite status:', error);
+      toast.error('Failed to update favorite status');
+    }
+  };
+
   return (
     <Card className={cn(
       "overflow-hidden transition-all duration-300 bg-white border hover:shadow-md animate-scale-in",
@@ -107,31 +134,47 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               {description}
             </CardDescription>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-                <span className="sr-only">Open menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[180px]">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={handleEditBrain}>
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit brain
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleManageMembers}>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Manage members
-              </DropdownMenuItem>
-              {isOwner && (
-                <DropdownMenuItem onClick={handleArchiveBrain}>
-                  <Archive className="h-4 w-4 mr-2" />
-                  Archive brain
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={toggleFavorite}
+              aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              <Star
+                className={cn(
+                  "h-5 w-5 transition-colors",
+                  favorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
+                )}
+              />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[180px]">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem onClick={handleEditBrain}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit brain
                 </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem onClick={handleManageMembers}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Manage members
+                </DropdownMenuItem>
+                {isOwner && (
+                  <DropdownMenuItem onClick={handleArchiveBrain}>
+                    <Archive className="h-4 w-4 mr-2" />
+                    Archive brain
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pb-4">

@@ -1,16 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ProjectCard, { ProjectCardProps } from '@/components/ProjectCard';
 import Navbar from '@/components/Navbar';
-import { Plus, Search, Filter, ArrowUpDown, Loader2 } from 'lucide-react';
+import { Plus, Search, Filter, ArrowUpDown, Loader2, Star } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +23,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'all' | 'owned' | 'member'>('all');
+  const [filter, setFilter] = useState<'all' | 'owned' | 'member' | 'favorites'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
   const [projects, setProjects] = useState<ProjectCardProps[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,8 @@ const Dashboard = () => {
             description,
             created_at,
             updated_at,
-            owner_id
+            owner_id,
+            is_favorite
           `)
           .eq('owner_id', user.id);
 
@@ -58,7 +61,8 @@ const Dashboard = () => {
               description,
               created_at,
               updated_at,
-              owner_id
+              owner_id,
+              is_favorite
             )
           `)
           .eq('user_id', user.id);
@@ -73,7 +77,8 @@ const Dashboard = () => {
           updatedAt: project.updated_at,
           status: 'active' as const,
           memberCount: 1,
-          isOwner: true
+          isOwner: true,
+          isFavorite: project.is_favorite
         }));
 
         const memberProjectsMap = new Map();
@@ -90,7 +95,8 @@ const Dashboard = () => {
                 status: 'active' as const,
                 memberCount: 1,
                 isOwner: false,
-                role: item.role
+                role: item.role,
+                isFavorite: project.is_favorite
               });
             }
           }
@@ -132,6 +138,7 @@ const Dashboard = () => {
       if (filter === 'all') return matchesSearch;
       if (filter === 'owned') return matchesSearch && project.isOwner;
       if (filter === 'member') return matchesSearch && !project.isOwner;
+      if (filter === 'favorites') return matchesSearch && project.isFavorite;
       
       return matchesSearch;
     })
@@ -189,14 +196,21 @@ const Dashboard = () => {
                 <Button id="filter-brains" variant="outline" className="w-[130px]">
                   <Filter className="h-4 w-4 mr-2" />
                   {filter === 'all' ? 'All' : 
-                   filter === 'owned' ? 'Owned' : 'Member'}
+                   filter === 'owned' ? 'Owned' : 
+                   filter === 'member' ? 'Member' : 
+                   'Favorites'}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Filter by role</DropdownMenuLabel>
+                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => setFilter('all')}>All</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setFilter('owned')}>Owned</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setFilter('member')}>Member</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setFilter('favorites')}>
+                  <Star className="h-4 w-4 mr-2" />
+                  Favorites
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             

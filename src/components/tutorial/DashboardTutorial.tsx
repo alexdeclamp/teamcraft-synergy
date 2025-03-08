@@ -28,7 +28,7 @@ const DashboardTutorial: React.FC<DashboardTutorialProps> = ({ className }) => {
       {
         id: 'filter',
         title: 'Filter Your Brains',
-        description: 'Filter your brains by ownership status - see all brains, only those you own, or just the ones where you\'re a team member.',
+        description: 'Filter your brains by ownership status or view your favorites to find exactly what you need.',
         targetId: 'filter-brains'
       },
       {
@@ -40,7 +40,7 @@ const DashboardTutorial: React.FC<DashboardTutorialProps> = ({ className }) => {
       {
         id: 'brain-card',
         title: 'Brain Cards',
-        description: 'Each card represents an AI brain. Click on a card to access its content, settings, and chat functionality.',
+        description: 'Each card represents an AI brain. Click on a card to access its content, settings, and chat functionality. You can also mark brains as favorites by clicking the star icon.',
         targetId: 'brain-cards'
       },
       {

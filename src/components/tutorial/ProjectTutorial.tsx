@@ -61,6 +61,12 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ activeTab, className 
         title: 'Fullscreen Chat',
         description: 'Use the expand button to open the chat in fullscreen mode for a better chat experience with more space.',
         targetId: 'expand-chat'
+      },
+      {
+        id: 'favorite',
+        title: 'Favorite Brains',
+        description: 'Mark this brain as a favorite to easily find it later. You can view all your favorite brains by using the favorites filter on the dashboard.',
+        targetId: 'favorite-brain'
       }
     ];
 
