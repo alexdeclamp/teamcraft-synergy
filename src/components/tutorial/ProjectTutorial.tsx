@@ -23,7 +23,7 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ activeTab, className 
       {
         id: 'notes',
         title: 'Project Notes',
-        description: 'Create and organize notes for your project. Keep track of ideas and important information.',
+        description: 'Create and organize notes for your project. Use the AI summary feature to get quick overviews of your notes.',
         targetId: 'tab-notes'
       },
       {
@@ -35,13 +35,13 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ activeTab, className 
       {
         id: 'documents',
         title: 'Brain Documents',
-        description: 'Upload PDF documents to train your AI brain with specialized knowledge.',
+        description: 'Upload PDF documents to train your AI brain. You can chat with documents and ask specific questions about their content.',
         targetId: 'tab-documents'
       },
       {
         id: 'images',
         title: 'Project Images',
-        description: 'Upload and organize images related to your project. AI will help analyze and summarize them.',
+        description: 'Upload and organize images. Use AI to analyze and generate descriptions of your images automatically.',
         targetId: 'tab-images'
       },
       {
@@ -53,8 +53,14 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ activeTab, className 
       {
         id: 'chat',
         title: 'Project Chat',
-        description: 'Chat with AI about your project. The AI is trained on your project data for context-aware responses.',
+        description: 'Chat with AI about your project. The AI assistant has context from your notes, documents, and images to provide relevant answers.',
         targetId: 'tab-chat'
+      },
+      {
+        id: 'chat-fullscreen',
+        title: 'Fullscreen Chat',
+        description: 'Use the expand button to open the chat in fullscreen mode for a better chat experience with more space.',
+        targetId: 'expand-chat'
       }
     ];
 

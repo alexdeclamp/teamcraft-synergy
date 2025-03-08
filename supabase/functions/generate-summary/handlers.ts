@@ -30,6 +30,7 @@ export async function handleRequest(req: Request): Promise<Response> {
     // Return the generated summary
     return new Response(JSON.stringify({ summary }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200
     });
   } catch (error) {
     console.error('Error in handleRequest:', error);
