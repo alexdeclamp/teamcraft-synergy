@@ -1,7 +1,6 @@
 
 import React from 'react';
 import ProjectOverview from '../ProjectOverview';
-import ProjectQuickLinks from '../ProjectQuickLinks';
 
 interface ProjectTabsOverviewProps {
   project: any;
@@ -10,6 +9,9 @@ interface ProjectTabsOverviewProps {
   activityPercentage: number;
   daysSinceCreation: () => number;
   imageCount: number;
+  noteCount: number; // New prop
+  documentCount: number; // New prop
+  recentUpdatesCount: number; // New prop
   recentImages: any[];
   isImagesLoading: boolean;
   formatFileSize: (bytes: number) => string;
@@ -24,6 +26,9 @@ const ProjectTabsOverview: React.FC<ProjectTabsOverviewProps> = ({
   activityPercentage,
   daysSinceCreation,
   imageCount,
+  noteCount,
+  documentCount,
+  recentUpdatesCount,
   recentImages,
   isImagesLoading,
   formatFileSize,
@@ -39,11 +44,12 @@ const ProjectTabsOverview: React.FC<ProjectTabsOverviewProps> = ({
         activityPercentage={activityPercentage}
         daysSinceCreation={daysSinceCreation()}
         imageCount={imageCount}
+        noteCount={noteCount}
+        documentCount={documentCount}
+        recentUpdatesCount={recentUpdatesCount}
         onAddMember={onAddMember}
         onTabChange={onTabChange}
       />
-        
-      <ProjectQuickLinks onTabChange={onTabChange} />
     </div>
   );
 };

@@ -19,6 +19,9 @@ const Project = () => {
     isImagesLoading,
     daysSinceCreation,
     activityPercentage,
+    noteCount,
+    documentCount,
+    recentUpdatesCount,
     formatFileSize,
     handleImagesUpdated,
     handleAddMember,
@@ -53,6 +56,9 @@ const Project = () => {
       isImagesLoading={isImagesLoading}
       daysSinceCreation={daysSinceCreation}
       activityPercentage={activityPercentage}
+      noteCount={noteCount}
+      documentCount={documentCount}
+      recentUpdatesCount={recentUpdatesCount}
       formatFileSize={formatFileSize}
       handleImagesUpdated={handleImagesUpdated}
       handleAddMember={handleAddMember}

@@ -24,6 +24,9 @@ interface ProjectOverviewProps {
   activityPercentage: number;
   daysSinceCreation: number;
   imageCount: number;
+  noteCount: number; // New prop
+  documentCount: number; // New prop
+  recentUpdatesCount: number; // New prop
   onAddMember: () => void;
   onTabChange: (tab: string) => void;
 }
@@ -35,6 +38,9 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
   activityPercentage,
   daysSinceCreation,
   imageCount,
+  noteCount,
+  documentCount,
+  recentUpdatesCount,
   onAddMember,
   onTabChange
 }) => {
@@ -63,12 +69,20 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
               <div className="text-xs text-muted-foreground">Members</div>
             </div>
             <div className="space-y-1 border rounded-md p-3">
+              <div className="text-xl font-bold text-primary">{noteCount}</div>
+              <div className="text-xs text-muted-foreground">Notes</div>
+            </div>
+            <div className="space-y-1 border rounded-md p-3">
+              <div className="text-xl font-bold text-primary">{documentCount}</div>
+              <div className="text-xs text-muted-foreground">Documents</div>
+            </div>
+            <div className="space-y-1 border rounded-md p-3">
               <div className="text-xl font-bold text-primary">{daysSinceCreation}</div>
               <div className="text-xs text-muted-foreground">Days active</div>
             </div>
             <div className="space-y-1 border rounded-md p-3">
-              <div className="text-xl font-bold text-primary">0</div>
-              <div className="text-xs text-muted-foreground">Comments</div>
+              <div className="text-xl font-bold text-primary">{recentUpdatesCount}</div>
+              <div className="text-xs text-muted-foreground">Updates (24h)</div>
             </div>
           </div>
         </CardContent>
