@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { ProjectCardProps } from '@/components/ProjectCard';
+import { ProjectCardProps } from '@/components/project-card/ProjectCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
