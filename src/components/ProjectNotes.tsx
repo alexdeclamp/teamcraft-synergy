@@ -55,6 +55,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import NoteSummaryButton from './NoteSummaryButton';
+import RegenerateMetadataButton from './note/RegenerateMetadataButton';
 
 interface Note {
   id: string;
@@ -88,6 +89,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
   const [saving, setSaving] = useState(false);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [allTags, setAllTags] = useState<string[]>([]);
+  const [aiModel, setAiModel] = useState<'claude' | 'openai'>('claude');
 
   useEffect(() => {
     fetchNotes();
@@ -169,6 +171,22 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
       e.preventDefault();
       addTag();
     }
+  };
+
+  const handleRegenerateTitle = (newTitle: string) => {
+    setTitle(newTitle);
+    toast.success('Title regenerated successfully');
+  };
+
+  const handleRegenerateTags = (newTags: string[]) => {
+    setTags(newTags);
+    toast.success('Tags regenerated successfully');
+  };
+
+  const handleRegenerateBoth = (data: { title: string; tags: string[] }) => {
+    setTitle(data.title);
+    setTags(data.tags);
+    toast.success('Title and tags regenerated successfully');
   };
 
   const handleCreateNote = async () => {
@@ -584,32 +602,34 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
               <DialogHeader>
                 <div className="flex justify-between items-start">
                   <DialogTitle className="pr-8">{currentNote.title}</DialogTitle>
-                  {currentNote.user_id === user?.id && (
-                    <div className="flex space-x-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        onClick={() => {
-                          setIsViewOpen(false);
-                          setTimeout(() => openEditDialog(currentNote), 100);
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => {
-                          setIsViewOpen(false);
-                          setTimeout(() => handleDeleteNote(currentNote.id), 100);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex space-x-1">
+                    {currentNote.user_id === user?.id && (
+                      <>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          onClick={() => {
+                            setIsViewOpen(false);
+                            setTimeout(() => openEditDialog(currentNote), 100);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => {
+                            setIsViewOpen(false);
+                            setTimeout(() => handleDeleteNote(currentNote.id), 100);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                   <div className="flex items-center">
@@ -662,7 +682,17 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">Title</Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="title">Title</Label>
+                <RegenerateMetadataButton 
+                  noteContent={content}
+                  onRegenerateTitle={handleRegenerateTitle}
+                  onRegenerateTags={handleRegenerateTags}
+                  onRegenerateBoth={handleRegenerateBoth}
+                  model={aiModel}
+                  onModelChange={setAiModel}
+                />
+              </div>
               <Input
                 id="title"
                 placeholder="Enter note title"
@@ -790,7 +820,17 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-title">Title</Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="edit-title">Title</Label>
+                <RegenerateMetadataButton 
+                  noteContent={content}
+                  onRegenerateTitle={handleRegenerateTitle}
+                  onRegenerateTags={handleRegenerateTags}
+                  onRegenerateBoth={handleRegenerateBoth}
+                  model={aiModel}
+                  onModelChange={setAiModel}
+                />
+              </div>
               <Input
                 id="edit-title"
                 value={title}
@@ -910,3 +950,4 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 };
 
 export default ProjectNotes;
+
