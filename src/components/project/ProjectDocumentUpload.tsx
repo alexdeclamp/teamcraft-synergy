@@ -17,12 +17,14 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({
 }) => {
   const { user } = useAuth();
   const {
-    file,
+    files,
     isUploading,
     uploadProgress,
     errorMessage,
     createNote,
-    handleFileChange,
+    currentFileIndex,
+    totalFiles,
+    handleFilesChange,
     handleCreateNoteChange,
     uploadDocument,
     resetForm
@@ -36,15 +38,15 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({
     <div className="border rounded-lg shadow-sm">
       <div className="flex items-center gap-2 p-4 border-b bg-muted/40">
         <FileText className="h-5 w-5" />
-        <h3 className="font-medium text-lg">Upload PDF</h3>
+        <h3 className="font-medium text-lg">Upload PDFs</h3>
       </div>
       
       <div className="p-4 space-y-4">
         <DocumentUploadForm 
-          file={file}
+          files={files}
           isUploading={isUploading}
           createNote={createNote}
-          onFileChange={handleFileChange}
+          onFilesChange={handleFilesChange}
           onCreateNoteChange={handleCreateNoteChange}
           onUpload={uploadDocument}
         />
@@ -54,6 +56,8 @@ const ProjectDocumentUpload: React.FC<ProjectDocumentUploadProps> = ({
           uploadProgress={uploadProgress}
           errorMessage={errorMessage}
           onReset={resetForm}
+          currentFileIndex={currentFileIndex}
+          totalFiles={totalFiles}
         />
       </div>
     </div>

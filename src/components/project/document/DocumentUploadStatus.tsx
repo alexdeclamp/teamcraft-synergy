@@ -9,13 +9,17 @@ interface DocumentUploadStatusProps {
   uploadProgress: number;
   errorMessage: string | null;
   onReset: () => void;
+  currentFileIndex?: number;
+  totalFiles?: number;
 }
 
 export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
   isUploading,
   uploadProgress,
   errorMessage,
-  onReset
+  onReset,
+  currentFileIndex = 0,
+  totalFiles = 0
 }) => {
   return (
     <div className="space-y-4">
@@ -36,6 +40,7 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           <div className="flex items-center justify-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             <p className="text-sm text-muted-foreground">
+              {totalFiles > 1 && `File ${currentFileIndex + 1} of ${totalFiles}: `}
               {uploadProgress < 40 && "Preparing file..."}
               {uploadProgress >= 40 && uploadProgress < 70 && "Uploading PDF..."}
               {uploadProgress >= 70 && uploadProgress < 90 && "Saving document..."}
@@ -48,13 +53,13 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
       {uploadProgress === 100 && !isUploading && (
         <div className="p-3 rounded-md bg-green-50 text-green-600 text-sm flex items-start">
           <FileText className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-          <div>File uploaded successfully</div>
+          <div>Files uploaded successfully</div>
         </div>
       )}
       
       {uploadProgress === 100 && !isUploading && (
         <Button variant="outline" size="sm" onClick={onReset}>
-          Upload Another PDF
+          Upload More PDFs
         </Button>
       )}
     </div>

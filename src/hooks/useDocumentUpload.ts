@@ -11,28 +11,30 @@ interface UseDocumentUploadProps {
 
 export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: UseDocumentUploadProps) {
   const navigate = useNavigate();
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [currentFileIndex, setCurrentFileIndex] = useState(0);
+  const [totalFiles, setTotalFiles] = useState(0);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const selectedFile = e.target.files[0];
-      setErrorMessage(null);
-      
-      if (selectedFile.type !== 'application/pdf') {
-        toast.error('Only PDF files are supported');
-        return;
+  const handleFilesChange = (selectedFiles: File[]) => {
+    const validFiles = selectedFiles.filter(file => {
+      if (file.type !== 'application/pdf') {
+        toast.error(`${file.name} is not a PDF file`);
+        return false;
       }
       
-      if (selectedFile.size > 10 * 1024 * 1024) { // 10MB limit
-        toast.error('File size exceeds 10MB limit');
-        return;
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        toast.error(`${file.name} exceeds 10MB limit`);
+        return false;
       }
       
-      setFile(selectedFile);
-    }
+      return true;
+    });
+    
+    setFiles(validFiles);
+    setErrorMessage(null);
   };
 
   const handleCreateNoteChange = (checked: boolean) => {
@@ -40,88 +42,115 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
   };
 
   const uploadDocument = async () => {
-    if (!file || !userId || !projectId) return;
+    if (files.length === 0 || !userId || !projectId) return;
     
     try {
       setIsUploading(true);
       setErrorMessage(null);
-      setUploadProgress(20);
+      setUploadProgress(0);
+      setCurrentFileIndex(0);
+      setTotalFiles(files.length);
       
-      // Define file path in storage
-      const timestamp = new Date().getTime();
-      const pdfPath = `${userId}/${projectId}/${timestamp}_${file.name}`;
-      const bucketName = 'project_documents';
+      // Upload each file in sequence
+      const uploadedDocuments = [];
       
-      // Upload the PDF file directly to Supabase Storage
-      setUploadProgress(40);
-      console.log(`Uploading PDF to storage: ${pdfPath}`);
+      for (let i = 0; i < files.length; i++) {
+        setCurrentFileIndex(i);
+        const file = files[i];
+        
+        // Define file path in storage
+        const timestamp = new Date().getTime();
+        const pdfPath = `${userId}/${projectId}/${timestamp}_${file.name}`;
+        const bucketName = 'project_documents';
+        
+        // Update progress for current file
+        setUploadProgress(20);
+        console.log(`Uploading PDF to storage (${i+1}/${files.length}): ${pdfPath}`);
+        
+        // Upload the PDF file directly to Supabase Storage
+        setUploadProgress(40);
+        
+        const { data: uploadData, error: uploadError } = await supabase
+          .storage
+          .from(bucketName)
+          .upload(pdfPath, file, {
+            contentType: 'application/pdf',
+            upsert: false
+          });
+        
+        if (uploadError) {
+          console.error(`Error uploading file ${file.name} to storage:`, uploadError);
+          toast.error(`Failed to upload ${file.name}: ${uploadError.message}`);
+          continue; // Continue with next file even if this one fails
+        }
+        
+        setUploadProgress(70);
+        
+        // Get the public URL for the uploaded file
+        const { data: { publicUrl } } = supabase
+          .storage
+          .from(bucketName)
+          .getPublicUrl(pdfPath);
+        
+        // Save document info in the database
+        setUploadProgress(85);
+        console.log(`Saving document info to database for ${file.name}`);
+        
+        const { data: documentData, error: documentError } = await supabase
+          .from('project_documents')
+          .insert({
+            project_id: projectId,
+            user_id: userId,
+            file_name: file.name,
+            file_url: publicUrl,
+            file_path: pdfPath,
+            document_type: 'pdf',
+            file_size: file.size,
+            metadata: {
+              pdf_url: publicUrl
+            }
+          })
+          .select()
+          .single();
+        
+        if (documentError) {
+          console.error(`Error saving document ${file.name} to database:`, documentError);
+          toast.error(`Database error for ${file.name}: ${documentError.message}`);
+          continue; // Continue with next file even if this one fails
+        }
+        
+        uploadedDocuments.push(documentData);
+        setUploadProgress(100);
+      }
       
-      const { data: uploadData, error: uploadError } = await supabase
-        .storage
-        .from(bucketName)
-        .upload(pdfPath, file, {
-          contentType: 'application/pdf',
-          upsert: false
+      // Notify about completed uploads
+      if (uploadedDocuments.length === files.length) {
+        toast.success(`${files.length} PDF${files.length > 1 ? 's' : ''} uploaded successfully`);
+      } else if (uploadedDocuments.length > 0) {
+        toast.success(`${uploadedDocuments.length} of ${files.length} PDFs uploaded successfully`);
+      } else {
+        toast.error('Failed to upload any PDFs');
+      }
+      
+      // Call the callback with the last uploaded document or all documents
+      if (onDocumentUploaded && uploadedDocuments.length > 0) {
+        // Notify about each uploaded document
+        uploadedDocuments.forEach(doc => {
+          onDocumentUploaded(doc);
         });
-      
-      if (uploadError) {
-        console.error('Error uploading file to storage:', uploadError);
-        throw new Error(`Upload failed: ${uploadError.message}`);
-      }
-      
-      setUploadProgress(70);
-      
-      // Get the public URL for the uploaded file
-      const { data: { publicUrl } } = supabase
-        .storage
-        .from(bucketName)
-        .getPublicUrl(pdfPath);
-      
-      // Save document info in the database
-      setUploadProgress(85);
-      console.log("Saving document info to database");
-      
-      const { data: documentData, error: documentError } = await supabase
-        .from('project_documents')
-        .insert({
-          project_id: projectId,
-          user_id: userId,
-          file_name: file.name,
-          file_url: publicUrl,
-          file_path: pdfPath,
-          document_type: 'pdf',
-          file_size: file.size,
-          metadata: {
-            pdf_url: publicUrl
-          }
-        })
-        .select()
-        .single();
-      
-      if (documentError) {
-        console.error('Error saving document to database:', documentError);
-        throw new Error(`Database error: ${documentError.message}`);
-      }
-      
-      setUploadProgress(100);
-      toast.success('PDF uploaded successfully');
-      
-      if (onDocumentUploaded && documentData) {
-        onDocumentUploaded(documentData);
       }
       
     } catch (error: any) {
-      console.error('Error uploading document:', error);
+      console.error('Error uploading documents:', error);
       toast.error(`Upload failed: ${error.message || 'Unknown error'}`);
       setErrorMessage(error.message || 'Unknown error occurred');
-      setIsUploading(false);
     } finally {
       setIsUploading(false);
     }
   };
 
   const resetForm = () => {
-    setFile(null);
+    setFiles([]);
     setErrorMessage(null);
     const inputElement = document.getElementById('pdf-upload') as HTMLInputElement;
     if (inputElement) {
@@ -130,12 +159,14 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
   };
 
   return {
-    file,
+    files,
     isUploading,
     uploadProgress,
     errorMessage,
     createNote: false, // Always return false for createNote
-    handleFileChange,
+    currentFileIndex,
+    totalFiles,
+    handleFilesChange,
     handleCreateNoteChange, // Keep for interface compatibility
     uploadDocument,
     resetForm
