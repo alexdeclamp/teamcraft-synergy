@@ -16,18 +16,37 @@ serve(async (req) => {
   }
 
   try {
-    const { pdfUrl, fileName, message, documentContext } = await req.json();
+    const reqBody = await req.json();
+    const { pdfUrl, fileName, message, documentContext } = reqBody;
     
+    // Input validation
     if (!pdfUrl) {
       return new Response(
-        JSON.stringify({ error: 'PDF URL is required' }),
+        JSON.stringify({ 
+          error: 'PDF URL is required',
+          success: false 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!message) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Message is required',
+          success: false 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
     if (!anthropicApiKey) {
+      console.error('ANTHROPIC_API_KEY environment variable is not set');
       return new Response(
-        JSON.stringify({ error: 'ANTHROPIC_API_KEY is not configured' }),
+        JSON.stringify({ 
+          error: 'ANTHROPIC_API_KEY is not configured',
+          success: false
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -36,19 +55,31 @@ serve(async (req) => {
     console.log(`PDF URL: ${pdfUrl}`);
     console.log(`User message: ${message}`);
     
-    // Prepare the context for Claude
-    let contextContent = '';
-    if (documentContext && documentContext.trim() !== '') {
-      contextContent = documentContext;
-      console.log('Using provided document context');
-    } else {
-      // We could implement fetching/extracting context here if needed
+    // Check document context
+    if (!documentContext || documentContext.trim() === '') {
       console.log('No document context provided');
+      return new Response(
+        JSON.stringify({ 
+          error: 'No document content available. The document may still be processing.',
+          success: false
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
+    
+    console.log('Using document context for chat');
+    console.log(`Document context length: ${documentContext.length} characters`);
     
     // Call Claude API
     try {
       console.log("Calling Claude API...");
+      
+      // Limit document context length to prevent exceeding token limits
+      const maxContextLength = 100000; // ~25K tokens
+      const truncatedContext = documentContext.length > maxContextLength
+        ? documentContext.substring(0, maxContextLength) + "... [Content truncated due to length]"
+        : documentContext;
+      
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -65,7 +96,7 @@ serve(async (req) => {
               If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
               
               Document content:
-              ${contextContent}`,
+              ${truncatedContext}`,
           messages: [
             {
               role: "user",
@@ -78,21 +109,15 @@ serve(async (req) => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Claude API error: ${response.status}`, errorText);
-        return new Response(
-          JSON.stringify({ error: `Claude API error: ${response.status}. Details: ${errorText}` }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        throw new Error(`Claude API error: ${response.status}. Details: ${errorText}`);
       }
       
       const data = await response.json();
-      console.log("Claude API response received:", JSON.stringify(data).slice(0, 200) + "...");
+      console.log("Claude API response received");
       
       if (!data.content || !data.content[0] || !data.content[0].text) {
         console.error('Invalid response from Claude API:', data);
-        return new Response(
-          JSON.stringify({ error: 'Invalid response format from Claude API' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+        throw new Error('Invalid response format from Claude API');
       }
       
       const answer = data.content[0].text;
@@ -111,7 +136,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: `Error calling Claude API: ${apiError.message || 'Unknown API error'}`,
-          details: apiError.stack || ''
+          details: apiError.stack || '',
+          success: false
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -122,7 +148,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Unknown error occurred',
-        details: error.stack || '' 
+        details: error.stack || '',
+        success: false 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

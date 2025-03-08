@@ -71,6 +71,13 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
     setIsLoading(true);
     
     try {
+      // Check if we have document content
+      if (!document.content_text || document.content_text.trim() === '') {
+        throw new Error('Document content is not available. Please try again later.');
+      }
+      
+      console.log(`Chatting with "${document.file_name}": ${userMessage}`);
+      
       const { data, error } = await supabase.functions.invoke('chat-with-pdf', {
         body: {
           pdfUrl: document.file_url,
@@ -86,10 +93,14 @@ const DocumentChatDialog: React.FC<DocumentChatDialogProps> = ({
         throw new Error(`Error calling function: ${error.message}`);
       }
       
+      if (data?.error) {
+        console.error('Service error:', data.error);
+        throw new Error(data.error);
+      }
+      
       if (!data || !data.success || !data.answer) {
-        const errorMsg = data?.error || 'Invalid response from chat service';
-        console.error('Service error:', errorMsg);
-        throw new Error(errorMsg);
+        console.error('Invalid response:', data);
+        throw new Error('Invalid response from chat service');
       }
       
       // Add assistant message to chat

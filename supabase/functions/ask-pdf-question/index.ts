@@ -16,104 +16,128 @@ serve(async (req) => {
   }
 
   try {
-    const { pdfUrl, fileName, userQuestion, documentContext } = await req.json();
+    const reqBody = await req.json();
+    const { pdfUrl, fileName, userQuestion, documentContext } = reqBody;
     
+    console.log(`Ask Question for PDF: ${fileName}`);
+    console.log(`PDF URL: ${pdfUrl}`);
+    console.log(`User Question: ${userQuestion}`);
+    
+    // Input validation
     if (!pdfUrl) {
       return new Response(
-        JSON.stringify({ error: 'PDF URL is required' }),
+        JSON.stringify({ 
+          error: 'PDF URL is required',
+          success: false 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
     if (!userQuestion) {
       return new Response(
-        JSON.stringify({ error: 'Question is required' }),
+        JSON.stringify({ 
+          error: 'Question is required',
+          success: false 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
     if (!anthropicApiKey) {
+      console.error('ANTHROPIC_API_KEY environment variable is not set');
       return new Response(
-        JSON.stringify({ error: 'ANTHROPIC_API_KEY is not configured' }),
+        JSON.stringify({ 
+          error: 'ANTHROPIC_API_KEY is not configured',
+          success: false
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    console.log(`Ask Question for PDF: ${fileName}`);
-    console.log(`PDF URL: ${pdfUrl}`);
-    console.log(`User Question: ${userQuestion}`);
-    
-    // Use the fallback approach directly as the primary method
-    // since we know the file_url approach doesn't work with Claude's API
-    if (documentContext && documentContext.trim() !== '') {
-      console.log('Using document context to answer the question...');
-      
-      try {
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': anthropicApiKey,
-            'anthropic-version': '2023-06-01'
-          },
-          body: JSON.stringify({
-            model: "claude-3-7-sonnet-20250219",
-            max_tokens: 1500,
-            system: `You are an AI assistant that helps users answer questions about PDF documents. 
-                The current document is: "${fileName}".
-                Use the following content from the document to answer the user's questions. 
-                If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
-                
-                Document content:
-                ${documentContext}`,
-            messages: [
-              {
-                role: "user",
-                content: userQuestion
-              }
-            ]
-          })
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Claude API error: ${response.status}. Details: ${errorText}`);
-        }
-        
-        const data = await response.json();
-        
-        if (!data.content || !data.content[0] || !data.content[0].text) {
-          throw new Error('Invalid response format from Claude API');
-        }
-        
-        const answer = data.content[0].text;
-        
-        console.log("Answer generated successfully");
-        
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            answer: answer,
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      } catch (apiError) {
-        console.error('Error calling Claude API:', apiError);
-        return new Response(
-          JSON.stringify({ 
-            error: `Error calling Claude API: ${apiError.message || 'Unknown API error'}`,
-            details: apiError.stack || ''
-          }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    } else {
-      // If no document context is provided
+    // Check document context
+    if (!documentContext || documentContext.trim() === '') {
+      console.log('No document context provided');
       return new Response(
         JSON.stringify({ 
-          error: `No document context provided. Unable to process the request.`
+          error: 'No document content available. The document may still be processing.',
+          success: false
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log('Using document context to answer the question...');
+    console.log(`Document context length: ${documentContext.length} characters`);
+    
+    try {
+      // Limit document context length to prevent exceeding token limits
+      const maxContextLength = 100000; // ~25K tokens
+      const truncatedContext = documentContext.length > maxContextLength
+        ? documentContext.substring(0, maxContextLength) + "... [Content truncated due to length]"
+        : documentContext;
+      
+      console.log(`Calling Claude API with truncated context of ${truncatedContext.length} characters`);
+      
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicApiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: "claude-3-7-sonnet-20250219",
+          max_tokens: 1500,
+          system: `You are an AI assistant that helps users answer questions about PDF documents. 
+              The current document is: "${fileName}".
+              Use the following content from the document to answer the user's questions. 
+              If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
+              
+              Document content:
+              ${truncatedContext}`,
+          messages: [
+            {
+              role: "user",
+              content: userQuestion
+            }
+          ]
+        })
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Claude API error: ${response.status}`, errorText);
+        throw new Error(`Claude API error: ${response.status}. Details: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.content || !data.content[0] || !data.content[0].text) {
+        console.error('Invalid response format from Claude API:', data);
+        throw new Error('Invalid response format from Claude API');
+      }
+      
+      const answer = data.content[0].text;
+      
+      console.log("Answer generated successfully");
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          answer: answer,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } catch (apiError) {
+      console.error('Error calling Claude API:', apiError);
+      return new Response(
+        JSON.stringify({ 
+          error: `Error calling Claude API: ${apiError.message || 'Unknown API error'}`,
+          details: apiError.stack || '',
+          success: false
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
@@ -122,7 +146,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Unknown error occurred',
-        details: error.stack || '' 
+        details: error.stack || '',
+        success: false 
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

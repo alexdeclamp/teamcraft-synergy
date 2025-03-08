@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
@@ -58,12 +59,19 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
     setCurrentStep('answer');
     
     try {
+      // First check if we have document content
+      if (!document.content_text || document.content_text.trim() === '') {
+        throw new Error('Document content is not available. Please try again later.');
+      }
+      
+      console.log(`Asking question about "${document.file_name}": ${userQuestion.trim()}`);
+      
       const { data, error } = await supabase.functions.invoke('ask-pdf-question', {
         body: {
           pdfUrl: document.file_url,
           fileName: document.file_name,
           userQuestion: userQuestion.trim(),
-          documentContext: document.content_text || ''
+          documentContext: document.content_text
         }
       });
       
@@ -72,10 +80,14 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
         throw new Error(`Error calling function: ${error.message}`);
       }
       
+      if (data?.error) {
+        console.error('Service error:', data.error);
+        throw new Error(data.error);
+      }
+      
       if (!data || !data.success || !data.answer) {
-        const errorMsg = data?.error || 'Invalid response from service';
-        console.error('Service error:', errorMsg);
-        throw new Error(errorMsg);
+        console.error('Invalid response:', data);
+        throw new Error('Invalid response from service');
       }
       
       setAnswer(data.answer);
