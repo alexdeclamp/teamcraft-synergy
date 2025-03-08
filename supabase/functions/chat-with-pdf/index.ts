@@ -75,7 +75,7 @@ serve(async (req) => {
       console.log("Calling Claude API...");
       
       // Limit document context length to prevent exceeding token limits
-      const maxContextLength = 100000; // ~25K tokens
+      const maxContextLength = 90000; // reduce slightly from 100K to be safe
       const truncatedContext = documentContext.length > maxContextLength
         ? documentContext.substring(0, maxContextLength) + "... [Content truncated due to length]"
         : documentContext;

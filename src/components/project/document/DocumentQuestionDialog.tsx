@@ -61,10 +61,12 @@ const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
     try {
       // First check if we have document content
       if (!document.content_text || document.content_text.trim() === '') {
-        throw new Error('Document content is not available. Please try again later.');
+        console.log("Document content is missing:", document);
+        throw new Error('Document content is not available. The document may still be processing.');
       }
       
       console.log(`Asking question about "${document.file_name}": ${userQuestion.trim()}`);
+      console.log(`Document content available: ${document.content_text.length} characters`);
       
       const { data, error } = await supabase.functions.invoke('ask-pdf-question', {
         body: {

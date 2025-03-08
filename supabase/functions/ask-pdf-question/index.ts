@@ -72,7 +72,7 @@ serve(async (req) => {
     
     try {
       // Limit document context length to prevent exceeding token limits
-      const maxContextLength = 100000; // ~25K tokens
+      const maxContextLength = 90000; // reduce slightly from 100K
       const truncatedContext = documentContext.length > maxContextLength
         ? documentContext.substring(0, maxContextLength) + "... [Content truncated due to length]"
         : documentContext;
@@ -112,7 +112,7 @@ serve(async (req) => {
       }
       
       const data = await response.json();
-      console.log("Claude API response received", data);
+      console.log("Claude API response received");
       
       if (!data.content || !data.content[0] || !data.content[0].text) {
         console.error('Invalid response format from Claude API:', data);
