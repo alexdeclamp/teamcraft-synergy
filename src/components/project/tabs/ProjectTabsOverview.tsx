@@ -2,7 +2,8 @@
 import React from 'react';
 import ProjectOverview from '../ProjectOverview';
 import ProjectQuickLinks from '../ProjectQuickLinks';
-import { Button } from '@/components/ui/button';
+import ProjectQuickUpdate from '../ProjectQuickUpdate';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ProjectTabsOverviewProps {
   project: any;
@@ -45,29 +46,19 @@ const ProjectTabsOverview: React.FC<ProjectTabsOverviewProps> = ({
       />
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="space-y-3">
-          <div className="p-6 border border-dashed rounded-md">
-            <div className="text-center">
-              <p className="text-muted-foreground mb-2">Capture ideas and keep track of important information</p>
-              <div className="flex justify-center gap-2">
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  onClick={() => onTabChange('notes')}
-                >
-                  Create Note
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => onTabChange('notes')}
-                >
-                  View Notes
-                </Button>
-              </div>
-            </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Quick Update</CardTitle>
+          </CardHeader>
+          <div className="p-4">
+            {project && project.id && (
+              <ProjectQuickUpdate 
+                projectId={project.id} 
+                onUpdateAdded={() => {}} 
+              />
+            )}
           </div>
-        </div>
+        </Card>
       </div>
         
       <ProjectQuickLinks onTabChange={onTabChange} />
