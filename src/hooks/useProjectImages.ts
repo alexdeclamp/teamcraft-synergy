@@ -26,50 +26,79 @@ export const useProjectImages = (
     try {
       setIsImagesLoading(true);
       
+      // Try to fetch the list of images from the storage bucket
       const { data, error } = await supabase
         .storage
         .from('project_images')
         .list(`${projectId}`);
 
-      if (error) throw error;
+      if (error) {
+        // Handle the case where the bucket or folder might not exist yet
+        console.error('Error fetching images:', error);
+        
+        // If this is a 404 or other error, just set empty arrays
+        setProjectImages([]);
+        setRecentImages([]);
+        return;
+      }
 
-      if (data) {
-        const imageUrls = await Promise.all(
-          data.map(async (item) => {
-            const { data: urlData } = await supabase
-              .storage
-              .from('project_images')
-              .getPublicUrl(`${projectId}/${item.name}`);
-            
-            // Fetch summary if exists
-            const { data: summaryData } = await supabase
-              .from('image_summaries')
-              .select('summary')
-              .eq('image_url', urlData.publicUrl)
-              .eq('project_id', projectId)
-              .single();
+      if (data && data.length > 0) {
+        try {
+          const imageUrls = await Promise.all(
+            data.map(async (item) => {
+              try {
+                const { data: urlData } = await supabase
+                  .storage
+                  .from('project_images')
+                  .getPublicUrl(`${projectId}/${item.name}`);
+                
+                // Fetch summary if exists
+                const { data: summaryData } = await supabase
+                  .from('image_summaries')
+                  .select('summary')
+                  .eq('image_url', urlData.publicUrl)
+                  .eq('project_id', projectId)
+                  .maybeSingle();
 
-            return {
-              url: urlData.publicUrl,
-              path: `${projectId}/${item.name}`,
-              size: item.metadata?.size || 0,
-              name: item.name,
-              createdAt: new Date(item.created_at || Date.now()),
-              summary: summaryData?.summary || undefined
-            };
-          })
-        );
+                return {
+                  url: urlData.publicUrl,
+                  path: `${projectId}/${item.name}`,
+                  size: item.metadata?.size || 0,
+                  name: item.name,
+                  createdAt: new Date(item.created_at || Date.now()),
+                  summary: summaryData?.summary || undefined
+                };
+              } catch (imageError) {
+                console.error('Error processing image item:', imageError);
+                return null;
+              }
+            })
+          );
 
-        const sortedImages = imageUrls.sort((a, b) => 
-          b.createdAt.getTime() - a.createdAt.getTime()
-        );
+          // Filter out any null entries from failed image processing
+          const validImages = imageUrls.filter(img => img !== null) as UploadedImage[];
+          
+          const sortedImages = validImages.sort((a, b) => 
+            b.createdAt.getTime() - a.createdAt.getTime()
+          );
 
-        setProjectImages(sortedImages);
-        setRecentImages(sortedImages.slice(0, 3));
+          setProjectImages(sortedImages);
+          setRecentImages(sortedImages.slice(0, 3));
+        } catch (processingError) {
+          console.error('Error processing images:', processingError);
+          setProjectImages([]);
+          setRecentImages([]);
+        }
+      } else {
+        // No images found
+        setProjectImages([]);
+        setRecentImages([]);
       }
     } catch (error: any) {
       console.error('Error fetching images:', error);
-      toast.error('Failed to load project images');
+      // Set empty arrays to prevent UI issues
+      setProjectImages([]);
+      setRecentImages([]);
     } finally {
       setIsImagesLoading(false);
     }
@@ -77,10 +106,10 @@ export const useProjectImages = (
 
   // Initial fetch of images when hook is initialized
   useEffect(() => {
-    if (projectId && userId && !isImagesLoading && projectImages.length === 0) {
+    if (projectId && userId) {
       fetchProjectImages();
     }
-  }, [projectId, userId, fetchProjectImages, isImagesLoading, projectImages.length]);
+  }, [projectId, userId, fetchProjectImages]);
 
   const handleImagesUpdated = (images: UploadedImage[], recent: UploadedImage[]) => {
     setProjectImages(images);
