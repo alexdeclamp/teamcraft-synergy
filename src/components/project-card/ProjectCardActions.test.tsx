@@ -22,14 +22,17 @@ vi.mock('sonner', () => ({
   }
 }));
 
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      update: vi.fn(() => ({
-        eq: vi.fn().mockReturnValue({ error: null })
-      }))
+// Mock Supabase client
+const mockSupabase = {
+  from: vi.fn(() => ({
+    update: vi.fn(() => ({
+      eq: vi.fn().mockReturnValue({ error: null })
     }))
-  }
+  }))
+};
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: mockSupabase
 }));
 
 describe('ProjectCardActions', () => {
@@ -78,7 +81,7 @@ describe('ProjectCardActions', () => {
     fireEvent.click(favoriteButton);
     
     // Check if Supabase was called
-    expect(supabase.from).toHaveBeenCalledWith('projects');
+    expect(mockSupabase.from).toHaveBeenCalledWith('projects');
     
     // Check if setFavorite was called with the new status
     expect(defaultProps.setFavorite).toHaveBeenCalledWith(true);

@@ -55,7 +55,10 @@ const ProjectTabsOverview: React.FC<ProjectTabsOverviewProps> = ({
       />
       
       <div className="mt-6">
-        <ProjectChat projectId={projectId} disableAutoScroll={true} />
+        <ProjectChat 
+          projectId={projectId} 
+          disableAutoScroll={true} 
+        />
       </div>
     </div>
   );

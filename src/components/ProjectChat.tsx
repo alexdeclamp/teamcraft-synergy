@@ -18,19 +18,20 @@ import ProjectChatFullscreen from '@/components/project/chat/ProjectChatFullscre
 
 interface ProjectChatProps {
   projectId: string;
+  disableAutoScroll?: boolean;
 }
 
-const ProjectChat: React.FC<ProjectChatProps> = ({ projectId }) => {
+const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll = false }) => {
   const { messages, isLoading, predefinedQuestions, sendMessage } = useProjectChat(projectId);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Scroll to bottom when new messages are added
+  // Scroll to bottom when new messages are added, unless disableAutoScroll is true
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (messagesEndRef.current && !disableAutoScroll) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, disableAutoScroll]);
 
   return (
     <>
