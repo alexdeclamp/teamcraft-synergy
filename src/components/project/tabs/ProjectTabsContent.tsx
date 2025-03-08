@@ -8,7 +8,6 @@ import ProjectDocumentsTab from '../ProjectDocumentsTab';
 import ProjectImages from '../ProjectImages';
 import ProjectMembers from '../ProjectMembers';
 import ProjectSettings from '../ProjectSettings';
-import ProjectChatTab from '../ProjectChatTab';
 
 interface ProjectTabsContentProps {
   activeTab: string;
@@ -22,6 +21,9 @@ interface ProjectTabsContentProps {
   isImagesLoading: boolean;
   daysSinceCreation: () => number;
   activityPercentage: number;
+  noteCount: number;
+  documentCount: number;
+  recentUpdatesCount: number;
   formatFileSize: (bytes: number) => string;
   handleImagesUpdated: (images: any[], recent: any[]) => void;
   handleAddMember: () => void;
@@ -40,6 +42,9 @@ const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
   isImagesLoading,
   daysSinceCreation,
   activityPercentage,
+  noteCount,
+  documentCount,
+  recentUpdatesCount,
   formatFileSize,
   handleImagesUpdated,
   handleAddMember,
@@ -55,11 +60,15 @@ const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
           activityPercentage={activityPercentage}
           daysSinceCreation={daysSinceCreation}
           imageCount={projectImages.length}
+          noteCount={noteCount}
+          documentCount={documentCount}
+          recentUpdatesCount={recentUpdatesCount}
           recentImages={recentImages}
           isImagesLoading={isImagesLoading}
           formatFileSize={formatFileSize}
           onAddMember={handleAddMember}
           onTabChange={setActiveTab}
+          projectId={projectId}
         />
       </TabsContent>
       
@@ -97,10 +106,6 @@ const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
       
       <TabsContent value="settings" className="space-y-6">
         {project && projectId && <ProjectSettings projectId={projectId} />}
-      </TabsContent>
-      
-      <TabsContent value="chat" className="space-y-6">
-        {project && projectId && <ProjectChatTab projectId={projectId} />}
       </TabsContent>
     </>
   );

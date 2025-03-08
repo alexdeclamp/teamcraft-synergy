@@ -26,7 +26,6 @@ const ProjectTabsNavigation: React.FC<ProjectTabsNavigationProps> = ({
         {userRole === 'owner' && (
           <TabsTrigger value="settings" id="tab-settings">Settings</TabsTrigger>
         )}
-        <TabsTrigger value="chat" id="tab-chat">Project Chat</TabsTrigger>
       </TabsList>
       
       <ProjectTutorial activeTab={activeTab} className="ml-2" />

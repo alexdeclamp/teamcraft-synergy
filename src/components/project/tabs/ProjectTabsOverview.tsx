@@ -1,6 +1,7 @@
 
 import React from 'react';
 import ProjectOverview from '../ProjectOverview';
+import ProjectChat from '@/components/ProjectChat';
 
 interface ProjectTabsOverviewProps {
   project: any;
@@ -9,14 +10,15 @@ interface ProjectTabsOverviewProps {
   activityPercentage: number;
   daysSinceCreation: () => number;
   imageCount: number;
-  noteCount: number; // New prop
-  documentCount: number; // New prop
-  recentUpdatesCount: number; // New prop
+  noteCount: number;
+  documentCount: number;
+  recentUpdatesCount: number;
   recentImages: any[];
   isImagesLoading: boolean;
   formatFileSize: (bytes: number) => string;
   onAddMember: () => void;
   onTabChange: (tab: string) => void;
+  projectId: string;
 }
 
 const ProjectTabsOverview: React.FC<ProjectTabsOverviewProps> = ({
@@ -33,7 +35,8 @@ const ProjectTabsOverview: React.FC<ProjectTabsOverviewProps> = ({
   isImagesLoading,
   formatFileSize,
   onAddMember,
-  onTabChange
+  onTabChange,
+  projectId
 }) => {
   return (
     <div className="space-y-6">
@@ -50,6 +53,10 @@ const ProjectTabsOverview: React.FC<ProjectTabsOverviewProps> = ({
         onAddMember={onAddMember}
         onTabChange={onTabChange}
       />
+      
+      <div className="mt-6">
+        <ProjectChat projectId={projectId} />
+      </div>
     </div>
   );
 };
