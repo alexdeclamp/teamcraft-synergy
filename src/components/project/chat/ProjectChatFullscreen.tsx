@@ -3,12 +3,11 @@ import React, { useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogPortal, DialogOverlay } from '@/components/ui/dialog';
+import { Dialog, DialogPortal, DialogOverlay } from '@/components/ui/dialog';
 import { useProjectChat } from '@/hooks/useProjectChat';
 import ProjectChatMessage from './ProjectChatMessage';
 import ProjectChatInput from './ProjectChatInput';
 import ProjectChatSuggestions from './ProjectChatSuggestions';
-import { cn } from '@/lib/utils';
 
 interface ProjectChatFullscreenProps {
   projectId: string;
