@@ -13,10 +13,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
   const navigate = useNavigate();
 
   return (
-    <div className={`flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 ${className}`}>
+    <div className={`flex flex-col md:flex-row items-start md:items-center justify-between mb-4 sm:mb-8 gap-4 ${className}`}>
       <div>
         <div className="flex items-center gap-2">
-          <h1 className="text-3xl font-bold" id="dashboard-heading">Brains</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold" id="dashboard-heading">Brains</h1>
           <Sparkles className="h-5 w-5 text-primary/70" />
         </div>
         <p className="text-muted-foreground mt-1">
@@ -24,11 +24,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
         </p>
       </div>
       
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 w-full sm:w-auto">
         <DashboardTutorial className="mr-2" />
         <Button 
           onClick={() => navigate('/new-project')}
-          className="shadow-sm rounded-full"
+          className="shadow-sm rounded-full w-full sm:w-auto"
           id="new-brain-button"
         >
           <Plus className="h-4 w-4 mr-2" />

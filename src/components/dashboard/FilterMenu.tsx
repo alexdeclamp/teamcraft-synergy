@@ -29,9 +29,9 @@ const FilterMenu: React.FC<FilterMenuProps> = ({ currentFilter, onFilterChange }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button id="filter-brains" variant="outline" className="w-[130px]">
+        <Button id="filter-brains" variant="outline" className="w-full sm:w-[130px] h-10">
           <Filter className="h-4 w-4 mr-2" />
-          {filterLabels[currentFilter]}
+          <span className="truncate">{filterLabels[currentFilter]}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

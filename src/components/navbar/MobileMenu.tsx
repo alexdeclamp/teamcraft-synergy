@@ -25,7 +25,7 @@ const MobileMenu = ({ isOpen, onProfileClick, onSignOutClick }: MobileMenuProps)
   if (!isOpen) return null;
 
   return (
-    <div className="md:hidden bg-white animate-fade-in border-t mt-3">
+    <div className="md:hidden bg-white/95 backdrop-blur-sm animate-fade-in border-t mt-3 rounded-b-lg shadow-sm">
       <div className="py-3 px-4 space-y-3">
         {navLinks.map((link) => (
           <Link 

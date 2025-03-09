@@ -61,6 +61,7 @@ const Navbar = () => {
           className="md:hidden p-2 rounded-md hover:bg-accent"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
+          aria-expanded={mobileMenuOpen}
         >
           {mobileMenuOpen ? 
             <X className="h-5 w-5" /> : 
@@ -72,7 +73,10 @@ const Navbar = () => {
       {/* Mobile Menu */}
       <MobileMenu 
         isOpen={mobileMenuOpen}
-        onProfileClick={() => setProfileDialogOpen(true)}
+        onProfileClick={() => {
+          setMobileMenuOpen(false);
+          setProfileDialogOpen(true);
+        }}
         onSignOutClick={signOut}
       />
 

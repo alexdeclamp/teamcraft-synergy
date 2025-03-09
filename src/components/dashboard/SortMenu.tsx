@@ -27,9 +27,9 @@ const SortMenu: React.FC<SortMenuProps> = ({ currentSort, onSortChange }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button id="sort-brains" variant="outline" className="w-[140px]">
+        <Button id="sort-brains" variant="outline" className="w-full sm:w-[140px] h-10">
           <ArrowUpDown className="h-4 w-4 mr-2" />
-          {sortLabels[currentSort]}
+          <span className="truncate">{sortLabels[currentSort]}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

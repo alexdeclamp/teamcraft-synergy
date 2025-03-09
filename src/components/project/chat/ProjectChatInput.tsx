@@ -37,7 +37,7 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLo
     <div className="space-y-2">
       <div className="flex justify-end">
         <Select value={selectedModel} onValueChange={setSelectedModel}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-[140px] sm:w-[180px]">
             <SelectValue placeholder="Select Model" />
           </SelectTrigger>
           <SelectContent>
@@ -57,7 +57,8 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLo
         <Button
           onClick={handleSend}
           disabled={isLoading || !input.trim()}
-          className="px-3"
+          className="px-3 flex-shrink-0"
+          aria-label="Send message"
         >
           <SendHorizontal className="h-5 w-5" />
         </Button>

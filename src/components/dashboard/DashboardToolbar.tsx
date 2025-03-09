@@ -22,10 +22,10 @@ const DashboardToolbar: React.FC<DashboardToolbarProps> = ({
   onSortChange
 }) => {
   return (
-    <div className="mb-8 flex flex-col sm:flex-row gap-4">
+    <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-4">
       <SearchBar value={searchTerm} onChange={onSearchChange} />
       
-      <div className="flex gap-3">
+      <div className="flex gap-3 w-full sm:w-auto">
         <FilterMenu currentFilter={filter} onFilterChange={onFilterChange} />
         <SortMenu currentSort={sortOrder} onSortChange={onSortChange} />
       </div>

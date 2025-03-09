@@ -3,6 +3,7 @@
 #root {
   max-width: 1400px;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
 /* Apple-inspired transitions */
@@ -26,4 +27,20 @@
   background-color: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
+}
+
+/* Responsive helpers */
+@media (max-width: 640px) {
+  .mobile-pt {
+    padding-top: 1rem;
+  }
+  
+  .mobile-pb {
+    padding-bottom: 1rem;
+  }
+
+  .mobile-stack {
+    display: flex;
+    flex-direction: column;
+  }
 }

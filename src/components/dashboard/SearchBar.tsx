@@ -10,12 +10,12 @@ interface SearchBarProps {
 
 const SearchBar: React.FC<SearchBarProps> = ({ value, onChange }) => {
   return (
-    <div className="relative flex-1">
+    <div className="relative w-full">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input
         id="search-brains"
         placeholder="Search brains..."
-        className="pl-9"
+        className="pl-9 w-full"
         value={value}
         onChange={onChange}
       />

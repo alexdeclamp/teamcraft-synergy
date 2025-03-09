@@ -78,7 +78,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
     <div className="min-h-screen bg-background pb-12 animate-fade-in">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24">
         <ProjectHeader
           project={project}
           userRole={userRole}
