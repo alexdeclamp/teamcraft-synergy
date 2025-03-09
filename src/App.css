@@ -44,6 +44,27 @@
   }
 }
 
+/* Feature card styles */
+.feature-image {
+  height: 100%;
+  min-height: 300px;
+  object-fit: cover;
+}
+
+@media (max-width: 768px) {
+  .feature-image {
+    min-height: 200px;
+  }
+  
+  .feature-card-content {
+    order: 2;
+  }
+  
+  .feature-card-image {
+    order: 1;
+  }
+}
+
 /* Responsive helpers */
 @media (max-width: 640px) {
   .mobile-pt {

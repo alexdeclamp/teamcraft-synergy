@@ -15,17 +15,23 @@ const Landing = () => {
     {
       icon: <Brain className="h-10 w-10 text-primary" />,
       title: "Intelligent Analysis",
-      description: "Advanced AI analyzes your projects to extract key insights and identify patterns."
+      description: "Advanced AI analyzes your projects to extract key insights and identify patterns. Our machine learning algorithms process your data in real-time, finding connections that humans might miss and delivering actionable intelligence to drive your projects forward.",
+      imageUrl: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
+      imagePosition: "right" as const
     },
     {
       icon: <MessageSquare className="h-10 w-10 text-primary" />,
       title: "Smart Collaboration",
-      description: "Seamlessly share insights with your team and collaborate in real-time."
+      description: "Seamlessly share insights with your team and collaborate in real-time. Our platform brings your entire team together, allowing for instant feedback, collaborative decision-making, and efficient knowledge sharing across departments and time zones.",
+      imageUrl: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
+      imagePosition: "left" as const
     },
     {
       icon: <LineChart className="h-10 w-10 text-primary" />,
       title: "Data Visualization",
-      description: "Transform complex data into clear, actionable visualizations."
+      description: "Transform complex data into clear, actionable visualizations. See your project metrics in beautiful, intuitive charts and graphs that help you understand trends, identify opportunities, and communicate progress effectively to stakeholders.",
+      imageUrl: "https://images.unsplash.com/photo-1531297484001-80022131f5a1",
+      imagePosition: "right" as const
     }
   ];
 
@@ -108,13 +114,15 @@ const Landing = () => {
           </p>
         </div>
         
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="space-y-16">
           {features.map((feature, index) => (
             <FeatureCard 
               key={index} 
               icon={feature.icon} 
               title={feature.title} 
-              description={feature.description} 
+              description={feature.description}
+              imageUrl={feature.imageUrl}
+              imagePosition={feature.imagePosition}
             />
           ))}
         </div>
