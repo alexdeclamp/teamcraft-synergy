@@ -44,6 +44,16 @@
   }
 }
 
+/* Step numbers animation */
+.step-number {
+  transition: all 0.3s ease;
+}
+
+.step-card:hover .step-number {
+  transform: scale(1.1);
+  background-color: rgba(var(--primary-rgb), 0.2);
+}
+
 /* Responsive helpers */
 @media (max-width: 640px) {
   .mobile-pt {
@@ -58,4 +68,14 @@
     display: flex;
     flex-direction: column;
   }
+}
+
+/* Additional animation for cards */
+.feature-card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
