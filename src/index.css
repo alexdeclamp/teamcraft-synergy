@@ -4,44 +4,44 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 220 20% 10%;
+    --background: 0 0% 98%;
+    --foreground: 240 10% 4%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 20% 10%;
+    --card-foreground: 240 10% 4%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 10%;
+    --popover-foreground: 240 10% 4%;
 
-    --primary: 210 100% 50%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 213 94% 53%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96.1%;
-    --secondary-foreground: 220 20% 10%;
+    --secondary-foreground: 240 10% 4%;
 
     --muted: 210 40% 96.1%;
-    --muted-foreground: 220 10% 40%;
+    --muted-foreground: 240 5% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 220 20% 10%;
+    --accent: 213 94% 92%;
+    --accent-foreground: 213 94% 35%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 220 20% 90%;
-    --input: 220 20% 90%;
-    --ring: 210 100% 50%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 213 94% 53%;
 
-    --radius: 0.5rem;
+    --radius: 12px;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 20% 10%;
-    --sidebar-primary: 210 100% 50%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 220 20% 10%;
-    --sidebar-border: 220 20% 90%;
-    --sidebar-ring: 210 100% 50%;
+    --sidebar-foreground: 240 10% 4%;
+    --sidebar-primary: 213 94% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 213 94% 92%;
+    --sidebar-accent-foreground: 213 94% 35%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 213 94% 53%;
   }
 
   * {
@@ -95,8 +95,9 @@
   }
 }
 
-/* Import Inter font */
-@import url('https://rsms.me/inter/inter.css');
+/* Import SF Pro font */
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+@import url('https://fonts.cdnfonts.com/css/sf-mono');
 
 @layer components {
   .glass-panel {
@@ -109,6 +110,19 @@
   
   .subtle-ring-focus {
     @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+  
+  /* Apple-inspired components */
+  .apple-button {
+    @apply rounded-full px-5 py-2 bg-primary text-primary-foreground font-medium transition-all duration-200 hover:shadow-md;
+  }
+  
+  .math-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+  
+  .formula-text {
+    @apply font-mono text-sm tracking-tight;
   }
 }
 

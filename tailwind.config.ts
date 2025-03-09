@@ -21,7 +21,10 @@ export default {
 		extend: {
 			fontFamily: {
 				sans: [
-					'Inter var, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+					'SF Pro Display, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+				],
+				mono: [
+					'SF Mono, SFMono-Regular, ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
 				],
 			},
 			colors: {
