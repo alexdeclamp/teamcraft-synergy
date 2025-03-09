@@ -22,7 +22,8 @@ const LandingNavbar = () => {
   const navLinks = [
     { name: "Features", href: "#features" },
     { name: "Pricing", href: "#pricing" },
-    { name: "About", href: "#about" }
+    { name: "About", href: "#about" },
+    { name: "Blog", href: "#blog" }
   ];
 
   return (
@@ -37,7 +38,9 @@ const LandingNavbar = () => {
           <div className="flex items-center justify-center">
             <Sparkles className="h-8 w-8 text-primary" />
           </div>
-          <span className="font-semibold text-lg tracking-tight">YourSaaS</span>
+          <span className="font-semibold text-lg tracking-tight">
+            Bra<span className="text-primary">3</span>n
+          </span>
         </Link>
 
         {/* Desktop Menu */}
