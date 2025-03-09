@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,93 +6,68 @@ import { Card, CardContent } from '@/components/ui/card';
 import LandingNavbar from '@/components/landing/LandingNavbar';
 import FeatureCard from '@/components/landing/FeatureCard';
 import TestimonialCard from '@/components/landing/TestimonialCard';
-
 const Landing = () => {
   const navigate = useNavigate();
-
-  const steps = [
-    {
-      icon: <Upload className="h-10 w-10 text-primary" />,
-      title: "Upload Your Knowledge",
-      description: "Add notes, PDFs, images, and updates into your Brain."
-    },
-    {
-      icon: <Brain className="h-10 w-10 text-primary" />,
-      title: "AI Summarizes for You",
-      description: "Bra3n instantly organizes and summarizes your content."
-    },
-    {
-      icon: <MessageSquare className="h-10 w-10 text-primary" />,
-      title: "Ask Anything, Get Answers",
-      description: "Use our AI-powered chat to retrieve insights instantly."
-    }
-  ];
-
-  const benefits = [
-    {
-      icon: <Search className="h-10 w-10 text-primary" />,
-      title: "AI-Powered Search",
-      description: "Retrieve any information in seconds."
-    },
-    {
-      icon: <FileText className="h-10 w-10 text-primary" />,
-      title: "Smart Summaries",
-      description: "No more reading endless PDFs."
-    },
-    {
-      icon: <Users className="h-10 w-10 text-primary" />,
-      title: "Team Collaboration",
-      description: "Share & work together seamlessly."
-    },
-    {
-      icon: <Shield className="h-10 w-10 text-primary" />,
-      title: "Secure & Private",
-      description: "Your data stays yours."
-    }
-  ];
-
-  const userPersonas = [
-    {
-      title: "Consultants & Analysts",
-      description: "Keep research organized and accessible."
-    },
-    {
-      title: "Product Teams",
-      description: "Centralize insights & findings."
-    },
-    {
-      title: "Startups & Creators",
-      description: "Manage ideas & notes easily."
-    },
-    {
-      title: "Knowledge Workers",
-      description: "Anyone who hates losing information."
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: "John D.",
-      role: "Product Manager",
-      content: "Bra3n changed how my team works! Finding past notes is now instant.",
-      avatar: "JD"
-    },
-    {
-      name: "Marie L.",
-      role: "Consultant",
-      content: "It's like having an AI assistant that actually knows my work.",
-      avatar: "ML"
-    },
-    {
-      name: "Alex P.",
-      role: "Team Lead",
-      content: "Our productivity improved dramatically after implementing Bra3n.",
-      avatar: "AP"
-    }
-  ];
-
-  return (
-    <div className="min-h-screen bg-background overflow-hidden">
+  const steps = [{
+    icon: <Upload className="h-10 w-10 text-primary" />,
+    title: "Upload Your Knowledge",
+    description: "Add notes, PDFs, images, and updates into your Brain."
+  }, {
+    icon: <Brain className="h-10 w-10 text-primary" />,
+    title: "AI Summarizes for You",
+    description: "Bra3n instantly organizes and summarizes your content."
+  }, {
+    icon: <MessageSquare className="h-10 w-10 text-primary" />,
+    title: "Ask Anything, Get Answers",
+    description: "Use our AI-powered chat to retrieve insights instantly."
+  }];
+  const benefits = [{
+    icon: <Search className="h-10 w-10 text-primary" />,
+    title: "AI-Powered Search",
+    description: "Retrieve any information in seconds."
+  }, {
+    icon: <FileText className="h-10 w-10 text-primary" />,
+    title: "Smart Summaries",
+    description: "No more reading endless PDFs."
+  }, {
+    icon: <Users className="h-10 w-10 text-primary" />,
+    title: "Team Collaboration",
+    description: "Share & work together seamlessly."
+  }, {
+    icon: <Shield className="h-10 w-10 text-primary" />,
+    title: "Secure & Private",
+    description: "Your data stays yours."
+  }];
+  const userPersonas = [{
+    title: "Consultants & Analysts",
+    description: "Keep research organized and accessible."
+  }, {
+    title: "Product Teams",
+    description: "Centralize insights & findings."
+  }, {
+    title: "Startups & Creators",
+    description: "Manage ideas & notes easily."
+  }, {
+    title: "Knowledge Workers",
+    description: "Anyone who hates losing information."
+  }];
+  const testimonials = [{
+    name: "John D.",
+    role: "Product Manager",
+    content: "Bra3n changed how my team works! Finding past notes is now instant.",
+    avatar: "JD"
+  }, {
+    name: "Marie L.",
+    role: "Consultant",
+    content: "It's like having an AI assistant that actually knows my work.",
+    avatar: "ML"
+  }, {
+    name: "Alex P.",
+    role: "Team Lead",
+    content: "Our productivity improved dramatically after implementing Bra3n.",
+    avatar: "AP"
+  }];
+  return <div className="min-h-screen bg-background overflow-hidden">
       <LandingNavbar />
       
       {/* Hero Section */}
@@ -108,9 +82,7 @@ const Landing = () => {
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight">
               Bra<span className="text-primary">3</span>n
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto md:mx-0">
-              Stop Searching. Start Knowing.
-            </p>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto md:mx-0">Stop Searching. Start Knowing. Make decisions.</p>
             <p className="text-md sm:text-lg text-muted-foreground max-w-xl mx-auto md:mx-0">
               Organize your notes, PDFs, and documents into an AI-powered knowledge hub, where you can retrieve insights instantly.
             </p>
@@ -123,13 +95,7 @@ const Landing = () => {
           </div>
           <div className="relative hidden md:block">
             <div className="apple-glass p-6 rounded-xl shadow-lg transition-all animate-fade-in">
-              <img 
-                src="/placeholder.svg" 
-                alt="Bra3n Dashboard Preview" 
-                className="rounded-lg w-full"
-                width={600}
-                height={400}
-              />
+              <img src="/placeholder.svg" alt="Bra3n Dashboard Preview" className="rounded-lg w-full" width={600} height={400} />
             </div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
           </div>
@@ -146,18 +112,12 @@ const Landing = () => {
         </div>
         
         <div className="grid sm:grid-cols-3 gap-8">
-          {steps.map((step, index) => (
-            <div key={index} className="relative">
+          {steps.map((step, index) => <div key={index} className="relative">
               <div className="absolute -left-4 -top-4 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
                 {index + 1}
               </div>
-              <FeatureCard 
-                icon={step.icon} 
-                title={step.title} 
-                description={step.description} 
-              />
-            </div>
-          ))}
+              <FeatureCard icon={step.icon} title={step.title} description={step.description} />
+            </div>)}
         </div>
         <div className="text-center mt-8">
           <p className="text-muted-foreground text-md italic">
@@ -176,14 +136,7 @@ const Landing = () => {
         </div>
         
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {benefits.map((benefit, index) => (
-            <FeatureCard 
-              key={index} 
-              icon={benefit.icon} 
-              title={benefit.title} 
-              description={benefit.description} 
-            />
-          ))}
+          {benefits.map((benefit, index) => <FeatureCard key={index} icon={benefit.icon} title={benefit.title} description={benefit.description} />)}
         </div>
       </section>
 
@@ -197,14 +150,12 @@ const Landing = () => {
         </div>
         
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {userPersonas.map((persona, index) => (
-            <Card key={index} className="overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-4px]">
+          {userPersonas.map((persona, index) => <Card key={index} className="overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-4px]">
               <CardContent className="p-6 space-y-4">
                 <h3 className="text-xl font-semibold">{persona.title}</h3>
                 <p className="text-muted-foreground">{persona.description}</p>
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
       </section>
 
@@ -218,15 +169,7 @@ const Landing = () => {
         </div>
         
         <div className="grid sm:grid-cols-3 gap-6">
-          {testimonials.map((testimonial, index) => (
-            <TestimonialCard
-              key={index}
-              name={testimonial.name}
-              role={testimonial.role}
-              content={testimonial.content}
-              avatarText={testimonial.avatar}
-            />
-          ))}
+          {testimonials.map((testimonial, index) => <TestimonialCard key={index} name={testimonial.name} role={testimonial.role} content={testimonial.content} avatarText={testimonial.avatar} />)}
         </div>
       </section>
 
@@ -300,8 +243,6 @@ const Landing = () => {
           <p>© {new Date().getFullYear()} Bra3n. All rights reserved.</p>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;
