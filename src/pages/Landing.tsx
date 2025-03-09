@@ -1,13 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Check, Upload, Brain, MessageSquare, Search, Shield, Users, FileText } from 'lucide-react';
+import { Sparkles, ArrowRight, Check, Upload, Brain, MessageSquare, Search, Shield, Users, FileText, Image, ImagePlus, GalleryHorizontal } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import LandingNavbar from '@/components/landing/LandingNavbar';
 import FeatureCard from '@/components/landing/FeatureCard';
 import TestimonialCard from '@/components/landing/TestimonialCard';
+
 const Landing = () => {
   const navigate = useNavigate();
+  
   const steps = [{
     icon: <Upload className="h-10 w-10 text-primary" />,
     title: "Upload Your Knowledge",
@@ -21,6 +23,7 @@ const Landing = () => {
     title: "Ask Anything, Get Answers",
     description: "Use our AI-powered chat to retrieve insights instantly."
   }];
+
   const benefits = [{
     icon: <Search className="h-10 w-10 text-primary" />,
     title: "AI-Powered Search",
@@ -38,6 +41,7 @@ const Landing = () => {
     title: "Secure & Private",
     description: "Your data stays yours."
   }];
+
   const userPersonas = [{
     title: "Consultants & Analysts",
     description: "Keep research organized and accessible."
@@ -51,6 +55,7 @@ const Landing = () => {
     title: "Knowledge Workers",
     description: "Anyone who hates losing information."
   }];
+
   const testimonials = [{
     name: "John D.",
     role: "Product Manager",
@@ -67,6 +72,7 @@ const Landing = () => {
     content: "Our productivity improved dramatically after implementing Bra3n.",
     avatar: "AP"
   }];
+
   return <div className="min-h-screen bg-background overflow-hidden">
       <LandingNavbar />
       
@@ -102,6 +108,51 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Image Gallery Section */}
+      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">See Bra3n in Action</h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Visualize how our AI organizes your knowledge
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="col-span-1 rounded-xl overflow-hidden shadow-lg transition-all hover:shadow-xl">
+            <img 
+              src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7" 
+              alt="Working with Bra3n" 
+              className="w-full h-64 object-cover"
+            />
+            <div className="p-4 bg-background/80 backdrop-blur-sm">
+              <h3 className="font-medium">Access your knowledge anywhere</h3>
+            </div>
+          </div>
+          
+          <div className="col-span-1 rounded-xl overflow-hidden shadow-lg transition-all hover:shadow-xl">
+            <img 
+              src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b" 
+              alt="Smart AI Interface" 
+              className="w-full h-64 object-cover"
+            />
+            <div className="p-4 bg-background/80 backdrop-blur-sm">
+              <h3 className="font-medium">Intelligent interface</h3>
+            </div>
+          </div>
+          
+          <div className="col-span-1 rounded-xl overflow-hidden shadow-lg transition-all hover:shadow-xl">
+            <img 
+              src="https://images.unsplash.com/photo-1518770660439-4636190af475" 
+              alt="AI-powered Analysis" 
+              className="w-full h-64 object-cover"
+            />
+            <div className="p-4 bg-background/80 backdrop-blur-sm">
+              <h3 className="font-medium">Advanced AI processing</h3>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works Section */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-12 md:mb-16">
@@ -123,6 +174,30 @@ const Landing = () => {
           <p className="text-muted-foreground text-md italic">
             No more digging through messy docs – just ask and get what you need!
           </p>
+        </div>
+      </section>
+
+      {/* Featured Image Section */}
+      <section className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="rounded-2xl overflow-hidden shadow-xl relative">
+          <img 
+            src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d" 
+            alt="Bra3n in action" 
+            className="w-full h-[400px] md:h-[500px] object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent">
+            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
+              <div className="max-w-2xl">
+                <h2 className="text-2xl md:text-3xl font-semibold mb-3 text-white">Seamless Knowledge Management</h2>
+                <p className="text-white/80 text-lg mb-4">
+                  Experience the future of knowledge work with our AI-powered platform
+                </p>
+                <Button onClick={() => navigate('/auth')} variant="secondary" size="lg" className="rounded-full">
+                  Get Started Now
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -156,6 +231,53 @@ const Landing = () => {
                 <p className="text-muted-foreground">{persona.description}</p>
               </CardContent>
             </Card>)}
+        </div>
+      </section>
+
+      {/* Workflow Image Section */}
+      <section className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-10 items-center">
+          <div className="order-2 md:order-1">
+            <h2 className="text-3xl font-semibold mb-6">Your Workflow, Revolutionized</h2>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Check className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-lg">Effortless Organization</h3>
+                  <p className="text-muted-foreground">Automatically categorize and tag all your content</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Check className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-lg">Instant Recall</h3>
+                  <p className="text-muted-foreground">Find exactly what you need when you need it</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-primary/10 rounded-full">
+                  <Check className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-lg">AI-Powered Insights</h3>
+                  <p className="text-muted-foreground">Extract meaning and connections from your knowledge base</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="order-1 md:order-2">
+            <div className="rounded-xl overflow-hidden shadow-lg apple-glass">
+              <img 
+                src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6" 
+                alt="Bra3n workflow" 
+                className="w-full h-auto"
+              />
+            </div>
+          </div>
         </div>
       </section>
 
