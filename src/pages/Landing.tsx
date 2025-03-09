@@ -2,139 +2,86 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Check, Upload, Brain, MessageSquare, Search, Shield, Users, FileText, Image, ImagePlus, GalleryHorizontal } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Sparkles, ArrowRight, Check, Shield, Zap, BarChart } from 'lucide-react';
 import LandingNavbar from '@/components/landing/LandingNavbar';
 import FeatureCard from '@/components/landing/FeatureCard';
-import TestimonialCard from '@/components/landing/TestimonialCard';
 
 const Landing = () => {
   const navigate = useNavigate();
   
-  const steps = [{
-    icon: <Upload className="h-10 w-10 text-primary" />,
-    title: "Upload Your Knowledge",
-    description: "Add notes, PDFs, images, and updates into your Brain."
-  }, {
-    icon: <Brain className="h-10 w-10 text-primary" />,
-    title: "AI Summarizes for You",
-    description: "Bra3n instantly organizes and summarizes your content."
-  }, {
-    icon: <MessageSquare className="h-10 w-10 text-primary" />,
-    title: "Ask Anything, Get Answers",
-    description: "Use our AI-powered chat to retrieve insights instantly."
-  }];
+  const features = [
+    {
+      icon: <Zap className="h-6 w-6 text-primary" />,
+      title: "Fast Implementation",
+      description: "Get up and running in minutes, not days. Our platform is designed for quick deployment."
+    },
+    {
+      icon: <Shield className="h-6 w-6 text-primary" />,
+      title: "Enterprise Security",
+      description: "Bank-level security with end-to-end encryption and compliance with industry standards."
+    },
+    {
+      icon: <BarChart className="h-6 w-6 text-primary" />,
+      title: "Advanced Analytics",
+      description: "Get insights into your business with our powerful analytics tools and dashboards."
+    }
+  ];
 
-  const benefits = [{
-    icon: <Search className="h-10 w-10 text-primary" />,
-    title: "AI-Powered Search",
-    description: "Retrieve any information in seconds."
-  }, {
-    icon: <FileText className="h-10 w-10 text-primary" />,
-    title: "Smart Summaries",
-    description: "No more reading endless PDFs."
-  }, {
-    icon: <Users className="h-10 w-10 text-primary" />,
-    title: "Team Collaboration",
-    description: "Share & work together seamlessly."
-  }, {
-    icon: <Shield className="h-10 w-10 text-primary" />,
-    title: "Secure & Private",
-    description: "Your data stays yours."
-  }];
-
-  const userPersonas = [{
-    title: "Consultants & Analysts",
-    description: "Keep research organized and accessible."
-  }, {
-    title: "Product Teams",
-    description: "Centralize insights & findings."
-  }, {
-    title: "Startups & Creators",
-    description: "Manage ideas & notes easily."
-  }, {
-    title: "Knowledge Workers",
-    description: "Anyone who hates losing information."
-  }];
-
-  const testimonials = [{
-    name: "John D.",
-    role: "Product Manager",
-    content: "Bra3n changed how my team works! Finding past notes is now instant.",
-    avatar: "JD"
-  }, {
-    name: "Marie L.",
-    role: "Consultant",
-    content: "It's like having an AI assistant that actually knows my work.",
-    avatar: "ML"
-  }, {
-    name: "Alex P.",
-    role: "Team Lead",
-    content: "Our productivity improved dramatically after implementing Bra3n.",
-    avatar: "AP"
-  }];
-
-  const featuredCards = [{
-    title: "Digital Workspace",
-    description: "Your virtual workspace for seamless knowledge management.",
-    image: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0"
-  }, {
-    title: "Insights & Analytics",
-    description: "Visualize your knowledge with powerful analytics.",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71"
-  }, {
-    title: "Team Knowledge Base",
-    description: "Centralize team knowledge for better collaboration.",
-    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c"
-  }];
-
-  return <div className="min-h-screen bg-background overflow-hidden">
+  return (
+    <div className="min-h-screen bg-background">
       <LandingNavbar />
       
       {/* Hero Section */}
-      <section className="relative pt-20 pb-16 md:pt-28 md:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
+      <section className="relative pt-28 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6 text-center md:text-left">
             <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
               <Sparkles className="h-4 w-4 mr-2" />
-              AI-Powered Knowledge Hub
+              Simplify Your Workflow
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight">
-              Bra<span className="text-primary">3</span>n
+              The Modern SaaS Platform
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto md:mx-0">Stop Searching. Start Knowing. Make decisions.</p>
-            <p className="text-md sm:text-lg text-muted-foreground max-w-xl mx-auto md:mx-0">
-              Organize your notes, PDFs, and documents into an AI-powered knowledge hub, where you can retrieve insights instantly.
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto md:mx-0">
+              Powerful tools to help your business grow, all in one place.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Button onClick={() => navigate('/auth')} size="lg" className="rounded-full px-8 text-base shadow-sm w-full sm:w-auto">
-                Try Bra3n for Free
+                Start Free Trial
                 <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+              <Button onClick={() => navigate('/home')} variant="outline" size="lg" className="rounded-full px-8 text-base w-full sm:w-auto">
+                Learn More
               </Button>
             </div>
           </div>
           <div className="relative hidden md:block">
-            <div className="apple-glass p-6 rounded-xl shadow-lg transition-all animate-fade-in">
-              <img src="/placeholder.svg" alt="Bra3n Dashboard Preview" className="rounded-lg w-full" width={600} height={400} />
+            <div className="apple-glass p-6 rounded-xl shadow-lg">
+              <img 
+                src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d" 
+                alt="Dashboard Preview" 
+                className="rounded-lg w-full" 
+                width={600} 
+                height={400} 
+              />
             </div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
           </div>
         </div>
       </section>
-      
-      {/* Full Width Hero Image Section */}
-      <section className="large-image-section mb-20">
+
+      {/* Main Banner */}
+      <section className="large-image-section my-16">
         <img 
-          src="https://images.unsplash.com/photo-1542744173-05336fcc7ad4" 
-          alt="Bra3n in action" 
+          src="https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7" 
+          alt="Business Growth" 
           className="w-full h-full object-cover"
         />
         <div className="content-overlay">
           <div className="max-w-xl">
-            <h2 className="text-4xl font-bold text-white mb-6">Transform How You Manage Knowledge</h2>
+            <h2 className="text-4xl font-bold text-white mb-6">Accelerate Your Business</h2>
             <p className="text-lg text-white/90 mb-8">
-              Bra3n helps you organize information, collaborate with your team, and retrieve insights instantly.
+              Our platform provides everything you need to streamline operations, improve collaboration, and drive growth.
             </p>
             <Button onClick={() => navigate('/auth')} size="lg" className="rounded-full px-8">
               Get Started
@@ -142,268 +89,50 @@ const Landing = () => {
           </div>
         </div>
       </section>
-
-      {/* Featured Cards Section */}
+      
+      {/* Features Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">Discover Bra3n's Features</h2>
+          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">Key Features</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Everything you need for effective knowledge management
+            Everything you need to take your business to the next level
           </p>
         </div>
         
         <div className="grid md:grid-cols-3 gap-8">
-          {featuredCards.map((card, index) => (
+          {features.map((feature, index) => (
             <FeatureCard 
               key={index} 
-              title={card.title} 
-              description={card.description} 
-              image={card.image}
-              imagePosition="top"
+              icon={feature.icon} 
+              title={feature.title} 
+              description={feature.description}
             />
           ))}
         </div>
       </section>
 
-      {/* Image Gallery Section */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">See Bra3n in Action</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Visualize how our AI organizes your knowledge
-          </p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="col-span-1 rounded-xl overflow-hidden shadow-lg transition-all hover:shadow-xl">
-            <img 
-              src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7" 
-              alt="Working with Bra3n" 
-              className="w-full h-64 object-cover"
-            />
-            <div className="p-4 bg-background/80 backdrop-blur-sm">
-              <h3 className="font-medium">Access your knowledge anywhere</h3>
-            </div>
-          </div>
-          
-          <div className="col-span-1 rounded-xl overflow-hidden shadow-lg transition-all hover:shadow-xl">
-            <img 
-              src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b" 
-              alt="Smart AI Interface" 
-              className="w-full h-64 object-cover"
-            />
-            <div className="p-4 bg-background/80 backdrop-blur-sm">
-              <h3 className="font-medium">Intelligent interface</h3>
-            </div>
-          </div>
-          
-          <div className="col-span-1 rounded-xl overflow-hidden shadow-lg transition-all hover:shadow-xl">
-            <img 
-              src="https://images.unsplash.com/photo-1518770660439-4636190af475" 
-              alt="AI-powered Analysis" 
-              className="w-full h-64 object-cover"
-            />
-            <div className="p-4 bg-background/80 backdrop-blur-sm">
-              <h3 className="font-medium">Advanced AI processing</h3>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Background Image Feature Section */}
-      <section className="py-16 mb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          <FeatureCard
-            title="Intelligent Document Processing"
-            description="Our AI automatically extracts key information from your documents"
-            image="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40"
-            imagePosition="background"
-            className="md:col-span-2 lg:col-span-1"
-          />
-          <FeatureCard
-            title="Seamless Team Collaboration"
-            description="Share knowledge and insights with your entire team"
-            image="https://images.unsplash.com/photo-1552664730-d307ca884978"
-            imagePosition="background"
-          />
-          <FeatureCard
-            title="Instant Knowledge Retrieval"
-            description="Find exactly what you need when you need it"
-            image="https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2"
-            imagePosition="background"
-            className="lg:col-span-1"
-          />
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">How It Works</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Simple steps to organize and access your knowledge.
-          </p>
-        </div>
-        
-        <div className="grid sm:grid-cols-3 gap-8">
-          {steps.map((step, index) => <div key={index} className="relative">
-              <div className="absolute -left-4 -top-4 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold">
-                {index + 1}
-              </div>
-              <FeatureCard icon={step.icon} title={step.title} description={step.description} />
-            </div>)}
-        </div>
-        <div className="text-center mt-8">
-          <p className="text-muted-foreground text-md italic">
-            No more digging through messy docs – just ask and get what you need!
-          </p>
-        </div>
-      </section>
-
-      {/* Featured Image Section */}
-      <section className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="rounded-2xl overflow-hidden shadow-xl relative">
-          <img 
-            src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d" 
-            alt="Bra3n in action" 
-            className="w-full h-[400px] md:h-[500px] object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent">
-            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
-              <div className="max-w-2xl">
-                <h2 className="text-2xl md:text-3xl font-semibold mb-3 text-white">Seamless Knowledge Management</h2>
-                <p className="text-white/80 text-lg mb-4">
-                  Experience the future of knowledge work with our AI-powered platform
-                </p>
-                <Button onClick={() => navigate('/auth')} variant="secondary" size="lg" className="rounded-full">
-                  Get Started Now
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Full Width Showcase Section */}
-      <section className="large-image-section my-20">
-        <img 
-          src="https://images.unsplash.com/photo-1552664730-d307ca884978" 
-          alt="Team collaboration" 
-          className="w-full h-full object-cover"
-        />
-        <div className="content-overlay">
-          <div className="max-w-xl">
-            <h2 className="text-4xl font-bold text-white mb-6">Empower Your Team</h2>
-            <p className="text-lg text-white/90 mb-8">
-              Bra3n provides a central hub for all your team's knowledge, making collaboration seamless and productive.
-            </p>
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-1 bg-white/20 rounded-full">
-                  <Check className="h-5 w-5 text-white" />
-                </div>
-                <p className="text-white">Centralized knowledge repository</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-1 bg-white/20 rounded-full">
-                  <Check className="h-5 w-5 text-white" />
-                </div>
-                <p className="text-white">Real-time collaboration capabilities</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-1 bg-white/20 rounded-full">
-                  <Check className="h-5 w-5 text-white" />
-                </div>
-                <p className="text-white">Secure access controls</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Why Choose Bra3n Section */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-muted/30 rounded-3xl">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">Why Choose Bra3n?</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Like Notion, but with an AI brain.
-          </p>
-        </div>
-        
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {benefits.map((benefit, index) => <FeatureCard key={index} icon={benefit.icon} title={benefit.title} description={benefit.description} />)}
-        </div>
-      </section>
-
-      {/* Grid Image Gallery */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">Experience the Interface</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Intuitive design for effortless knowledge management
-          </p>
-        </div>
-        
-        <div className="image-grid">
-          <div className="image-card">
-            <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998" alt="Dashboard" />
-            <div className="image-card-content">
-              <h3 className="text-lg font-medium">Intuitive Dashboard</h3>
-            </div>
-          </div>
-          <div className="image-card">
-            <img src="https://images.unsplash.com/photo-1522542550221-31fd19575a2d" alt="AI Chat" />
-            <div className="image-card-content">
-              <h3 className="text-lg font-medium">AI-Powered Chat</h3>
-            </div>
-          </div>
-          <div className="image-card">
-            <img src="https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d" alt="Document Viewer" />
-            <div className="image-card-content">
-              <h3 className="text-lg font-medium">Smart Document Viewer</h3>
-            </div>
-          </div>
-          <div className="image-card">
-            <img src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e" alt="Analytics" />
-            <div className="image-card-content">
-              <h3 className="text-lg font-medium">Knowledge Analytics</h3>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Who is Bra3n for Section */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">Who is Bra3n for?</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Designed for those who value organized knowledge.
-          </p>
-        </div>
-        
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {userPersonas.map((persona, index) => <Card key={index} className="overflow-hidden transition-all duration-300 hover:shadow-md hover:translate-y-[-4px]">
-              <CardContent className="p-6 space-y-4">
-                <h3 className="text-xl font-semibold">{persona.title}</h3>
-                <p className="text-muted-foreground">{persona.description}</p>
-              </CardContent>
-            </Card>)}
-        </div>
-      </section>
-
-      {/* Workflow Image Section */}
-      <section className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      {/* Showcase Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="grid md:grid-cols-2 gap-10 items-center">
-          <div className="order-2 md:order-1">
-            <h2 className="text-3xl font-semibold mb-6">Your Workflow, Revolutionized</h2>
+          <div>
+            <FeatureCard
+              title="Powerful and Intuitive Dashboard"
+              description="Monitor your business performance with our easy-to-use dashboard. Get real-time insights and make data-driven decisions."
+              image="https://images.unsplash.com/photo-1531297484001-80022131f5a1"
+              imagePosition="background"
+              fullWidth={true}
+            />
+          </div>
+          <div className="space-y-6">
+            <h2 className="text-3xl font-semibold mb-4">Why Choose Our Platform?</h2>
             <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <div className="p-2 bg-primary/10 rounded-full">
                   <Check className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-lg">Effortless Organization</h3>
-                  <p className="text-muted-foreground">Automatically categorize and tag all your content</p>
+                  <h3 className="font-medium text-lg">Easy to Use</h3>
+                  <p className="text-muted-foreground">Our intuitive interface makes it simple to get started</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -411,8 +140,8 @@ const Landing = () => {
                   <Check className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-lg">Instant Recall</h3>
-                  <p className="text-muted-foreground">Find exactly what you need when you need it</p>
+                  <h3 className="font-medium text-lg">Flexible Integrations</h3>
+                  <p className="text-muted-foreground">Connect with your favorite tools seamlessly</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -420,57 +149,28 @@ const Landing = () => {
                   <Check className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-lg">AI-Powered Insights</h3>
-                  <p className="text-muted-foreground">Extract meaning and connections from your knowledge base</p>
+                  <h3 className="font-medium text-lg">24/7 Support</h3>
+                  <p className="text-muted-foreground">Our team is always available to help you succeed</p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="order-1 md:order-2">
-            <div className="rounded-xl overflow-hidden shadow-lg apple-glass">
-              <img 
-                src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6" 
-                alt="Bra3n workflow" 
-                className="w-full h-auto"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-muted/30 rounded-3xl">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">What Users Say</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Discover how Bra3n is transforming the way teams work.
-          </p>
-        </div>
-        
-        <div className="grid sm:grid-cols-3 gap-6">
-          {testimonials.map((testimonial, index) => <TestimonialCard key={index} name={testimonial.name} role={testimonial.role} content={testimonial.content} avatarText={testimonial.avatar} />)}
         </div>
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center">
-        <Card className="apple-glass p-8 md:p-12 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent -z-10" />
-          <CardContent className="space-y-6 p-0">
-            <Sparkles className="h-12 w-12 text-primary mx-auto" />
-            <h2 className="text-3xl sm:text-4xl font-semibold">Ready to Try?</h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Start organizing your knowledge with AI today.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button onClick={() => navigate('/auth')} size="lg" className="rounded-full px-8 text-base shadow-sm w-full sm:w-auto">
-                Try for Free
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground pt-2">No credit card required.</p>
-          </CardContent>
-        </Card>
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto text-center">
+        <div className="bg-primary/5 p-12 rounded-xl">
+          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">Ready to Get Started?</h2>
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-8">
+            Join thousands of businesses that trust our platform to drive growth and efficiency.
+          </p>
+          <Button onClick={() => navigate('/auth')} size="lg" className="rounded-full px-8 text-base shadow-sm">
+            Start Free Trial
+            <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
+          <p className="text-sm text-muted-foreground mt-4">No credit card required. 14-day free trial.</p>
+        </div>
       </section>
 
       {/* Footer */}
@@ -479,12 +179,10 @@ const Landing = () => {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center space-x-2 mb-4">
               <Sparkles className="h-6 w-6 text-primary" />
-              <span className="font-semibold text-lg">
-                Bra<span className="text-primary">3</span>n
-              </span>
+              <span className="font-semibold text-lg">YourSaaS</span>
             </div>
             <p className="text-muted-foreground text-sm">
-              Your AI-Powered Knowledge Hub. Organize notes, PDFs, and documents for instant insights.
+              Helping businesses grow since 2023. Our platform provides the tools you need to succeed.
             </p>
           </div>
           
@@ -493,7 +191,7 @@ const Landing = () => {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><a href="#" className="hover:text-foreground transition-colors">Features</a></li>
               <li><a href="#" className="hover:text-foreground transition-colors">Pricing</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Case Studies</a></li>
+              <li><a href="#" className="hover:text-foreground transition-colors">Integrations</a></li>
               <li><a href="#" className="hover:text-foreground transition-colors">Documentation</a></li>
             </ul>
           </div>
@@ -519,9 +217,11 @@ const Landing = () => {
         </div>
         
         <div className="max-w-7xl mx-auto mt-12 pt-6 border-t text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Bra3n. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} YourSaaS. All rights reserved.</p>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
+
 export default Landing;

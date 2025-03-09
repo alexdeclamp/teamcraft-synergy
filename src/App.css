@@ -1,5 +1,5 @@
 
-/* Modern clean styles inspired by Apple Intelligence */
+/* Modern clean styles for SaaS landing page */
 #root {
   max-width: 1400px;
   margin: 0 auto;
@@ -97,21 +97,7 @@
   background-size: cover;
 }
 
-/* Inspiration from fullenrich.com */
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-}
-
-.hero-section {
-  min-height: 80vh;
-  display: flex;
-  align-items: center;
-  background-position: center;
-  background-size: cover;
-}
-
+/* Large image section styles */
 .large-image-section {
   height: 70vh;
   min-height: 500px;
@@ -135,38 +121,4 @@
     text-align: center;
     justify-content: center;
   }
-}
-
-.image-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-}
-
-.image-card {
-  aspect-ratio: 4/3;
-  position: relative;
-  overflow: hidden;
-  border-radius: 0.5rem;
-}
-
-.image-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-
-.image-card:hover img {
-  transform: scale(1.05);
-}
-
-.image-card-content {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 1.5rem;
-  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-  color: white;
 }
