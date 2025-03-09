@@ -14,7 +14,7 @@ const Index = () => {
           <Sparkles className="h-14 w-14 text-primary" />
         </div>
         <h1 className="text-5xl font-semibold tracking-tight mb-5">
-          Integer<span className="text-primary">.</span>AI
+          Bra<span className="text-primary">3</span>n
         </h1>
         <p className="text-muted-foreground text-xl max-w-xl mx-auto leading-relaxed mb-10">
           Intelligent analysis for your projects. Seamlessly organize documents, generate insights, and collaborate with your team.

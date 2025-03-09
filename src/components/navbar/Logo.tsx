@@ -10,7 +10,7 @@ const Logo = () => {
         <Sparkles className="h-8 w-8 text-primary" />
       </div>
       <span className="font-semibold text-lg tracking-tight">
-        Integer<span className="text-primary">.</span>AI
+        Bra<span className="text-primary">3</span>n
       </span>
     </Link>
   );
