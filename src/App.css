@@ -29,6 +29,21 @@
   border-radius: 12px;
 }
 
+/* Landing page specific styles */
+.landing-container {
+  max-width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 1400px) {
+  .landing-container #root {
+    max-width: 100%;
+    padding: 0;
+  }
+}
+
 /* Responsive helpers */
 @media (max-width: 640px) {
   .mobile-pt {
