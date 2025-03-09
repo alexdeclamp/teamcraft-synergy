@@ -1,47 +1,48 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 240 10% 4%;
+    --background: 210 40% 98%;
+    --foreground: 210 40% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 4%;
+    --card-foreground: 210 40% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 4%;
+    --popover-foreground: 210 40% 10%;
 
-    --primary: 213 94% 53%;
+    --primary: 213 96% 54%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96.1%;
-    --secondary-foreground: 240 10% 4%;
+    --secondary-foreground: 210 40% 10%;
 
     --muted: 210 40% 96.1%;
-    --muted-foreground: 240 5% 45%;
+    --muted-foreground: 210 40% 40%;
 
-    --accent: 213 94% 92%;
-    --accent-foreground: 213 94% 35%;
+    --accent: 213 96% 90%;
+    --accent-foreground: 213 96% 35%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 213 94% 53%;
+    --border: 210 40% 90%;
+    --input: 210 40% 90%;
+    --ring: 213 96% 54%;
 
     --radius: 12px;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 10% 4%;
-    --sidebar-primary: 213 94% 53%;
+    --sidebar-foreground: 210 40% 10%;
+    --sidebar-primary: 213 96% 54%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 213 94% 92%;
-    --sidebar-accent-foreground: 213 94% 35%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 213 94% 53%;
+    --sidebar-accent: 213 96% 90%;
+    --sidebar-accent-foreground: 213 96% 35%;
+    --sidebar-border: 210 40% 90%;
+    --sidebar-ring: 213 96% 54%;
   }
 
   * {
@@ -117,8 +118,8 @@
     @apply rounded-full px-5 py-2 bg-primary text-primary-foreground font-medium transition-all duration-200 hover:shadow-md;
   }
   
-  .math-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+  .apple-gradient {
+    @apply bg-gradient-to-br from-primary/20 to-primary/5 backdrop-blur-sm;
   }
   
   .formula-text {

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardTutorial from '@/components/tutorial/DashboardTutorial';
 
@@ -15,9 +15,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
   return (
     <div className={`flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4 ${className}`}>
       <div>
-        <h1 className="text-3xl font-bold" id="dashboard-heading">Brains</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-bold" id="dashboard-heading">Brains</h1>
+          <Sparkles className="h-5 w-5 text-primary/70" />
+        </div>
         <p className="text-muted-foreground mt-1">
-          Manage and organize your team's brains
+          Manage and organize your intelligent workspaces
         </p>
       </div>
       
@@ -25,7 +28,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
         <DashboardTutorial className="mr-2" />
         <Button 
           onClick={() => navigate('/new-project')}
-          className="shadow-sm"
+          className="shadow-sm rounded-full"
           id="new-brain-button"
         >
           <Plus className="h-4 w-4 mr-2" />

@@ -1,5 +1,5 @@
 
-/* Modern clean styles to complement Tailwind */
+/* Modern clean styles inspired by Apple Intelligence */
 #root {
   max-width: 1400px;
   margin: 0 auto;
@@ -14,9 +14,16 @@
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Mathematical grid patterns */
-.math-pattern {
-  background-image: radial-gradient(circle, #f0f0f0 1px, transparent 1px);
+/* Subtle background grid */
+.subtle-grid {
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
+/* Apple-inspired glassmorphism */
+.apple-glass {
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+}
