@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,20 @@ const Landing = () => {
     avatar: "AP"
   }];
 
+  const featuredCards = [{
+    title: "Digital Workspace",
+    description: "Your virtual workspace for seamless knowledge management.",
+    image: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0"
+  }, {
+    title: "Insights & Analytics",
+    description: "Visualize your knowledge with powerful analytics.",
+    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71"
+  }, {
+    title: "Team Knowledge Base",
+    description: "Centralize team knowledge for better collaboration.",
+    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c"
+  }];
+
   return <div className="min-h-screen bg-background overflow-hidden">
       <LandingNavbar />
       
@@ -105,6 +120,48 @@ const Landing = () => {
             </div>
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
           </div>
+        </div>
+      </section>
+      
+      {/* Full Width Hero Image Section */}
+      <section className="large-image-section mb-20">
+        <img 
+          src="https://images.unsplash.com/photo-1542744173-05336fcc7ad4" 
+          alt="Bra3n in action" 
+          className="w-full h-full object-cover"
+        />
+        <div className="content-overlay">
+          <div className="max-w-xl">
+            <h2 className="text-4xl font-bold text-white mb-6">Transform How You Manage Knowledge</h2>
+            <p className="text-lg text-white/90 mb-8">
+              Bra3n helps you organize information, collaborate with your team, and retrieve insights instantly.
+            </p>
+            <Button onClick={() => navigate('/auth')} size="lg" className="rounded-full px-8">
+              Get Started
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Cards Section */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">Discover Bra3n's Features</h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Everything you need for effective knowledge management
+          </p>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-8">
+          {featuredCards.map((card, index) => (
+            <FeatureCard 
+              key={index} 
+              title={card.title} 
+              description={card.description} 
+              image={card.image}
+              imagePosition="top"
+            />
+          ))}
         </div>
       </section>
 
@@ -150,6 +207,32 @@ const Landing = () => {
               <h3 className="font-medium">Advanced AI processing</h3>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Background Image Feature Section */}
+      <section className="py-16 mb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <FeatureCard
+            title="Intelligent Document Processing"
+            description="Our AI automatically extracts key information from your documents"
+            image="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40"
+            imagePosition="background"
+            className="md:col-span-2 lg:col-span-1"
+          />
+          <FeatureCard
+            title="Seamless Team Collaboration"
+            description="Share knowledge and insights with your entire team"
+            image="https://images.unsplash.com/photo-1552664730-d307ca884978"
+            imagePosition="background"
+          />
+          <FeatureCard
+            title="Instant Knowledge Retrieval"
+            description="Find exactly what you need when you need it"
+            image="https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2"
+            imagePosition="background"
+            className="lg:col-span-1"
+          />
         </div>
       </section>
 
@@ -201,6 +284,43 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Full Width Showcase Section */}
+      <section className="large-image-section my-20">
+        <img 
+          src="https://images.unsplash.com/photo-1552664730-d307ca884978" 
+          alt="Team collaboration" 
+          className="w-full h-full object-cover"
+        />
+        <div className="content-overlay">
+          <div className="max-w-xl">
+            <h2 className="text-4xl font-bold text-white mb-6">Empower Your Team</h2>
+            <p className="text-lg text-white/90 mb-8">
+              Bra3n provides a central hub for all your team's knowledge, making collaboration seamless and productive.
+            </p>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-1 bg-white/20 rounded-full">
+                  <Check className="h-5 w-5 text-white" />
+                </div>
+                <p className="text-white">Centralized knowledge repository</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="p-1 bg-white/20 rounded-full">
+                  <Check className="h-5 w-5 text-white" />
+                </div>
+                <p className="text-white">Real-time collaboration capabilities</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="p-1 bg-white/20 rounded-full">
+                  <Check className="h-5 w-5 text-white" />
+                </div>
+                <p className="text-white">Secure access controls</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Why Choose Bra3n Section */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-muted/30 rounded-3xl">
         <div className="text-center mb-12">
@@ -212,6 +332,43 @@ const Landing = () => {
         
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {benefits.map((benefit, index) => <FeatureCard key={index} icon={benefit.icon} title={benefit.title} description={benefit.description} />)}
+        </div>
+      </section>
+
+      {/* Grid Image Gallery */}
+      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">Experience the Interface</h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Intuitive design for effortless knowledge management
+          </p>
+        </div>
+        
+        <div className="image-grid">
+          <div className="image-card">
+            <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998" alt="Dashboard" />
+            <div className="image-card-content">
+              <h3 className="text-lg font-medium">Intuitive Dashboard</h3>
+            </div>
+          </div>
+          <div className="image-card">
+            <img src="https://images.unsplash.com/photo-1522542550221-31fd19575a2d" alt="AI Chat" />
+            <div className="image-card-content">
+              <h3 className="text-lg font-medium">AI-Powered Chat</h3>
+            </div>
+          </div>
+          <div className="image-card">
+            <img src="https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d" alt="Document Viewer" />
+            <div className="image-card-content">
+              <h3 className="text-lg font-medium">Smart Document Viewer</h3>
+            </div>
+          </div>
+          <div className="image-card">
+            <img src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e" alt="Analytics" />
+            <div className="image-card-content">
+              <h3 className="text-lg font-medium">Knowledge Analytics</h3>
+            </div>
+          </div>
         </div>
       </section>
 
