@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Check, LineChart, Brain, MessageSquare } from 'lucide-react';
+import { Sparkles, ArrowRight, Check, Upload, Brain, MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import LandingNavbar from '@/components/landing/LandingNavbar';
 import FeatureCard from '@/components/landing/FeatureCard';
@@ -11,48 +11,61 @@ import TestimonialCard from '@/components/landing/TestimonialCard';
 const Landing = () => {
   const navigate = useNavigate();
 
-  const features = [
+  const howItWorks = [
     {
-      icon: <Brain className="h-10 w-10 text-primary" />,
-      title: "Intelligent Analysis",
-      description: "Advanced AI analyzes your projects to extract key insights and identify patterns. Our machine learning algorithms process your data in real-time, finding connections that humans might miss and delivering actionable intelligence to drive your projects forward.",
-      imageUrl: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
+      icon: <Upload className="h-10 w-10 text-primary" />,
+      title: "1️⃣ Upload Your Knowledge",
+      description: "📂 Add notes, PDFs, images, and updates into your Brain.",
+      imageUrl: "https://images.unsplash.com/photo-1507842217343-583bb7270b66",
       imagePosition: "right" as const
     },
     {
-      icon: <MessageSquare className="h-10 w-10 text-primary" />,
-      title: "Smart Collaboration",
-      description: "Seamlessly share insights with your team and collaborate in real-time. Our platform brings your entire team together, allowing for instant feedback, collaborative decision-making, and efficient knowledge sharing across departments and time zones.",
-      imageUrl: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
+      icon: <Brain className="h-10 w-10 text-primary" />,
+      title: "2️⃣ AI Summarizes for You",
+      description: "🧠 Bra3n instantly organizes and summarizes your content.",
+      imageUrl: "https://images.unsplash.com/photo-1522542550221-31fd19575a2d",
       imagePosition: "left" as const
     },
     {
-      icon: <LineChart className="h-10 w-10 text-primary" />,
-      title: "Data Visualization",
-      description: "Transform complex data into clear, actionable visualizations. See your project metrics in beautiful, intuitive charts and graphs that help you understand trends, identify opportunities, and communicate progress effectively to stakeholders.",
-      imageUrl: "https://images.unsplash.com/photo-1531297484001-80022131f5a1",
+      icon: <MessageSquare className="h-10 w-10 text-primary" />,
+      title: "3️⃣ Ask Anything, Get Answers",
+      description: "💬 Use our AI-powered chat to retrieve insights instantly. 👉 No more digging through messy docs – just ask and get what you need!",
+      imageUrl: "https://images.unsplash.com/photo-1565616424931-f04411bde104",
       imagePosition: "right" as const
+    }
+  ];
+
+  const audiences = [
+    {
+      name: "Consultants & Analysts",
+      description: "Keep research organized."
+    },
+    {
+      name: "Product Teams",
+      description: "Centralize insights & findings."
+    },
+    {
+      name: "Startups & Creators",
+      description: "Manage ideas & notes easily."
+    },
+    {
+      name: "Anyone who hates losing information",
+      description: "Find what you need when you need it."
     }
   ];
 
   const testimonials = [
     {
-      name: "Sarah Johnson",
+      name: "John D.",
       role: "Product Manager",
-      content: "Bra3n has revolutionized how our team analyzes project data. The insights are incredible.",
-      avatar: "SJ"
+      content: "Bra3n changed how my team works! Finding past notes is now instant.",
+      avatar: "JD"
     },
     {
-      name: "Michael Chen",
-      role: "Data Scientist",
-      content: "The intelligent analysis features save me hours of work every week. Highly recommended.",
-      avatar: "MC"
-    },
-    {
-      name: "Alex Rodriguez",
-      role: "Team Lead",
-      content: "Our collaboration efficiency improved by 40% after implementing Bra3n.",
-      avatar: "AR"
+      name: "Marie L.",
+      role: "Consultant",
+      content: "It's like having an AI assistant that actually knows my work.",
+      avatar: "ML"
     }
   ];
 
@@ -67,26 +80,21 @@ const Landing = () => {
           <div className="space-y-6 text-center md:text-left">
             <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
               <Sparkles className="h-4 w-4 mr-2" />
-              Intelligent Project Analysis
+              AI-Powered Knowledge Hub
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight">
-              Meet Bra<span className="text-primary">3</span>n
+              Bra<span className="text-primary">3</span>n
             </h1>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto md:mx-0">
-              The intelligent companion for your projects. Analyze, visualize, and collaborate with unparalleled efficiency.
+            <p className="text-2xl sm:text-3xl font-medium text-foreground mb-4">
+              Stop Searching. Start Knowing.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto md:mx-0">
+              Bra3n organizes your notes, PDFs, and documents into an AI-powered knowledge hub, where you can retrieve insights instantly.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-4">
               <Button onClick={() => navigate('/auth')} size="lg" className="rounded-full px-8 text-base shadow-sm w-full sm:w-auto">
-                Get Started
+                Try Bra3n for Free
                 <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-              <Button 
-                onClick={() => navigate('/dashboard')} 
-                variant="outline" 
-                size="lg"
-                className="rounded-full px-8 text-base w-full sm:w-auto"
-              >
-                View Demo
               </Button>
             </div>
           </div>
@@ -105,17 +113,17 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* How It Works Section */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-12 md:mb-16">
-          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">Intelligent Features</h2>
+          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">🔍 How It Works</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Powerful tools designed to enhance your productivity and decision making.
+            Three simple steps to transform how you manage information
           </p>
         </div>
         
         <div className="space-y-16">
-          {features.map((feature, index) => (
+          {howItWorks.map((feature, index) => (
             <FeatureCard 
               key={index} 
               icon={feature.icon} 
@@ -128,7 +136,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Benefits Section */}
+      {/* Why Choose Bra3n Section */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-muted/30 rounded-3xl">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="order-2 md:order-1">
@@ -141,13 +149,13 @@ const Landing = () => {
             />
           </div>
           <div className="space-y-6 order-1 md:order-2">
-            <h2 className="text-3xl sm:text-4xl font-semibold">Why Choose Bra3n?</h2>
+            <h2 className="text-3xl sm:text-4xl font-semibold">🎯 Why Choose Bra3n?</h2>
             <div className="space-y-4">
               {[
-                "Advanced AI that learns and adapts to your projects",
-                "Seamless collaboration with your entire team",
-                "Beautiful visualizations that tell the story of your data",
-                "Time-saving automation of repetitive analysis tasks"
+                "AI-Powered Search – Retrieve any info in seconds.",
+                "Smart Summaries – No more reading endless PDFs.",
+                "Team Collaboration – Share & work together seamlessly.",
+                "Secure & Private – Your data stays yours."
               ].map((benefit, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <div className="mt-1 bg-primary/10 rounded-full p-1">
@@ -157,24 +165,47 @@ const Landing = () => {
                 </div>
               ))}
             </div>
-            <Button onClick={() => navigate('/auth')} className="rounded-full mt-4">
-              Start Your Journey
-              <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
+            <div className="mt-6 p-4 bg-primary/5 rounded-lg border border-primary/10">
+              <p className="text-lg font-medium">🔹 "Like Notion, but with an AI brain."</p>
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* Who is Bra3n for Section */}
+      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">👀 Who is Bra3n for?</h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Perfect for teams and individuals who value their time and information
+          </p>
+        </div>
+        
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {audiences.map((audience, index) => (
+            <Card key={index} className="transition-all duration-300 hover:shadow-md">
+              <CardContent className="p-6 space-y-2">
+                <div className="p-3 bg-primary/10 inline-flex rounded-lg">
+                  <Check className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold">{audience.name}</h3>
+                <p className="text-muted-foreground">{audience.description}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </section>
 
       {/* Testimonials */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">What Our Users Say</h2>
+          <h2 className="text-3xl sm:text-4xl font-semibold mb-4">📢 What Users Say</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Discover how Bra3n is transforming the way teams work.
+            Don't take our word for it - hear from our users
           </p>
         </div>
         
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {testimonials.map((testimonial, index) => (
             <TestimonialCard
               key={index}
@@ -193,23 +224,16 @@ const Landing = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent -z-10" />
           <CardContent className="space-y-6 p-0">
             <Sparkles className="h-12 w-12 text-primary mx-auto" />
-            <h2 className="text-3xl sm:text-4xl font-semibold">Ready to experience the future?</h2>
+            <h2 className="text-3xl sm:text-4xl font-semibold">🚀 Ready to Try?</h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Join thousands of professionals who have already transformed their workflow with Bra3n.
+              💡 Start organizing your knowledge with AI today.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <div className="flex flex-col items-center gap-4 pt-4">
               <Button onClick={() => navigate('/auth')} size="lg" className="rounded-full px-8 text-base shadow-sm w-full sm:w-auto">
-                Get Started for Free
+                Try for Free
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
-              <Button 
-                onClick={() => window.open('#', '_blank')} 
-                variant="outline" 
-                size="lg"
-                className="rounded-full px-8 text-base w-full sm:w-auto"
-              >
-                Schedule Demo
-              </Button>
+              <p className="text-sm text-muted-foreground">No credit card required.</p>
             </div>
           </CardContent>
         </Card>
@@ -226,7 +250,7 @@ const Landing = () => {
               </span>
             </div>
             <p className="text-muted-foreground text-sm">
-              Intelligent analysis for your projects. Seamlessly organize, generate insights, and collaborate.
+              AI-powered knowledge hub for your projects. Organize, search, and retrieve insights instantly.
             </p>
           </div>
           
