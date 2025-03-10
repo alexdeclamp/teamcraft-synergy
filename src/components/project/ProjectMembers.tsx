@@ -8,27 +8,12 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { UserPlus, Users, MoreHorizontal, Plus } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import MemberInvite from '@/components/MemberInvite';
-
-interface ProjectMember {
-  id: string;
-  name: string;
-  email: string;
-  role: 'owner' | 'admin' | 'editor' | 'viewer';
-  avatar?: string;
-}
+import MembersList from './members/MembersList';
+import { ProjectMember } from '@/types/project';
 
 interface ProjectMembersProps {
   projectId: string;
@@ -175,74 +160,13 @@ const ProjectMembers: React.FC<ProjectMembersProps> = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {members.length === 0 ? (
-            <div className="text-center p-6 border border-dashed rounded-md">
-              <Users className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-muted-foreground">No members yet</p>
-              {userRole === 'owner' && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-4"
-                  onClick={handleAddMember}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Members
-                </Button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {members.map((member) => (
-                <div 
-                  key={member.id} 
-                  className="flex items-center justify-between p-3 rounded-md hover:bg-accent/40"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-8 w-8">
-                      {member.avatar && <AvatarImage src={member.avatar} alt={member.name} />}
-                      <AvatarFallback>
-                        {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium text-sm">{member.name}</p>
-                      <p className="text-xs text-muted-foreground">{member.role}</p>
-                    </div>
-                  </div>
-                  
-                  {userRole === 'owner' && member.role !== 'owner' && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-[160px]">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleUpdateMemberRole(member.id, 'admin')}>
-                          Make admin
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateMemberRole(member.id, 'editor')}>
-                          Make editor
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateMemberRole(member.id, 'viewer')}>
-                          Make viewer
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          className="text-red-600"
-                          onClick={() => handleRemoveMember(member.id)}
-                        >
-                          Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <MembersList 
+            members={members}
+            userRole={userRole}
+            onUpdateMemberRole={handleUpdateMemberRole}
+            onRemoveMember={handleRemoveMember}
+            onAddMember={handleAddMember}
+          />
           
           {showInviteDialog && (
             <MemberInvite 
