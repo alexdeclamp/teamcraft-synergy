@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Loader2, FileText } from 'lucide-react';
+import { Upload, Loader2, FileText, AlertCircle } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface DocumentUploadFormProps {
   files: File[];
@@ -53,33 +54,50 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
             className="file:mr-4 file:rounded-md file:border-0 file:font-medium file:bg-primary/10 file:text-primary hover:file:cursor-pointer w-full h-12 px-[8px] mx-px py-[6px]" 
           />
         </div>
-        <Button onClick={onUpload} disabled={files.length === 0 || isUploading} className="whitespace-nowrap w-full sm:w-auto h-12">
-          {isUploading ? <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Uploading...
-            </> : <>
-              <Upload className="mr-2 h-4 w-4" />
-              Upload PDF{files.length > 1 ? 's' : ''}
-            </>}
-        </Button>
       </div>
       
       {files.length > 0 && (
-        <div className="space-y-2">
-          {files.map((file, index) => (
-            <div key={index} className="flex items-center text-sm text-muted-foreground">
-              <FileText className="mr-2 h-4 w-4" />
-              <span className="truncate max-w-[300px]">{file.name}</span>
-              <span className="ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
-            </div>
-          ))}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            {files.map((file, index) => (
+              <div key={index} className="flex items-center text-sm text-muted-foreground">
+                <FileText className="mr-2 h-4 w-4" />
+                <span className="truncate max-w-[300px]">{file.name}</span>
+                <span className="ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
+              </div>
+            ))}
+          </div>
+          
+          {files.length > 0 && (
+            <Alert variant="default" className="bg-amber-50 border-amber-200">
+              <AlertCircle className="h-4 w-4 text-amber-600" />
+              <AlertDescription>
+                Click the "Upload PDF{files.length > 1 ? 's' : ''}" button below to complete the upload process.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <Button 
+            onClick={onUpload} 
+            disabled={files.length === 0 || isUploading} 
+            className="whitespace-nowrap w-full h-12 text-base"
+            size="lg"
+          >
+            {isUploading ? <>
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              Uploading...
+            </> : <>
+              <Upload className="mr-2 h-5 w-5" />
+              Upload PDF{files.length > 1 ? 's' : ''}
+            </>}
+          </Button>
         </div>
       )}
 
       {onModelChange && (
-        <div className="flex justify-end">
-          <Select value={model || 'claude'} onValueChange={onModelChange}>
-            <SelectTrigger className="w-[180px]">
+        <div className="flex justify-end mt-2">
+          <Select value={model || 'claude'} onValueChange={(value: 'claude' | 'openai') => onModelChange(value)}>
+            <SelectTrigger className="w-[180px] h-8">
               <SelectValue placeholder="Select AI Model" />
             </SelectTrigger>
             <SelectContent>
