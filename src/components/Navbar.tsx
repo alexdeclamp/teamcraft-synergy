@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { cn } from "@/lib/utils";
@@ -50,7 +51,7 @@ const Navbar = () => {
           <Logo />
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center space-x-6">
           <NavLinks />
           <div className="hidden md:block">
             <ProfileButton onClick={() => setProfileDialogOpen(true)} />

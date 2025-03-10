@@ -16,7 +16,7 @@ const NavLinks = () => {
   ];
 
   return (
-    <nav className="hidden md:flex items-center justify-center gap-2">
+    <nav className="hidden md:flex items-center space-x-4">
       {navLinks.map((link) => (
         <Link key={link.path} to={link.path}>
           <Button
