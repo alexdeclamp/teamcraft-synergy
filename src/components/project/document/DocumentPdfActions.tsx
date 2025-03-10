@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download } from 'lucide-react';
+import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -54,11 +54,34 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
         duration: 3000,
       });
       
+      console.log('Calling extract-pdf-text edge function with URL:', pdfUrl.substring(0, 50) + '...');
+      
+      // First check if the PDF is accessible
+      try {
+        const urlCheck = await fetch(pdfUrl, { method: 'HEAD' });
+        if (!urlCheck.ok) {
+          throw new Error(`PDF URL is not accessible: ${urlCheck.status} ${urlCheck.statusText}`);
+        }
+      } catch (urlError: any) {
+        console.error('PDF URL check failed:', urlError);
+        throw new Error(`Cannot access PDF: ${urlError.message}`);
+      }
+      
+      // Now call the edge function
       const { data, error } = await supabase.functions.invoke('extract-pdf-text', {
         body: { pdfUrl }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(`Failed to send a request to the Edge Function: ${error.message}`);
+      }
+      
+      console.log('Edge function response:', data);
+      
+      if (!data || data.error) {
+        throw new Error(data?.error || 'Failed to extract text from PDF');
+      }
       
       if (!data.success || !data.text) {
         throw new Error(data.error || 'Failed to extract text from PDF');
@@ -66,7 +89,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
       
       setExtractedText(data.text);
       setPageCount(data.pageCount || 0);
-      toast.success(`Successfully extracted text from ${pageCount || 0} pages`);
+      toast.success(`Successfully extracted text from ${data.pageCount || 0} pages`);
     } catch (error: any) {
       console.error('Error extracting text:', error);
       const errorMessage = error.message || 'Failed to extract text from the PDF';
@@ -179,12 +202,20 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
               </div>
             ) : extractionError ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
+                <AlertCircle className="h-12 w-12 text-destructive mb-4" />
                 <div className="text-destructive mb-4">{extractionError}</div>
+                <div className="text-sm text-muted-foreground mb-6 max-w-md">
+                  This could be due to network issues, an invalid PDF format, or the PDF might be password-protected.
+                </div>
                 <Button onClick={handleRetryExtraction}>Retry Extraction</Button>
               </div>
             ) : (
               <div className="whitespace-pre-wrap font-mono text-sm">
-                {extractedText}
+                {extractedText || (
+                  <div className="text-center text-muted-foreground py-8">
+                    No text content was extracted from this PDF. It might be an image-based PDF.
+                  </div>
+                )}
               </div>
             )}
           </ScrollArea>

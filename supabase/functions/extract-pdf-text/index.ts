@@ -9,28 +9,47 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("Edge function received request", { method: req.method, url: req.url });
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("Handling OPTIONS request for CORS preflight");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { pdfUrl } = await req.json();
+    // Parse request body
+    let body;
+    try {
+      body = await req.json();
+      console.log("Request body parsed successfully", { pdfUrl: body.pdfUrl?.substring(0, 50) + "..." });
+    } catch (e) {
+      console.error("Failed to parse request body", e);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { pdfUrl } = body;
     
     if (!pdfUrl) {
+      console.error("PDF URL is missing in request");
       return new Response(
         JSON.stringify({ error: 'PDF URL is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    console.log(`Starting to extract text from PDF: ${pdfUrl}`);
+    console.log(`Starting to extract text from PDF: ${pdfUrl.substring(0, 50)}...`);
     
     try {
       // Fetch the PDF with timeout and retry logic
       const response = await fetchWithRetry(pdfUrl, 3);
       
       if (!response.ok) {
+        const errorText = await response.text().catch(() => "Could not read error response");
+        console.error(`Failed to fetch PDF: ${response.status} ${response.statusText}`, errorText);
         throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`);
       }
       
@@ -98,12 +117,19 @@ async function fetchWithRetry(url: string, maxRetries: number): Promise<Response
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`Fetch attempt ${attempt}/${maxRetries} for ${url}`);
+      console.log(`Fetch attempt ${attempt}/${maxRetries} for ${url.substring(0, 50)}...`);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
       try {
-        const response = await fetch(url, { signal: controller.signal });
+        const response = await fetch(url, { 
+          signal: controller.signal,
+          headers: {
+            // Add additional headers that might be needed for fetching from storage
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
         clearTimeout(timeoutId);
         return response;
       } catch (err) {
