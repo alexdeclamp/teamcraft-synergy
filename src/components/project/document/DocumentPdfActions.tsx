@@ -102,15 +102,25 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     try {
       console.log('Sending message to chat-with-pdf function with document context length:', extractedText.length);
       
-      const { data, error } = await supabase.functions.invoke('chat-with-pdf', {
+      const trimmedContext = extractedText.length > 100000 
+        ? extractedText.substring(0, 100000) + "... [text truncated due to size]" 
+        : extractedText;
+      
+      const response = await supabase.functions.invoke('chat-with-pdf', {
         body: {
           pdfUrl,
           fileName,
           message: userMessage,
-          documentContext: extractedText,
+          documentContext: trimmedContext,
           model: 'openai'
+        },
+        // Add timeout to prevent hanging requests
+        options: {
+          timeout: 60000 // 60 seconds timeout
         }
       });
+      
+      const { data, error } = response;
       
       if (error) {
         console.error('Function invocation error:', error);
@@ -131,7 +141,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
       
       setChatMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: "I'm sorry, I encountered an error processing your request. Please try again." 
+        content: "I'm sorry, I encountered an error processing your request. Please try extracting the text again or with a smaller document." 
       }]);
     } finally {
       setIsChatLoading(false);

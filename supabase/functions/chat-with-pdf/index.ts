@@ -51,17 +51,22 @@ async function extractTextFromPdf(url) {
 }
 
 serve(async (req) => {
+  console.log("Edge function received request");
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log("Handling OPTIONS request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { pdfUrl, fileName, message, documentContext, model = 'openai' } = await req.json();
+    const requestBody = await req.json();
+    const { pdfUrl, fileName, message, documentContext, model = 'openai' } = requestBody;
     
     console.log(`Chat with PDF request received for: ${fileName || 'unnamed document'}`);
     console.log(`Using model: ${model}`);
     console.log(`User message: ${message}`);
+    console.log(`Document context length: ${documentContext ? documentContext.length : 0} characters`);
     
     if (!message || message.trim() === '') {
       return new Response(
@@ -187,7 +192,7 @@ serve(async (req) => {
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
-      } else {
+      } else if (openAIApiKey) {
         // Call OpenAI API
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -227,6 +232,8 @@ serve(async (req) => {
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      } else {
+        throw new Error('No valid API key available for AI models');
       }
       
     } catch (apiError) {
