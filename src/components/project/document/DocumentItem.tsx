@@ -124,21 +124,13 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
   };
 
   const handleChatWithPdf = () => {
-    if (!isPdf) {
-      toast.error('Chat is only available for PDF files');
-      return;
-    }
-    
-    setIsChatOpen(true);
+    // Disabled for now - show work in progress message
+    toast.info('Chat with PDF feature is coming soon!');
   };
 
   const handleAskQuestion = () => {
-    if (!isPdf) {
-      toast.error('Question feature is only available for PDF files');
-      return;
-    }
-    
-    setIsQuestionOpen(true);
+    // Disabled for now - show work in progress message
+    toast.info('Ask Question feature is coming soon!');
   };
 
   return (
@@ -173,21 +165,23 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 opacity-70"
                 onClick={handleAskQuestion}
               >
                 <HelpCircle className="h-4 w-4" />
                 <span className="hidden sm:inline">Ask Question</span>
+                <span className="hidden sm:inline text-xs ml-1">(Coming Soon)</span>
               </Button>
               
               <Button 
                 variant="default" 
                 size="sm" 
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 opacity-70"
                 onClick={handleChatWithPdf}
               >
                 <MessageSquare className="h-4 w-4" />
                 <span className="sm:inline">Chat</span>
+                <span className="hidden sm:inline text-xs ml-1">(Coming Soon)</span>
               </Button>
             </>
           )}
