@@ -16,8 +16,8 @@ const ProjectTabsNavigation: React.FC<ProjectTabsNavigationProps> = ({
   onTabChange
 }) => {
   return (
-    <div className="flex justify-between items-center mb-2">
-      <TabsList className="bg-muted/50">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+      <TabsList className="bg-muted/50 w-full sm:w-auto overflow-x-auto">
         <TabsTrigger value="overview" id="tab-overview">Overview</TabsTrigger>
         <TabsTrigger value="notes" id="tab-notes">Notes</TabsTrigger>
         <TabsTrigger value="updates" id="tab-updates">Updates</TabsTrigger>
@@ -29,8 +29,8 @@ const ProjectTabsNavigation: React.FC<ProjectTabsNavigationProps> = ({
         )}
       </TabsList>
       
-      <div className="flex items-center space-x-2">
-        <StartOnboardingButton className="mr-2" />
+      <div className="flex items-center gap-2">
+        <StartOnboardingButton />
         <ProjectTutorial activeTab={activeTab} />
       </div>
     </div>

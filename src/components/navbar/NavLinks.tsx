@@ -16,7 +16,7 @@ const NavLinks = () => {
   ];
 
   return (
-    <>
+    <div className="flex items-center gap-2">
       {navLinks.map((link) => (
         <Link key={link.path} to={link.path}>
           <Button
@@ -29,7 +29,7 @@ const NavLinks = () => {
           </Button>
         </Link>
       ))}
-    </>
+    </div>
   );
 };
 

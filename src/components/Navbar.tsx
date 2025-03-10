@@ -50,9 +50,8 @@ const Navbar = () => {
         <Logo />
 
         {/* Desktop Menu */}
-        <nav className="hidden md:flex items-center space-x-1">
+        <nav className="hidden md:flex items-center gap-4">
           <NavLinks />
-          
           <ProfileButton onClick={() => setProfileDialogOpen(true)} />
         </nav>
 

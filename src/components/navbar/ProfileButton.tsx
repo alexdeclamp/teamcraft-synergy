@@ -27,14 +27,14 @@ const ProfileButton = ({ onClick }: ProfileButtonProps) => {
   return (
     <Button 
       variant="outline" 
-      size="sm" 
-      className="ml-2"
+      size="sm"
       onClick={onClick}
+      className="flex items-center gap-2"
     >
-      <Avatar className="h-5 w-5 mr-2">
+      <Avatar className="h-5 w-5">
         <AvatarFallback>{getInitials()}</AvatarFallback>
       </Avatar>
-      Profile
+      <span>Profile</span>
     </Button>
   );
 };
