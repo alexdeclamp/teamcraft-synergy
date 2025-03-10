@@ -70,13 +70,13 @@ const NoteContentDisplay: React.FC<NoteContentDisplayProps> = ({ content, isPrev
   let displayContent = content;
   if (isPreview) {
     const firstParagraph = content.split('\n')[0] || '';
-    displayContent = firstParagraph.length > 300 
-      ? firstParagraph.substring(0, 300) + '...'
+    displayContent = firstParagraph.length > 500 
+      ? firstParagraph.substring(0, 500) + '...'
       : firstParagraph;
   }
   
   return (
-    <div className={`whitespace-pre-wrap prose-sm max-w-none leading-relaxed ${isPreview ? 'line-clamp-2 text-[8px]' : ''}`}>
+    <div className={`whitespace-pre-wrap prose-sm max-w-none leading-relaxed ${isPreview ? 'line-clamp-2 text-[6px]' : ''}`}>
       {formatNoteContent(displayContent)}
     </div>
   );

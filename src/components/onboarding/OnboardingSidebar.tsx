@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboarding } from '@/contexts/OnboardingContext';
@@ -134,7 +135,7 @@ const OnboardingSidebar: React.FC = () => {
             onClick={() => skipOnboarding()}
             className="text-sm"
           >
-            Skip Tutorial
+            Skip Onboarding
           </Button>
           {currentStepIndex < steps.length - 1 && (
             <Button 

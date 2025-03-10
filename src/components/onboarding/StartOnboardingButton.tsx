@@ -36,11 +36,11 @@ const StartOnboardingButton: React.FC<StartOnboardingButtonProps> = ({
             className={className}
           >
             <Sparkles className="h-4 w-4 mr-1" />
-            Tutorial
+            Onboarding
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Start the interactive tutorial</p>
+          <p>Start the interactive onboarding</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

@@ -30,13 +30,13 @@ const WelcomeDialog: React.FC = () => {
     }
   }, []);
   
-  const handleStartTutorial = () => {
+  const handleStartOnboarding = () => {
     localStorage.setItem('hasSeenWelcome', 'true');
     setIsOpen(false);
     startOnboarding();
   };
   
-  const handleSkipTutorial = () => {
+  const handleSkipOnboarding = () => {
     localStorage.setItem('hasSeenWelcome', 'true');
     setIsOpen(false);
   };
@@ -64,10 +64,10 @@ const WelcomeDialog: React.FC = () => {
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={handleSkipTutorial}>
-            Skip Tutorial
+          <Button variant="outline" onClick={handleSkipOnboarding}>
+            Skip Onboarding
           </Button>
-          <Button onClick={handleStartTutorial}>
+          <Button onClick={handleStartOnboarding}>
             Start Tour
           </Button>
         </DialogFooter>
