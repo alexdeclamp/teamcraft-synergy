@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { FileText, User, Clock, Edit, Trash2 } from 'lucide-react';
 import NoteSummaryButton from '../NoteSummaryButton';
 import { Note } from './types';
-import { formatNoteContent } from './NotesFormatter';
+import NoteContentDisplay from './NotesFormatter';
 
 interface NotesCardProps {
   note: Note;
@@ -31,24 +31,6 @@ const NotesCard: React.FC<NotesCardProps> = ({
   onDelete,
   formatDate
 }) => {
-  // Function to truncate and format preview content
-  const renderPreviewContent = () => {
-    if (!note.content) return <span className="italic text-muted-foreground">No content</span>;
-    
-    // Create a temporary div to hold formatted content
-    const tempDiv = document.createElement('div');
-    const contentNodes = formatNoteContent(note.content);
-    
-    // Use first 2 elements or portions of text for preview
-    const previewContent = contentNodes.slice(0, 2);
-    
-    return (
-      <div className="line-clamp-2 text-sm">
-        {previewContent}
-      </div>
-    );
-  };
-  
   return (
     <Card 
       key={note.id} 
@@ -64,7 +46,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
             </div>
             
             <div className="mb-3 text-muted-foreground">
-              {renderPreviewContent()}
+              <NoteContentDisplay content={note.content} isPreview={true} />
             </div>
             
             {note.tags && note.tags.length > 0 && (

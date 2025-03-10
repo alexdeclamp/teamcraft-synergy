@@ -59,16 +59,26 @@ export const formatNoteContent = (text: string) => {
 // React component wrapper for displaying formatted note content
 interface NoteContentDisplayProps {
   content: string | null;
+  isPreview?: boolean;
 }
 
-const NoteContentDisplay: React.FC<NoteContentDisplayProps> = ({ content }) => {
+const NoteContentDisplay: React.FC<NoteContentDisplayProps> = ({ content, isPreview = false }) => {
   if (!content) {
     return <div className="text-muted-foreground italic">No content provided.</div>;
   }
   
+  // For preview, just show first 100 characters max
+  let displayContent = content;
+  if (isPreview) {
+    const firstParagraph = content.split('\n')[0] || '';
+    displayContent = firstParagraph.length > 120 
+      ? firstParagraph.substring(0, 120) + '...'
+      : firstParagraph;
+  }
+  
   return (
-    <div className="whitespace-pre-wrap prose-sm max-w-none leading-relaxed">
-      {formatNoteContent(content)}
+    <div className={`whitespace-pre-wrap prose-sm max-w-none leading-relaxed ${isPreview ? 'line-clamp-2' : ''}`}>
+      {formatNoteContent(displayContent)}
     </div>
   );
 };
