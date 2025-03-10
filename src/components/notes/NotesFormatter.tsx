@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const formatNoteContent = (text: string) => {
@@ -56,7 +55,6 @@ export const formatNoteContent = (text: string) => {
   });
 };
 
-// React component wrapper for displaying formatted note content
 interface NoteContentDisplayProps {
   content: string | null;
   isPreview?: boolean;
@@ -67,17 +65,17 @@ const NoteContentDisplay: React.FC<NoteContentDisplayProps> = ({ content, isPrev
     return <div className="text-muted-foreground italic">No content provided.</div>;
   }
   
-  // For preview, show a much shorter excerpt
+  // For preview, show more content but with smaller font
   let displayContent = content;
   if (isPreview) {
     const firstParagraph = content.split('\n')[0] || '';
-    displayContent = firstParagraph.length > 60 
-      ? firstParagraph.substring(0, 60) + '...'
+    displayContent = firstParagraph.length > 150 
+      ? firstParagraph.substring(0, 150) + '...'
       : firstParagraph;
   }
   
   return (
-    <div className={`whitespace-pre-wrap prose-sm max-w-none leading-relaxed ${isPreview ? 'line-clamp-1 text-xs' : ''}`}>
+    <div className={`whitespace-pre-wrap prose-sm max-w-none leading-relaxed ${isPreview ? 'line-clamp-2 text-[11px]' : ''}`}>
       {formatNoteContent(displayContent)}
     </div>
   );
