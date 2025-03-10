@@ -27,6 +27,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { toast } from 'sonner';
 
 interface DocumentsListProps {
   documents: any[];
@@ -69,6 +70,18 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
 
   const handleGenerateSummaries = async () => {
     const selectedDocuments = documents.filter(doc => selectedDocs.includes(doc.id));
+    
+    // Warn the user if they're trying to process too many documents at once
+    if (selectedDocuments.length > 10) {
+      const confirmed = confirm(
+        `You are about to process ${selectedDocuments.length} documents, which might take a while ` +
+        `and could cause some documents to fail. It's recommended to process 10 or fewer documents at once. ` +
+        `Do you want to continue anyway?`
+      );
+      
+      if (!confirmed) return;
+    }
+    
     await summarizeDocuments(selectedDocuments);
     // Don't clear selected docs immediately in case user wants to retry failed ones
     if (errors?.length === 0) {
@@ -131,7 +144,7 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
               className="h-8 text-destructive border-destructive hover:bg-destructive/10"
             >
               <AlertCircle className="h-4 w-4 mr-1" />
-              View Errors
+              View Errors ({errors.length})
             </Button>
           )}
           
@@ -150,28 +163,35 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button 
-                      variant="default" 
-                      size="sm" 
-                      disabled={isProcessing} 
-                      onClick={handleGenerateSummaries}
-                      className="h-8"
-                    >
-                      {isProcessing ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="h-4 w-4 mr-2" />
-                          Summarize Selected
-                        </>
-                      )}
-                    </Button>
+                    <div> {/* Wrapper div to make disabled button work with tooltip */}
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        disabled={isProcessing} 
+                        onClick={handleGenerateSummaries}
+                        className="h-8"
+                      >
+                        {isProcessing ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-4 w-4 mr-2" />
+                            Summarize Selected
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Generate summaries and save them as notes</p>
+                    {selectedDocs.length > 10 && (
+                      <p className="text-yellow-500 text-xs mt-1">
+                        Processing many documents at once may cause failures
+                      </p>
+                    )}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -184,7 +204,11 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
         <div className="mb-4">
           <Progress value={progress} className="h-2 mb-1" />
           <p className="text-xs text-muted-foreground text-center">
-            Generating summaries and creating notes... {progress}%
+            {progress < 20 && "Preparing documents..."}
+            {progress >= 20 && progress < 70 && "Generating summaries..."}
+            {progress >= 70 && progress < 90 && "Creating notes..."}
+            {progress >= 90 && "Finalizing..."}
+            {" "}{progress}%
           </p>
         </div>
       )}
@@ -231,7 +255,21 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
               ))}
             </ul>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex justify-between">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                // Mark only the failed documents for retry
+                const failedDocIds = errors
+                  .map(err => documents.find(doc => doc.file_name === err.fileName)?.id)
+                  .filter(Boolean) as string[];
+                setSelectedDocs(failedDocIds);
+                setShowErrorDialog(false);
+                toast.info(`Selected ${failedDocIds.length} failed document(s) for retry`);
+              }}
+            >
+              Select Failed for Retry
+            </Button>
             <Button onClick={() => setShowErrorDialog(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
