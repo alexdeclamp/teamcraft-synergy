@@ -1,8 +1,6 @@
-
-import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, MessageSquare, FileText, Image, Bell, Users, Brain } from 'lucide-react';
+import React from 'react';
+import { MessageSquare, FileText, Image, Bell, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 const features = [
   {
@@ -337,22 +335,6 @@ const features = [
 ];
 
 const KeyFeaturesSection: React.FC = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
-  
-  const nextSlide = () => {
-    setActiveIndex((prev) => (prev === features.length - 1 ? 0 : prev + 1));
-  };
-  
-  const prevSlide = () => {
-    setActiveIndex((prev) => (prev === 0 ? features.length - 1 : prev - 1));
-  };
-  
-  const goToSlide = (index: number) => {
-    setActiveIndex(index);
-  };
-  
-  const activeFeature = features[activeIndex];
-  
   return (
     <section id="features" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-accent/10 rounded-lg">
       <div className="mb-12 text-center">
@@ -362,55 +344,32 @@ const KeyFeaturesSection: React.FC = () => {
         </p>
       </div>
       
-      <div className="relative">
-        <div className="grid md:grid-cols-2 gap-8 items-center">
-          <div className="space-y-6">
-            <div className="inline-flex p-2 rounded-full bg-primary/10">
-              {activeFeature.icon}
-            </div>
-            
-            <h3 className="text-2xl font-semibold">{activeFeature.title}</h3>
-            <p className="text-muted-foreground">{activeFeature.description}</p>
-            
-            <div className="flex space-x-2 pt-4">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={prevSlide}
-                aria-label="Previous feature"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
+      <div className="space-y-24">
+        {features.map((feature, index) => (
+          <div 
+            key={feature.id}
+            className={cn(
+              "grid md:grid-cols-2 gap-8 items-center",
+              index % 2 === 1 && "md:flex-row-reverse"
+            )}
+          >
+            <div className={cn("space-y-6", index % 2 === 1 && "md:order-2")}>
+              <div className="inline-flex p-2 rounded-full bg-primary/10">
+                {feature.icon}
+              </div>
               
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={nextSlide}
-                aria-label="Next feature"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
+              <h3 className="text-2xl font-semibold">{feature.title}</h3>
+              <p className="text-muted-foreground">{feature.description}</p>
+            </div>
+            
+            <div className={cn(
+              "relative rounded-xl overflow-hidden shadow-xl bg-background/50 p-4 border",
+              index % 2 === 1 && "md:order-1"
+            )}>
+              {feature.mockup}
             </div>
           </div>
-          
-          <div className="relative rounded-xl overflow-hidden shadow-xl bg-background/50 p-4 border">
-            {activeFeature.mockup}
-          </div>
-        </div>
-        
-        <div className="flex justify-center space-x-2 mt-8">
-          {features.map((feature, index) => (
-            <button
-              key={feature.id}
-              onClick={() => goToSlide(index)}
-              className={cn(
-                "w-3 h-3 rounded-full transition-colors",
-                index === activeIndex ? "bg-primary" : "bg-primary/20"
-              )}
-              aria-label={`Go to feature ${index + 1}`}
-            />
-          ))}
-        </div>
+        ))}
       </div>
     </section>
   );
