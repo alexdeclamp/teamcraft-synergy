@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { UseCaseCategory } from './use-case-gallery/types';
-import { useCasesData, categories } from './use-case-gallery/use-cases-data';
+import { categories } from './use-case-gallery/categories';
+import { useCasesData } from './use-case-gallery/use-cases-data';
 import CategoryFilter from './use-case-gallery/CategoryFilter';
 import UseCaseGrid from './use-case-gallery/UseCaseGrid';
 
