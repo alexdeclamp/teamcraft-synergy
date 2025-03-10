@@ -10,17 +10,8 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from '@/components/ui/label';
-import { Loader2 } from 'lucide-react';
+import { findUserByEmail } from '@/utils/memberUtils';
+import MemberInviteForm from '@/components/member/MemberInviteForm';
 
 interface MemberInviteProps {
   projectId: string;
@@ -39,58 +30,6 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
   const [role, setRole] = useState('viewer');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const findUserByEmail = async (email: string) => {
-    console.log('Looking up user by email:', email);
-    
-    try {
-      // First check profiles table for the email
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .ilike('email', email.toLowerCase());
-
-      if (profilesError) {
-        console.error('Error querying profiles:', profilesError);
-        throw profilesError;
-      }
-      
-      console.log('Profiles search results:', profiles);
-      
-      // Find the first matching profile
-      const matchingProfile = profiles?.find(profile => 
-        profile.email?.toLowerCase() === email.toLowerCase()
-      );
-      
-      if (matchingProfile?.id) {
-        console.log('User found in profiles:', matchingProfile);
-        return matchingProfile.id;
-      }
-      
-      // If we couldn't find the user in profiles, try using our RPC function
-      const { data: authProfiles, error: authError } = await supabase
-        .rpc('get_user_by_email', { 
-          lookup_email: email.toLowerCase() 
-        });
-      
-      if (authError) {
-        console.error('Error with RPC function:', authError);
-        throw authError;
-      } 
-      
-      console.log('Auth profiles from RPC:', authProfiles);
-      
-      if (authProfiles && authProfiles.length > 0) {
-        console.log('User found via RPC:', authProfiles[0]);
-        return authProfiles[0].id;
-      }
-      
-      throw new Error('User with this email not found. Please ensure they have created an account first.');
-    } catch (error) {
-      console.error('Error finding user:', error);
-      throw error;
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -160,59 +99,16 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email address</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="colleague@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select
-              value={role}
-              onValueChange={setRole}
-              disabled={loading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="editor">Editor</SelectItem>
-                <SelectItem value="viewer">Viewer</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Admins can manage members, Editors can edit content, Viewers can only view
-            </p>
-          </div>
-          
-          {error && (
-            <p className="text-sm text-red-500">{error}</p>
-          )}
-          
-          <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Invite Member
-            </Button>
-          </DialogFooter>
-        </form>
+        <MemberInviteForm
+          email={email}
+          setEmail={setEmail}
+          role={role}
+          setRole={setRole}
+          loading={loading}
+          error={error}
+          onSubmit={handleSubmit}
+          onCancel={onClose}
+        />
       </DialogContent>
     </Dialog>
   );
