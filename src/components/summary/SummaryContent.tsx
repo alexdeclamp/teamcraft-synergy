@@ -25,8 +25,8 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
 
   // Format the summary content and handle markdown formatting
   const formatSummaryContent = (content: string) => {
-    // Format markdown-style formatting by converting to HTML
-    const formattedText = content
+    // Format markdown-style formatting
+    let formattedText = content
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
       .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
       .replace(/__(.*?)__/g, '<u>$1</u>'); // Underline
@@ -53,17 +53,25 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
               const cells = line.split('|').filter(cell => cell.trim() !== '');
               return (
                 <div key={index} className="grid grid-cols-12 gap-2 py-1 border-b border-border/50">
-                  {cells.map((cell, cellIndex) => (
-                    <div 
-                      key={`${index}-${cellIndex}`}
-                      className={cn(
-                        "px-2", 
-                        cellIndex === 0 ? "col-span-3 font-medium" : "col-span-9/cells.length",
-                        index === 0 ? "font-semibold" : ""
-                      )}
-                      dangerouslySetInnerHTML={{ __html: cell.trim() }}
-                    />
-                  ))}
+                  {cells.map((cell, cellIndex) => {
+                    // Apply markdown formatting to cell content
+                    const formattedCell = cell.trim()
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                      .replace(/__(.*?)__/g, '<u>$1</u>');
+                    
+                    return (
+                      <div 
+                        key={`${index}-${cellIndex}`}
+                        className={cn(
+                          "px-2", 
+                          cellIndex === 0 ? "col-span-3 font-medium" : "col-span-9/cells.length",
+                          index === 0 ? "font-semibold" : ""
+                        )}
+                        dangerouslySetInnerHTML={{ __html: formattedCell }}
+                      />
+                    );
+                  })}
                 </div>
               );
             } 
@@ -73,25 +81,44 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
               if (line.trim().startsWith('#')) {
                 const level = line.trim().match(/^#+/)[0].length;
                 const text = line.trim().replace(/^#+\s*/, '');
+                // Apply markdown formatting to heading text
+                const formattedHeading = text
+                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                  .replace(/__(.*?)__/g, '<u>$1</u>');
+                
                 const headingClass = cn(
                   "font-semibold", 
                   level === 1 ? "text-xl mt-4 mb-2" : 
                   level === 2 ? "text-lg mt-3 mb-2" : 
                   "text-base mt-2 mb-1"
                 );
-                return <div key={index} className={headingClass} dangerouslySetInnerHTML={{ __html: text }} />;
+                return <div key={index} className={headingClass} dangerouslySetInnerHTML={{ __html: formattedHeading }} />;
               }
               // Check if this is a list item
               else if (line.trim().match(/^[-*•]\s/)) {
+                const listItemText = line.trim().replace(/^[-*•]\s/, '');
+                // Apply markdown formatting to list item text
+                const formattedListItem = listItemText
+                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                  .replace(/__(.*?)__/g, '<u>$1</u>');
+                
                 return (
                   <div key={index} className="ml-4 flex">
                     <span className="mr-2">•</span>
-                    <span dangerouslySetInnerHTML={{ __html: line.trim().replace(/^[-*•]\s/, '') }} />
+                    <span dangerouslySetInnerHTML={{ __html: formattedListItem }} />
                   </div>
                 );
               }
-              // Regular paragraph with formatted content
-              return <p key={index} className="my-1" dangerouslySetInnerHTML={{ __html: formattedText }} />;
+              // Format regular paragraph with formatted content
+              // Apply separate formatting for this specific line
+              const lineFormatted = line
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/__(.*?)__/g, '<u>$1</u>');
+              
+              return <p key={index} className="my-1" dangerouslySetInnerHTML={{ __html: lineFormatted }} />;
             }
             return null;
           }).filter(Boolean)}
@@ -99,8 +126,16 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
       );
     }
     
-    // Default rendering with formatted content
-    return <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formattedText.replace(/\n/g, '<br/>') }} />;
+    // For non-tabular content, maintain the whitespace and line breaks
+    // Process each line separately to preserve formatting
+    const formattedLines = content.split('\n').map(line => {
+      return line
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/__(.*?)__/g, '<u>$1</u>');
+    }).join('<br/>');
+    
+    return <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formattedLines }} />;
   };
 
   // Only show the summary content if we explicitly know we have a summary

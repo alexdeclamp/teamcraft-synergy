@@ -155,6 +155,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
             isCreatingNote={isCreatingNote}
             projectId={projectId}
             hasSummary={hasSummary}
+            buttonText="Save as Note"
           />
         </DialogFooter>
       </DialogContent>
