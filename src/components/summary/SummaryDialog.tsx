@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
+  DialogClose
 } from "@/components/ui/dialog";
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,8 +12,9 @@ import SummaryDialogHeader from './SummaryDialogHeader';
 import SummaryContent from './SummaryContent';
 import SummaryFeedback from './SummaryFeedback';
 import SummaryActions from './SummaryActions';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, X } from 'lucide-react';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 interface SummaryDialogProps {
   isOpen: boolean;
@@ -89,7 +90,6 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
       return;
     }
 
-    // Prevent creating a note if it's already saved
     if (localHasSavedVersion) {
       toast.info("This summary is already saved as a note");
       return;
@@ -98,12 +98,10 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     try {
       setIsCreatingNote(true);
       
-      // For PDFs, use a specific title format that we can query later
       const noteTitle = imageName 
         ? `Summary: ${imageName}` 
         : "Document Summary";
       
-      // Create source document reference if we have a URL
       const sourceDocument = (sourceUrl && imageName) ? {
         type: sourceType,
         url: sourceUrl,
@@ -142,6 +140,15 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
       if (!open) onClose();
     }}>
       <DialogContent className="sm:max-w-[750px] max-h-[85vh] flex flex-col">
+        <div className="absolute right-4 top-4">
+          <DialogClose asChild>
+            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </DialogClose>
+        </div>
+        
         <SummaryDialogHeader 
           title={title} 
           hasSavedVersion={localHasSavedVersion} 
