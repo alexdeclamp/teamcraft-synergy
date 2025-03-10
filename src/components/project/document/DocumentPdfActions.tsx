@@ -13,8 +13,8 @@ import {
   DialogDescription
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase } from '@/integrations/supabase/client';
 import { Loader2, X } from 'lucide-react';
+import { extractPdfText } from '@/utils/pdfUtils';
 
 interface DocumentPdfActionsProps {
   onGenerateSummary: () => void;
@@ -93,40 +93,16 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
         throw new Error('PDF URL is not accessible. Please check the file exists and try again.');
       }
       
-      // Extract the text using the edge function
+      // Extract text directly using client-side processing
       try {
-        console.log('Calling extract-pdf-text edge function');
-        const { data, error } = await supabase.functions.invoke('extract-pdf-text', {
-          body: { pdfUrl }
-        });
-        
-        if (error) {
-          console.error('Edge function error:', error);
-          throw new Error(`Edge function error: ${error.message || 'Unknown error'}`);
-        }
-        
-        console.log('Edge function response:', data);
-        
-        if (!data) {
-          throw new Error('Received empty response from Edge Function');
-        }
-        
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        
-        if (!data.success || !data.text) {
-          throw new Error(data.error || 'Failed to extract text from PDF');
-        }
-        
-        setExtractedText(data.text);
-        setPageCount(data.pageCount || 0);
-        toast.success(`Successfully extracted text from ${data.pageCount || 0} pages`);
-      } catch (edgeFunctionError: any) {
-        console.error('Edge function call failed:', edgeFunctionError);
-        // Collect diagnostic information about the error
-        setDiagnosisInfo(`Edge function error: ${edgeFunctionError.message}`);
-        throw edgeFunctionError;
+        const result = await extractPdfText(pdfUrl);
+        setExtractedText(result.text);
+        setPageCount(result.pageCount || 0);
+        toast.success(`Successfully extracted text from ${result.pageCount || 0} pages`);
+      } catch (extractionError: any) {
+        console.error('PDF extraction failed:', extractionError);
+        setDiagnosisInfo(`Extraction error: ${extractionError.message}`);
+        throw extractionError;
       }
     } catch (error: any) {
       console.error('Error extracting text:', error);
