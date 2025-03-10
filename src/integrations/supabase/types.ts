@@ -410,6 +410,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_by_email: {
+        Args: {
+          lookup_email: string
+        }
+        Returns: {
+          id: string
+          email: string
+        }[]
+      }
       is_project_member: {
         Args: {
           project_id: string

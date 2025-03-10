@@ -44,9 +44,7 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
     console.log('Looking up user by email:', email);
     
     try {
-      // First check auth.users table using a different approach
-      // Since we don't have direct access to filter by email using admin.listUsers()
-      // We'll use a more standard approach with the profiles table
+      // First check profiles table for the email
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, email')
@@ -69,8 +67,7 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
         return matchingProfile.id;
       }
       
-      // If we couldn't find the user in profiles, we can try to query the auth metadata
-      // This is an alternative approach that doesn't use the admin API
+      // If we couldn't find the user in profiles, try using our RPC function
       const { data: authProfiles, error: authError } = await supabase
         .rpc('get_user_by_email', { 
           lookup_email: email.toLowerCase() 
@@ -78,7 +75,12 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
       
       if (authError) {
         console.error('Error with RPC function:', authError);
-      } else if (authProfiles && authProfiles.length > 0) {
+        throw authError;
+      } 
+      
+      console.log('Auth profiles from RPC:', authProfiles);
+      
+      if (authProfiles && authProfiles.length > 0) {
         console.log('User found via RPC:', authProfiles[0]);
         return authProfiles[0].id;
       }
