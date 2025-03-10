@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Brain, MessageSquare, Search, FolderSearch, Users, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Brain, MessageSquare, Search, FolderSearch, Users, Sparkles, Database, ShieldCheck, LayoutDashboard, WandSparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -208,6 +207,213 @@ const features = [
         </div>
       </div>
     )
+  },
+  {
+    id: 5,
+    title: "Secure Knowledge Base",
+    description: "Store all your project data in a secure, centralized knowledge repository.",
+    icon: <Database className="h-8 w-8 text-primary" />,
+    mockup: (
+      <div className="bg-card rounded-lg border shadow-sm p-4 h-[300px] relative overflow-hidden">
+        <div className="mb-4">
+          <h4 className="text-sm font-medium">Project Knowledge Repository</h4>
+          <div className="flex items-center mt-1">
+            <div className="bg-primary/10 text-primary p-1 rounded">
+              <Database className="h-4 w-4" />
+            </div>
+            <span className="text-xs ml-2">124 documents · 36 notes · 58 images</span>
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          {[
+            { title: "Marketing Strategy", type: "Collection", items: 12, updated: "2 days ago" },
+            { title: "Product Research", type: "Collection", items: 24, updated: "Yesterday" },
+            { title: "Customer Feedback", type: "Collection", items: 18, updated: "Just now" },
+          ].map((collection, i) => (
+            <div key={i} className="bg-muted/30 p-3 rounded-lg">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium text-sm">{collection.title}</span>
+                <span className="text-xs text-muted-foreground">{collection.updated}</span>
+              </div>
+              <div className="flex items-center text-xs text-muted-foreground">
+                <span>{collection.type}</span>
+                <span className="mx-2">•</span>
+                <span>{collection.items} items</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="absolute bottom-4 right-4">
+          <Button size="sm" variant="outline" className="text-xs">Browse Repository</Button>
+        </div>
+        
+        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-card to-transparent pointer-events-none"></div>
+      </div>
+    )
+  },
+  {
+    id: 6,
+    title: "Enterprise Security",
+    description: "End-to-end encryption and compliance controls keep your sensitive data protected.",
+    icon: <ShieldCheck className="h-8 w-8 text-primary" />,
+    mockup: (
+      <div className="bg-card rounded-lg border shadow-sm p-4 h-[300px] relative overflow-hidden">
+        <div className="flex flex-col h-full">
+          <div className="mb-4">
+            <h4 className="text-sm font-medium">Security Dashboard</h4>
+            <p className="text-xs text-muted-foreground mt-1">Project data is protected with enterprise-grade security</p>
+          </div>
+          
+          <div className="space-y-4 flex-1">
+            <div className="border rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <div className="bg-green-500/20 p-1 rounded text-green-600">
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
+                  <span className="font-medium text-sm ml-2">End-to-End Encryption</span>
+                </div>
+                <span className="text-xs bg-green-500/10 text-green-600 py-0.5 px-2 rounded-full">Active</span>
+              </div>
+              <p className="text-xs text-muted-foreground">All data is encrypted at rest and in transit</p>
+            </div>
+            
+            <div className="border rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <div className="bg-green-500/20 p-1 rounded text-green-600">
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
+                  <span className="font-medium text-sm ml-2">Access Controls</span>
+                </div>
+                <span className="text-xs bg-green-500/10 text-green-600 py-0.5 px-2 rounded-full">Configured</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Role-based permissions and access limitations</p>
+            </div>
+            
+            <div className="border rounded-lg p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <div className="bg-green-500/20 p-1 rounded text-green-600">
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
+                  <span className="font-medium text-sm ml-2">Compliance</span>
+                </div>
+                <span className="text-xs bg-green-500/10 text-green-600 py-0.5 px-2 rounded-full">GDPR, HIPAA</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Meets regulatory requirements for data handling</p>
+            </div>
+          </div>
+          
+          <div className="text-center mt-4">
+            <span className="text-xs text-muted-foreground">Last security audit: 3 days ago</span>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 7,
+    title: "Analytics Dashboard",
+    description: "Track usage, engagement, and insights with comprehensive analytics and visualizations.",
+    icon: <LayoutDashboard className="h-8 w-8 text-primary" />,
+    mockup: (
+      <div className="bg-card rounded-lg border shadow-sm p-4 h-[300px] relative overflow-hidden">
+        <div className="flex flex-col h-full">
+          <div className="mb-4">
+            <h4 className="text-sm font-medium">Analytics Overview</h4>
+            <div className="flex items-center mt-1">
+              <span className="text-xs bg-primary/10 text-primary py-0.5 px-2 rounded-full">Last 30 days</span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {[
+              { label: "Projects Created", value: "32", change: "+12%" },
+              { label: "AI Queries", value: "248", change: "+18%" },
+              { label: "Documents Uploaded", value: "156", change: "+24%" },
+              { label: "Team Activity", value: "86%", change: "+5%" }
+            ].map((stat, i) => (
+              <div key={i} className="bg-muted/30 p-2 rounded-lg">
+                <span className="text-xs text-muted-foreground">{stat.label}</span>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="font-medium">{stat.value}</span>
+                  <span className="text-xs text-green-600">{stat.change}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex-1 relative">
+            <div className="h-24 w-full">
+              <div className="relative h-full">
+                <div className="absolute bottom-0 left-0 w-6 h-12 bg-primary/80 rounded-t"></div>
+                <div className="absolute bottom-0 left-8 w-6 h-16 bg-primary/80 rounded-t"></div>
+                <div className="absolute bottom-0 left-16 w-6 h-10 bg-primary/80 rounded-t"></div>
+                <div className="absolute bottom-0 left-24 w-6 h-18 bg-primary/80 rounded-t"></div>
+                <div className="absolute bottom-0 left-32 w-6 h-14 bg-primary/80 rounded-t"></div>
+                <div className="absolute bottom-0 left-40 w-6 h-20 bg-primary/80 rounded-t"></div>
+                <div className="absolute bottom-0 left-48 w-6 h-16 bg-primary/80 rounded-t"></div>
+              </div>
+            </div>
+            <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+              <span>Mon</span>
+              <span>Wed</span>
+              <span>Fri</span>
+              <span>Sun</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  },
+  {
+    id: 8,
+    title: "Workflow Automation",
+    description: "Automate repetitive tasks and streamline your document processing workflows.",
+    icon: <WandSparkles className="h-8 w-8 text-primary" />,
+    mockup: (
+      <div className="bg-card rounded-lg border shadow-sm p-4 h-[300px] relative overflow-hidden">
+        <div className="flex flex-col h-full">
+          <div className="mb-4">
+            <h4 className="text-sm font-medium">Workflow Editor</h4>
+            <p className="text-xs text-muted-foreground mt-1">Drag and drop to build automated workflows</p>
+          </div>
+          
+          <div className="flex-1 flex flex-col items-center">
+            <div className="relative w-full">
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 w-32 text-center">
+                <span className="text-xs font-medium">New Document</span>
+              </div>
+              
+              <div className="absolute top-12 left-1/2 transform -translate-x-1/2 h-8 w-0.5 bg-muted-foreground"></div>
+              
+              <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-purple-500/10 border border-purple-500/30 rounded-lg p-2 w-40 text-center">
+                <span className="text-xs font-medium">Extract Key Topics</span>
+              </div>
+              
+              <div className="absolute top-32 left-1/2 transform -translate-x-1/2 h-8 w-0.5 bg-muted-foreground"></div>
+              
+              <div className="absolute top-40 left-1/2 transform -translate-x-1/2 flex space-x-16">
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-2 w-32 text-center">
+                  <span className="text-xs font-medium">Create Summary</span>
+                </div>
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 w-32 text-center">
+                  <span className="text-xs font-medium">Tag Document</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 flex justify-between">
+            <Button size="sm" variant="outline" className="text-xs">Save Workflow</Button>
+            <Button size="sm" className="text-xs">Test Run</Button>
+          </div>
+        </div>
+      </div>
+    )
   }
 ];
 
@@ -238,9 +444,7 @@ const KeyFeaturesSection: React.FC = () => {
       </div>
       
       <div className="relative">
-        {/* Feature Info + Mockup */}
         <div className="grid md:grid-cols-2 gap-8 items-center">
-          {/* Feature Info */}
           <div className="space-y-6">
             <div className="inline-flex p-2 rounded-full bg-primary/10">
               {activeFeature.icon}
@@ -270,13 +474,11 @@ const KeyFeaturesSection: React.FC = () => {
             </div>
           </div>
           
-          {/* Feature Mockup */}
           <div className="relative rounded-xl overflow-hidden shadow-xl bg-background/50 p-4 border">
             {activeFeature.mockup}
           </div>
         </div>
         
-        {/* Feature Indicators */}
         <div className="flex justify-center space-x-2 mt-8">
           {features.map((feature, index) => (
             <button
