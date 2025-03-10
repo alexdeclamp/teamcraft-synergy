@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { daysSinceDate, formatFileSize } from '@/utils/fileUtils';
@@ -28,6 +28,7 @@ interface UseProjectPageDataResult {
   showInviteDialog: boolean;
   setShowInviteDialog: (show: boolean) => void;
   fetchProjectImages: () => Promise<void>;
+  refreshProjectStats: () => Promise<void>;
 }
 
 export const useProjectPageData = (projectId: string | undefined): UseProjectPageDataResult => {
@@ -69,52 +70,60 @@ export const useProjectPageData = (projectId: string | undefined): UseProjectPag
     return daysSinceDate(project.created_at);
   };
 
-  // Fetch additional statistics when project loads
-  useEffect(() => {
+  // Fetch additional statistics
+  const fetchAdditionalStats = useCallback(async () => {
     if (!projectId) return;
 
-    const fetchAdditionalStats = async () => {
-      try {
-        // Fetch note count
-        const { count: notesCount, error: notesError } = await supabase
-          .from('project_notes')
-          .select('id', { count: 'exact' })
-          .eq('project_id', projectId);
-        
-        if (!notesError) {
-          setNoteCount(notesCount || 0);
-        }
-
-        // Fetch document count
-        const { count: docsCount, error: docsError } = await supabase
-          .from('project_documents')
-          .select('id', { count: 'exact' })
-          .eq('project_id', projectId);
-        
-        if (!docsError) {
-          setDocumentCount(docsCount || 0);
-        }
-
-        // Fetch recent updates count (last 24 hours)
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        
-        const { count: updatesCount, error: updatesError } = await supabase
-          .from('project_updates')
-          .select('id', { count: 'exact' })
-          .eq('project_id', projectId)
-          .gte('created_at', yesterday.toISOString());
-        
-        if (!updatesError) {
-          setRecentUpdatesCount(updatesCount || 0);
-        }
-      } catch (error) {
-        console.error('Error fetching project statistics:', error);
+    try {
+      // Fetch note count
+      const { count: notesCount, error: notesError } = await supabase
+        .from('project_notes')
+        .select('id', { count: 'exact' })
+        .eq('project_id', projectId);
+      
+      if (!notesError) {
+        setNoteCount(notesCount || 0);
       }
-    };
 
-    fetchAdditionalStats();
+      // Fetch document count
+      const { count: docsCount, error: docsError } = await supabase
+        .from('project_documents')
+        .select('id', { count: 'exact' })
+        .eq('project_id', projectId);
+      
+      if (!docsError) {
+        setDocumentCount(docsCount || 0);
+      }
+
+      // Fetch recent updates count (last 24 hours)
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      
+      const { count: updatesCount, error: updatesError } = await supabase
+        .from('project_updates')
+        .select('id', { count: 'exact' })
+        .eq('project_id', projectId)
+        .gte('created_at', yesterday.toISOString());
+      
+      if (!updatesError) {
+        setRecentUpdatesCount(updatesCount || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching project statistics:', error);
+    }
   }, [projectId]);
+
+  // Refresh project statistics
+  const refreshProjectStats = useCallback(async () => {
+    await fetchAdditionalStats();
+  }, [fetchAdditionalStats]);
+
+  // Fetch additional statistics when project loads
+  useEffect(() => {
+    if (projectId) {
+      fetchAdditionalStats();
+    }
+  }, [projectId, fetchAdditionalStats]);
 
   return {
     loading: projectLoading || membersLoading,
@@ -134,6 +143,7 @@ export const useProjectPageData = (projectId: string | undefined): UseProjectPag
     handleAddMember,
     showInviteDialog,
     setShowInviteDialog,
-    fetchProjectImages
+    fetchProjectImages,
+    refreshProjectStats
   };
 };

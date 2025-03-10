@@ -84,9 +84,10 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     try {
       setIsCreatingNote(true);
       
+      // For PDFs, use a specific title format that we can query later
       const noteTitle = imageName 
-        ? `Image Description: ${imageName}` 
-        : "Image Description";
+        ? `Summary: ${imageName}` 
+        : "Document Summary";
       
       const { data, error } = await supabase
         .from('project_notes')
@@ -95,14 +96,14 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           content: summary,
           project_id: projectId,
           user_id: user.id,
-          tags: ['image', 'ai-generated']
+          tags: ['document', 'summary', 'ai-generated']
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      toast.success('Note created successfully from image description');
+      toast.success('Summary saved as a note successfully');
       onClose();
     } catch (error: any) {
       console.error('Error creating note:', error);

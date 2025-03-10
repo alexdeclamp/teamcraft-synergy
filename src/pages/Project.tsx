@@ -27,7 +27,8 @@ const Project = () => {
     handleAddMember,
     fetchProjectImages,
     showInviteDialog,
-    setShowInviteDialog
+    setShowInviteDialog,
+    refreshProjectStats
   } = useProjectPageData(id);
 
   // Update members when they're fetched
@@ -49,6 +50,11 @@ const Project = () => {
     setActiveTab(newTab);
     // Reset scroll position when changing tabs
     window.scrollTo(0, 0);
+    
+    // Refresh project statistics when returning to overview tab
+    if (newTab === 'overview') {
+      refreshProjectStats();
+    }
   };
 
   return (
