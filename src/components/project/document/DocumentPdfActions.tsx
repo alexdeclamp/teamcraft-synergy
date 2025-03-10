@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Eye, MessageSquare, HelpCircle, FileText, FileSearch } from 'lucide-react';
+import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -8,7 +8,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogClose
+  DialogClose,
+  DialogFooter
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +37,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   const [showTextModal, setShowTextModal] = useState(false);
   const [extractedText, setExtractedText] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
+  const [extractionError, setExtractionError] = useState<string | null>(null);
   const [pageCount, setPageCount] = useState(0);
 
   const handleDisabledFeatureClick = () => {
@@ -44,9 +46,14 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
 
   const handleExtractText = async () => {
     setIsExtracting(true);
+    setExtractionError(null);
     setShowTextModal(true);
     
     try {
+      toast.info("Extracting text from PDF...", {
+        duration: 3000,
+      });
+      
       const { data, error } = await supabase.functions.invoke('extract-pdf-text', {
         body: { pdfUrl }
       });
@@ -54,18 +61,40 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
       if (error) throw error;
       
       if (!data.success || !data.text) {
-        throw new Error('Failed to extract text from PDF');
+        throw new Error(data.error || 'Failed to extract text from PDF');
       }
       
       setExtractedText(data.text);
       setPageCount(data.pageCount || 0);
+      toast.success(`Successfully extracted text from ${pageCount || 0} pages`);
     } catch (error: any) {
       console.error('Error extracting text:', error);
-      toast.error(`Failed to extract text: ${error.message}`);
-      setShowTextModal(false);
+      const errorMessage = error.message || 'Failed to extract text from the PDF';
+      setExtractionError(errorMessage);
+      toast.error(`Extraction failed: ${errorMessage}`);
     } finally {
       setIsExtracting(false);
     }
+  };
+  
+  const handleRetryExtraction = () => {
+    handleExtractText();
+  };
+  
+  const handleDownloadText = () => {
+    if (!extractedText) return;
+    
+    const blob = new Blob([extractedText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${fileName.replace('.pdf', '')}-extracted-text.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success('Text downloaded successfully');
   };
 
   return (
@@ -143,9 +172,15 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
           
           <ScrollArea className="flex-1 p-4 mt-4">
             {isExtracting ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                <span className="ml-2 text-muted-foreground">Extracting text...</span>
+              <div className="flex flex-col items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-2" />
+                <span className="text-muted-foreground">Extracting text from PDF...</span>
+                <span className="text-xs text-muted-foreground mt-1">This may take a moment for large files</span>
+              </div>
+            ) : extractionError ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="text-destructive mb-4">{extractionError}</div>
+                <Button onClick={handleRetryExtraction}>Retry Extraction</Button>
               </div>
             ) : (
               <div className="whitespace-pre-wrap font-mono text-sm">
@@ -153,6 +188,19 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
               </div>
             )}
           </ScrollArea>
+          
+          {!isExtracting && extractedText && (
+            <DialogFooter className="mt-4">
+              <Button 
+                onClick={handleDownloadText}
+                variant="outline"
+                className="flex items-center gap-1"
+              >
+                <Download className="h-4 w-4" />
+                Download Text
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
     </>
