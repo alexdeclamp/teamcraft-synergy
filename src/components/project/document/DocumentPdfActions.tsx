@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle, ExternalLink } from 'lucide-react';
+import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle, ExternalLink, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, X } from 'lucide-react';
-import { extractPdfText } from '@/utils/pdfUtils';
+import { extractPdfText, getPdfInfo } from '@/utils/pdfUtils';
 
 interface DocumentPdfActionsProps {
   onGenerateSummary: () => void;
@@ -41,6 +40,8 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   const [extractionError, setExtractionError] = useState<string | null>(null);
   const [pageCount, setPageCount] = useState(0);
   const [diagnosisInfo, setDiagnosisInfo] = useState<string | null>(null);
+  const [pdfInfo, setPdfInfo] = useState<{pageCount: number; isEncrypted: boolean; fingerprint: string} | null>(null);
+  const [textLength, setTextLength] = useState(0);
 
   const handleDisabledFeatureClick = () => {
     toast.info("This feature is currently disabled");
@@ -50,14 +51,12 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     try {
       console.log('Verifying PDF URL:', url);
       
-      // First try to validate the URL format
       try {
         new URL(url);
       } catch (e) {
         throw new Error(`Invalid URL format: ${e.message}`);
       }
       
-      // Try a HEAD request first to check if the PDF is accessible
       const headResponse = await fetch(url, { method: 'HEAD' });
       
       if (!headResponse.ok) {
@@ -77,6 +76,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     setIsExtracting(true);
     setExtractionError(null);
     setDiagnosisInfo(null);
+    setPdfInfo(null);
     setShowTextModal(true);
     
     try {
@@ -86,19 +86,30 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
       
       console.log('PDF URL to extract:', pdfUrl);
       
-      // First verify the URL is accessible
       const isUrlValid = await verifyPdfUrl(pdfUrl);
       
       if (!isUrlValid) {
         throw new Error('PDF URL is not accessible. Please check the file exists and try again.');
       }
       
-      // Extract text directly using client-side processing
+      try {
+        const info = await getPdfInfo(pdfUrl);
+        setPdfInfo(info);
+        console.log('PDF info:', info);
+        
+        if (info.isEncrypted) {
+          setDiagnosisInfo('Warning: This PDF appears to be encrypted, which may limit text extraction');
+        }
+      } catch (infoError) {
+        console.error('Failed to get PDF info:', infoError);
+      }
+      
       try {
         const result = await extractPdfText(pdfUrl);
         setExtractedText(result.text);
         setPageCount(result.pageCount || 0);
-        toast.success(`Successfully extracted text from ${result.pageCount || 0} pages`);
+        setTextLength(result.text.length);
+        toast.success(`Successfully extracted ${result.text.length.toLocaleString()} characters from ${result.pageCount || 0} pages`);
       } catch (extractionError: any) {
         console.error('PDF extraction failed:', extractionError);
         setDiagnosisInfo(`Extraction error: ${extractionError.message}`);
@@ -207,11 +218,22 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
           <DialogHeader>
             <DialogTitle>
               Extracted Text - {fileName}
-              {pageCount > 0 && <span className="text-sm text-muted-foreground ml-2">({pageCount} pages)</span>}
+              {pageCount > 0 && (
+                <span className="text-sm text-muted-foreground ml-2">
+                  ({pageCount} pages, {textLength > 0 ? `${textLength.toLocaleString()} characters` : ''})
+                </span>
+              )}
             </DialogTitle>
             {diagnosisInfo && (
               <DialogDescription className="text-amber-500">
-                Diagnostic info: {diagnosisInfo}
+                <Info className="h-4 w-4 inline mr-1" />
+                {diagnosisInfo}
+              </DialogDescription>
+            )}
+            {pdfInfo && pdfInfo.isEncrypted && (
+              <DialogDescription className="text-amber-500">
+                <Info className="h-4 w-4 inline mr-1" />
+                This PDF is encrypted which may limit text extraction capabilities.
               </DialogDescription>
             )}
           </DialogHeader>
