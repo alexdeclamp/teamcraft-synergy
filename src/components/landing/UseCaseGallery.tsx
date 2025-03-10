@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { FileText, Brain, MessageSquare, Users, Search, BarChart, PenLine, Building, BookOpen, Folder, Briefcase, Scale, Stethoscope, Globe, Landmark, Shield, Gavel, Microscope, Glasses, School, DollarSign, Network, Lightbulb, CheckSquare, MoveRight, Layers, FileSpreadsheet, BookMarked, Calculator, BadgeCheck, Heart, Verified } from 'lucide-react';
+import { FileText, Brain, MessageSquare, Users, Search, BarChart, PenLine, Building, BookOpen, Folder, Briefcase, Scale, Stethoscope, Globe, Landmark, Shield, Gavel, Microscope, Glasses, School, DollarSign, Network, Lightbulb, CheckSquare, MoveRight, Layers, FileSpreadsheet, BookMarked, Calculator, BadgeCheck, Heart, Verified, Crosshair } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 // Category type - expanded to include more industries
@@ -237,7 +236,7 @@ const UseCaseGallery: React.FC = () => {
       title: "Product Research Repository",
       description: "Organize market research, user feedback, and competitor analysis to generate insights for product development with AI-powered recommendation summaries.",
       icon: <Lightbulb className="h-6 w-6 text-white" />,
-      image: "https://images.unsplash.com/photo-1534972195531-d756b9bfa9f2",
+      image: "https://images.unsplash.com/photo-1534972195-5b18f218e8de",
       categories: ['Technology', 'Research']
     },
     {
@@ -262,7 +261,7 @@ const UseCaseGallery: React.FC = () => {
       id: 29,
       title: "Marketing Campaign Hub",
       description: "Bra3n centralizes campaign assets, performance data, and audience insights to automatically generate performance reports and optimization recommendations.",
-      icon: <Target className="h-6 w-6 text-white" />,
+      icon: <Crosshair className="h-6 w-6 text-white" />,
       image: "https://images.unsplash.com/photo-1551434678-e076c223a692",
       categories: ['Marketing', 'Business']
     },
