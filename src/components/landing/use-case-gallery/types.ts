@@ -1,8 +1,15 @@
 
 import { ReactNode } from 'react';
 
-// Category type - expanded to include more industries
-export type UseCaseCategory = 'Featured' | 'Research' | 'Education' | 'Business' | 'Content' | 'Knowledge' | 'Finance' | 'Legal' | 'Healthcare' | 'Government' | 'Technology' | 'Marketing';
+// Category type - updated to reflect new categories
+export type UseCaseCategory = 
+  | 'Featured' 
+  | 'Research & Education' 
+  | 'Business & Marketing' 
+  | 'Finance & Legal' 
+  | 'Healthcare & Life Sciences' 
+  | 'Technology & Software Development' 
+  | 'Government & Public Sector';
 
 // Use case type
 export interface UseCase {

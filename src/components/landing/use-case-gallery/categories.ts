@@ -4,15 +4,10 @@ import { UseCaseCategory } from './types';
 // Define all available categories
 export const categories: UseCaseCategory[] = [
   'Featured', 
-  'Research', 
-  'Education', 
-  'Business', 
-  'Content', 
-  'Knowledge', 
-  'Finance', 
-  'Legal', 
-  'Healthcare', 
-  'Government', 
-  'Technology', 
-  'Marketing'
+  'Research & Education', 
+  'Business & Marketing', 
+  'Finance & Legal', 
+  'Healthcare & Life Sciences', 
+  'Technology & Software Development', 
+  'Government & Public Sector'
 ];

@@ -1,22 +1,22 @@
 
 import { categories } from './categories';
 import { featuredUseCases } from './featured-use-cases';
-import { financeUseCases } from './finance-use-cases';
-import { legalUseCases } from './legal-use-cases';
-import { healthcareUseCases } from './healthcare-use-cases';
-import { governmentUseCases } from './government-use-cases';
-import { technologyUseCases } from './technology-use-cases';
-import { marketingUseCases } from './marketing-use-cases';
+import { researchEducationUseCases } from './research-education-use-cases';
+import { businessMarketingUseCases } from './business-marketing-use-cases';
+import { financeLegalUseCases } from './finance-legal-use-cases';
+import { healthcareLifeSciencesUseCases } from './healthcare-life-sciences-use-cases';
+import { technologySoftwareUseCases } from './technology-software-use-cases';
+import { governmentPublicUseCases } from './government-public-use-cases';
 
 // Combine all use cases
 export const useCasesData = [
   ...featuredUseCases,
-  ...financeUseCases,
-  ...legalUseCases,
-  ...healthcareUseCases,
-  ...governmentUseCases,
-  ...technologyUseCases,
-  ...marketingUseCases
+  ...researchEducationUseCases,
+  ...businessMarketingUseCases,
+  ...financeLegalUseCases,
+  ...healthcareLifeSciencesUseCases,
+  ...technologySoftwareUseCases,
+  ...governmentPublicUseCases
 ];
 
 // Re-export categories for convenience
