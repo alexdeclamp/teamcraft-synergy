@@ -23,9 +23,15 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
     );
   }
 
-  // Format the summary content if it contains tabular data
+  // Format the summary content and handle markdown formatting
   const formatSummaryContent = (content: string) => {
-    // Check if content might contain a table structure (has multiple lines with consistent separators)
+    // Format markdown-style formatting by converting to HTML
+    const formattedText = content
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+      .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+      .replace(/__(.*?)__/g, '<u>$1</u>'); // Underline
+
+    // Check if content might contain a table structure
     const lines = content.split('\n');
     const potentialTableLines = lines.filter(line => 
       line.includes('|') || 
@@ -55,9 +61,8 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
                         cellIndex === 0 ? "col-span-3 font-medium" : "col-span-9/cells.length",
                         index === 0 ? "font-semibold" : ""
                       )}
-                    >
-                      {cell.trim()}
-                    </div>
+                      dangerouslySetInnerHTML={{ __html: cell.trim() }}
+                    />
                   ))}
                 </div>
               );
@@ -74,14 +79,19 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
                   level === 2 ? "text-lg mt-3 mb-2" : 
                   "text-base mt-2 mb-1"
                 );
-                return <div key={index} className={headingClass}>{text}</div>;
+                return <div key={index} className={headingClass} dangerouslySetInnerHTML={{ __html: text }} />;
               }
               // Check if this is a list item
               else if (line.trim().match(/^[-*•]\s/)) {
-                return <div key={index} className="ml-4 flex"><span className="mr-2">•</span>{line.trim().replace(/^[-*•]\s/, '')}</div>;
+                return (
+                  <div key={index} className="ml-4 flex">
+                    <span className="mr-2">•</span>
+                    <span dangerouslySetInnerHTML={{ __html: line.trim().replace(/^[-*•]\s/, '') }} />
+                  </div>
+                );
               }
-              // Regular paragraph
-              return <p key={index} className="my-1">{line}</p>;
+              // Regular paragraph with formatted content
+              return <p key={index} className="my-1" dangerouslySetInnerHTML={{ __html: formattedText }} />;
             }
             return null;
           }).filter(Boolean)}
@@ -89,8 +99,8 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
       );
     }
     
-    // Default rendering with pre-wrap
-    return <div className="whitespace-pre-wrap">{content}</div>;
+    // Default rendering with formatted content
+    return <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formattedText.replace(/\n/g, '<br/>') }} />;
   };
 
   // Only show the summary content if we explicitly know we have a summary
