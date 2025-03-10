@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Card,
   CardContent,
@@ -13,27 +11,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, Lock } from 'lucide-react';
-import { toast } from 'sonner';
-
-const INVITATION_CODE = "I NEED BRA3N";
+import { Loader2 } from 'lucide-react';
+import LoginForm from '@/components/auth/LoginForm';
+import RegisterForm from '@/components/auth/RegisterForm';
 
 const Auth = () => {
-  const { signIn, signUp, session, isLoading } = useAuth();
+  const { session, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
-  const [loading, setLoading] = useState(false);
   
-  // Form states
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-  const [registerFullName, setRegisterFullName] = useState('');
-  const [invitationCode, setInvitationCode] = useState('');
-  const [invitationError, setInvitationError] = useState<string | null>(null);
-
   useEffect(() => {
     // Redirect to dashboard if already logged in
     if (session && !isLoading) {
@@ -47,37 +34,6 @@ const Auth = () => {
       setActiveTab('register');
     }
   }, [session, isLoading, navigate, location]);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!loginEmail || !loginPassword) return;
-    
-    setLoading(true);
-    await signIn(loginEmail, loginPassword);
-    setLoading(false);
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!registerEmail || !registerPassword || !registerFullName) return;
-    
-    // Validate invitation code
-    if (invitationCode !== INVITATION_CODE) {
-      setInvitationError('Invalid invitation code');
-      return;
-    }
-    
-    setLoading(true);
-    await signUp(registerEmail, registerPassword, registerFullName);
-    setLoading(false);
-  };
-
-  // Reset invitation error when code changes
-  useEffect(() => {
-    if (invitationError && invitationCode) {
-      setInvitationError(null);
-    }
-  }, [invitationCode]);
 
   if (isLoading) {
     return (
@@ -104,122 +60,11 @@ const Auth = () => {
             </TabsList>
             
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium">
-                    Email
-                  </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="password" className="text-sm font-medium">
-                    Password
-                  </label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={loginPassword}
-                    onChange={(e) => setLoginPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={loading || !loginEmail || !loginPassword}
-                >
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Sign In
-                </Button>
-              </form>
+              <LoginForm />
             </TabsContent>
             
             <TabsContent value="register">
-              <div className="bg-primary/5 rounded-lg p-3 flex items-start mb-4 border border-primary/20">
-                <Lock className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
-                <div className="text-sm">
-                  <p className="font-medium text-primary mb-1">Private Beta Access</p>
-                  <p className="text-muted-foreground">Bra3n is currently in private beta. An invitation code is required to join our exclusive early access program.</p>
-                </div>
-              </div>
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="full-name" className="text-sm font-medium">
-                    Full Name
-                  </label>
-                  <Input
-                    id="full-name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={registerFullName}
-                    onChange={(e) => setRegisterFullName(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="register-email" className="text-sm font-medium">
-                    Email
-                  </label>
-                  <Input
-                    id="register-email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={registerEmail}
-                    onChange={(e) => setRegisterEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="register-password" className="text-sm font-medium">
-                    Password
-                  </label>
-                  <Input
-                    id="register-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={registerPassword}
-                    onChange={(e) => setRegisterPassword(e.target.value)}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Password must be at least 6 characters long
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="invitation-code" className="text-sm font-medium flex items-center gap-1">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    <span>Invitation Code</span>
-                  </label>
-                  <Input
-                    id="invitation-code"
-                    type="text"
-                    placeholder="Enter your invitation code"
-                    value={invitationCode}
-                    onChange={(e) => setInvitationCode(e.target.value)}
-                    required
-                    className={invitationError ? "border-red-500" : ""}
-                  />
-                  {invitationError && (
-                    <p className="text-xs text-red-500">{invitationError}</p>
-                  )}
-                </div>
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={loading || !registerEmail || !registerPassword || !registerFullName || !invitationCode}
-                >
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Join Private Beta
-                </Button>
-              </form>
+              <RegisterForm />
             </TabsContent>
           </Tabs>
         </CardContent>
