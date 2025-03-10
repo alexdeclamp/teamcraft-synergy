@@ -46,27 +46,29 @@ const Navbar = () => {
         scrolled ? "bg-white/80 backdrop-blur-sm border-b shadow-sm" : "bg-transparent"
       )}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Logo />
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <div className="flex items-center flex-1">
+          <Logo />
+        </div>
 
-        {/* Desktop Menu */}
-        <nav className="hidden md:flex items-center gap-4">
+        <div className="flex items-center justify-end gap-4 flex-1">
           <NavLinks />
-          <ProfileButton onClick={() => setProfileDialogOpen(true)} />
-        </nav>
-
-        {/* Mobile menu button */}
-        <button 
-          className="md:hidden p-2 rounded-md hover:bg-accent"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-          aria-expanded={mobileMenuOpen}
-        >
-          {mobileMenuOpen ? 
-            <X className="h-5 w-5" /> : 
-            <Menu className="h-5 w-5" />
-          }
-        </button>
+          <div className="hidden md:block">
+            <ProfileButton onClick={() => setProfileDialogOpen(true)} />
+          </div>
+          
+          <button 
+            className="md:hidden p-2 rounded-md hover:bg-accent"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? 
+              <X className="h-5 w-5" /> : 
+              <Menu className="h-5 w-5" />
+            }
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
@@ -79,14 +81,13 @@ const Navbar = () => {
         onSignOutClick={signOut}
       />
 
-      {/* Profile Dialog */}
+      {/* Dialogs */}
       <ProfileDialog 
         open={profileDialogOpen}
         onOpenChange={setProfileDialogOpen}
         onOpenSettings={handleOpenSettings}
       />
 
-      {/* Settings Dialog */}
       <SettingsDialog
         open={settingsDialogOpen}
         onOpenChange={setSettingsDialogOpen}
