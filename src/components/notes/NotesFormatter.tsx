@@ -42,16 +42,21 @@ export const formatNoteContent = (text: string) => {
       const listContent = formattedLine.replace(/^[-*•]\s/, '');
       
       return (
-        <div key={index} className="flex ml-4 my-1.5">
+        <div key={index} className="flex ml-4 my-2">
           <span className="mr-2 text-primary">•</span>
           <span dangerouslySetInnerHTML={{__html: listContent}} />
         </div>
       );
     }
     
+    // Handle empty lines with proper spacing
+    if (line.trim() === '') {
+      return <div key={index} className="h-4"></div>;
+    }
+    
     // Regular paragraph with improved spacing
     return (
-      <div key={index} className="my-2 text-slate-700" dangerouslySetInnerHTML={{__html: formattedLine}} />
+      <div key={index} className="my-2 text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{__html: formattedLine}} />
     );
   });
 };

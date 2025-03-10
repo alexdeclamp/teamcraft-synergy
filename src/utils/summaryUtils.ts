@@ -57,11 +57,31 @@ export async function summarizeText({
       throw new Error(errorMsg);
     }
 
+    // Format the summary to ensure consistent spacing
+    const formattedSummary = formatSummary(data.summary);
+
     toast.success(`Summary generated successfully using ${model === 'claude' ? 'Claude' : 'OpenAI'}`);
-    return data.summary;
+    return formattedSummary;
   } catch (error: any) {
     console.error('Error summarizing text:', error);
     toast.error(`Failed to summarize text: ${error.message || 'Unknown error'}`);
     throw new Error(`Failed to summarize text: ${error.message || 'Unknown error'}`);
   }
+}
+
+// Helper function to ensure consistent summary formatting
+function formatSummary(text: string): string {
+  if (!text) return '';
+  
+  // Ensure clean paragraph breaks
+  let formatted = text.replace(/\n{3,}/g, '\n\n');
+  
+  // Ensure bullet points have consistent spacing
+  formatted = formatted.replace(/^[-*•]\s*/gm, '• ');
+  
+  // Ensure headers have consistent spacing
+  formatted = formatted.replace(/^(#{1,6})\s*([^\n]+)(?!\n\n)/gm, '$1 $2\n\n');
+  
+  // Trim extra whitespace
+  return formatted.trim();
 }

@@ -227,6 +227,38 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     }
   }, [showTextModal, isExtracting, extractedText]);
 
+  // Format the raw PDF text for better readability
+  const formatExtractedText = (text: string) => {
+    if (!text) return '';
+    
+    // Replace consecutive spaces with a single space
+    let formatted = text.replace(/[ \t]+/g, ' ');
+    
+    // Ensure paragraphs have consistent spacing
+    formatted = formatted.replace(/\n{3,}/g, '\n\n');
+    
+    // Add proper indentation for paragraphs that might be continuation of text
+    const lines = formatted.split('\n');
+    let result = '';
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Skip empty lines but preserve paragraph breaks
+      if (line === '') {
+        if (i > 0 && lines[i-1].trim() !== '') {
+          result += '\n\n';
+        }
+        continue;
+      }
+      
+      // Add the line with proper spacing
+      result += line + '\n';
+    }
+    
+    return result;
+  };
+
   return (
     <>
       <Button 
@@ -362,9 +394,9 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
             ) : extractedText ? (
               <pre 
                 ref={textContainerRef}
-                className="whitespace-pre-wrap font-mono text-sm w-full overflow-visible"
+                className="whitespace-pre-wrap font-sans text-sm w-full overflow-visible leading-relaxed p-2"
               >
-                {extractedText}
+                {formatExtractedText(extractedText)}
               </pre>
             ) : (
               <div className="text-center text-muted-foreground py-8">

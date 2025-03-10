@@ -37,6 +37,9 @@ serve(async (req) => {
       throw new Error('No API key available for the selected model');
     }
 
+    // Format summary text - ensure paragraphs have proper spacing
+    summary = formatSummaryText(summary);
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -60,6 +63,21 @@ serve(async (req) => {
   }
 });
 
+function formatSummaryText(text) {
+  if (!text) return '';
+  
+  // Ensure double line breaks between paragraphs
+  text = text.replace(/\n{3,}/g, '\n\n'); // Replace 3+ newlines with just 2
+  
+  // Ensure proper spacing after bullet points
+  text = text.replace(/•\s*/g, '• ');
+  
+  // Ensure headings have space after them
+  text = text.replace(/#{1,6}\s*([^\n]+)(?!\n\n)/g, '$&\n');
+  
+  return text;
+}
+
 async function summarizeWithClaude(text: string, maxLength: number): Promise<string> {
   try {
     console.log("Calling Claude API...");
@@ -76,7 +94,7 @@ async function summarizeWithClaude(text: string, maxLength: number): Promise<str
         messages: [
           {
             role: 'user',
-            content: `Please summarize the following text. Focus on the key points and main ideas. Keep your summary concise but comprehensive:
+            content: `Please summarize the following text. Use proper formatting with paragraphs, bullet points, and headings where appropriate. Focus on the key points and main ideas:
 
 ${text.slice(0, 100000)}`
           }
@@ -113,7 +131,7 @@ async function summarizeWithOpenAI(text: string, maxLength: number): Promise<str
         messages: [
           {
             role: 'system',
-            content: 'You are an AI assistant that summarizes documents. Create a concise but comprehensive summary that captures the key points and main ideas.'
+            content: 'You are an AI assistant that summarizes documents. Create a concise but comprehensive summary that captures the key points and main ideas. Use proper formatting with paragraphs, bullet points, and headings as appropriate.'
           },
           {
             role: 'user',

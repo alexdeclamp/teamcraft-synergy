@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -33,7 +34,7 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
       <div className="prose max-w-none">
         {lines.map((line, index) => {
           if (line.trim() === '') {
-            return <div key={index} className="my-1"></div>;
+            return <div key={index} className="my-2"></div>;
           }
           
           const formattedLine = line
@@ -46,16 +47,16 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
             const level = line.trim().match(/^#+/)[0].length;
             let fontSize;
             switch(level) {
-              case 1: fontSize = "1.25rem"; break;
-              case 2: fontSize = "1.15rem"; break;
-              case 3: fontSize = "1.1rem"; break;
-              default: fontSize = "1rem";
+              case 1: fontSize = "1.4rem"; break;
+              case 2: fontSize = "1.25rem"; break;
+              case 3: fontSize = "1.15rem"; break;
+              default: fontSize = "1.05rem";
             }
             
             return (
               <div 
                 key={index} 
-                className="font-bold mb-2 mt-3" 
+                className="font-bold mb-3 mt-4" 
                 style={{fontSize}}
                 dangerouslySetInnerHTML={{__html: formattedLine.replace(/^#+\s*/, '')}}
               />
@@ -64,7 +65,7 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
           
           if (line.trim().match(/^[-*•]\s/)) {
             return (
-              <div key={index} className="flex ml-4 my-1">
+              <div key={index} className="flex ml-4 my-2">
                 <span className="mr-2">•</span>
                 <span dangerouslySetInnerHTML={{__html: formattedLine.replace(/^[-*•]\s/, '')}} />
               </div>
@@ -72,13 +73,13 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
           }
           
           if (line.includes('--') && line.includes('|')) {
-            return <hr key={index} className="my-1" />;
+            return <hr key={index} className="my-2" />;
           }
           
           if (line.includes('|')) {
             const cells = line.split('|').filter(cell => cell.trim() !== '');
             return (
-              <div key={index} className="grid grid-cols-12 gap-2 py-1 border-b border-border/50">
+              <div key={index} className="grid grid-cols-12 gap-2 py-2 border-b border-border/50">
                 {cells.map((cell, cellIndex) => {
                   const formattedCell = cell.trim()
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -104,7 +105,7 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
           return (
             <div 
               key={index} 
-              className="my-1"
+              className="my-2 leading-relaxed"
               dangerouslySetInnerHTML={{ __html: formattedLine }}
             />
           );
