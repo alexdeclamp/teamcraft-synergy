@@ -1,6 +1,8 @@
+
 import React from 'react';
-import { MessageSquare, FileText, Image, Bell, Users } from 'lucide-react';
+import { MessageSquare, FileText, Image, Bell, Users, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 const features = [
   {
