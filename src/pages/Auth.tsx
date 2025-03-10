@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 
 const INVITATION_CODE = "I NEED BRA3N";
@@ -142,6 +143,13 @@ const Auth = () => {
             </TabsContent>
             
             <TabsContent value="register">
+              <div className="bg-primary/5 rounded-lg p-3 flex items-start mb-4 border border-primary/20">
+                <Lock className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="font-medium text-primary mb-1">Private Beta Access</p>
+                  <p className="text-muted-foreground">Bra3n is currently in private beta. An invitation code is required to join our exclusive early access program.</p>
+                </div>
+              </div>
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="space-y-2">
                   <label htmlFor="full-name" className="text-sm font-medium">
@@ -186,8 +194,9 @@ const Auth = () => {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="invitation-code" className="text-sm font-medium">
-                    Invitation Code
+                  <label htmlFor="invitation-code" className="text-sm font-medium flex items-center gap-1">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <span>Invitation Code</span>
                   </label>
                   <Input
                     id="invitation-code"
@@ -201,9 +210,6 @@ const Auth = () => {
                   {invitationError && (
                     <p className="text-xs text-red-500">{invitationError}</p>
                   )}
-                  <p className="text-xs text-muted-foreground">
-                    An invitation code is required to register
-                  </p>
                 </div>
                 <Button 
                   type="submit" 
@@ -211,7 +217,7 @@ const Auth = () => {
                   disabled={loading || !registerEmail || !registerPassword || !registerFullName || !invitationCode}
                 >
                   {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Create Account
+                  Join Private Beta
                 </Button>
               </form>
             </TabsContent>
