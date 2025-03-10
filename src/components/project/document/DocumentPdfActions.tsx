@@ -7,20 +7,16 @@ import { toast } from 'sonner';
 interface DocumentPdfActionsProps {
   onGenerateSummary: () => void;
   isGenerating: boolean;
+  onChatClick: () => void;
+  onAskQuestion: () => void;
 }
 
 const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   onGenerateSummary,
-  isGenerating
+  isGenerating,
+  onChatClick,
+  onAskQuestion
 }) => {
-  const handleChatWithPdf = () => {
-    toast.info('Chat with PDF feature is coming soon!');
-  };
-
-  const handleAskQuestion = () => {
-    toast.info('Ask Question feature is coming soon!');
-  };
-
   return (
     <>
       <Button 
@@ -37,23 +33,21 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
       <Button 
         variant="outline" 
         size="sm" 
-        className="flex items-center gap-1 opacity-70"
-        onClick={handleAskQuestion}
+        className="flex items-center gap-1"
+        onClick={onAskQuestion}
       >
         <HelpCircle className="h-4 w-4" />
         <span className="hidden sm:inline">Ask Question</span>
-        <span className="hidden sm:inline text-xs ml-1">(Coming Soon)</span>
       </Button>
       
       <Button 
         variant="default" 
         size="sm" 
-        className="flex items-center gap-1 opacity-70"
-        onClick={handleChatWithPdf}
+        className="flex items-center gap-1"
+        onClick={onChatClick}
       >
         <MessageSquare className="h-4 w-4" />
         <span className="sm:inline">Chat</span>
-        <span className="hidden sm:inline text-xs ml-1">(Coming Soon)</span>
       </Button>
     </>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { File } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -109,6 +108,14 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
     }
   };
 
+  const handleChatClick = () => {
+    setIsChatOpen(true);
+  };
+
+  const handleAskQuestion = () => {
+    setIsQuestionOpen(true);
+  };
+
   return (
     <>
       <div className="flex items-center justify-between p-4 border rounded-lg mb-2 bg-card w-full">
@@ -129,6 +136,8 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
             <DocumentPdfActions
               onGenerateSummary={handleGenerateSummary}
               isGenerating={isGenerating}
+              onChatClick={handleChatClick}
+              onAskQuestion={handleAskQuestion}
             />
           )}
           

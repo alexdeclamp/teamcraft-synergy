@@ -1,6 +1,7 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// Add PDF parsing library
+import * as pdfjs from "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js";
 
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -9,6 +10,44 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Function to fetch and extract text from a PDF URL
+async function extractTextFromPdf(url) {
+  try {
+    console.log(`Fetching PDF from: ${url}`);
+    
+    // Fetch the PDF
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`);
+    }
+    
+    // Get the PDF as ArrayBuffer
+    const pdfData = await response.arrayBuffer();
+    
+    // Load the PDF with pdf.js
+    const loadingTask = pdfjs.getDocument({ data: new Uint8Array(pdfData) });
+    const pdf = await loadingTask.promise;
+    
+    console.log(`PDF loaded with ${pdf.numPages} pages`);
+    
+    // Extract text from each page
+    let textContent = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      const strings = content.items.map(item => item.str);
+      textContent += strings.join(' ') + '\n';
+    }
+    
+    console.log(`Extracted ${textContent.length} characters from PDF`);
+    
+    return textContent;
+  } catch (error) {
+    console.error('Error extracting text from PDF:', error);
+    throw new Error(`Failed to extract text from PDF: ${error.message}`);
+  }
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -46,8 +85,18 @@ serve(async (req) => {
       contextContent = documentContext;
       console.log('Using provided document context');
     } else {
-      // We could implement fetching/extracting context here if needed
-      console.log('No document context provided');
+      // Extract text from the PDF URL
+      try {
+        console.log('No document context provided, extracting from PDF URL...');
+        contextContent = await extractTextFromPdf(pdfUrl);
+        console.log(`Successfully extracted ${contextContent.length} characters from PDF`);
+      } catch (extractError) {
+        console.error('Error extracting PDF text:', extractError);
+        return new Response(
+          JSON.stringify({ error: `Failed to extract text from PDF: ${extractError.message}` }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
     
     // System message for both models
