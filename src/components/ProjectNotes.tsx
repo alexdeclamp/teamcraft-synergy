@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -346,14 +347,22 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
       if (line.trim().match(/^#{1,6}\s/)) {
         const level = line.trim().match(/^#+/)[0].length;
         const headingText = line.trim().replace(/^#+\s*/, '');
-        const headingClass = `heading-${level}`;
-        const fontSize = 6 - level + 0.9;
+        
+        // Adjust heading size based on level
+        let fontSize;
+        switch(level) {
+          case 1: fontSize = "1.5rem"; break;
+          case 2: fontSize = "1.3rem"; break;
+          case 3: fontSize = "1.15rem"; break;
+          case 4: fontSize = "1.05rem"; break;
+          default: fontSize = "1rem";
+        }
         
         return (
           <div 
             key={index} 
             className={`font-bold mb-2 mt-3`} 
-            style={{fontSize: `${fontSize}rem`}}
+            style={{fontSize}}
             dangerouslySetInnerHTML={{__html: formattedLine.replace(/^#+\s*/, '')}}
           />
         );

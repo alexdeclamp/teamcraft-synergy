@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -50,13 +51,21 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
           if (line.trim().match(/^#{1,6}\s/)) {
             const level = line.trim().match(/^#+/)[0].length;
             const headingClass = `heading-${level}`;
-            const fontSize = 6 - level + 0.8; // Scale heading size
+            // Adjust heading size based on level
+            let fontSize;
+            switch(level) {
+              case 1: fontSize = "1.5rem"; break;
+              case 2: fontSize = "1.3rem"; break;
+              case 3: fontSize = "1.15rem"; break;
+              case 4: fontSize = "1.05rem"; break;
+              default: fontSize = "1rem";
+            }
             
             return (
               <div 
                 key={index} 
                 className={`font-bold mb-2 mt-3`} 
-                style={{fontSize: `${fontSize}rem`}}
+                style={{fontSize}}
                 dangerouslySetInnerHTML={{__html: formattedLine.replace(/^#+\s*/, '')}}
               />
             );

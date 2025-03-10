@@ -22,7 +22,7 @@ const SummaryActions: React.FC<SummaryActionsProps> = ({
   isCreatingNote,
   projectId,
   hasSummary,
-  buttonText = "Create Note"
+  buttonText = "Save as Note"
 }) => {
   const hasValidSummary = summary && summary.trim() !== '';
   
