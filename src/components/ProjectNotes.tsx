@@ -15,6 +15,7 @@ import { PlusCircle, Edit, Trash2, FileText, Loader2, User, Clock, Tag, Hash, X,
 import { toast } from 'sonner';
 import NoteSummaryButton from './NoteSummaryButton';
 import RegenerateMetadataButton from './note/RegenerateMetadataButton';
+
 interface Note {
   id: string;
   title: string;
@@ -27,9 +28,11 @@ interface Note {
   creator_avatar?: string;
   tags?: string[];
 }
+
 interface ProjectNotesProps {
   projectId: string;
 }
+
 const ProjectNotes: React.FC<ProjectNotesProps> = ({
   projectId
 }) => {
@@ -50,9 +53,11 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [aiModel, setAiModel] = useState<'claude' | 'openai'>('claude');
+
   useEffect(() => {
     fetchNotes();
   }, [projectId, activeTag]);
+
   const fetchNotes = async () => {
     if (!projectId || !user) return;
     try {
@@ -101,6 +106,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
       setLoading(false);
     }
   };
+
   const addTag = () => {
     if (!tagInput.trim() || tags.includes(tagInput.trim())) {
       return;
@@ -108,23 +114,28 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
     setTags([...tags, tagInput.trim()]);
     setTagInput('');
   };
+
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
+
   const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
       addTag();
     }
   };
+
   const handleRegenerateTitle = (newTitle: string) => {
     setTitle(newTitle);
     toast.success('Title regenerated successfully');
   };
+
   const handleRegenerateTags = (newTags: string[]) => {
     setTags(newTags);
     toast.success('Tags regenerated successfully');
   };
+
   const handleRegenerateBoth = (data: {
     title: string;
     tags: string[];
@@ -133,6 +144,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
     setTags(data.tags);
     toast.success('Title and tags regenerated successfully');
   };
+
   const handleCreateNote = async () => {
     if (!title.trim() || !projectId || !user) {
       toast.error('Please enter a title for your note');
@@ -171,6 +183,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
       setSaving(false);
     }
   };
+
   const handleEditNote = async () => {
     if (!title.trim() || !currentNote || !user) {
       toast.error('Please enter a title for your note');
@@ -208,6 +221,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
       setSaving(false);
     }
   };
+
   const handleDeleteNote = async (noteId: string) => {
     if (!noteId || !user) return;
     const confirmed = window.confirm('Are you sure you want to delete this note?');
@@ -231,6 +245,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
       toast.error('Failed to delete note');
     }
   };
+
   const openEditDialog = (note: Note) => {
     setCurrentNote(note);
     setTitle(note.title);
@@ -238,10 +253,12 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
     setTags(note.tags || []);
     setIsEditOpen(true);
   };
+
   const openViewDialog = (note: Note) => {
     setCurrentNote(note);
     setIsViewOpen(true);
   };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
@@ -251,10 +268,12 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
       minute: '2-digit'
     });
   };
+
   const handleOpenCreateDialog = () => {
     resetForm();
     setIsCreateOpen(true);
   };
+
   const resetForm = () => {
     setTitle('');
     setContent('');
@@ -262,6 +281,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
     setTagInput('');
     setCurrentNote(null);
   };
+
   const applyFormatting = (type: 'bold' | 'italic' | 'underline') => {
     const textarea = document.getElementById(isEditOpen ? 'edit-content' : 'content') as HTMLTextAreaElement;
     if (!textarea) return;
@@ -311,12 +331,49 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
       }, 0);
     }
   };
+
   const renderFormattedText = (text: string) => {
     if (!text) return "No content provided.";
-    let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>').replace(/__(.*?)__/g, '<u>$1</u>');
-    formattedText = formattedText.replace(/\n/g, '<br>');
-    return formattedText;
+    
+    const lines = text.split('\n');
+    
+    return lines.map((line, index) => {
+      let formattedLine = line
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/__(.*?)__/g, '<u>$1</u>');
+      
+      if (line.trim().match(/^#{1,6}\s/)) {
+        const level = line.trim().match(/^#+/)[0].length;
+        const headingText = line.trim().replace(/^#+\s*/, '');
+        const headingClass = `heading-${level}`;
+        const fontSize = 6 - level + 0.9;
+        
+        return (
+          <div 
+            key={index} 
+            className={`font-bold mb-2 mt-3`} 
+            style={{fontSize: `${fontSize}rem`}}
+            dangerouslySetInnerHTML={{__html: formattedLine.replace(/^#+\s*/, '')}}
+          />
+        );
+      }
+      
+      if (line.trim().match(/^[-*•]\s/)) {
+        return (
+          <div key={index} className="flex ml-4 my-1">
+            <span className="mr-2">•</span>
+            <span dangerouslySetInnerHTML={{__html: formattedLine.replace(/^[-*•]\s/, '')}} />
+          </div>
+        );
+      }
+      
+      return (
+        <div key={index} className="my-1" dangerouslySetInnerHTML={{__html: formattedLine}} />
+      );
+    });
   };
+
   return <div className="space-y-4">
       <div className="flex justify-between items-center mb-6">
         
@@ -361,9 +418,11 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
                     </div>
                     
                     <div className="text-muted-foreground text-sm mb-2 line-clamp-2">
-                      {note.content ? <div dangerouslySetInnerHTML={{
-                  __html: renderFormattedText(note.content)
-                }} /> : "No content"}
+                      {note.content ? (
+                        <div>
+                          {renderFormattedText(note.content)}
+                        </div>
+                      ) : "No content"}
                     </div>
                     
                     {note.tags && note.tags.length > 0 && <div className="flex flex-wrap gap-1 mb-2">
@@ -440,7 +499,8 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
 
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
         <DialogContent className="sm:max-w-[650px] max-h-[80vh] overflow-y-auto">
-          {currentNote && <>
+          {currentNote && (
+            <>
               <DialogHeader>
                 <div className="flex justify-between items-start">
                   <DialogTitle className="pr-8">{currentNote.title}</DialogTitle>
@@ -489,11 +549,10 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
                 </div>}
               
               <div className="mt-4 whitespace-pre-wrap">
-                <div dangerouslySetInnerHTML={{
-              __html: renderFormattedText(currentNote.content || '')
-            }} />
+                {renderFormattedText(currentNote.content || '')}
               </div>
-            </>}
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -676,4 +735,5 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({
       </Dialog>
     </div>;
 };
+
 export default ProjectNotes;

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -25,117 +24,98 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
 
   // Format the summary content and handle markdown formatting
   const formatSummaryContent = (content: string) => {
-    // Format markdown-style formatting
-    let formattedText = content
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-      .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
-      .replace(/__(.*?)__/g, '<u>$1</u>'); // Underline
-
-    // Check if content might contain a table structure
-    const lines = content.split('\n');
-    const potentialTableLines = lines.filter(line => 
-      line.includes('|') || 
-      line.includes('\t') || 
-      (line.includes(':') && line.split(':').length > 1)
-    );
-    
-    // If we detect a potential table structure
-    if (potentialTableLines.length > 3 && potentialTableLines.length / lines.length > 0.4) {
-      return (
-        <div className="prose max-w-none">
-          {lines.map((line, index) => {
-            // Check if line looks like a table header or separator
-            if (line.includes('--') && line.includes('|')) {
-              return <hr key={index} className="my-1" />;
-            }
-            // Check if line looks like a table row
-            else if (line.includes('|')) {
-              const cells = line.split('|').filter(cell => cell.trim() !== '');
-              return (
-                <div key={index} className="grid grid-cols-12 gap-2 py-1 border-b border-border/50">
-                  {cells.map((cell, cellIndex) => {
-                    // Apply markdown formatting to cell content
-                    const formattedCell = cell.trim()
-                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                      .replace(/__(.*?)__/g, '<u>$1</u>');
-                    
-                    return (
-                      <div 
-                        key={`${index}-${cellIndex}`}
-                        className={cn(
-                          "px-2", 
-                          cellIndex === 0 ? "col-span-3 font-medium" : "col-span-9/cells.length",
-                          index === 0 ? "font-semibold" : ""
-                        )}
-                        dangerouslySetInnerHTML={{ __html: formattedCell }}
-                      />
-                    );
-                  })}
-                </div>
-              );
-            } 
-            // Format other content with proper paragraph styling
-            else if (line.trim() !== '') {
-              // Check if this is a heading (starts with # symbols)
-              if (line.trim().startsWith('#')) {
-                const level = line.trim().match(/^#+/)[0].length;
-                const text = line.trim().replace(/^#+\s*/, '');
-                // Apply markdown formatting to heading text
-                const formattedHeading = text
-                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                  .replace(/__(.*?)__/g, '<u>$1</u>');
-                
-                const headingClass = cn(
-                  "font-semibold", 
-                  level === 1 ? "text-xl mt-4 mb-2" : 
-                  level === 2 ? "text-lg mt-3 mb-2" : 
-                  "text-base mt-2 mb-1"
-                );
-                return <div key={index} className={headingClass} dangerouslySetInnerHTML={{ __html: formattedHeading }} />;
-              }
-              // Check if this is a list item
-              else if (line.trim().match(/^[-*•]\s/)) {
-                const listItemText = line.trim().replace(/^[-*•]\s/, '');
-                // Apply markdown formatting to list item text
-                const formattedListItem = listItemText
-                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                  .replace(/__(.*?)__/g, '<u>$1</u>');
-                
-                return (
-                  <div key={index} className="ml-4 flex">
-                    <span className="mr-2">•</span>
-                    <span dangerouslySetInnerHTML={{ __html: formattedListItem }} />
-                  </div>
-                );
-              }
-              // Format regular paragraph with formatted content
-              // Apply separate formatting for this specific line
-              const lineFormatted = line
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/__(.*?)__/g, '<u>$1</u>');
-              
-              return <p key={index} className="my-1" dangerouslySetInnerHTML={{ __html: lineFormatted }} />;
-            }
-            return null;
-          }).filter(Boolean)}
-        </div>
-      );
+    // Check if content is empty
+    if (!content || content.trim() === '') {
+      return <p>No content available</p>;
     }
+
+    // Split content by lines to process line by line
+    const lines = content.split('\n');
     
-    // For non-tabular content, maintain the whitespace and line breaks
-    // Process each line separately to preserve formatting
-    const formattedLines = content.split('\n').map(line => {
-      return line
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/__(.*?)__/g, '<u>$1</u>');
-    }).join('<br/>');
-    
-    return <div className="whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formattedLines }} />;
+    return (
+      <div className="prose max-w-none">
+        {lines.map((line, index) => {
+          // Skip empty lines but keep spacing
+          if (line.trim() === '') {
+            return <div key={index} className="my-1"></div>;
+          }
+          
+          // Format the line with markdown syntax
+          const formattedLine = line
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')              // Italic
+            .replace(/__(.*?)__/g, '<u>$1</u>');               // Underline
+          
+          // Handle headings (lines starting with #)
+          if (line.trim().match(/^#{1,6}\s/)) {
+            const level = line.trim().match(/^#+/)[0].length;
+            const headingClass = `heading-${level}`;
+            const fontSize = 6 - level + 0.8; // Scale heading size
+            
+            return (
+              <div 
+                key={index} 
+                className={`font-bold mb-2 mt-3`} 
+                style={{fontSize: `${fontSize}rem`}}
+                dangerouslySetInnerHTML={{__html: formattedLine.replace(/^#+\s*/, '')}}
+              />
+            );
+          }
+          
+          // Handle list items
+          if (line.trim().match(/^[-*•]\s/)) {
+            return (
+              <div key={index} className="flex ml-4 my-1">
+                <span className="mr-2">•</span>
+                <span dangerouslySetInnerHTML={{__html: formattedLine.replace(/^[-*•]\s/, '')}} />
+              </div>
+            );
+          }
+          
+          // Check if line looks like a table separator
+          if (line.includes('--') && line.includes('|')) {
+            return <hr key={index} className="my-1" />;
+          }
+          
+          // Check if line looks like a table row
+          if (line.includes('|')) {
+            const cells = line.split('|').filter(cell => cell.trim() !== '');
+            return (
+              <div key={index} className="grid grid-cols-12 gap-2 py-1 border-b border-border/50">
+                {cells.map((cell, cellIndex) => {
+                  // Apply markdown formatting to cell content
+                  const formattedCell = cell.trim()
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/__(.*?)__/g, '<u>$1</u>');
+                  
+                  return (
+                    <div 
+                      key={`${index}-${cellIndex}`}
+                      className={cn(
+                        "px-2", 
+                        cellIndex === 0 ? "col-span-3 font-medium" : "col-span-9/cells.length",
+                        index === 0 ? "font-semibold" : ""
+                      )}
+                      dangerouslySetInnerHTML={{ __html: formattedCell }}
+                    />
+                  );
+                })}
+              </div>
+            );
+          }
+          
+          // Handle regular paragraph with spacing
+          return (
+            <div 
+              key={index} 
+              className="my-1"
+              dangerouslySetInnerHTML={{ __html: formattedLine }}
+            />
+          );
+        })}
+      </div>
+    );
   };
 
   // Only show the summary content if we explicitly know we have a summary
