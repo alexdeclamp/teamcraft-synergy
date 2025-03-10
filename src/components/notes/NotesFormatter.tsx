@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const formatNoteContent = (text: string) => {
@@ -69,13 +70,13 @@ const NoteContentDisplay: React.FC<NoteContentDisplayProps> = ({ content, isPrev
   let displayContent = content;
   if (isPreview) {
     const firstParagraph = content.split('\n')[0] || '';
-    displayContent = firstParagraph.length > 150 
-      ? firstParagraph.substring(0, 150) + '...'
+    displayContent = firstParagraph.length > 300 
+      ? firstParagraph.substring(0, 300) + '...'
       : firstParagraph;
   }
   
   return (
-    <div className={`whitespace-pre-wrap prose-sm max-w-none leading-relaxed ${isPreview ? 'line-clamp-2 text-[11px]' : ''}`}>
+    <div className={`whitespace-pre-wrap prose-sm max-w-none leading-relaxed ${isPreview ? 'line-clamp-2 text-[8px]' : ''}`}>
       {formatNoteContent(displayContent)}
     </div>
   );
