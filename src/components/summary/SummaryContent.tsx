@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -23,55 +22,46 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
     );
   }
 
-  // Format the summary content and handle markdown formatting
   const formatSummaryContent = (content: string) => {
-    // Check if content is empty
     if (!content || content.trim() === '') {
       return <p>No content available</p>;
     }
 
-    // Split content by lines to process line by line
     const lines = content.split('\n');
     
     return (
       <div className="prose max-w-none">
         {lines.map((line, index) => {
-          // Skip empty lines but keep spacing
           if (line.trim() === '') {
             return <div key={index} className="my-1"></div>;
           }
           
-          // Format the line with markdown syntax
           const formattedLine = line
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')  // Bold
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')              // Italic
-            .replace(/__(.*?)__/g, '<u>$1</u>');               // Underline
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/__(.*?)__/g, '<u>$1</u>')
+            .replace(/^\* /, '• ');
           
-          // Handle headings (lines starting with #)
           if (line.trim().match(/^#{1,6}\s/)) {
             const level = line.trim().match(/^#+/)[0].length;
-            const headingClass = `heading-${level}`;
-            // Adjust heading size based on level
             let fontSize;
             switch(level) {
-              case 1: fontSize = "1.5rem"; break;
-              case 2: fontSize = "1.3rem"; break;
-              case 3: fontSize = "1.15rem"; break;
-              case 4: fontSize = "1.05rem"; break;
+              case 1: fontSize = "1.25rem"; break;
+              case 2: fontSize = "1.15rem"; break;
+              case 3: fontSize = "1.1rem"; break;
               default: fontSize = "1rem";
             }
             
             return (
               <div 
                 key={index} 
-                className={`font-bold mb-2 mt-3`} 
+                className="font-bold mb-2 mt-3" 
                 style={{fontSize}}
                 dangerouslySetInnerHTML={{__html: formattedLine.replace(/^#+\s*/, '')}}
               />
             );
           }
           
-          // Handle list items
           if (line.trim().match(/^[-*•]\s/)) {
             return (
               <div key={index} className="flex ml-4 my-1">
@@ -81,18 +71,15 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
             );
           }
           
-          // Check if line looks like a table separator
           if (line.includes('--') && line.includes('|')) {
             return <hr key={index} className="my-1" />;
           }
           
-          // Check if line looks like a table row
           if (line.includes('|')) {
             const cells = line.split('|').filter(cell => cell.trim() !== '');
             return (
               <div key={index} className="grid grid-cols-12 gap-2 py-1 border-b border-border/50">
                 {cells.map((cell, cellIndex) => {
-                  // Apply markdown formatting to cell content
                   const formattedCell = cell.trim()
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                     .replace(/\*(.*?)\*/g, '<em>$1</em>')
@@ -114,7 +101,6 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
             );
           }
           
-          // Handle regular paragraph with spacing
           return (
             <div 
               key={index} 
@@ -127,7 +113,6 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
     );
   };
 
-  // Only show the summary content if we explicitly know we have a summary
   if (hasSummary && summary.trim() !== '') {
     return (
       <>
@@ -142,7 +127,6 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
     );
   }
 
-  // Default "no summary" state
   return (
     <div className="p-4 bg-accent/10 rounded-md flex items-center justify-center h-32">
       <p className="text-muted-foreground">No summary available yet.</p>
