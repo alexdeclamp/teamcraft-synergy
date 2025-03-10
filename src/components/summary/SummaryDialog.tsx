@@ -42,13 +42,15 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
 }) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
+  const [localHasSavedVersion, setLocalHasSavedVersion] = useState(hasSavedVersion);
   const { user } = useAuth();
   
   useEffect(() => {
     if (isOpen) {
       setFeedbackGiven(false);
+      setLocalHasSavedVersion(hasSavedVersion);
     }
-  }, [isOpen]);
+  }, [isOpen, hasSavedVersion]);
 
   const handleCopy = () => {
     if (!summary || summary.trim() === '') {
@@ -87,6 +89,12 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
       return;
     }
 
+    // Prevent creating a note if it's already saved
+    if (localHasSavedVersion) {
+      toast.info("This summary is already saved as a note");
+      return;
+    }
+
     try {
       setIsCreatingNote(true);
       
@@ -118,7 +126,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
       if (error) throw error;
 
       toast.success('Summary saved as a note successfully');
-      onClose();
+      setLocalHasSavedVersion(true);
     } catch (error: any) {
       console.error('Error creating note:', error);
       toast.error(`Failed to create note: ${error.message}`);
@@ -127,7 +135,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     }
   };
 
-  const hasSummary = hasSavedVersion || (summary.trim() !== '' && !isLoading);
+  const hasSummary = localHasSavedVersion || (summary.trim() !== '' && !isLoading);
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
@@ -136,7 +144,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
       <DialogContent className="sm:max-w-[750px] max-h-[85vh] flex flex-col">
         <SummaryDialogHeader 
           title={title} 
-          hasSavedVersion={hasSavedVersion} 
+          hasSavedVersion={localHasSavedVersion} 
           isLoading={isLoading} 
         />
         
@@ -148,7 +156,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           />
         </div>
         
-        {!hasSavedVersion && hasSummary && projectId && (
+        {!localHasSavedVersion && hasSummary && projectId && (
           <Alert variant="default" className="mt-4 bg-amber-50 border-amber-200">
             <AlertCircle className="h-4 w-4 text-amber-600" />
             <AlertDescription>
@@ -159,7 +167,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
         
         <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 mt-4">
           <div className="flex items-center space-x-2 mt-4 sm:mt-0">
-            {!isLoading && hasSavedVersion && !feedbackGiven && (
+            {!isLoading && localHasSavedVersion && !feedbackGiven && (
               <SummaryFeedback 
                 feedbackGiven={feedbackGiven} 
                 onFeedback={handleFeedback} 
@@ -178,7 +186,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
             isCreatingNote={isCreatingNote}
             projectId={projectId}
             hasSummary={hasSummary}
-            buttonText={hasSavedVersion ? "Already Saved" : "Save as Note"}
+            buttonText={localHasSavedVersion ? "Already Saved" : "Save as Note"}
           />
         </DialogFooter>
       </DialogContent>

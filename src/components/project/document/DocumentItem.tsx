@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { File } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -8,7 +7,7 @@ import SummaryDialog from '@/components/summary/SummaryDialog';
 import DocumentChatDialog from './DocumentChatDialog';
 import DocumentQuestionDialog from './DocumentQuestionDialog';
 import DocumentActions from './DocumentActions';
-import DocumentPdfActions from './DocumentPdfActions';
+import DocumentPdfActions';
 
 interface DocumentItemProps {
   document: {
@@ -45,7 +44,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
   const isPdf = fileExtension === 'pdf';
   const pdfUrl = document.metadata?.pdf_url || document.file_url;
   
-  // Check for existing summary when component mounts
   useEffect(() => {
     const checkForExistingSummary = async () => {
       if (!isPdf) return;
@@ -111,7 +109,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
     
     setIsSummaryOpen(true);
     
-    // If we already have a saved summary, try to fetch it first
     if (hasSavedSummary) {
       try {
         const { data, error } = await supabase
@@ -132,7 +129,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
       }
     }
     
-    // If no saved summary found or there was an error, generate a new one
     setIsGenerating(true);
     setSummary('');
     
@@ -152,7 +148,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
       }
       
       setSummary(data.summary);
-      setHasSavedSummary(true);
     } catch (error: any) {
       console.error('Error generating summary:', error);
       toast.error(`Failed to generate summary: ${error.message}`);
