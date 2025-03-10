@@ -42,8 +42,15 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      <div className="flex flex-col sm:flex-row items-center gap-3">
         <div className="w-full">
+          <label 
+            htmlFor="pdf-upload" 
+            className="flex items-center justify-center gap-2 cursor-pointer bg-muted hover:bg-muted/80 text-foreground font-medium px-4 py-3 rounded-md border-2 border-dashed border-border h-16 transition-colors w-full"
+          >
+            <FileText className="h-6 w-6" />
+            <span className="text-base">Choose PDF Files</span>
+          </label>
           <Input 
             id="pdf-upload" 
             type="file" 
@@ -51,7 +58,7 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
             onChange={handleFileChange} 
             disabled={isUploading} 
             multiple 
-            className="file:mr-4 file:rounded-md file:border-0 file:font-medium file:bg-primary/10 file:text-primary hover:file:cursor-pointer w-full h-12 px-[8px] mx-px py-[6px]" 
+            className="sr-only" 
           />
         </div>
       </div>
