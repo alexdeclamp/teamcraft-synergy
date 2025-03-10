@@ -58,74 +58,106 @@ serve(async (req) => {
     const results = [];
     const errors = [];
     
-    for (let i = 0; i < pdfUrls.length; i++) {
-      const pdfUrl = pdfUrls[i];
-      const fileName = fileNames[i] || `Document ${i + 1}`;
+    // Process documents in smaller batches to prevent resource exhaustion
+    const BATCH_SIZE = 3; // Process 3 documents at a time
+    let processedCount = 0;
+    
+    for (let batchIndex = 0; batchIndex < Math.ceil(pdfUrls.length / BATCH_SIZE); batchIndex++) {
+      const startIdx = batchIndex * BATCH_SIZE;
+      const endIdx = Math.min(startIdx + BATCH_SIZE, pdfUrls.length);
+      const batchPromises = [];
       
-      try {
-        console.log(`Processing PDF (${i+1}/${pdfUrls.length}): ${fileName}`);
+      console.log(`Processing batch ${batchIndex + 1} (documents ${startIdx + 1} to ${endIdx})`);
+      
+      // Create promises for the current batch
+      for (let i = startIdx; i < endIdx; i++) {
+        batchPromises.push(processPdf(pdfUrls[i], fileNames[i], model));
+      }
+      
+      // Process the batch concurrently
+      const batchResults = await Promise.allSettled(batchPromises);
+      
+      // Handle results from the batch
+      for (let i = 0; i < batchResults.length; i++) {
+        const result = batchResults[i];
+        const index = startIdx + i;
         
-        let apiResponse;
-        let summary;
-        
-        // Call the appropriate AI API based on the model parameter
-        if (model === 'claude') {
-          // Call Claude API
-          apiResponse = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': anthropicApiKey,
-              'anthropic-version': '2023-06-01'
-            },
-            body: JSON.stringify({
-              model: "claude-3-haiku-20240307",
-              max_tokens: 1500,
-              messages: [
-                {
-                  role: "user",
-                  content: [
-                    {
-                      type: "text",
-                      text: `Please provide a comprehensive summary of this PDF document (${pdfUrl}). 
-                      
-                      Include the following in your summary:
-                      1. The main purpose and key points of the document
-                      2. Important facts, figures, and findings
-                      3. Any conclusions or recommendations
-                      
-                      Format your response in a clear, structured way using paragraphs, bullet points, and headings as appropriate.`
-                    }
-                  ]
-                }
-              ]
-            })
+        if (result.status === 'fulfilled') {
+          results.push({
+            fileName: fileNames[index],
+            pdfUrl: pdfUrls[index],
+            summary: result.value
           });
-          
-          if (!apiResponse.ok) {
-            throw new Error(`Claude API error: ${apiResponse.status} - ${await apiResponse.text()}`);
-          }
-          
-          const data = await apiResponse.json();
-          summary = data.content[0].text;
+          console.log(`Successfully generated summary for ${fileNames[index]}`);
         } else {
-          // Call OpenAI API
-          apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${openaiApiKey}`
-            },
-            body: JSON.stringify({
-              model: "gpt-4o-mini",
-              messages: [
+          errors.push({
+            fileName: fileNames[index],
+            pdfUrl: pdfUrls[index],
+            error: result.reason?.message || 'Failed to process document'
+          });
+          console.error(`Error processing PDF ${fileNames[index]}:`, result.reason);
+        }
+        
+        processedCount++;
+      }
+      
+      // Add a small delay between batches to allow resources to be freed
+      if (batchIndex < Math.ceil(pdfUrls.length / BATCH_SIZE) - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+    
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        results,
+        errors,
+        totalProcessed: processedCount,
+        totalSuccess: results.length,
+        totalErrors: errors.length
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Error in summarize-multiple-pdfs function:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        error: error.message || 'Unknown error occurred',
+        details: error.stack || '' 
+      }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+});
+
+async function processPdf(pdfUrl: string, fileName: string, model: string): Promise<string> {
+  try {
+    console.log(`Processing PDF: ${fileName}`);
+    
+    let apiResponse;
+    let summary;
+    
+    // Call the appropriate AI API based on the model parameter
+    if (model === 'claude') {
+      // Call Claude API
+      apiResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicApiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: "claude-3-haiku-20240307",
+          max_tokens: 1500,
+          messages: [
+            {
+              role: "user",
+              content: [
                 {
-                  role: "system",
-                  content: "You are a helpful assistant that provides comprehensive summaries of PDF documents."
-                },
-                {
-                  role: "user",
-                  content: `Please provide a comprehensive summary of this PDF document (${pdfUrl}). 
+                  type: "text",
+                  text: `Please provide a comprehensive summary of this PDF document (${pdfUrl}). 
                   
                   Include the following in your summary:
                   1. The main purpose and key points of the document
@@ -135,52 +167,68 @@ serve(async (req) => {
                   Format your response in a clear, structured way using paragraphs, bullet points, and headings as appropriate.`
                 }
               ]
-            })
-          });
-          
-          if (!apiResponse.ok) {
-            throw new Error(`OpenAI API error: ${apiResponse.status} - ${await apiResponse.text()}`);
-          }
-          
-          const data = await apiResponse.json();
-          summary = data.choices[0].message.content;
-        }
-        
-        results.push({
-          fileName,
-          pdfUrl,
-          summary
-        });
-        
-        console.log(`Successfully generated summary for ${fileName}`);
-      } catch (error) {
-        console.error(`Error processing PDF ${fileName}:`, error);
-        errors.push({
-          fileName,
-          pdfUrl,
-          error: error.message || 'Unknown error'
-        });
+            }
+          ]
+        })
+      });
+      
+      if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        throw new Error(`Claude API error: ${apiResponse.status} - ${errorText}`);
       }
+      
+      const data = await apiResponse.json();
+      if (!data.content || !data.content[0] || !data.content[0].text) {
+        throw new Error('Invalid response format from Claude API');
+      }
+      
+      summary = data.content[0].text;
+    } else {
+      // Call OpenAI API
+      apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openaiApiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: "You are a helpful assistant that provides comprehensive summaries of PDF documents."
+            },
+            {
+              role: "user",
+              content: `Please provide a comprehensive summary of this PDF document (${pdfUrl}). 
+              
+              Include the following in your summary:
+              1. The main purpose and key points of the document
+              2. Important facts, figures, and findings
+              3. Any conclusions or recommendations
+              
+              Format your response in a clear, structured way using paragraphs, bullet points, and headings as appropriate.`
+            }
+          ]
+        })
+      });
+      
+      if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        throw new Error(`OpenAI API error: ${apiResponse.status} - ${errorText}`);
+      }
+      
+      const data = await apiResponse.json();
+      if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+        throw new Error('Invalid response format from OpenAI API');
+      }
+      
+      summary = data.choices[0].message.content;
     }
     
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        results,
-        errors,
-        totalProcessed: results.length,
-        totalErrors: errors.length
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return summary;
   } catch (error) {
-    console.error('Error in summarize-multiple-pdfs function:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: error.message || 'Unknown error occurred',
-        details: error.stack || '' 
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    console.error(`Error processing PDF ${fileName}:`, error);
+    throw error;
   }
-});
+}

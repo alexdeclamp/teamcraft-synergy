@@ -25,7 +25,9 @@ interface DocumentUploadFormProps {
 export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
   files,
   isUploading,
+  createNote,
   onFilesChange,
+  onCreateNoteChange,
   onUpload,
   model,
   onModelChange
