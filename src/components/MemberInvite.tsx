@@ -44,43 +44,13 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
     console.log('Looking up user by email:', email);
     
     try {
-      // First check auth.users table (this requires service_role access)
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({
-        filters: {
-          email: email.toLowerCase()
-        }
-      });
-      
-      if (authError) {
-        console.error('Error checking auth users:', authError);
-      } else {
-        console.log('Auth users search results:', authUsers);
-        
-        if (authUsers.users && authUsers.users.length > 0) {
-          const user = authUsers.users[0];
-          console.log('User found in auth.users:', user);
-          
-          // Now get the profile to ensure it exists
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-          if (profileData?.id) {
-            return profileData.id;
-          }
-          
-          // If we found the user in auth but not in profiles, return the auth id anyway
-          return user.id;
-        }
-      }
-      
-      // Fallback to profiles table search
+      // First check auth.users table using a different approach
+      // Since we don't have direct access to filter by email using admin.listUsers()
+      // We'll use a more standard approach with the profiles table
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, email')
-        .ilike('email', email);
+        .ilike('email', email.toLowerCase());
 
       if (profilesError) {
         console.error('Error querying profiles:', profilesError);
@@ -97,6 +67,20 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
       if (matchingProfile?.id) {
         console.log('User found in profiles:', matchingProfile);
         return matchingProfile.id;
+      }
+      
+      // If we couldn't find the user in profiles, we can try to query the auth metadata
+      // This is an alternative approach that doesn't use the admin API
+      const { data: authProfiles, error: authError } = await supabase
+        .rpc('get_user_by_email', { 
+          lookup_email: email.toLowerCase() 
+        });
+      
+      if (authError) {
+        console.error('Error with RPC function:', authError);
+      } else if (authProfiles && authProfiles.length > 0) {
+        console.log('User found via RPC:', authProfiles[0]);
+        return authProfiles[0].id;
       }
       
       throw new Error('User with this email not found. Please ensure they have created an account first.');
