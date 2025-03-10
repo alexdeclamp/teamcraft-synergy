@@ -9,7 +9,6 @@ import AudienceSection from '@/components/landing/AudienceSection';
 import TestimonialsSection from '@/components/landing/TestimonialsSection';
 import CtaSection from '@/components/landing/CtaSection';
 import FooterSection from '@/components/landing/FooterSection';
-import HowItWorksSection from '@/components/landing/HowItWorksSection';
 
 const Landing = () => {
   return (
@@ -18,7 +17,6 @@ const Landing = () => {
       <HeroSection />
       <TimelineSection />
       <UseCaseGallery />
-      <HowItWorksSection />
       <BenefitsSection />
       <AudienceSection />
       <TestimonialsSection />
