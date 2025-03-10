@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle, ExternalLink, Info } from 'lucide-react';
+import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle, ExternalLink, Info, BookText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -14,6 +15,13 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, X } from 'lucide-react';
 import { extractPdfText, getPdfInfo } from '@/utils/pdfUtils';
+import { summarizeText, SummaryModel } from '@/utils/summaryUtils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DocumentPdfActionsProps {
   onGenerateSummary: () => void;
@@ -23,6 +31,7 @@ interface DocumentPdfActionsProps {
   hasSavedSummary?: boolean;
   pdfUrl: string;
   fileName: string;
+  projectId?: string;
 }
 
 const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
@@ -32,7 +41,8 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   onAskQuestion,
   hasSavedSummary = false,
   pdfUrl,
-  fileName
+  fileName,
+  projectId
 }) => {
   const [showTextModal, setShowTextModal] = useState(false);
   const [extractedText, setExtractedText] = useState('');
@@ -43,6 +53,9 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   const [pdfInfo, setPdfInfo] = useState<{pageCount: number; isEncrypted: boolean; fingerprint: string} | null>(null);
   const [textLength, setTextLength] = useState(0);
   const textContainerRef = useRef<HTMLPreElement>(null);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [summary, setSummary] = useState('');
+  const [showSummary, setShowSummary] = useState(false);
 
   const handleDisabledFeatureClick = () => {
     toast.info("This feature is currently disabled");
@@ -79,6 +92,8 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     setDiagnosisInfo(null);
     setPdfInfo(null);
     setExtractedText(''); // Clear previous text
+    setSummary(''); // Clear previous summary
+    setShowSummary(false);
     setShowTextModal(true);
     
     try {
@@ -143,17 +158,52 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   const handleDownloadText = () => {
     if (!extractedText) return;
     
-    const blob = new Blob([extractedText], { type: 'text/plain' });
+    const content = showSummary && summary ? summary : extractedText;
+    const fileNameSuffix = showSummary && summary ? '-summary' : '-extracted-text';
+    
+    const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${fileName.replace('.pdf', '')}-extracted-text.txt`;
+    a.download = `${fileName.replace('.pdf', '')}${fileNameSuffix}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    toast.success('Text downloaded successfully');
+    toast.success(`${showSummary ? 'Summary' : 'Text'} downloaded successfully`);
+  };
+
+  const handleSummarizeText = async (model: SummaryModel = 'claude') => {
+    if (!extractedText) {
+      toast.error('No text available to summarize');
+      return;
+    }
+
+    setIsSummarizing(true);
+    setSummary('');
+
+    try {
+      const result = await summarizeText({
+        text: extractedText,
+        model,
+        title: fileName,
+        projectId
+      });
+
+      setSummary(result);
+      setShowSummary(true);
+      toast.success(`Text summarized successfully using ${model === 'claude' ? 'Claude' : 'OpenAI'}`);
+    } catch (error: any) {
+      console.error('Error summarizing text:', error);
+      toast.error(`Failed to summarize: ${error.message}`);
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
+  const toggleTextView = () => {
+    setShowSummary(!showSummary);
   };
 
   useEffect(() => {
@@ -232,12 +282,25 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
           </div>
           
           <DialogHeader>
-            <DialogTitle>
-              Extracted Text - {fileName}
-              {pageCount > 0 && (
-                <span className="text-sm text-muted-foreground ml-2">
-                  ({pageCount} pages, {textLength > 0 ? `${textLength.toLocaleString()} characters` : ''})
-                </span>
+            <DialogTitle className="flex items-center justify-between">
+              <div>
+                {showSummary && summary ? 'Summary' : 'Extracted Text'} - {fileName}
+                {pageCount > 0 && !showSummary && (
+                  <span className="text-sm text-muted-foreground ml-2">
+                    ({pageCount} pages, {textLength > 0 ? `${textLength.toLocaleString()} characters` : ''})
+                  </span>
+                )}
+              </div>
+              {extractedText && !isExtracting && !extractionError && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={toggleTextView}
+                  className="ml-4"
+                  disabled={isSummarizing || (!summary && showSummary)}
+                >
+                  {showSummary ? 'Show Full Text' : 'Show Summary'}
+                </Button>
               )}
             </DialogTitle>
             {diagnosisInfo && (
@@ -261,6 +324,12 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
                 <span className="text-muted-foreground">Extracting text from PDF...</span>
                 <span className="text-xs text-muted-foreground mt-1">This may take a moment for large files</span>
               </div>
+            ) : isSummarizing ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-2" />
+                <span className="text-muted-foreground">Summarizing text...</span>
+                <span className="text-xs text-muted-foreground mt-1">This may take a moment for large documents</span>
+              </div>
             ) : extractionError ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <AlertCircle className="h-12 w-12 text-destructive mb-4" />
@@ -276,6 +345,10 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
                   </Button>
                 </div>
               </div>
+            ) : showSummary && summary ? (
+              <div className="prose prose-sm max-w-none dark:prose-invert">
+                {summary}
+              </div>
             ) : extractedText ? (
               <pre 
                 ref={textContainerRef}
@@ -290,15 +363,39 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
             )}
           </ScrollArea>
           
-          {!isExtracting && extractedText && (
-            <DialogFooter className="mt-4">
+          {!isExtracting && !isSummarizing && extractedText && (
+            <DialogFooter className="mt-4 flex flex-wrap justify-between gap-2">
+              <div>
+                {!showSummary && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="outline"
+                        className="flex items-center gap-1"
+                        disabled={isSummarizing}
+                      >
+                        <BookText className="h-4 w-4" />
+                        Summarize
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => handleSummarizeText('claude')}>
+                        Summarize with Claude
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleSummarizeText('openai')}>
+                        Summarize with OpenAI
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </div>
               <Button 
                 onClick={handleDownloadText}
                 variant="outline"
                 className="flex items-center gap-1"
               >
                 <Download className="h-4 w-4" />
-                Download Text
+                Download {showSummary ? 'Summary' : 'Text'}
               </Button>
             </DialogFooter>
           )}
