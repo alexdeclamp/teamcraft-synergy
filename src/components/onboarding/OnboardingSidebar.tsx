@@ -68,7 +68,7 @@ const OnboardingSidebar: React.FC = () => {
   };
 
   return (
-    <div className="fixed right-0 top-0 z-50 h-screen w-80 bg-background border-l shadow-lg animate-slide-in-right">
+    <div className="fixed right-0 top-[10vh] z-50 h-[80vh] w-80 bg-background border-l shadow-lg animate-slide-in-right rounded-l-lg">
       <div className="flex flex-col h-full">
         <div className="p-4 border-b flex justify-between items-center">
           <h2 className="font-semibold text-lg">Bra3n Onboarding</h2>
