@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,70 +43,41 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
     console.log('Looking up user by email:', email);
     
     try {
-      // First attempt: Try to find the user in auth.users via profiles table
-      // This is a case-insensitive query
+      // Do a direct lookup in profiles table with case-insensitive search
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id, email')
         .ilike('email', email)
-        .maybeSingle();
+        .single();
 
       if (profileError) {
-        console.error('Error querying profiles:', profileError);
-        throw profileError;
+        if (profileError.code === 'PGRST116') {
+          // No match found with ilike search
+          console.log('No user found with case-insensitive search');
+        } else {
+          console.error('Error querying profiles:', profileError);
+          throw profileError;
+        }
       }
       
       if (profileData?.id) {
-        console.log('User found in profiles table:', profileData.id);
+        console.log('User found:', profileData);
         return profileData.id;
       }
-      
-      // Second attempt: Try exact match
-      const { data: exactMatchData } = await supabase
+
+      // As a fallback, do an exact match search
+      const { data: exactMatch } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
-        .maybeSingle();
+        .single();
         
-      if (exactMatchData?.id) {
-        console.log('User found with exact email match:', exactMatchData.id);
-        return exactMatchData.id;
+      if (exactMatch?.id) {
+        console.log('User found with exact match:', exactMatch);
+        return exactMatch.id;
       }
       
-      // Third attempt: look up in auth.users indirectly by trying to sign up
-      // This will fail if user exists but gives us a confirmation
-      try {
-        const { error: signUpError } = await supabase.auth.signUp({
-          email: email,
-          password: `temp${Math.random().toString(36).substring(2, 15)}`, // Random password
-        });
-        
-        if (signUpError && signUpError.message.includes('already registered')) {
-          console.log('User exists in auth system but profile not found');
-          
-          // Get all profiles as a last resort
-          const { data: allProfiles } = await supabase
-            .from('profiles')
-            .select('id, email');
-            
-          console.log('Searching through all profiles for a match');
-          // Try to find a match manually (case-insensitive)
-          const matchedProfile = allProfiles?.find(
-            profile => profile.email && profile.email.toLowerCase() === email.toLowerCase()
-          );
-          
-          if (matchedProfile) {
-            console.log('Found user through manual search:', matchedProfile.id);
-            return matchedProfile.id;
-          }
-          
-          throw new Error('User exists in the authentication system but their profile cannot be found. Please contact support.');
-        }
-      } catch (e) {
-        console.error('Error in alternate lookup:', e);
-      }
-      
-      return null;
+      throw new Error('User with this email not found. Please ensure they have created an account first.');
     } catch (error) {
       console.error('Error finding user:', error);
       throw error;
