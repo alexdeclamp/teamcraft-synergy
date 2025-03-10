@@ -13,14 +13,14 @@ const TagFilter: React.FC<TagFilterProps> = ({ allTags, activeTag, setActiveTag 
   if (allTags.length === 0) return null;
   
   return (
-    <div className="flex flex-wrap items-center gap-2 mb-4 bg-accent/10 p-3 rounded-md">
-      <Tag className="h-4 w-4 text-muted-foreground mr-1" />
-      <span className="text-sm font-medium mr-2">Filter by tag:</span>
+    <div className="flex flex-wrap items-center gap-2 mb-5 bg-gradient-to-r from-accent/10 to-accent/5 p-3 rounded-md shadow-sm">
+      <Tag className="h-4 w-4 text-primary" />
+      <span className="text-sm font-medium mr-1 text-slate-700">Filter by tag:</span>
       <Button 
         variant={activeTag === null ? "secondary" : "outline"} 
         size="sm" 
         onClick={() => setActiveTag(null)} 
-        className="h-7 text-xs"
+        className="h-7 text-xs rounded-full"
       >
         All
       </Button>
@@ -30,7 +30,7 @@ const TagFilter: React.FC<TagFilterProps> = ({ allTags, activeTag, setActiveTag 
           variant={activeTag === tag ? "secondary" : "outline"} 
           size="sm" 
           onClick={() => setActiveTag(activeTag === tag ? null : tag)} 
-          className="h-7 text-xs"
+          className="h-7 text-xs rounded-full hover:bg-accent/10 transition-colors"
         >
           #{tag}
         </Button>

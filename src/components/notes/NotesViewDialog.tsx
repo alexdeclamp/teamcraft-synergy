@@ -31,10 +31,10 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[650px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[650px] max-h-[80vh] overflow-y-auto bg-gradient-to-b from-white to-slate-50">
         <DialogHeader>
           <div className="flex justify-between items-start">
-            <DialogTitle className="pr-8">{note.title}</DialogTitle>
+            <DialogTitle className="pr-8 text-xl font-semibold text-slate-800">{note.title}</DialogTitle>
             <div className="flex space-x-1">
               {note.user_id === userId && (
                 <>
@@ -88,16 +88,16 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
         </DialogHeader>
         
         {note.tags && note.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
+          <div className="flex flex-wrap gap-1.5 mt-2 mb-4">
             {note.tags.map(tag => (
-              <Badge key={tag} variant="outline" className="text-xs bg-accent/20">
+              <Badge key={tag} variant="outline" className="text-xs bg-accent/20 hover:bg-accent/30 transition-colors">
                 #{tag}
               </Badge>
             ))}
           </div>
         )}
         
-        <div className="mt-4">
+        <div className="mt-4 bg-white p-4 rounded-md border border-slate-100 shadow-sm">
           <NoteContentDisplay content={note.content} />
         </div>
       </DialogContent>

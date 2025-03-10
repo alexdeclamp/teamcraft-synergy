@@ -31,35 +31,49 @@ const NotesCard: React.FC<NotesCardProps> = ({
   onDelete,
   formatDate
 }) => {
+  // Function to truncate and format preview content
+  const renderPreviewContent = () => {
+    if (!note.content) return <span className="italic text-muted-foreground">No content</span>;
+    
+    // Create a temporary div to hold formatted content
+    const tempDiv = document.createElement('div');
+    const contentNodes = formatNoteContent(note.content);
+    
+    // Use first 2 elements or portions of text for preview
+    const previewContent = contentNodes.slice(0, 2);
+    
+    return (
+      <div className="line-clamp-2 text-sm">
+        {previewContent}
+      </div>
+    );
+  };
+  
   return (
     <Card 
       key={note.id} 
-      className="hover:bg-accent/5 transition-colors cursor-pointer" 
+      className="hover:bg-accent/5 transition-colors cursor-pointer border-l-4 border-l-primary/40 shadow-sm" 
       onClick={() => onView(note)}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <h3 className="font-medium text-lg">{note.title}</h3>
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="h-4 w-4 text-primary/80" />
+              <h3 className="font-medium text-lg text-slate-800">{note.title}</h3>
             </div>
             
-            <div className="text-muted-foreground text-sm mb-2 line-clamp-2">
-              {note.content ? (
-                <div>
-                  {formatNoteContent(note.content)}
-                </div>
-              ) : "No content"}
+            <div className="mb-3 text-muted-foreground">
+              {renderPreviewContent()}
             </div>
             
             {note.tags && note.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-2">
+              <div className="flex flex-wrap gap-1 mb-3">
                 {note.tags.map(tag => (
                   <Badge 
                     key={tag} 
                     variant="outline" 
-                    className="text-xs bg-accent/20" 
+                    className="text-xs bg-accent/20 hover:bg-accent/40 transition-colors" 
                     onClick={e => {
                       e.stopPropagation();
                       setActiveTag(tag === activeTag ? null : tag);
@@ -71,7 +85,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
               </div>
             )}
             
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground border-t pt-2 mt-2 border-slate-100">
               <div className="flex items-center">
                 <User className="h-3 w-3 mr-1" />
                 <div className="flex items-center">

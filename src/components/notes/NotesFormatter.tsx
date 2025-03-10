@@ -17,38 +17,41 @@ export const formatNoteContent = (text: string) => {
     if (line.trim().match(/^#{1,6}\s/)) {
       const level = line.trim().match(/^#+/)[0].length;
       let fontSize;
+      let className = "font-bold mb-3 mt-4 text-slate-800";
+      
       switch(level) {
-        case 1: fontSize = "1.25rem"; break;
-        case 2: fontSize = "1.15rem"; break;
-        case 3: fontSize = "1.1rem"; break;
-        default: fontSize = "1rem";
+        case 1: fontSize = "1.4rem"; break;
+        case 2: fontSize = "1.25rem"; break;
+        case 3: fontSize = "1.15rem"; break;
+        default: fontSize = "1.05rem";
       }
       
       return (
         <div 
           key={index} 
-          className="font-bold mb-2 mt-3" 
+          className={className}
           style={{fontSize}}
           dangerouslySetInnerHTML={{__html: formattedLine.replace(/^#+\s*/, '')}}
         />
       );
     }
     
-    // Handle list items (both * and - and • formats)
+    // Handle list items (all types of list markers)
     if (line.trim().match(/^[-*•]\s/)) {
       // Extract the content after the list marker
       const listContent = formattedLine.replace(/^[-*•]\s/, '');
       
       return (
-        <div key={index} className="flex ml-4 my-1">
-          <span className="mr-2">•</span>
+        <div key={index} className="flex ml-4 my-1.5">
+          <span className="mr-2 text-primary">•</span>
           <span dangerouslySetInnerHTML={{__html: listContent}} />
         </div>
       );
     }
     
+    // Regular paragraph with improved spacing
     return (
-      <div key={index} className="my-1" dangerouslySetInnerHTML={{__html: formattedLine}} />
+      <div key={index} className="my-2 text-slate-700" dangerouslySetInnerHTML={{__html: formattedLine}} />
     );
   });
 };
@@ -60,10 +63,14 @@ interface NoteContentDisplayProps {
 
 const NoteContentDisplay: React.FC<NoteContentDisplayProps> = ({ content }) => {
   if (!content) {
-    return <div>No content provided.</div>;
+    return <div className="text-muted-foreground italic">No content provided.</div>;
   }
   
-  return <div className="whitespace-pre-wrap">{formatNoteContent(content)}</div>;
+  return (
+    <div className="whitespace-pre-wrap prose-sm max-w-none leading-relaxed">
+      {formatNoteContent(content)}
+    </div>
+  );
 };
 
 export default NoteContentDisplay;
