@@ -234,31 +234,17 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
+      {/* How It Works Timeline Section */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-12 md:mb-16">
           <h2 className="text-3xl sm:text-4xl font-semibold mb-4">🔍 How It Works</h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Transform how you manage information with these simple steps
+            Four simple steps to transform how you manage information
           </p>
         </div>
         
-        {/* Feature Cards with Images */}
-        <div className="space-y-16">
-          {howItWorks.map((item, index) => (
-            <FeatureCard
-              key={index}
-              icon={item.icon}
-              title={item.title}
-              description={item.description}
-              imageUrl={item.imageUrl}
-              imagePosition={item.imagePosition}
-            />
-          ))}
-        </div>
-        
-        {/* Timeline for Visual Step Progress */}
-        <div className="max-w-4xl mx-auto mt-20 relative hidden md:block">
+        {/* Timeline */}
+        <div className="relative max-w-4xl mx-auto mb-16">
           {/* Timeline Line */}
           <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-muted"></div>
           
@@ -294,7 +280,7 @@ const Landing = () => {
                 </div>
                 
                 {/* Progress Bar */}
-                <div className="mt-6 max-w-md mx-auto px-4">
+                <div className="mt-6 max-w-md mx-auto px-4 hidden sm:block">
                   <Progress value={step.progress} className="h-1.5" />
                 </div>
               </div>
@@ -302,7 +288,7 @@ const Landing = () => {
           </div>
         </div>
         
-        <div className="text-center mt-16">
+        <div className="text-center mb-12">
           <Button
             onClick={() => navigate('/auth')}
             variant="outline"
