@@ -74,42 +74,46 @@ const Landing = () => {
       <LandingNavbar />
       
       {/* Hero Section */}
-      <section className="relative pt-20 pb-16 md:pt-28 md:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <section className="relative pt-20 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6 text-center md:text-left">
-            <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-              <Sparkles className="h-4 w-4 mr-2" />
-              AI-Powered Knowledge Hub
-            </div>
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight">
-              Bra<span className="text-primary">3</span>n
-            </h1>
-            <p className="text-2xl sm:text-3xl font-medium text-foreground mb-4">
-              Stop Searching. Start Knowing.
-            </p>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto md:mx-0">
-              Bra3n organizes your notes, PDFs, and documents into an AI-powered knowledge hub, where you can retrieve insights instantly.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-4">
-              <Button onClick={() => navigate('/auth')} size="lg" className="rounded-full px-8 text-base shadow-sm w-full sm:w-auto">
-                Try Bra3n for Free
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="relative hidden md:block">
-            <div className="apple-glass p-6 rounded-xl shadow-lg transition-all animate-fade-in">
+        
+        {/* Hero Image */}
+        <div className="flex justify-center mb-12">
+          <div className="relative w-full max-w-4xl">
+            <div className="apple-glass rounded-xl shadow-xl overflow-hidden">
               <img 
-                src="/placeholder.svg" 
-                alt="Bra3n Dashboard Preview" 
-                className="rounded-lg w-full"
-                width={600}
-                height={400}
+                src="https://images.unsplash.com/photo-1498050108023-c5249f4df085" 
+                alt="Bra3n Platform Preview" 
+                className="w-full h-auto rounded-lg"
+                width={1200}
+                height={675}
               />
+              <div className="absolute inset-0 bg-primary/10 rounded-xl"></div>
             </div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
+            <div className="absolute -bottom-6 -right-6 -z-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl"></div>
+            <div className="absolute -top-6 -left-6 -z-10 w-64 h-64 bg-accent/30 rounded-full blur-3xl"></div>
           </div>
+        </div>
+        
+        {/* Hero Text - Centered */}
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+            <Sparkles className="h-4 w-4 mr-2" />
+            AI-Powered Knowledge Hub
+          </div>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight mb-4">
+            Bra<span className="text-primary">3</span>n
+          </h1>
+          <p className="text-2xl sm:text-3xl font-medium text-foreground mb-4">
+            Stop Searching. Start Knowing.
+          </p>
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto mb-8">
+            Bra3n organizes your notes, PDFs, and documents into an AI-powered knowledge hub, where you can retrieve insights instantly.
+          </p>
+          <Button onClick={() => navigate('/auth')} size="lg" className="rounded-full px-8 text-base shadow-sm">
+            Try Bra3n for Free
+            <ArrowRight className="ml-1 h-4 w-4" />
+          </Button>
         </div>
       </section>
 
