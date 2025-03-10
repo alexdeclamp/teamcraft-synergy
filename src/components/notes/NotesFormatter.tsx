@@ -7,12 +7,13 @@ export const formatNoteContent = (text: string) => {
   const lines = text.split('\n');
   
   return lines.map((line, index) => {
+    // Handle bold, italic, and underline formatting first
     let formattedLine = line
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/__(.*?)__/g, '<u>$1</u>')
-      .replace(/^\* /, '• ');
+      .replace(/__(.*?)__/g, '<u>$1</u>');
     
+    // Handle headers
     if (line.trim().match(/^#{1,6}\s/)) {
       const level = line.trim().match(/^#+/)[0].length;
       let fontSize;
@@ -33,11 +34,15 @@ export const formatNoteContent = (text: string) => {
       );
     }
     
+    // Handle list items (both * and - and • formats)
     if (line.trim().match(/^[-*•]\s/)) {
+      // Extract the content after the list marker
+      const listContent = formattedLine.replace(/^[-*•]\s/, '');
+      
       return (
         <div key={index} className="flex ml-4 my-1">
           <span className="mr-2">•</span>
-          <span dangerouslySetInnerHTML={{__html: formattedLine.replace(/^[-*•]\s/, '')}} />
+          <span dangerouslySetInnerHTML={{__html: listContent}} />
         </div>
       );
     }
