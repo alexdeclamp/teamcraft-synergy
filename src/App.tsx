@@ -26,32 +26,44 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <OnboardingProvider>
-            <OnboardingSidebar />
-            <WelcomeDialog />
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/home" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
+          <Routes>
+            {/* Public routes without onboarding */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/home" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+
+            {/* Protected routes with onboarding */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
                   <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/new-project" element={
-                <ProtectedRoute>
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+            <Route path="/new-project" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
                   <NewProject />
-                </ProtectedRoute>
-              } />
-              <Route path="/project/:id" element={
-                <ProtectedRoute>
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+            <Route path="/project/:id" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
                   <Project />
-                </ProtectedRoute>
-              } />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </OnboardingProvider>
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+            
+            {/* Catch-all route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
