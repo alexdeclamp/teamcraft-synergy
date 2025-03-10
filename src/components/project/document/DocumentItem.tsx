@@ -1,19 +1,14 @@
 
 import React, { useState } from 'react';
-import { File, MoreVertical, Download, Trash2, Eye, MessageSquare, HelpCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { File } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import SummaryDialog from '@/components/summary/SummaryDialog';
 import DocumentChatDialog from './DocumentChatDialog';
 import DocumentQuestionDialog from './DocumentQuestionDialog';
+import DocumentActions from './DocumentActions';
+import DocumentPdfActions from './DocumentPdfActions';
 
 interface DocumentItemProps {
   document: {
@@ -54,14 +49,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
     }
   };
 
-  const handleDownload = () => {
-    if (document.file_url) {
-      window.open(document.file_url, '_blank');
-    } else {
-      toast.error('Download link not available');
-    }
-  };
-
   const handleDelete = async () => {
     if (!onDelete) return;
     
@@ -69,7 +56,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
     if (!confirmed) return;
     
     try {
-      // Delete from database
       const { error } = await supabase
         .from('project_documents')
         .delete()
@@ -123,16 +109,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
     }
   };
 
-  const handleChatWithPdf = () => {
-    // Disabled for now - show work in progress message
-    toast.info('Chat with PDF feature is coming soon!');
-  };
-
-  const handleAskQuestion = () => {
-    // Disabled for now - show work in progress message
-    toast.info('Ask Question feature is coming soon!');
-  };
-
   return (
     <>
       <div className="flex items-center justify-between p-4 border rounded-lg mb-2 bg-card w-full">
@@ -150,59 +126,17 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
         
         <div className="flex items-center gap-2">
           {isPdf && (
-            <>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1"
-                onClick={handleGenerateSummary}
-                disabled={isGenerating}
-              >
-                <Eye className="h-4 w-4" />
-                <span className="hidden sm:inline">Summarize</span>
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1 opacity-70"
-                onClick={handleAskQuestion}
-              >
-                <HelpCircle className="h-4 w-4" />
-                <span className="hidden sm:inline">Ask Question</span>
-                <span className="hidden sm:inline text-xs ml-1">(Coming Soon)</span>
-              </Button>
-              
-              <Button 
-                variant="default" 
-                size="sm" 
-                className="flex items-center gap-1 opacity-70"
-                onClick={handleChatWithPdf}
-              >
-                <MessageSquare className="h-4 w-4" />
-                <span className="sm:inline">Chat</span>
-                <span className="hidden sm:inline text-xs ml-1">(Coming Soon)</span>
-              </Button>
-            </>
+            <DocumentPdfActions
+              onGenerateSummary={handleGenerateSummary}
+              isGenerating={isGenerating}
+            />
           )}
           
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleDownload}>
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <DocumentActions
+            fileName={document.file_name}
+            fileUrl={document.file_url}
+            onDelete={handleDelete}
+          />
         </div>
       </div>
       
