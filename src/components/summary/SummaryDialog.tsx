@@ -135,7 +135,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     }
   };
 
-  const hasSummary = localHasSavedVersion || (summary.trim() !== '' && !isLoading);
+  const hasSummary = summary.trim() !== '' && !isLoading;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {

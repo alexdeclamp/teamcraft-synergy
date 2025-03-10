@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { File } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -7,7 +8,7 @@ import SummaryDialog from '@/components/summary/SummaryDialog';
 import DocumentChatDialog from './DocumentChatDialog';
 import DocumentQuestionDialog from './DocumentQuestionDialog';
 import DocumentActions from './DocumentActions';
-import DocumentPdfActions';
+import DocumentPdfActions from './DocumentPdfActions';
 
 interface DocumentItemProps {
   document: {
