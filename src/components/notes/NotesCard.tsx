@@ -45,7 +45,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
               <h3 className="font-medium text-lg text-slate-800">{note.title}</h3>
             </div>
             
-            <div className="mb-3 text-muted-foreground">
+            <div className="mb-2 text-muted-foreground opacity-75">
               <NoteContentDisplay content={note.content} isPreview={true} />
             </div>
             

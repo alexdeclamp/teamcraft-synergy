@@ -67,17 +67,17 @@ const NoteContentDisplay: React.FC<NoteContentDisplayProps> = ({ content, isPrev
     return <div className="text-muted-foreground italic">No content provided.</div>;
   }
   
-  // For preview, just show first 100 characters max
+  // For preview, show a much shorter excerpt
   let displayContent = content;
   if (isPreview) {
     const firstParagraph = content.split('\n')[0] || '';
-    displayContent = firstParagraph.length > 120 
-      ? firstParagraph.substring(0, 120) + '...'
+    displayContent = firstParagraph.length > 60 
+      ? firstParagraph.substring(0, 60) + '...'
       : firstParagraph;
   }
   
   return (
-    <div className={`whitespace-pre-wrap prose-sm max-w-none leading-relaxed ${isPreview ? 'line-clamp-2' : ''}`}>
+    <div className={`whitespace-pre-wrap prose-sm max-w-none leading-relaxed ${isPreview ? 'line-clamp-1 text-xs' : ''}`}>
       {formatNoteContent(displayContent)}
     </div>
   );
