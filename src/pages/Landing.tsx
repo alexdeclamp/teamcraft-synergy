@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import LandingNavbar from '@/components/landing/LandingNavbar';
 import FeatureCard from '@/components/landing/FeatureCard';
 import TestimonialCard from '@/components/landing/TestimonialCard';
+import UseCaseGallery from '@/components/landing/UseCaseGallery';
 import { Progress } from '@/components/ui/progress';
 
 const Landing = () => {
@@ -300,6 +301,9 @@ const Landing = () => {
           </Button>
         </div>
       </section>
+
+      {/* Use Case Gallery Section */}
+      <UseCaseGallery />
 
       {/* Why Choose Bra3n Section */}
       <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-muted/30 rounded-3xl">
