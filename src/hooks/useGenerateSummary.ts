@@ -7,6 +7,7 @@ interface UseGenerateSummaryProps {
   noteContent: string | null;
   projectId?: string;
   noteId: string;
+  noteName?: string;
   setSummary: (summary: string) => void;
   setSavedSummary: (summary: string | null) => void;
   setHasSummary: (has: boolean) => void;
@@ -17,6 +18,7 @@ export function useGenerateSummary({
   noteContent,
   projectId,
   noteId,
+  noteName,
   setSummary,
   setSavedSummary,
   setHasSummary,
@@ -53,6 +55,7 @@ export function useGenerateSummary({
           projectId,
           userId: user.user.id,
           noteId,
+          noteName
         },
       });
 

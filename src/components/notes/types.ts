@@ -10,4 +10,9 @@ export interface Note {
   creator_name?: string;
   creator_avatar?: string;
   tags?: string[];
+  source_document?: {
+    type: 'pdf' | 'image';
+    url: string;
+    name: string;
+  } | null;
 }

@@ -19,6 +19,9 @@ interface DocumentItemProps {
     document_type?: string;
     file_size?: number;
     content_text?: string;
+    metadata?: {
+      pdf_url?: string;
+    };
   };
   onDelete?: (id: string) => void;
   onRefresh?: () => void;
@@ -40,6 +43,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
 
   const fileExtension = document.file_name.split('.').pop()?.toLowerCase();
   const isPdf = fileExtension === 'pdf';
+  const pdfUrl = document.metadata?.pdf_url || document.file_url;
   
   // Check for existing summary when component mounts
   useEffect(() => {
@@ -135,7 +139,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
     try {
       const { data, error } = await supabase.functions.invoke('summarize-pdf', {
         body: {
-          pdfUrl: document.file_url,
+          pdfUrl: pdfUrl,
           fileName: document.file_name,
           projectId
         }
@@ -208,6 +212,8 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
         projectId={projectId}
         imageName={document.file_name}
         hasSavedVersion={hasSavedSummary}
+        sourceUrl={pdfUrl}
+        sourceType="pdf"
       />
       
       <DocumentChatDialog

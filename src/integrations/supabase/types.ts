@@ -266,6 +266,7 @@ export type Database = {
           is_favorite: boolean
           is_important: boolean
           project_id: string
+          source_document: Json | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -279,6 +280,7 @@ export type Database = {
           is_favorite?: boolean
           is_important?: boolean
           project_id: string
+          source_document?: Json | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -292,6 +294,7 @@ export type Database = {
           is_favorite?: boolean
           is_important?: boolean
           project_id?: string
+          source_document?: Json | null
           tags?: string[] | null
           title?: string
           updated_at?: string

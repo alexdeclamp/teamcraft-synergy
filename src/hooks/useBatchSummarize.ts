@@ -74,6 +74,13 @@ export function useBatchSummarize({ projectId, model = 'claude' }: UseBatchSumma
       const createdNotes = [];
       
       for (const result of data.results) {
+        // Create source document reference
+        const sourceDocument = {
+          type: 'pdf' as const,
+          url: result.pdfUrl,
+          name: result.fileName
+        };
+        
         const { data: noteData, error: noteError } = await supabase
           .from('project_notes')
           .insert({
@@ -81,7 +88,8 @@ export function useBatchSummarize({ projectId, model = 'claude' }: UseBatchSumma
             content: result.summary,
             project_id: projectId,
             user_id: user.id,
-            tags: ['pdf-summary', 'ai-generated']
+            tags: ['pdf-summary', 'ai-generated'],
+            source_document: sourceDocument
           })
           .select()
           .single();

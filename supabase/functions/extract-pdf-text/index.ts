@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
@@ -263,6 +262,13 @@ serve(async (req) => {
         
         console.log("Successfully generated note summary");
         
+        // Create source document reference
+        const sourceDocument = {
+          type: 'pdf',
+          url: pdfPublicUrl,
+          name: fileName
+        };
+        
         // Create note in database
         const { data: noteData, error: noteError } = await supabase
           .from('project_notes')
@@ -271,7 +277,8 @@ serve(async (req) => {
             content: summary,
             project_id: projectId,
             user_id: userId,
-            tags: ['pdf', 'ai-generated']
+            tags: ['pdf', 'ai-generated'],
+            source_document: sourceDocument
           })
           .select()
           .single();

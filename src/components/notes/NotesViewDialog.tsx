@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { User, Clock, Edit, Trash2 } from 'lucide-react';
+import { User, Clock, Edit, Trash2, FileText, Image, ExternalLink } from 'lucide-react';
 import { Note } from './types';
 import NoteContentDisplay from './NotesFormatter';
 
@@ -94,6 +94,27 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
                 #{tag}
               </Badge>
             ))}
+          </div>
+        )}
+        
+        {note.source_document && (
+          <div className="mb-4 flex items-center gap-2 p-2 bg-muted/40 rounded-md text-sm border border-muted-foreground/20">
+            {note.source_document.type === 'pdf' ? (
+              <FileText className="h-4 w-4 text-blue-500" />
+            ) : (
+              <Image className="h-4 w-4 text-green-500" />
+            )}
+            <span className="text-muted-foreground">Source:</span>
+            <span className="font-medium flex-grow truncate">{note.source_document.name}</span>
+            <a 
+              href={note.source_document.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center text-primary hover:underline"
+            >
+              <ExternalLink className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">View Original</span>
+            </a>
           </div>
         )}
         

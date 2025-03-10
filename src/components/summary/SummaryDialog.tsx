@@ -22,6 +22,8 @@ interface SummaryDialogProps {
   hasSavedVersion?: boolean;
   projectId?: string;
   imageName?: string;
+  sourceUrl?: string;
+  sourceType?: 'pdf' | 'image';
 }
 
 const SummaryDialog: React.FC<SummaryDialogProps> = ({
@@ -32,7 +34,9 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   isLoading,
   hasSavedVersion = false,
   projectId,
-  imageName
+  imageName,
+  sourceUrl,
+  sourceType = 'pdf'
 }) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
@@ -89,6 +93,13 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
         ? `Summary: ${imageName}` 
         : "Document Summary";
       
+      // Create source document reference if we have a URL
+      const sourceDocument = (sourceUrl && imageName) ? {
+        type: sourceType,
+        url: sourceUrl,
+        name: imageName
+      } : null;
+      
       const { data, error } = await supabase
         .from('project_notes')
         .insert({
@@ -96,7 +107,8 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           content: summary,
           project_id: projectId,
           user_id: user.id,
-          tags: ['document', 'summary', 'ai-generated']
+          tags: ['document', 'summary', 'ai-generated'],
+          source_document: sourceDocument
         })
         .select()
         .single();
