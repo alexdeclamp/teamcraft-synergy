@@ -5,6 +5,24 @@ import * as pdfjs from 'pdfjs-dist';
 const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
 pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
+// Define custom interfaces for PDF.js text content items
+interface TextItem {
+  str: string;
+  transform: number[];
+  hasEOL?: boolean;
+  dir?: string;
+}
+
+interface TextMarkedContent {
+  type: string;
+  items: any[];
+}
+
+// Type guard to check if an item is a TextItem
+function isTextItem(item: any): item is TextItem {
+  return item && typeof item.str === 'string' && Array.isArray(item.transform);
+}
+
 /**
  * Extract text from a PDF file
  * @param pdfUrl URL of the PDF file
@@ -54,25 +72,23 @@ export async function extractPdfText(pdfUrl: string): Promise<{ text: string; pa
         let text = '';
         
         for (const item of content.items) {
-          // Make sure we're dealing with TextItem not TextMarkedContent
-          if ('str' in item) {
-            // This is a TextItem
-            
+          // Use type guard to check if this is a TextItem
+          if (isTextItem(item)) {
             // Add newlines between different vertical positions (paragraphs)
-            if (lastY !== null && lastY !== (item as pdfjs.TextItem).transform[5]) {
+            if (lastY !== null && lastY !== item.transform[5]) {
               text += '\n';
             }
             
-            text += (item as pdfjs.TextItem).str;
+            text += item.str;
             
             // Add space if this isn't the end of a line
-            if ((item as pdfjs.TextItem).hasEOL !== true) {
+            if (item.hasEOL !== true) {
               text += ' ';
             } else {
               text += '\n';
             }
             
-            lastY = (item as pdfjs.TextItem).transform[5];
+            lastY = item.transform[5];
           }
         }
         
