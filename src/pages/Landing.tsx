@@ -5,7 +5,6 @@ import HeroSection from '@/components/landing/HeroSection';
 import TimelineSection from '@/components/landing/TimelineSection';
 import UseCaseGallery from '@/components/landing/UseCaseGallery';
 import BenefitsSection from '@/components/landing/BenefitsSection';
-import AudienceSection from '@/components/landing/AudienceSection';
 import TestimonialsSection from '@/components/landing/TestimonialsSection';
 import CtaSection from '@/components/landing/CtaSection';
 import FooterSection from '@/components/landing/FooterSection';
@@ -18,7 +17,6 @@ const Landing = () => {
       <TimelineSection />
       <UseCaseGallery />
       <BenefitsSection />
-      <AudienceSection />
       <TestimonialsSection />
       <CtaSection />
       <FooterSection />
