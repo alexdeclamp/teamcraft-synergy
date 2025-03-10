@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Loader2, ClipboardCopy, Download, FileText } from "lucide-react";
+import { Loader2, ClipboardCopy, Download, FileText, Brain } from "lucide-react";
 
 interface SummaryActionsProps {
   summary: string;
@@ -56,16 +56,19 @@ const SummaryActions: React.FC<SummaryActionsProps> = ({
       
       {projectId && (
         <Button
-          variant="default"
+          variant={buttonText === "Already Saved" ? "outline" : "default"}
           size="sm"
           onClick={onCreateNote}
-          disabled={isCreatingNote || !hasValidSummary}
-          title="Save summary as a project note"
+          disabled={isCreatingNote || !hasValidSummary || buttonText === "Already Saved"}
+          title={buttonText === "Already Saved" ? "This summary has already been saved" : "Save summary as a project note"}
+          className={buttonText === "Already Saved" ? "text-green-600 border-green-200 bg-green-50" : ""}
         >
           {isCreatingNote ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
+          ) : buttonText === "Already Saved" ? (
             <FileText className="mr-2 h-4 w-4" />
+          ) : (
+            <Brain className="mr-2 h-4 w-4" />
           )}
           {buttonText}
         </Button>

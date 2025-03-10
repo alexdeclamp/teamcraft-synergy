@@ -12,6 +12,8 @@ import SummaryDialogHeader from './SummaryDialogHeader';
 import SummaryContent from './SummaryContent';
 import SummaryFeedback from './SummaryFeedback';
 import SummaryActions from './SummaryActions';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface SummaryDialogProps {
   isOpen: boolean;
@@ -146,6 +148,15 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           />
         </div>
         
+        {!hasSavedVersion && hasSummary && projectId && (
+          <Alert variant="default" className="mt-4 bg-amber-50 border-amber-200">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertDescription>
+              <strong>Important:</strong> Click "Save as Note" to add this summary to your project's Brain. This allows your AI to learn from this document.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 mt-4">
           <div className="flex items-center space-x-2 mt-4 sm:mt-0">
             {!isLoading && hasSavedVersion && !feedbackGiven && (
@@ -167,7 +178,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
             isCreatingNote={isCreatingNote}
             projectId={projectId}
             hasSummary={hasSummary}
-            buttonText="Save as Note"
+            buttonText={hasSavedVersion ? "Already Saved" : "Save as Note"}
           />
         </DialogFooter>
       </DialogContent>
