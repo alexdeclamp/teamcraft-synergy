@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -77,24 +76,6 @@ const Landing = () => {
       <section className="relative pt-20 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
         
-        {/* Hero Image */}
-        <div className="flex justify-center mb-12">
-          <div className="relative w-full max-w-4xl">
-            <div className="apple-glass rounded-xl shadow-xl overflow-hidden">
-              <img 
-                src="https://images.unsplash.com/photo-1498050108023-c5249f4df085" 
-                alt="Bra3n Platform Preview" 
-                className="w-full h-auto rounded-lg"
-                width={1200}
-                height={675}
-              />
-              <div className="absolute inset-0 bg-primary/10 rounded-xl"></div>
-            </div>
-            <div className="absolute -bottom-6 -right-6 -z-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl"></div>
-            <div className="absolute -top-6 -left-6 -z-10 w-64 h-64 bg-accent/30 rounded-full blur-3xl"></div>
-          </div>
-        </div>
-        
         {/* Hero Text - Centered */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
@@ -114,6 +95,24 @@ const Landing = () => {
             Try Bra3n for Free
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
+        </div>
+        
+        {/* Hero Image */}
+        <div className="flex justify-center mb-16">
+          <div className="relative w-full max-w-4xl">
+            <div className="apple-glass rounded-xl shadow-xl overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1498050108023-c5249f4df085" 
+                alt="Bra3n Platform Preview" 
+                className="w-full h-auto rounded-lg"
+                width={1200}
+                height={675}
+              />
+              <div className="absolute inset-0 bg-primary/10 rounded-xl"></div>
+            </div>
+            <div className="absolute -bottom-6 -right-6 -z-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl"></div>
+            <div className="absolute -top-6 -left-6 -z-10 w-64 h-64 bg-accent/30 rounded-full blur-3xl"></div>
+          </div>
         </div>
       </section>
 
