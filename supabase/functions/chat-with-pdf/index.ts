@@ -57,11 +57,23 @@ serve(async (req) => {
   }
 
   try {
-    const { pdfUrl, fileName, message, documentContext, model = 'claude' } = await req.json();
+    const { pdfUrl, fileName, message, documentContext, model = 'openai' } = await req.json();
     
-    if (!pdfUrl) {
+    console.log(`Chat with PDF request received for: ${fileName || 'unnamed document'}`);
+    console.log(`Using model: ${model}`);
+    console.log(`User message: ${message}`);
+    
+    if (!message || message.trim() === '') {
       return new Response(
-        JSON.stringify({ error: 'PDF URL is required' }),
+        JSON.stringify({ error: 'No message provided' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Check if we should use provided document context or extract from PDF URL
+    if ((!documentContext || documentContext.trim() === '') && !pdfUrl) {
+      return new Response(
+        JSON.stringify({ error: 'Either document context or PDF URL is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -75,17 +87,13 @@ serve(async (req) => {
       );
     }
     
-    console.log(`Chat with PDF: ${fileName}`);
-    console.log(`PDF URL: ${pdfUrl}`);
-    console.log(`User message: ${message}`);
-    console.log(`Using model: ${model}`);
-    
     // Prepare the context for the AI
     let contextContent = '';
+    
     if (documentContext && documentContext.trim() !== '') {
+      console.log(`Using provided document context (${documentContext.length} characters)`);
       contextContent = documentContext;
-      console.log('Using provided document context');
-    } else {
+    } else if (pdfUrl) {
       // Extract text from the PDF URL
       try {
         console.log('No document context provided, extracting from PDF URL...');
@@ -100,21 +108,43 @@ serve(async (req) => {
       }
     }
     
+    if (!contextContent || contextContent.trim() === '') {
+      return new Response(
+        JSON.stringify({ error: 'No document content available to process' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Truncate context if it's too large (to avoid token limit issues)
+    const maxContextLength = 75000; // Characters, not tokens
+    if (contextContent.length > maxContextLength) {
+      console.log(`Document context too large (${contextContent.length} chars), truncating to ${maxContextLength} chars`);
+      contextContent = contextContent.substring(0, maxContextLength) + 
+        "\n\n[Note: The document is too large and has been truncated. Some information may be missing.]";
+    }
+    
     // System message for both models
-    const systemMessage = `You are an AI assistant that helps users chat with PDF documents. 
-      The current document is: "${fileName}".
-      Use the following content from the document to answer the user's questions. 
-      If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
+    const systemMessage = `You are an AI assistant that helps users understand and analyze documents. 
+      The current document is: "${fileName || 'Unnamed document'}".
       
-      Document content:
-      ${contextContent}`;
+      Use the following content from the document to answer the user's questions:
+      
+      ${contextContent}
+      
+      Guidelines:
+      1. Base your answers solely on the document content provided. Don't reference external information.
+      2. If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
+      3. When quoting from the document, use quotation marks and be precise.
+      4. If the document is truncated, mention that some information might be missing.
+      5. Format your responses in a clear, easy-to-read manner with proper spacing.
+      6. For technical or complex documents, explain terms when appropriate.`;
 
     // Call the selected API
     try {
       console.log(`Calling ${model.toUpperCase()} API...`);
       let data;
       
-      if (model === 'claude') {
+      if (model === 'claude' && anthropicApiKey) {
         // Call Claude API
         const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
@@ -143,6 +173,7 @@ serve(async (req) => {
         }
         
         data = await response.json();
+        console.log('Claude API response received successfully');
         
         if (!data.content || !data.content[0] || !data.content[0].text) {
           console.error('Invalid response from Claude API:', data);
@@ -187,6 +218,7 @@ serve(async (req) => {
         }
         
         data = await response.json();
+        console.log('OpenAI API response received successfully');
         
         return new Response(
           JSON.stringify({ 

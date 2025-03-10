@@ -95,7 +95,7 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
           }
           
           // Handle horizontal rules
-          if (line.includes('--') && line.includes('|')) {
+          if (line.trim().match(/^-{3,}$/) || line.trim().match(/^_{3,}$/) || line.trim().match(/^\*{3,}$/)) {
             return <hr key={`hr-${index}`} className="my-2" />;
           }
           

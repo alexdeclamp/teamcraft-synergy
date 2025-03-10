@@ -99,8 +99,11 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     setIsChatLoading(true);
     
     try {
+      console.log('Sending message to chat-with-pdf function with document context length:', extractedText.length);
+      
       const { data, error } = await supabase.functions.invoke('chat-with-pdf', {
         body: {
+          pdfUrl,
           fileName,
           message: userMessage,
           documentContext: extractedText,
@@ -119,6 +122,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
         throw new Error(errorMsg);
       }
       
+      console.log('Received response from chat-with-pdf function:', data);
       setChatMessages(prev => [...prev, { role: 'assistant', content: data.answer }]);
     } catch (error: any) {
       console.error('Error chatting with document text:', error);

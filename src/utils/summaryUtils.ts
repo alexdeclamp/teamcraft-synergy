@@ -76,11 +76,14 @@ function formatSummary(text: string): string {
   // Ensure clean paragraph breaks
   let formatted = text.replace(/\n{3,}/g, '\n\n');
   
+  // Fix headings format (ensure # has a space after it)
+  formatted = formatted.replace(/^(#{1,6})([^\s])/gm, '$1 $2');
+  
   // Ensure bullet points have consistent spacing
   formatted = formatted.replace(/^[-*•]\s*/gm, '• ');
   
   // Ensure headers have consistent spacing
-  formatted = formatted.replace(/^(#{1,6})\s*([^\n]+)(?!\n\n)/gm, '$1 $2\n\n');
+  formatted = formatted.replace(/^(#{1,6}\s[^\n]+)(?!\n\n)/gm, '$1\n\n');
   
   // Ensure proper spacing after paragraphs
   formatted = formatted.replace(/([^\n])\n([^#\s•-])/g, '$1\n\n$2');
