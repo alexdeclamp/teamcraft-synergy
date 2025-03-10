@@ -1,8 +1,8 @@
-
 import React, { createContext, useContext } from 'react';
 import { OnboardingContextType } from './onboarding/types';
 import { useOnboardingState } from './onboarding/useOnboardingState';
 import { useStepCompletion } from './onboarding/useStepCompletion';
+import { initialSteps } from './onboarding/steps';
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(undefined);
 
