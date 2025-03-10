@@ -60,7 +60,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
       
       setNotes(data || []);
       
-      // Extract all unique tags
       const uniqueTags = Array.from(
         new Set(
           data
@@ -160,10 +159,8 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 
   const handleSelectAllNotes = () => {
     if (selectedNotes.length === filteredNotes.length) {
-      // If all are already selected, deselect all
       setSelectedNotes([]);
     } else {
-      // Otherwise select all
       setSelectedNotes(filteredNotes.map(note => note.id));
     }
   };
@@ -197,7 +194,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     }
   };
 
-  // Filter notes based on search term and selected tags
   const filteredNotes = notes.filter(note => {
     const matchesSearch = searchTerm === '' || 
       note.title?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -325,19 +321,17 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         {allTags.length > 0 && (
           <div className="flex items-center gap-2">
             <Tag className="h-4 w-4 text-muted-foreground" />
-            <div className="flex flex-wrap gap-2">
-              <TagFilter 
-                allTags={allTags} 
-                selectedTags={selectedTags} 
-                onTagSelect={(tag) => {
-                  setSelectedTags(prev => 
-                    prev.includes(tag) 
-                      ? prev.filter(t => t !== tag) 
-                      : [...prev, tag]
-                  );
-                }} 
-              />
-            </div>
+            <TagFilter 
+              allTags={allTags} 
+              selectedTags={selectedTags} 
+              onTagSelect={(tag) => {
+                setSelectedTags(prev => 
+                  prev.includes(tag) 
+                    ? prev.filter(t => t !== tag) 
+                    : [...prev, tag]
+                );
+              }} 
+            />
           </div>
         )}
       </div>

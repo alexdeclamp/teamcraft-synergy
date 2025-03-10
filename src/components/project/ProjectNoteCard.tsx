@@ -251,7 +251,10 @@ const ProjectNoteCard: React.FC<ProjectNoteCardProps> = ({
               
               <div className="flex gap-2 ml-auto">
                 {showRegenerateButton && (
-                  <RegenerateMetadataButton noteId={note.id} onSuccess={onUpdate} />
+                  <RegenerateMetadataButton 
+                    noteId={note.id} 
+                    onSuccess={onUpdate} 
+                  />
                 )}
                 
                 {showSummaryButton && (
