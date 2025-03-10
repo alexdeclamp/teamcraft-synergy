@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { cn } from "@/lib/utils";
@@ -46,12 +45,12 @@ const Navbar = () => {
         scrolled ? "bg-white/80 backdrop-blur-sm border-b shadow-sm" : "bg-transparent"
       )}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        <div className="flex items-center flex-1">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="flex-shrink-0">
           <Logo />
         </div>
 
-        <div className="flex items-center justify-end gap-4 flex-1">
+        <div className="flex items-center gap-4">
           <NavLinks />
           <div className="hidden md:block">
             <ProfileButton onClick={() => setProfileDialogOpen(true)} />
