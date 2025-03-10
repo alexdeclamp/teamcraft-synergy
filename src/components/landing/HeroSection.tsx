@@ -1,14 +1,10 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight, Brain, MessageSquare } from 'lucide-react';
-
 const HeroSection: React.FC = () => {
   const navigate = useNavigate();
-  
-  return (
-    <section className="relative pt-20 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+  return <section className="relative pt-20 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
       
       {/* Hero Text - Centered */}
@@ -20,7 +16,7 @@ const HeroSection: React.FC = () => {
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight mb-4">
           Bra<span className="text-primary">3</span>n
         </h1>
-        <p className="text-2xl sm:text-3xl font-medium text-foreground mb-4">Stop Searching. Start Knowing. Take actions.</p>
+        <p className="text-2xl sm:text-3xl font-medium text-foreground mb-4">Stop Searching. Start Knowing. Take Actions.</p>
         <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto mb-8">
           Bra3n organizes your notes, PDFs, and documents into an AI-powered knowledge hub, where you can retrieve insights instantly.
         </p>
@@ -65,20 +61,16 @@ const HeroSection: React.FC = () => {
                   <div className="h-8 rounded-md bg-primary/10 flex items-center px-3">
                     <span className="text-sm font-medium">Dashboard</span>
                   </div>
-                  {['Projects', 'Documents', 'Images', 'Settings'].map((item, i) => (
-                    <div key={i} className="h-8 rounded-md bg-muted/70 flex items-center px-3">
+                  {['Projects', 'Documents', 'Images', 'Settings'].map((item, i) => <div key={i} className="h-8 rounded-md bg-muted/70 flex items-center px-3">
                       <span className="text-sm text-muted-foreground">{item}</span>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
                 
                 <div className="mt-6">
                   <div className="text-xs font-medium mb-2 text-muted-foreground">RECENT PROJECTS</div>
-                  {['Marketing Strategy', 'Product Research', 'Client Presentations'].map((project, i) => (
-                    <div key={i} className="h-8 flex items-center text-sm text-muted-foreground">
+                  {['Marketing Strategy', 'Product Research', 'Client Presentations'].map((project, i) => <div key={i} className="h-8 flex items-center text-sm text-muted-foreground">
                       {project}
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
               
@@ -86,12 +78,10 @@ const HeroSection: React.FC = () => {
               <div className="col-span-9 space-y-4">
                 {/* Top Stats */}
                 <div className="grid grid-cols-3 gap-4">
-                  {['Documents', 'Images', 'Notes'].map((stat, i) => (
-                    <div key={i} className="bg-background rounded-lg p-3 border border-border/30">
+                  {['Documents', 'Images', 'Notes'].map((stat, i) => <div key={i} className="bg-background rounded-lg p-3 border border-border/30">
                       <div className="text-sm text-muted-foreground">{stat}</div>
                       <div className="text-2xl font-semibold">{Math.floor(Math.random() * 50) + 10}</div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
                 
                 {/* Search and Chat */}
@@ -128,23 +118,23 @@ const HeroSection: React.FC = () => {
                 
                 {/* Project Cards */}
                 <div className="grid grid-cols-2 gap-4">
-                  {['Marketing Strategy', 'Product Research'].map((project, i) => (
-                    <div key={i} className="bg-background border border-border/30 rounded-lg p-4">
+                  {['Marketing Strategy', 'Product Research'].map((project, i) => <div key={i} className="bg-background border border-border/30 rounded-lg p-4">
                       <div className="flex justify-between items-start mb-3">
                         <div className="font-medium">{project}</div>
                         <div className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">Active</div>
                       </div>
                       <div className="space-y-2">
                         <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-primary" style={{width: `${Math.floor(Math.random() * 60) + 30}%`}}></div>
+                          <div className="h-full bg-primary" style={{
+                        width: `${Math.floor(Math.random() * 60) + 30}%`
+                      }}></div>
                         </div>
                         <div className="flex justify-between text-xs text-muted-foreground">
                           <span>Updated 2 days ago</span>
                           <span>{Math.floor(Math.random() * 5) + 3} contributors</span>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
             </div>
@@ -153,8 +143,6 @@ const HeroSection: React.FC = () => {
           <div className="absolute -top-6 -left-6 -z-10 w-64 h-64 bg-accent/30 rounded-full blur-3xl"></div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
