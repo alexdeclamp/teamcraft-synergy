@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, MessageSquare, FilePdf, Image, Bell, Users, Brain } from 'lucide-react';
+import { ChevronLeft, ChevronRight, MessageSquare, FileText, Image, Bell, Users, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -9,13 +9,13 @@ const features = [
     id: 1,
     title: "Summarize PDF Documents",
     description: "Extract key insights and summaries from your PDF documents with just a click.",
-    icon: <FilePdf className="h-8 w-8 text-primary" />,
+    icon: <FileText className="h-8 w-8 text-primary" />,
     mockup: (
       <div className="bg-card rounded-lg border shadow-sm p-4 h-[300px] relative overflow-hidden">
         <div className="flex flex-col h-full">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <FilePdf className="h-5 w-5 text-primary" />
+              <FileText className="h-5 w-5 text-primary" />
               <h4 className="font-medium">Q2 Financial Report.pdf</h4>
             </div>
             <span className="text-xs bg-muted px-2 py-1 rounded-full">4 pages</span>
@@ -284,7 +284,7 @@ const features = [
         <div className="flex flex-col h-full">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <FilePdf className="h-5 w-5 text-primary" />
+              <FileText className="h-5 w-5 text-primary" />
               <h4 className="font-medium">Annual Report 2023.pdf</h4>
             </div>
           </div>
