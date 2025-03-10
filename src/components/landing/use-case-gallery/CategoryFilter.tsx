@@ -14,12 +14,17 @@ const CategoryFilter: React.FC<CategoryFilterProps> = ({
   activeCategory, 
   onCategoryChange 
 }) => {
+  const handleCategoryChange = (category: UseCaseCategory) => {
+    console.log('Changing category to:', category);
+    onCategoryChange(category);
+  };
+
   return (
     <div className="flex flex-wrap justify-center gap-2 mb-12">
       {categories.map((category) => (
         <button
           key={category}
-          onClick={() => onCategoryChange(category)}
+          onClick={() => handleCategoryChange(category)}
           className={cn(
             "px-4 py-2 rounded-full text-sm font-medium transition-colors",
             activeCategory === category 

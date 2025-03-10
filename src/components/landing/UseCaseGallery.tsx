@@ -10,10 +10,13 @@ const UseCaseGallery: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<UseCaseCategory>('Featured');
   
   // Filter use cases based on active category
-  // Only show use cases that have the active category in their categories array
+  // Only show use cases that match the exact active category
   const filteredUseCases = useCasesData.filter(useCase => 
     useCase.categories.includes(activeCategory)
   );
+
+  console.log('Active Category:', activeCategory);
+  console.log('Filtered Use Cases:', filteredUseCases);
 
   return (
     <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" id="use-cases">

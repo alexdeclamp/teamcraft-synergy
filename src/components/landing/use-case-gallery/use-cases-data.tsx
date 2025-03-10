@@ -7,7 +7,7 @@ import { healthcareLifeSciencesUseCases } from './healthcare-life-sciences-use-c
 import { technologySoftwareUseCases } from './technology-software-use-cases';
 import { governmentPublicUseCases } from './government-public-use-cases';
 
-// Combine all use cases
+// Combine all use cases without any duplicates
 export const useCasesData = [
   ...featuredUseCases,
   ...researchEducationUseCases,
