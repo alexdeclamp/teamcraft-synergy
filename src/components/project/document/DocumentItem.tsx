@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { File } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
@@ -35,10 +36,34 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isQuestionOpen, setIsQuestionOpen] = useState(false);
+  const [hasSavedSummary, setHasSavedSummary] = useState(false);
 
   const fileExtension = document.file_name.split('.').pop()?.toLowerCase();
   const isPdf = fileExtension === 'pdf';
   
+  // Check for existing summary when component mounts
+  useEffect(() => {
+    const checkForExistingSummary = async () => {
+      if (!isPdf) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('project_notes')
+          .select('id')
+          .eq('project_id', projectId)
+          .eq('title', `Summary: ${document.file_name}`)
+          .maybeSingle();
+        
+        if (error) throw error;
+        setHasSavedSummary(!!data);
+      } catch (error) {
+        console.error('Error checking for existing summary:', error);
+      }
+    };
+    
+    checkForExistingSummary();
+  }, [document.file_name, isPdf, projectId]);
+
   const formatDate = (dateString: string) => {
     try {
       return formatDistanceToNow(new Date(dateString), { addSuffix: true });
@@ -80,9 +105,32 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
       return;
     }
     
+    setIsSummaryOpen(true);
+    
+    // If we already have a saved summary, try to fetch it first
+    if (hasSavedSummary) {
+      try {
+        const { data, error } = await supabase
+          .from('project_notes')
+          .select('content')
+          .eq('project_id', projectId)
+          .eq('title', `Summary: ${document.file_name}`)
+          .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data?.content) {
+          setSummary(data.content);
+          return;
+        }
+      } catch (error) {
+        console.error('Error fetching saved summary:', error);
+      }
+    }
+    
+    // If no saved summary found or there was an error, generate a new one
     setIsGenerating(true);
     setSummary('');
-    setIsSummaryOpen(true);
     
     try {
       const { data, error } = await supabase.functions.invoke('summarize-pdf', {
@@ -100,6 +148,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
       }
       
       setSummary(data.summary);
+      setHasSavedSummary(true);
     } catch (error: any) {
       console.error('Error generating summary:', error);
       toast.error(`Failed to generate summary: ${error.message}`);
@@ -138,6 +187,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
               isGenerating={isGenerating}
               onChatClick={handleChatClick}
               onAskQuestion={handleAskQuestion}
+              hasSavedSummary={hasSavedSummary}
             />
           )}
           
@@ -157,6 +207,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
         isLoading={isGenerating}
         projectId={projectId}
         imageName={document.file_name}
+        hasSavedVersion={hasSavedSummary}
       />
       
       <DocumentChatDialog

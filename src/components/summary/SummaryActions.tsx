@@ -44,7 +44,7 @@ const SummaryActions: React.FC<SummaryActionsProps> = ({
         ) : (
           <FileText className="h-4 w-4" />
         )}
-        Create Note
+        Save as Note
       </Button>
       <Button 
         onClick={onCopy} 

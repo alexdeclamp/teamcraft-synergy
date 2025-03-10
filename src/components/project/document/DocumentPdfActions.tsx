@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Eye, MessageSquare, HelpCircle } from 'lucide-react';
+import { Eye, MessageSquare, HelpCircle, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -9,13 +9,15 @@ interface DocumentPdfActionsProps {
   isGenerating: boolean;
   onChatClick: () => void;
   onAskQuestion: () => void;
+  hasSavedSummary?: boolean;
 }
 
 const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   onGenerateSummary,
   isGenerating,
   onChatClick,
-  onAskQuestion
+  onAskQuestion,
+  hasSavedSummary = false
 }) => {
   const handleDisabledFeatureClick = () => {
     toast.info("This feature is currently disabled");
@@ -30,8 +32,17 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
         onClick={onGenerateSummary}
         disabled={isGenerating}
       >
-        <Eye className="h-4 w-4" />
-        <span className="hidden sm:inline">Summarize</span>
+        {hasSavedSummary ? (
+          <>
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">View Summary</span>
+          </>
+        ) : (
+          <>
+            <Eye className="h-4 w-4" />
+            <span className="hidden sm:inline">Summarize</span>
+          </>
+        )}
       </Button>
       
       <Button 
