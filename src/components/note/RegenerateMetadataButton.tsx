@@ -18,12 +18,14 @@ import { useRegenerateNoteMetadata } from '@/hooks/useRegenerateNoteMetadata';
 
 interface RegenerateMetadataButtonProps {
   noteId: string;
-  onSuccess: () => void;
+  content?: string | null;
+  onSuccess?: () => void;
   model?: 'claude' | 'openai';
 }
 
 const RegenerateMetadataButton: React.FC<RegenerateMetadataButtonProps> = ({
   noteId,
+  content,
   onSuccess,
   model = 'claude'
 }) => {
@@ -41,15 +43,15 @@ const RegenerateMetadataButton: React.FC<RegenerateMetadataButtonProps> = ({
   });
 
   const handleRegenerateTitle = async () => {
-    await regenerateTitle();
+    await regenerateTitle(content);
   };
 
   const handleRegenerateTags = async () => {
-    await regenerateTags();
+    await regenerateTags(content);
   };
 
   const handleRegenerateBoth = async () => {
-    await regenerateBoth();
+    await regenerateBoth(content);
   };
 
   return (

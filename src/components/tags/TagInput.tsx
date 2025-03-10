@@ -5,22 +5,34 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
 interface TagInputProps {
-  tags: string[];
-  setTags: React.Dispatch<React.SetStateAction<string[]>>;
+  tags?: string[];
+  setTags?: React.Dispatch<React.SetStateAction<string[]>>;
   availableTags?: string[];
+  onAddTag?: (newTag: string) => Promise<boolean> | void;
 }
 
-const TagInput: React.FC<TagInputProps> = ({ tags, setTags, availableTags = [] }) => {
+const TagInput: React.FC<TagInputProps> = ({ 
+  tags = [], 
+  setTags, 
+  availableTags = [],
+  onAddTag 
+}) => {
   const [newTag, setNewTag] = useState('');
 
   const handleAddTag = () => {
     if (!newTag.trim()) return;
     
-    // Add the tag if it doesn't already exist
-    if (!tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()]);
+    if (onAddTag) {
+      // Use the callback provided via props
+      onAddTag(newTag.trim());
+      setNewTag('');
+    } else if (setTags) {
+      // Use the standard tags state update
+      if (!tags.includes(newTag.trim())) {
+        setTags([...tags, newTag.trim()]);
+      }
+      setNewTag('');
     }
-    setNewTag('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
