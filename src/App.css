@@ -1,12 +1,12 @@
 
-/* Modern clean styles inspired by Apple Intelligence */
+/* Modern clean styles inspired by manus.in */
 #root {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 1rem;
 }
 
-/* Apple-inspired transitions */
+/* Clean transitions */
 .fade-transition {
   transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -15,18 +15,23 @@
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Subtle background grid */
+/* Subtle background patterns */
 .subtle-grid {
   background-image: radial-gradient(circle, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
-/* Apple-inspired glassmorphism */
-.apple-glass {
+.subtle-dots {
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 15px 15px;
+}
+
+/* Glassmorphism in the style of manus.in */
+.glass-effect {
   backdrop-filter: blur(8px);
   background-color: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
+  border: 1px solid rgba(240, 240, 240, 0.6);
+  border-radius: 8px;
 }
 
 /* Landing page specific styles */
@@ -44,11 +49,24 @@
   }
 }
 
-/* Feature card styles */
+/* Feature card styles with manus.in aesthetics */
 .feature-image {
   height: 100%;
   min-height: 300px;
   object-fit: cover;
+}
+
+/* Manus.in-inspired card with hover effect */
+.manus-card {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(240, 240, 240, 0.6);
+}
+
+.manus-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
 }
 
 @media (max-width: 768px) {
@@ -65,6 +83,12 @@
   }
 }
 
+/* Clean dividers */
+.soft-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.05), transparent);
+}
+
 /* Responsive helpers */
 @media (max-width: 640px) {
   .mobile-pt {
@@ -79,4 +103,47 @@
     display: flex;
     flex-direction: column;
   }
+}
+
+/* Button styles inspired by manus.in */
+.manus-primary-button {
+  background-color: hsl(var(--primary));
+  color: white;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.manus-primary-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.manus-secondary-button {
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--foreground));
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.manus-secondary-button:hover {
+  background-color: hsl(var(--muted));
+}
+
+/* Clean, minimal input styles */
+.manus-input {
+  border: 1px solid hsl(var(--border));
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.manus-input:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsla(var(--primary), 0.2);
 }
