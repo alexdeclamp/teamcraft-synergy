@@ -16,10 +16,10 @@ const Landing = () => {
       <LandingNavbar />
       <HeroSection />
       <TimelineSection />
+      <KeyFeaturesSection />
       <UseCaseGallery />
       <BenefitsSection />
       <TestimonialsSection />
-      <KeyFeaturesSection />
       <CtaSection />
       <FooterSection />
     </div>

@@ -354,7 +354,7 @@ const KeyFeaturesSection: React.FC = () => {
   const activeFeature = features[activeIndex];
   
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-accent/10 rounded-lg">
+    <section id="features" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-accent/10 rounded-lg">
       <div className="mb-12 text-center">
         <h2 className="text-3xl font-bold mb-4">Powerful Features</h2>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">

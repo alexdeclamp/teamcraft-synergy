@@ -21,9 +21,9 @@ const LandingNavbar = () => {
 
   const navLinks = [
     { name: "Features", href: "#features" },
-    { name: "Pricing", href: "#pricing" },
-    { name: "About", href: "#about" },
-    { name: "Blog", href: "#blog" }
+    { name: "Use Cases", href: "#use-cases" },
+    { name: "Benefits", href: "#benefits" },
+    { name: "Testimonials", href: "#testimonials" }
   ];
 
   return (
