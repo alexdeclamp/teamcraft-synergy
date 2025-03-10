@@ -20,7 +20,7 @@ const LandingNavbar = () => {
   }, []);
 
   const navLinks = [
-    { name: "Features", href: "#features" },
+    { name: "Features", href: "/features" },
     { name: "Pricing", href: "#pricing" },
     { name: "About", href: "#about" },
     { name: "Blog", href: "#blog" }
@@ -51,6 +51,12 @@ const LandingNavbar = () => {
                 key={link.name}
                 href={link.href}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                onClick={(e) => {
+                  if (link.href.startsWith('/')) {
+                    e.preventDefault();
+                    navigate(link.href);
+                  }
+                }}
               >
                 {link.name}
               </a>
@@ -102,7 +108,15 @@ const LandingNavbar = () => {
                 key={link.name}
                 href={link.href}
                 className="text-sm font-medium py-2 px-3 rounded-md hover:bg-accent"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => {
+                  if (link.href.startsWith('/')) {
+                    e.preventDefault();
+                    navigate(link.href);
+                    setMobileMenuOpen(false);
+                  } else {
+                    setMobileMenuOpen(false);
+                  }
+                }}
               >
                 {link.name}
               </a>
