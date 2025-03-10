@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle, ExternalLink, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -77,6 +78,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     setExtractionError(null);
     setDiagnosisInfo(null);
     setPdfInfo(null);
+    setExtractedText(''); // Clear previous text
     setShowTextModal(true);
     
     try {
@@ -106,7 +108,11 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
       
       try {
         const result = await extractPdfText(pdfUrl);
-        setExtractedText(result.text);
+        if (result.text) {
+          setExtractedText(result.text);
+        } else {
+          setExtractedText('No text content found in the document.');
+        }
         setPageCount(result.pageCount || 0);
         setTextLength(result.text.length);
         toast.success(`Successfully extracted ${result.text.length.toLocaleString()} characters from ${result.pageCount || 0} pages`);
@@ -186,8 +192,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
         variant="outline" 
         size="sm" 
         className="flex items-center gap-1"
-        onClick={handleDisabledFeatureClick}
-        disabled={true}
+        onClick={onAskQuestion}
       >
         <HelpCircle className="h-4 w-4" />
         <span className="hidden sm:inline">Ask Question</span>
@@ -197,8 +202,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
         variant="default" 
         size="sm" 
         className="flex items-center gap-1"
-        onClick={handleDisabledFeatureClick}
-        disabled={true}
+        onClick={onChatClick}
       >
         <MessageSquare className="h-4 w-4" />
         <span className="sm:inline">Chat</span>
@@ -238,7 +242,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
             )}
           </DialogHeader>
           
-          <ScrollArea className="flex-1 p-4 mt-4">
+          <ScrollArea className="flex-1 p-4 mt-4 max-h-[500px]">
             {isExtracting ? (
               <div className="flex flex-col items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-2" />
@@ -260,13 +264,11 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
                   </Button>
                 </div>
               </div>
+            ) : extractedText ? (
+              <pre className="whitespace-pre-wrap font-mono text-sm">{extractedText}</pre>
             ) : (
-              <div className="whitespace-pre-wrap font-mono text-sm">
-                {extractedText || (
-                  <div className="text-center text-muted-foreground py-8">
-                    No text content was extracted from this PDF. It might be an image-based PDF.
-                  </div>
-                )}
+              <div className="text-center text-muted-foreground py-8">
+                No text content was extracted from this PDF. It might be an image-based PDF.
               </div>
             )}
           </ScrollArea>
