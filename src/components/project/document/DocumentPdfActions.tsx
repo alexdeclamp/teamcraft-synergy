@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle, ExternalLink, Info, BookText } from 'lucide-react';
+import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle, ExternalLink, Info, BookText, SendHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -22,6 +21,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from '@/integrations/supabase/client';
 
 interface DocumentPdfActionsProps {
   onGenerateSummary: () => void;
@@ -56,33 +57,86 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [summary, setSummary] = useState('');
   const [showSummary, setShowSummary] = useState(false);
+  
+  const [showChatWithTextModal, setShowChatWithTextModal] = useState(false);
+  const [chatMessages, setChatMessages] = useState<{role: 'user' | 'assistant', content: string}[]>([]);
+  const [messageInput, setMessageInput] = useState('');
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const chatScrollAreaRef = useRef<HTMLDivElement>(null);
 
-  const handleDisabledFeatureClick = () => {
-    toast.info("This feature is currently disabled");
+  useEffect(() => {
+    if (chatScrollAreaRef.current && showChatWithTextModal) {
+      const scrollElement = chatScrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
+    }
+  }, [chatMessages, showChatWithTextModal]);
+
+  const handleChatWithText = () => {
+    if (!extractedText) {
+      toast.error('No text available to chat with');
+      return;
+    }
+
+    setShowChatWithTextModal(true);
+    
+    if (chatMessages.length === 0) {
+      setChatMessages([{
+        role: 'assistant',
+        content: `👋 I'm your document assistant for "${fileName}". Ask me any questions about this document!`
+      }]);
+    }
   };
 
-  const verifyPdfUrl = async (url: string): Promise<boolean> => {
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() || isChatLoading) return;
+    
+    const userMessage = messageInput.trim();
+    setMessageInput('');
+    
+    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setIsChatLoading(true);
+    
     try {
-      console.log('Verifying PDF URL:', url);
+      const { data, error } = await supabase.functions.invoke('chat-with-pdf', {
+        body: {
+          fileName,
+          message: userMessage,
+          documentContext: extractedText,
+          model: 'openai'
+        }
+      });
       
-      try {
-        new URL(url);
-      } catch (e) {
-        throw new Error(`Invalid URL format: ${e.message}`);
+      if (error) {
+        console.error('Function invocation error:', error);
+        throw new Error(`Error calling function: ${error.message}`);
       }
       
-      const headResponse = await fetch(url, { method: 'HEAD' });
-      
-      if (!headResponse.ok) {
-        throw new Error(`PDF URL is not accessible: ${headResponse.status} ${headResponse.statusText}`);
+      if (!data || !data.success || !data.answer) {
+        const errorMsg = data?.error || 'Invalid response from chat service';
+        console.error('Service error:', errorMsg);
+        throw new Error(errorMsg);
       }
       
-      console.log('PDF URL is valid and accessible');
-      return true;
+      setChatMessages(prev => [...prev, { role: 'assistant', content: data.answer }]);
     } catch (error: any) {
-      console.error('PDF URL verification failed:', error);
-      setDiagnosisInfo(`URL verification failed: ${error.message}`);
-      return false;
+      console.error('Error chatting with document text:', error);
+      toast.error(`Failed to get response: ${error.message || 'Unknown error'}`);
+      
+      setChatMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: "I'm sorry, I encountered an error processing your request. Please try again." 
+      }]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
     }
   };
 
@@ -91,8 +145,8 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     setExtractionError(null);
     setDiagnosisInfo(null);
     setPdfInfo(null);
-    setExtractedText(''); // Clear previous text
-    setSummary(''); // Clear previous summary
+    setExtractedText('');
+    setSummary('');
     setShowSummary(false);
     setShowTextModal(true);
     
@@ -146,6 +200,31 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
       setIsExtracting(false);
     }
   };
+
+  const verifyPdfUrl = async (url: string): Promise<boolean> => {
+    try {
+      console.log('Verifying PDF URL:', url);
+      
+      try {
+        new URL(url);
+      } catch (e) {
+        throw new Error(`Invalid URL format: ${e.message}`);
+      }
+      
+      const headResponse = await fetch(url, { method: 'HEAD' });
+      
+      if (!headResponse.ok) {
+        throw new Error(`PDF URL is not accessible: ${headResponse.status} ${headResponse.statusText}`);
+      }
+      
+      console.log('PDF URL is valid and accessible');
+      return true;
+    } catch (error: any) {
+      console.error('PDF URL verification failed:', error);
+      setDiagnosisInfo(`URL verification failed: ${error.message}`);
+      return false;
+    }
+  };
   
   const handleRetryExtraction = () => {
     handleExtractText();
@@ -192,7 +271,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
         model,
         title: fileName,
         projectId,
-        maxLength: 2000 // Increasing max length for better summaries
+        maxLength: 2000
       });
 
       console.log("Summary received:", result ? "success" : "empty");
@@ -227,24 +306,18 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     }
   }, [showTextModal, isExtracting, extractedText]);
 
-  // Format the raw PDF text for better readability
   const formatExtractedText = (text: string) => {
     if (!text) return '';
     
-    // Replace consecutive spaces with a single space
     let formatted = text.replace(/[ \t]+/g, ' ');
-    
-    // Ensure paragraphs have consistent spacing
     formatted = formatted.replace(/\n{3,}/g, '\n\n');
     
-    // Add proper indentation for paragraphs that might be continuation of text
     const lines = formatted.split('\n');
     let result = '';
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       
-      // Skip empty lines but preserve paragraph breaks
       if (line === '') {
         if (i > 0 && lines[i-1].trim() !== '') {
           result += '\n\n';
@@ -252,11 +325,29 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
         continue;
       }
       
-      // Add the line with proper spacing
       result += line + '\n';
     }
     
     return result;
+  };
+
+  const formatChatMessage = (message: {role: 'user' | 'assistant', content: string}) => {
+    return (
+      <div 
+        key={`message-${Math.random()}`} 
+        className={`mb-4 ${message.role === 'assistant' ? 'pr-8' : 'pl-8'}`}
+      >
+        <div 
+          className={`px-4 py-3 rounded-lg ${
+            message.role === 'assistant' 
+              ? 'bg-muted text-foreground rounded-tl-none' 
+              : 'bg-primary text-primary-foreground ml-auto rounded-tr-none'
+          }`}
+        >
+          <div className="whitespace-pre-wrap">{message.content}</div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -407,28 +498,39 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
           
           {!isExtracting && !isSummarizing && extractedText && (
             <DialogFooter className="mt-4 flex flex-wrap justify-between gap-2">
-              <div>
+              <div className="flex gap-2">
                 {!showSummary && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="outline"
-                        className="flex items-center gap-1"
-                        disabled={isSummarizing}
-                      >
-                        <BookText className="h-4 w-4" />
-                        Summarize
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => handleSummarizeText('claude')}>
-                        Summarize with Claude
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleSummarizeText('openai')}>
-                        Summarize with OpenAI
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="outline"
+                          className="flex items-center gap-1"
+                          disabled={isSummarizing}
+                        >
+                          <BookText className="h-4 w-4" />
+                          Summarize
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem onClick={() => handleSummarizeText('claude')}>
+                          Summarize with Claude
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSummarizeText('openai')}>
+                          Summarize with OpenAI
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    
+                    <Button 
+                      variant="outline"
+                      className="flex items-center gap-1"
+                      onClick={handleChatWithText}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Chat with Text
+                    </Button>
+                  </>
                 )}
               </div>
               <Button 
@@ -441,6 +543,67 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
               </Button>
             </DialogFooter>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showChatWithTextModal} onOpenChange={setShowChatWithTextModal}>
+        <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col">
+          <div className="absolute right-4 top-4">
+            <DialogClose asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                <X className="h-4 w-4" />
+                <span className="sr-only">Close</span>
+              </Button>
+            </DialogClose>
+          </div>
+          
+          <DialogHeader>
+            <DialogTitle>Chat about "{fileName}"</DialogTitle>
+            <DialogDescription>
+              Ask questions about the extracted text content to get AI-powered answers
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex flex-col h-[500px]">
+            <ScrollArea ref={chatScrollAreaRef} className="flex-1 pr-4">
+              <div className="space-y-2 p-2">
+                {chatMessages.map((message, index) => (
+                  formatChatMessage(message)
+                ))}
+                
+                {isChatLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-muted rounded-lg p-3">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+            
+            <div className="pt-4 border-t mt-4">
+              <div className="flex gap-2">
+                <Textarea
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  placeholder="Ask a question about this document..."
+                  className="min-h-[60px]"
+                  onKeyDown={handleKeyDown}
+                  disabled={isChatLoading}
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={isChatLoading || !messageInput.trim()}
+                  className="px-3"
+                >
+                  <SendHorizontal className="h-5 w-5" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Press Enter to send. Use Shift+Enter for a new line.
+              </p>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

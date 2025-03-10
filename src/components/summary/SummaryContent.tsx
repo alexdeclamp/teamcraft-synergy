@@ -72,12 +72,14 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
               default: fontSize = "1rem";
             }
             
+            const headingText = line.replace(/^#+\s*/, '');
+            
             return (
               <div 
                 key={`heading-${index}`} 
                 className={classes} 
                 style={{fontSize}}
-                dangerouslySetInnerHTML={{__html: formattedLine.replace(/^#+\s*/, '')}}
+                dangerouslySetInnerHTML={{__html: headingText}}
               />
             );
           }

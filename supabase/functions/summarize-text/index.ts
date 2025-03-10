@@ -69,12 +69,15 @@ function formatSummaryText(text) {
   // Ensure double line breaks between paragraphs
   text = text.replace(/\n{3,}/g, '\n\n'); // Replace 3+ newlines with just 2
   
-  // Ensure proper spacing after bullet points
-  text = text.replace(/^([-*•])\s*/gm, '• ');
+  // Fix headings format (ensure # has a space after it)
+  text = text.replace(/^(#{1,6})([^\s])/gm, '$1 $2');
   
-  // Ensure headings have proper spacing before and after
+  // Ensure proper spacing around headings
   text = text.replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2');
   text = text.replace(/^(#{1,6}\s[^\n]+)(?!\n\n)/gm, '$1\n\n');
+  
+  // Ensure bullet points have proper spacing
+  text = text.replace(/^([-*•])\s*/gm, '• ');
   
   // Ensure proper spacing between paragraphs
   text = text.replace(/([^\n])\n([^#\s•-])/g, '$1\n\n$2');
@@ -109,6 +112,7 @@ FORMAT YOUR SUMMARY WITH PROPER STRUCTURE:
 3. Use bullet points (•) for lists with proper indentation
 4. Ensure paragraphs have double line breaks between them
 5. Make sure there are no spacing issues that could affect rendering
+6. Don't use excessive line breaks or irregular spacing
 
 Here's the text to summarize:
 
@@ -154,7 +158,8 @@ FORMAT YOUR SUMMARY WITH PROPER STRUCTURE:
 2. Always add TWO line breaks after each heading (not just one)
 3. Use bullet points (•) for lists with proper indentation
 4. Ensure paragraphs have double line breaks between them
-5. Make sure there are no spacing issues that could affect rendering`
+5. Make sure there are no spacing issues that could affect rendering
+6. Don't use excessive line breaks or irregular spacing`
           },
           {
             role: 'user',
