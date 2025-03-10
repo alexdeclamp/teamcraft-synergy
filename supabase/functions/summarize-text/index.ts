@@ -70,12 +70,19 @@ function formatSummaryText(text) {
   text = text.replace(/\n{3,}/g, '\n\n'); // Replace 3+ newlines with just 2
   
   // Ensure proper spacing after bullet points
-  text = text.replace(/•\s*/g, '• ');
+  text = text.replace(/^([-*•])\s*/gm, '• ');
   
-  // Ensure headings have space after them
-  text = text.replace(/#{1,6}\s*([^\n]+)(?!\n\n)/g, '$&\n');
+  // Ensure headings have proper spacing before and after
+  text = text.replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2');
+  text = text.replace(/^(#{1,6}\s[^\n]+)(?!\n\n)/gm, '$1\n\n');
   
-  return text;
+  // Ensure proper spacing between paragraphs
+  text = text.replace(/([^\n])\n([^#\s•-])/g, '$1\n\n$2');
+  
+  // Remove extra spaces
+  text = text.replace(/\s{2,}/g, ' ');
+  
+  return text.trim();
 }
 
 async function summarizeWithClaude(text: string, maxLength: number): Promise<string> {
@@ -94,7 +101,7 @@ async function summarizeWithClaude(text: string, maxLength: number): Promise<str
         messages: [
           {
             role: 'user',
-            content: `Please summarize the following text. Use proper formatting with paragraphs, bullet points, and headings where appropriate. Focus on the key points and main ideas:
+            content: `Please summarize the following text. Use proper formatting with paragraphs, bullet points, and headings where appropriate. Make sure to leave proper spacing between paragraphs and after headings. Focus on the key points and main ideas:
 
 ${text.slice(0, 100000)}`
           }
@@ -131,7 +138,7 @@ async function summarizeWithOpenAI(text: string, maxLength: number): Promise<str
         messages: [
           {
             role: 'system',
-            content: 'You are an AI assistant that summarizes documents. Create a concise but comprehensive summary that captures the key points and main ideas. Use proper formatting with paragraphs, bullet points, and headings as appropriate.'
+            content: 'You are an AI assistant that summarizes documents. Create a concise but comprehensive summary that captures the key points and main ideas. Use proper formatting with paragraphs, bullet points, and headings as appropriate. Make sure to leave proper spacing between paragraphs and after headings.'
           },
           {
             role: 'user',

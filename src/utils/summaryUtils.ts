@@ -82,6 +82,15 @@ function formatSummary(text: string): string {
   // Ensure headers have consistent spacing
   formatted = formatted.replace(/^(#{1,6})\s*([^\n]+)(?!\n\n)/gm, '$1 $2\n\n');
   
+  // Ensure proper spacing after paragraphs
+  formatted = formatted.replace(/([^\n])\n([^#\s•-])/g, '$1\n\n$2');
+  
+  // Ensure consistent spacing around headings
+  formatted = formatted.replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2');
+  
+  // Fix any double spaces
+  formatted = formatted.replace(/\s{2,}/g, ' ');
+  
   // Trim extra whitespace
   return formatted.trim();
 }
