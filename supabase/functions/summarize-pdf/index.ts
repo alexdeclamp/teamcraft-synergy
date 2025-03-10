@@ -54,14 +54,21 @@ serve(async (req) => {
               content: [
                 {
                   type: "text",
-                  text: `Please provide a comprehensive summary of this PDF document (${pdfUrl}). 
+                  text: `Please analyze and summarize this PDF document (${fileName}). 
                   
-                  Include the following in your summary:
-                  1. The main purpose and key points of the document
-                  2. Important facts, figures, and findings
-                  3. Any conclusions or recommendations
+                  The PDF URL is: ${pdfUrl}
                   
-                  Format your response in a clear, structured way using paragraphs, bullet points, and headings as appropriate.`
+                  Your task:
+                  1. Extract and summarize the main points and key information from the document
+                  2. Include important data, statistics, findings or conclusions
+                  3. Organize the information in a clear, structured format
+                  4. Include any relevant context that helps understand the document's purpose
+                  5. Focus on accuracy and factual information - do not invent or assume details not present
+                  6. If you cannot properly access or read the PDF, clearly state this issue
+                  
+                  Format your summary to be clear, concise and comprehensive, using headings, bullet points, and paragraphs as appropriate.
+                  
+                  If the PDF cannot be properly accessed or contains encrypted/protected content, please clearly indicate this issue rather than generating an inaccurate summary.`
                 }
               ]
             }
