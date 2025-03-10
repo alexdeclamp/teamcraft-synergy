@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Dialog,
@@ -24,6 +25,9 @@ interface DocumentQuestionDialogProps {
     file_name: string;
     file_url: string;
     content_text?: string;
+    metadata?: {
+      pdf_url?: string;
+    };
   };
   projectId: string;
 }
