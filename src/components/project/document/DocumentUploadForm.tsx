@@ -46,10 +46,10 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
         <div className="w-full">
           <label 
             htmlFor="pdf-upload" 
-            className="flex items-center justify-center gap-2 cursor-pointer bg-muted hover:bg-muted/80 text-foreground font-medium px-4 py-3 rounded-md border-2 border-dashed border-border h-16 transition-colors w-full"
+            className="flex items-center justify-center gap-3 cursor-pointer bg-muted hover:bg-muted/80 text-foreground font-medium px-6 py-4 rounded-md border-2 border-dashed border-border h-20 transition-colors w-full"
           >
-            <FileText className="h-6 w-6" />
-            <span className="text-base">Choose PDF Files</span>
+            <FileText className="h-7 w-7" />
+            <span className="text-lg font-semibold">Choose PDF Files</span>
           </label>
           <Input 
             id="pdf-upload" 

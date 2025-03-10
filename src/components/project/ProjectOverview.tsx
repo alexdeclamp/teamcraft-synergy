@@ -24,9 +24,9 @@ interface ProjectOverviewProps {
   activityPercentage: number;
   daysSinceCreation: number;
   imageCount: number;
-  noteCount: number; // New prop
-  documentCount: number; // New prop
-  recentUpdatesCount: number; // New prop
+  noteCount: number;
+  documentCount: number;
+  recentUpdatesCount: number;
   onAddMember: () => void;
   onTabChange: (tab: string) => void;
 }
@@ -60,27 +60,54 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4 pt-2">
-            <div className="space-y-1 border rounded-md p-3">
+            <div 
+              className="space-y-1 border rounded-md p-3 hover:bg-accent/30 transition-colors cursor-pointer"
+              onClick={() => onTabChange('images')}
+              role="button"
+              aria-label="View images"
+            >
               <div className="text-xl font-bold text-primary">{imageCount}</div>
               <div className="text-xs text-muted-foreground">Images</div>
             </div>
-            <div className="space-y-1 border rounded-md p-3">
+            <div 
+              className="space-y-1 border rounded-md p-3 hover:bg-accent/30 transition-colors cursor-pointer"
+              onClick={() => onTabChange('members')}
+              role="button"
+              aria-label="View members"
+            >
               <div className="text-xl font-bold text-primary">{members.length}</div>
               <div className="text-xs text-muted-foreground">Members</div>
             </div>
-            <div className="space-y-1 border rounded-md p-3">
+            <div 
+              className="space-y-1 border rounded-md p-3 hover:bg-accent/30 transition-colors cursor-pointer"
+              onClick={() => onTabChange('notes')}
+              role="button"
+              aria-label="View notes"
+            >
               <div className="text-xl font-bold text-primary">{noteCount}</div>
               <div className="text-xs text-muted-foreground">Notes</div>
             </div>
-            <div className="space-y-1 border rounded-md p-3">
+            <div 
+              className="space-y-1 border rounded-md p-3 hover:bg-accent/30 transition-colors cursor-pointer"
+              onClick={() => onTabChange('documents')}
+              role="button"
+              aria-label="View documents"
+            >
               <div className="text-xl font-bold text-primary">{documentCount}</div>
               <div className="text-xs text-muted-foreground">Documents</div>
             </div>
-            <div className="space-y-1 border rounded-md p-3">
+            <div 
+              className="space-y-1 border rounded-md p-3 cursor-default"
+            >
               <div className="text-xl font-bold text-primary">{daysSinceCreation}</div>
               <div className="text-xs text-muted-foreground">Days active</div>
             </div>
-            <div className="space-y-1 border rounded-md p-3">
+            <div 
+              className="space-y-1 border rounded-md p-3 hover:bg-accent/30 transition-colors cursor-pointer"
+              onClick={() => onTabChange('updates')}
+              role="button"
+              aria-label="View updates"
+            >
               <div className="text-xl font-bold text-primary">{recentUpdatesCount}</div>
               <div className="text-xs text-muted-foreground">Updates (24h)</div>
             </div>
@@ -117,7 +144,12 @@ const ProjectOverview: React.FC<ProjectOverviewProps> = ({
                 ))}
                 
                 {members.length > 5 && (
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted text-sm font-medium">
+                  <div 
+                    className="flex items-center justify-center w-10 h-10 rounded-full bg-muted text-sm font-medium cursor-pointer hover:bg-muted/80"
+                    onClick={() => onTabChange('members')}
+                    role="button"
+                    aria-label="View all members"
+                  >
                     +{members.length - 5}
                   </div>
                 )}
