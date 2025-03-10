@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardTutorial from '@/components/tutorial/DashboardTutorial';
+import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton';
 
 interface DashboardHeaderProps {
   className?: string;
@@ -25,6 +26,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
       </div>
       
       <div className="flex items-center space-x-2 w-full sm:w-auto">
+        <StartOnboardingButton className="mr-2" />
         <DashboardTutorial className="mr-2" />
         <Button 
           onClick={() => navigate('/new-project')}

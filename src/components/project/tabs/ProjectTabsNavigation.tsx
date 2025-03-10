@@ -2,6 +2,7 @@
 import React from 'react';
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectTutorial from '@/components/tutorial/ProjectTutorial';
+import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton';
 
 interface ProjectTabsNavigationProps {
   activeTab: string;
@@ -28,7 +29,10 @@ const ProjectTabsNavigation: React.FC<ProjectTabsNavigationProps> = ({
         )}
       </TabsList>
       
-      <ProjectTutorial activeTab={activeTab} className="ml-2" />
+      <div className="flex items-center space-x-2">
+        <StartOnboardingButton className="mr-2" />
+        <ProjectTutorial activeTab={activeTab} />
+      </div>
     </div>
   );
 };
