@@ -43,38 +43,27 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
     console.log('Looking up user by email:', email);
     
     try {
-      // Do a direct lookup in profiles table with case-insensitive search
-      const { data: profileData, error: profileError } = await supabase
+      // Do a standard select without expecting single result
+      const { data, error } = await supabase
         .from('profiles')
         .select('id, email')
-        .ilike('email', email)
-        .single();
+        .ilike('email', email);
 
-      if (profileError) {
-        if (profileError.code === 'PGRST116') {
-          // No match found with ilike search
-          console.log('No user found with case-insensitive search');
-        } else {
-          console.error('Error querying profiles:', profileError);
-          throw profileError;
-        }
+      if (error) {
+        console.error('Error querying profiles:', error);
+        throw error;
       }
       
-      if (profileData?.id) {
-        console.log('User found:', profileData);
-        return profileData.id;
-      }
-
-      // As a fallback, do an exact match search
-      const { data: exactMatch } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email)
-        .single();
-        
-      if (exactMatch?.id) {
-        console.log('User found with exact match:', exactMatch);
-        return exactMatch.id;
+      console.log('Search results:', data);
+      
+      // Find the first matching profile
+      const matchingProfile = data?.find(profile => 
+        profile.email?.toLowerCase() === email.toLowerCase()
+      );
+      
+      if (matchingProfile?.id) {
+        console.log('User found:', matchingProfile);
+        return matchingProfile.id;
       }
       
       throw new Error('User with this email not found. Please ensure they have created an account first.');
