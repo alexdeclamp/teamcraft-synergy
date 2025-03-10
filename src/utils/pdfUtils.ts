@@ -46,34 +46,34 @@ export async function extractPdfText(pdfUrl: string): Promise<{ text: string; pa
       const page = await pdf.getPage(i);
       
       try {
-        // Get text content with all properties
-        const content = await page.getTextContent({
-          normalizeWhitespace: true,
-          disableCombineTextItems: false
-        });
+        // Get text content with appropriate parameters
+        const content = await page.getTextContent();
         
         // Process text content more carefully
-        let lastY = null;
+        let lastY: number | null = null;
         let text = '';
         
         for (const item of content.items) {
-          if (typeof item.str !== 'string') continue;
-          
-          // Add newlines between different vertical positions (paragraphs)
-          if (lastY !== null && lastY !== item.transform[5]) {
-            text += '\n';
+          // Make sure we're dealing with TextItem not TextMarkedContent
+          if ('str' in item) {
+            // This is a TextItem
+            
+            // Add newlines between different vertical positions (paragraphs)
+            if (lastY !== null && lastY !== (item as pdfjs.TextItem).transform[5]) {
+              text += '\n';
+            }
+            
+            text += (item as pdfjs.TextItem).str;
+            
+            // Add space if this isn't the end of a line
+            if ((item as pdfjs.TextItem).hasEOL !== true) {
+              text += ' ';
+            } else {
+              text += '\n';
+            }
+            
+            lastY = (item as pdfjs.TextItem).transform[5];
           }
-          
-          text += item.str;
-          
-          // Add space if this isn't the end of a line
-          if (item.hasEOL !== true) {
-            text += ' ';
-          } else {
-            text += '\n';
-          }
-          
-          lastY = item.transform[5];
         }
         
         textContent += text + '\n\n'; // Add extra newline between pages
@@ -128,10 +128,18 @@ export async function getPdfInfo(pdfUrl: string): Promise<{ pageCount: number; i
     const loadingTask = pdfjs.getDocument({ data: new Uint8Array(pdfData) });
     const pdf = await loadingTask.promise;
     
+    // Check if PDF is encrypted
+    // PDF.js doesn't directly expose isEncrypted in the type definitions
+    // but it might be available at runtime
+    const isEncrypted = 'isEncrypted' in pdf ? (pdf as any).isEncrypted : false;
+    
+    // Use fingerprints (plural) as it's the correct property name
+    const fingerprint = pdf.fingerprints?.[0] || '';
+    
     return {
       pageCount: pdf.numPages,
-      isEncrypted: pdf.isEncrypted,
-      fingerprint: pdf.fingerprint
+      isEncrypted,
+      fingerprint
     };
   } catch (error: any) {
     console.error('Error getting PDF info:', error);
