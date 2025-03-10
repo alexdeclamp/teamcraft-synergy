@@ -12,9 +12,9 @@ const BenefitsSection: React.FC = () => {
   ];
   
   return (
-    <section id="benefits" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-primary/5 rounded-lg">
+    <section id="benefits" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto bg-primary/5 rounded-lg">
       <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold mb-4">Why Choose Bra3n?</h2>
+        <h2 className="text-3xl font-bold tracking-tight mb-4">Why Choose Bra3n?</h2>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
           Our AI-powered platform offers unique benefits that transform how you manage information
         </p>

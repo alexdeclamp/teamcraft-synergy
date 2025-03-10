@@ -29,14 +29,14 @@ const LandingNavbar = () => {
   return (
     <header 
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 sm:px-6 py-3",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 sm:px-6 py-4",
         scrolled ? "bg-white/80 backdrop-blur-sm border-b shadow-sm" : "bg-transparent"
       )}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
           <div className="flex items-center justify-center">
-            <Sparkles className="h-8 w-8 text-primary" />
+            <Sparkles className="h-7 w-7 text-primary" />
           </div>
           <span className="font-semibold text-lg tracking-tight">
             Bra<span className="text-primary">3</span>n
@@ -45,7 +45,7 @@ const LandingNavbar = () => {
 
         {/* Desktop Menu */}
         <nav className="hidden md:flex items-center space-x-1">
-          <div className="flex items-center space-x-6 mr-6">
+          <div className="flex items-center space-x-8 mr-8">
             {navLinks.map((link) => (
               <a 
                 key={link.name}
@@ -57,7 +57,7 @@ const LandingNavbar = () => {
             ))}
           </div>
           
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
             <Button 
               variant="outline" 
               className="rounded-full"
@@ -91,7 +91,7 @@ const LandingNavbar = () => {
       {/* Mobile Menu */}
       <div 
         className={cn(
-          "fixed inset-x-0 top-[61px] bg-white shadow-lg border-t transform transition-transform duration-300 ease-in-out md:hidden z-50",
+          "fixed inset-x-0 top-[65px] bg-white shadow-lg border-t transform transition-transform duration-300 ease-in-out md:hidden z-50",
           mobileMenuOpen ? "translate-y-0" : "-translate-y-full"
         )}
       >
