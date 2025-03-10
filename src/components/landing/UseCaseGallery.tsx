@@ -4,7 +4,6 @@ import { UseCaseCategory } from './use-case-gallery/types';
 import { useCasesData, categories } from './use-case-gallery/use-cases-data';
 import CategoryFilter from './use-case-gallery/CategoryFilter';
 import UseCaseGrid from './use-case-gallery/UseCaseGrid';
-import ExploreButton from './use-case-gallery/ExploreButton';
 
 const UseCaseGallery: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<UseCaseCategory>('Featured');
@@ -32,9 +31,6 @@ const UseCaseGallery: React.FC = () => {
       
       {/* Use Cases Grid */}
       <UseCaseGrid useCases={filteredUseCases} />
-      
-      {/* Explore More Button */}
-      <ExploreButton />
     </section>
   );
 };

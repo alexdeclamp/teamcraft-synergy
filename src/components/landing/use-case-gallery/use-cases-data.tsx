@@ -1,4 +1,3 @@
-
 import { FileText, Brain, MessageSquare, Users, Search, BarChart, PenLine, Building, BookOpen, Folder, Briefcase, Scale, Stethoscope, Globe, Landmark, Shield, Gavel, Microscope, Glasses, School, DollarSign, Network, Lightbulb, CheckSquare, MoveRight, Layers, FileSpreadsheet, BookMarked, Calculator, BadgeCheck, Heart, Verified, Crosshair } from 'lucide-react';
 import { UseCase, UseCaseCategory } from './types';
 
@@ -18,9 +17,9 @@ export const categories: UseCaseCategory[] = [
   'Marketing'
 ];
 
-// Define use cases - expanded to 30+ cases across industries
+// Define use cases - with 8 featured cases
 export const useCasesData: UseCase[] = [
-  // Original use cases updated for Featured category
+  // Featured use cases (exactly 8)
   {
     id: 1,
     title: "Research Literature Review",
@@ -71,21 +70,22 @@ export const useCasesData: UseCase[] = [
   },
   {
     id: 7,
-    title: "Competitor Research Dashboard",
-    description: "Bra3n compiles competitor information from multiple sources, tracks positioning, and helps you monitor significant market changes in real-time.",
-    icon: <Building className="h-6 w-6 text-white" />,
-    image: "/lovable-uploads/d3f6e2ca-3976-4e95-a07a-e33d20d16bc5.png",
-    categories: ['Featured', 'Research', 'Business']
-  },
-  {
-    id: 8,
     title: "Knowledge Assistant Chat",
     description: "Ask questions about your projects and get instant answers. Bra3n understands context across all your documents and generates accurate, sourced responses.",
     icon: <MessageSquare className="h-6 w-6 text-white" />,
     image: "/lovable-uploads/d3f6e2ca-3976-4e95-a07a-e33d20d16bc5.png",
     categories: ['Featured', 'Knowledge']
   },
+  {
+    id: 8,
+    title: "Software Development Knowledge Hub",
+    description: "Bra3n centralizes technical documentation, code snippets, and development best practices in a searchable hub that suggests relevant resources during coding.",
+    icon: <Brain className="h-6 w-6 text-white" />,
+    image: "/lovable-uploads/d3f6e2ca-3976-4e95-a07a-e33d20d16bc5.png",
+    categories: ['Featured', 'Technology', 'Knowledge']
+  },
   
+  // Non-featured use cases (keeping them for other category filters)
   // Finance Industry
   {
     id: 9,
@@ -225,14 +225,6 @@ export const useCasesData: UseCase[] = [
   // Technology Industry
   {
     id: 25,
-    title: "Software Development Knowledge Hub",
-    description: "Bra3n centralizes technical documentation, code snippets, and development best practices in a searchable hub that suggests relevant resources during coding.",
-    icon: <Brain className="h-6 w-6 text-white" />,
-    image: "/lovable-uploads/d3f6e2ca-3976-4e95-a07a-e33d20d16bc5.png",
-    categories: ['Featured', 'Technology', 'Knowledge']
-  },
-  {
-    id: 26,
     title: "Product Research Repository",
     description: "Organize market research, user feedback, and competitor analysis to generate insights for product development with AI-powered recommendation summaries.",
     icon: <Lightbulb className="h-6 w-6 text-white" />,
@@ -240,7 +232,7 @@ export const useCasesData: UseCase[] = [
     categories: ['Technology', 'Research']
   },
   {
-    id: 27,
+    id: 26,
     title: "Technical Documentation Assistant",
     description: "Bra3n helps teams create, organize, and maintain technical documentation with automated summaries, version tracking, and contextual search capabilities.",
     icon: <FileText className="h-6 w-6 text-white" />,
@@ -248,7 +240,7 @@ export const useCasesData: UseCase[] = [
     categories: ['Technology', 'Content']
   },
   {
-    id: 28,
+    id: 27,
     title: "IT Compliance Management",
     description: "Organize security standards, audit requirements, and internal policies in one place with automated gap analysis and compliance tracking.",
     icon: <Shield className="h-6 w-6 text-white" />,
@@ -258,7 +250,7 @@ export const useCasesData: UseCase[] = [
 
   // Marketing & Advertising
   {
-    id: 29,
+    id: 28,
     title: "Marketing Campaign Hub",
     description: "Bra3n centralizes campaign assets, performance data, and audience insights to automatically generate performance reports and optimization recommendations.",
     icon: <Crosshair className="h-6 w-6 text-white" />,
@@ -266,7 +258,7 @@ export const useCasesData: UseCase[] = [
     categories: ['Featured', 'Marketing', 'Business']
   },
   {
-    id: 30,
+    id: 29,
     title: "Brand Asset Management",
     description: "Create an organized repository of brand guidelines, creative assets, and marketing materials with AI-powered tagging and intuitive search capabilities.",
     icon: <PenLine className="h-6 w-6 text-white" />,
@@ -274,7 +266,7 @@ export const useCasesData: UseCase[] = [
     categories: ['Marketing', 'Content']
   },
   {
-    id: 31,
+    id: 30,
     title: "Market Research Intelligence",
     description: "Bra3n analyzes consumer research, focus group findings, and market trends to generate actionable marketing insights and competitive positioning strategies.",
     icon: <BarChart className="h-6 w-6 text-white" />,
@@ -282,7 +274,7 @@ export const useCasesData: UseCase[] = [
     categories: ['Marketing', 'Research']
   },
   {
-    id: 32,
+    id: 31,
     title: "Social Media Content Planning",
     description: "Organize content calendars, audience data, and performance metrics to generate AI-powered content recommendations and engagement strategies.",
     icon: <Globe className="h-6 w-6 text-white" />,
