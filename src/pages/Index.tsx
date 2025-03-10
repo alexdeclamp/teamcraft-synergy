@@ -25,12 +25,12 @@ const Index = () => {
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
           <Button 
-            onClick={() => window.open('https://docs.example.com', '_blank')} 
+            onClick={() => navigate('/features')} 
             variant="outline" 
             size="lg"
             className="rounded-md px-8 text-base w-full sm:w-auto"
           >
-            Learn More
+            Explore Features
           </Button>
         </div>
       </div>
