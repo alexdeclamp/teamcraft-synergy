@@ -1,5 +1,4 @@
 
-import { categories } from './categories';
 import { featuredUseCases } from './featured-use-cases';
 import { researchEducationUseCases } from './research-education-use-cases';
 import { businessMarketingUseCases } from './business-marketing-use-cases';
@@ -18,6 +17,3 @@ export const useCasesData = [
   ...technologySoftwareUseCases,
   ...governmentPublicUseCases
 ];
-
-// Re-export categories for convenience
-export { categories };
