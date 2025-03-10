@@ -8,14 +8,14 @@ import { useNoteSummary } from '@/hooks/useNoteSummary';
 
 interface NoteSummaryButtonProps {
   noteId: string;
-  content: string | null;
-  title: string;
+  noteTitle: string;
+  noteContent: string | null;
 }
 
 const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
   noteId,
-  content,
-  title
+  noteTitle,
+  noteContent
 }) => {
   const { id: projectId } = useParams<{ id: string }>();
   const location = useLocation();
@@ -29,7 +29,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
     generateSummary
   } = useNoteSummary({
     noteId,
-    noteContent: content,
+    noteContent,
     projectId
   });
   
@@ -55,7 +55,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
             generateSummary();
           }
         }}
-        disabled={isGenerating || !content}
+        disabled={isGenerating || !noteContent}
         title={hasSummary ? "View Saved AI Summary" : "Generate AI Summary"}
       >
         {isGenerating ? (
@@ -70,7 +70,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
       <SummaryDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={`Summary of "${title}"`}
+        title={`Summary of "${noteTitle}"`}
         summary={summary}
         isLoading={isGenerating && !hasSummary}
         hasSavedVersion={hasSummary}

@@ -17,17 +17,21 @@ import {
 import { useRegenerateNoteMetadata } from '@/hooks/useRegenerateNoteMetadata';
 
 interface RegenerateMetadataButtonProps {
-  noteId: string;
-  content?: string | null;
-  onSuccess?: () => void;
+  noteContent: string | null;
+  onRegenerateTitle: (title: string) => void;
+  onRegenerateTags: (tags: string[]) => void;
+  onRegenerateBoth: (data: { title: string; tags: string[] }) => void;
   model?: 'claude' | 'openai';
+  onModelChange?: (model: 'claude' | 'openai') => void;
 }
 
 const RegenerateMetadataButton: React.FC<RegenerateMetadataButtonProps> = ({
-  noteId,
-  content,
-  onSuccess,
-  model = 'claude'
+  noteContent,
+  onRegenerateTitle,
+  onRegenerateTags,
+  onRegenerateBoth,
+  model = 'claude',
+  onModelChange
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
@@ -36,58 +40,83 @@ const RegenerateMetadataButton: React.FC<RegenerateMetadataButtonProps> = ({
     regenerateTitle,
     regenerateTags,
     regenerateBoth
-  } = useRegenerateNoteMetadata({ 
-    noteId,
-    model,
-    onSuccess
-  });
+  } = useRegenerateNoteMetadata({ model });
 
   const handleRegenerateTitle = async () => {
-    await regenerateTitle(content);
+    const title = await regenerateTitle(noteContent);
+    if (title) {
+      onRegenerateTitle(title);
+    }
   };
 
   const handleRegenerateTags = async () => {
-    await regenerateTags(content);
+    const tags = await regenerateTags(noteContent);
+    if (tags) {
+      onRegenerateTags(tags);
+    }
   };
 
   const handleRegenerateBoth = async () => {
-    await regenerateBoth(content);
+    const data = await regenerateBoth(noteContent);
+    if (data) {
+      onRegenerateBoth(data);
+    }
   };
 
   return (
-    <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className="h-8 w-8"
-                disabled={isRegenerating}
-              >
-                {isRegenerating ? 
-                  <Loader2 className="h-4 w-4 animate-spin" /> : 
-                  <Sparkles className="h-4 w-4" />}
-              </Button>
-            </DropdownMenuTrigger>
-          </TooltipTrigger>
-          <TooltipContent>AI Generate</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+    <div className="flex items-center gap-2">
+      {onModelChange && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8">
+              {model === 'claude' ? 'Claude' : 'OpenAI'}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onModelChange('claude')}>
+              Claude
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onModelChange('openai')}>
+              OpenAI (GPT-4o mini)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
       
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleRegenerateTitle} disabled={isRegenerating}>
-          Generate Title
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleRegenerateTags} disabled={isRegenerating}>
-          Generate Tags
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleRegenerateBoth} disabled={isRegenerating}>
-          Generate Both
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  disabled={isRegenerating || !noteContent}
+                >
+                  {isRegenerating ? 
+                    <Loader2 className="h-4 w-4 animate-spin" /> : 
+                    <Sparkles className="h-4 w-4" />}
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent>AI Generate</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handleRegenerateTitle} disabled={isRegenerating || !noteContent}>
+            Generate Title
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleRegenerateTags} disabled={isRegenerating || !noteContent}>
+            Generate Tags
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={handleRegenerateBoth} disabled={isRegenerating || !noteContent}>
+            Generate Both
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 };
 

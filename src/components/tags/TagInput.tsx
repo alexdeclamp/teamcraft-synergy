@@ -5,32 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 
 interface TagInputProps {
-  tags?: string[];
-  setTags?: React.Dispatch<React.SetStateAction<string[]>>;
-  availableTags?: string[];
-  onAddTag?: (newTag: string) => Promise<boolean> | void;
+  onAddTag: (tag: string) => Promise<boolean | undefined>;
 }
 
-const TagInput: React.FC<TagInputProps> = ({ 
-  tags = [], 
-  setTags, 
-  availableTags = [],
-  onAddTag 
-}) => {
+const TagInput: React.FC<TagInputProps> = ({ onAddTag }) => {
   const [newTag, setNewTag] = useState('');
 
-  const handleAddTag = () => {
+  const handleAddTag = async () => {
     if (!newTag.trim()) return;
     
-    if (onAddTag) {
-      // Use the callback provided via props
-      onAddTag(newTag.trim());
-      setNewTag('');
-    } else if (setTags) {
-      // Use the standard tags state update
-      if (!tags.includes(newTag.trim())) {
-        setTags([...tags, newTag.trim()]);
-      }
+    const success = await onAddTag(newTag);
+    if (success) {
       setNewTag('');
     }
   };

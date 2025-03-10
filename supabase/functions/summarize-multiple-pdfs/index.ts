@@ -58,8 +58,8 @@ serve(async (req) => {
     const results = [];
     const errors = [];
     
-    // Process documents in even smaller batches to prevent resource exhaustion
-    const BATCH_SIZE = 2; // Process 2 documents at a time instead of 3
+    // Process documents in smaller batches to prevent resource exhaustion
+    const BATCH_SIZE = 3; // Process 3 documents at a time
     let processedCount = 0;
     
     for (let batchIndex = 0; batchIndex < Math.ceil(pdfUrls.length / BATCH_SIZE); batchIndex++) {
@@ -101,10 +101,9 @@ serve(async (req) => {
         processedCount++;
       }
       
-      // Add a LONGER delay between batches to allow resources to be freed
+      // Add a small delay between batches to allow resources to be freed
       if (batchIndex < Math.ceil(pdfUrls.length / BATCH_SIZE) - 1) {
-        console.log(`Pausing for 2 seconds between batches to manage resources...`);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
     
@@ -139,113 +138,92 @@ async function processPdf(pdfUrl: string, fileName: string, model: string): Prom
     let apiResponse;
     let summary;
     
-    // Add timeout and retry logic for API calls
-    const MAX_RETRIES = 2;
-    let retries = 0;
-    let success = false;
-    
-    while (!success && retries <= MAX_RETRIES) {
-      try {
-        if (retries > 0) {
-          console.log(`Retry attempt ${retries} for ${fileName}`);
-          // Add delay before retry
-          await new Promise(resolve => setTimeout(resolve, 1000 * retries));
-        }
-        
-        // Call the appropriate AI API based on the model parameter with a timeout
-        if (model === 'claude') {
-          // Call Claude API with a simpler prompt to reduce processing load
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 25000); // 25-second timeout
-          
-          apiResponse = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-api-key': anthropicApiKey,
-              'anthropic-version': '2023-06-01'
-            },
-            body: JSON.stringify({
-              model: "claude-3-haiku-20240307",
-              max_tokens: 1000, // Reduced token count to make processing faster
-              messages: [
+    // Call the appropriate AI API based on the model parameter
+    if (model === 'claude') {
+      // Call Claude API
+      apiResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': anthropicApiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: "claude-3-haiku-20240307",
+          max_tokens: 1500,
+          messages: [
+            {
+              role: "user",
+              content: [
                 {
-                  role: "user",
-                  content: [
-                    {
-                      type: "text",
-                      text: `Provide a brief summary of this PDF document (${pdfUrl}). Focus only on the most important information.`
-                    }
-                  ]
+                  type: "text",
+                  text: `Please provide a comprehensive summary of this PDF document (${pdfUrl}). 
+                  
+                  Include the following in your summary:
+                  1. The main purpose and key points of the document
+                  2. Important facts, figures, and findings
+                  3. Any conclusions or recommendations
+                  
+                  Format your response in a clear, structured way using paragraphs, bullet points, and headings as appropriate.`
                 }
               ]
-            }),
-            signal: controller.signal
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (!apiResponse.ok) {
-            const errorText = await apiResponse.text();
-            throw new Error(`Claude API error: ${apiResponse.status} - ${errorText}`);
-          }
-          
-          const data = await apiResponse.json();
-          if (!data.content || !data.content[0] || !data.content[0].text) {
-            throw new Error('Invalid response format from Claude API');
-          }
-          
-          summary = data.content[0].text;
-        } else {
-          // Call OpenAI API with a simpler prompt
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 25000); // 25-second timeout
-          
-          apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${openaiApiKey}`
-            },
-            body: JSON.stringify({
-              model: "gpt-4o-mini",
-              messages: [
-                {
-                  role: "system",
-                  content: "Provide brief summaries of documents, focusing only on key information."
-                },
-                {
-                  role: "user",
-                  content: `Provide a brief summary of this PDF document (${pdfUrl}).`
-                }
-              ]
-            }),
-            signal: controller.signal
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (!apiResponse.ok) {
-            const errorText = await apiResponse.text();
-            throw new Error(`OpenAI API error: ${apiResponse.status} - ${errorText}`);
-          }
-          
-          const data = await apiResponse.json();
-          if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
-            throw new Error('Invalid response format from OpenAI API');
-          }
-          
-          summary = data.choices[0].message.content;
-        }
-        
-        success = true;
-      } catch (error) {
-        retries++;
-        if (retries > MAX_RETRIES) {
-          throw error;
-        }
-        console.error(`Error attempt ${retries} processing ${fileName}:`, error);
+            }
+          ]
+        })
+      });
+      
+      if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        throw new Error(`Claude API error: ${apiResponse.status} - ${errorText}`);
       }
+      
+      const data = await apiResponse.json();
+      if (!data.content || !data.content[0] || !data.content[0].text) {
+        throw new Error('Invalid response format from Claude API');
+      }
+      
+      summary = data.content[0].text;
+    } else {
+      // Call OpenAI API
+      apiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${openaiApiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            {
+              role: "system",
+              content: "You are a helpful assistant that provides comprehensive summaries of PDF documents."
+            },
+            {
+              role: "user",
+              content: `Please provide a comprehensive summary of this PDF document (${pdfUrl}). 
+              
+              Include the following in your summary:
+              1. The main purpose and key points of the document
+              2. Important facts, figures, and findings
+              3. Any conclusions or recommendations
+              
+              Format your response in a clear, structured way using paragraphs, bullet points, and headings as appropriate.`
+            }
+          ]
+        })
+      });
+      
+      if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        throw new Error(`OpenAI API error: ${apiResponse.status} - ${errorText}`);
+      }
+      
+      const data = await apiResponse.json();
+      if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+        throw new Error('Invalid response format from OpenAI API');
+      }
+      
+      summary = data.choices[0].message.content;
     }
     
     return summary;

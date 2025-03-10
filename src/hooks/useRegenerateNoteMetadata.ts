@@ -4,15 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface UseRegenerateNoteMetadataProps {
-  noteId?: string;
   model?: 'claude' | 'openai';
-  onSuccess?: () => void;
 }
 
-export function useRegenerateNoteMetadata({ noteId, model = 'claude', onSuccess }: UseRegenerateNoteMetadataProps = {}) {
+export function useRegenerateNoteMetadata({ model = 'claude' }: UseRegenerateNoteMetadataProps = {}) {
   const [isRegenerating, setIsRegenerating] = useState(false);
 
-  const regenerateTitle = async (noteContent?: string | null): Promise<string | null> => {
+  const regenerateTitle = async (noteContent: string | null): Promise<string | null> => {
     if (!noteContent) {
       toast.error('Cannot regenerate title for empty note content');
       return null;
@@ -25,8 +23,7 @@ export function useRegenerateNoteMetadata({ noteId, model = 'claude', onSuccess 
         body: {
           noteContent,
           type: 'title',
-          model,
-          noteId
+          model
         },
       });
 
@@ -39,7 +36,6 @@ export function useRegenerateNoteMetadata({ noteId, model = 'claude', onSuccess 
         throw new Error('Received empty or invalid response');
       }
       
-      if (onSuccess) onSuccess();
       return data.title;
     } catch (error: any) {
       console.error('Error regenerating title:', error);
@@ -50,7 +46,7 @@ export function useRegenerateNoteMetadata({ noteId, model = 'claude', onSuccess 
     }
   };
 
-  const regenerateTags = async (noteContent?: string | null): Promise<string[] | null> => {
+  const regenerateTags = async (noteContent: string | null): Promise<string[] | null> => {
     if (!noteContent) {
       toast.error('Cannot regenerate tags for empty note content');
       return null;
@@ -63,8 +59,7 @@ export function useRegenerateNoteMetadata({ noteId, model = 'claude', onSuccess 
         body: {
           noteContent,
           type: 'tags',
-          model,
-          noteId
+          model
         },
       });
 
@@ -77,7 +72,6 @@ export function useRegenerateNoteMetadata({ noteId, model = 'claude', onSuccess 
         throw new Error('Received empty or invalid response');
       }
       
-      if (onSuccess) onSuccess();
       return data.tags;
     } catch (error: any) {
       console.error('Error regenerating tags:', error);
@@ -88,7 +82,7 @@ export function useRegenerateNoteMetadata({ noteId, model = 'claude', onSuccess 
     }
   };
 
-  const regenerateBoth = async (noteContent?: string | null): Promise<{ title: string; tags: string[] } | null> => {
+  const regenerateBoth = async (noteContent: string | null): Promise<{ title: string; tags: string[] } | null> => {
     if (!noteContent) {
       toast.error('Cannot regenerate metadata for empty note content');
       return null;
@@ -101,8 +95,7 @@ export function useRegenerateNoteMetadata({ noteId, model = 'claude', onSuccess 
         body: {
           noteContent,
           type: 'both',
-          model,
-          noteId
+          model
         },
       });
 
@@ -115,7 +108,6 @@ export function useRegenerateNoteMetadata({ noteId, model = 'claude', onSuccess 
         throw new Error('Received empty or invalid response');
       }
       
-      if (onSuccess) onSuccess();
       return {
         title: data.title,
         tags: data.tags
