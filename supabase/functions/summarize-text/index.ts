@@ -17,13 +17,15 @@ serve(async (req) => {
   }
 
   try {
-    const { text, model = 'claude', maxLength = 1500, title } = await req.json();
+    const { text, model = 'claude', maxLength = 1500, title, projectId } = await req.json();
 
     if (!text || text.trim().length === 0) {
       throw new Error('No text provided for summarization');
     }
 
     console.log(`Summarizing text with ${model}. Length: ${text.length} characters`);
+    console.log(`Using title: ${title || 'No title provided'}`);
+    console.log(`Project ID: ${projectId || 'No project ID provided'}`);
     
     let summary;
     
@@ -59,66 +61,80 @@ serve(async (req) => {
 });
 
 async function summarizeWithClaude(text: string, maxLength: number): Promise<string> {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': claudeApiKey!,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: maxLength,
-      messages: [
-        {
-          role: 'user',
-          content: `Please summarize the following text. Focus on the key points and main ideas. Keep your summary concise but comprehensive:
+  try {
+    console.log("Calling Claude API...");
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': claudeApiKey!,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-3-sonnet-20240229',
+        max_tokens: maxLength,
+        messages: [
+          {
+            role: 'user',
+            content: `Please summarize the following text. Focus on the key points and main ideas. Keep your summary concise but comprehensive:
 
 ${text.slice(0, 100000)}`
-        }
-      ]
-    })
-  });
+          }
+        ]
+      })
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Claude API error:', response.status, errorText);
-    throw new Error(`Claude API error: ${response.statusText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Claude API error:', response.status, errorText);
+      throw new Error(`Claude API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log("Claude response received successfully");
+    return data.content[0].text;
+  } catch (error) {
+    console.error("Error in Claude summarization:", error);
+    throw error;
   }
-
-  const data = await response.json();
-  return data.content[0].text;
 }
 
 async function summarizeWithOpenAI(text: string, maxLength: number): Promise<string> {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an AI assistant that summarizes documents. Create a concise but comprehensive summary that captures the key points and main ideas.'
-        },
-        {
-          role: 'user',
-          content: `Please summarize the following text:\n\n${text.slice(0, 100000)}`
-        }
-      ],
-      max_tokens: maxLength
-    }),
-  });
+  try {
+    console.log("Calling OpenAI API...");
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an AI assistant that summarizes documents. Create a concise but comprehensive summary that captures the key points and main ideas.'
+          },
+          {
+            role: 'user',
+            content: `Please summarize the following text:\n\n${text.slice(0, 100000)}`
+          }
+        ],
+        max_tokens: maxLength
+      }),
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('OpenAI API error:', response.status, errorText);
-    throw new Error(`OpenAI API error: ${response.statusText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API error:', response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log("OpenAI response received successfully");
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error("Error in OpenAI summarization:", error);
+    throw error;
   }
-
-  const data = await response.json();
-  return data.choices[0].message.content;
 }

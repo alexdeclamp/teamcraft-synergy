@@ -184,12 +184,21 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     setSummary('');
 
     try {
+      console.log(`Starting summarization with ${model}...`);
+      console.log(`Text length: ${extractedText.length} characters`);
+      
       const result = await summarizeText({
         text: extractedText,
         model,
         title: fileName,
-        projectId
+        projectId,
+        maxLength: 2000 // Increasing max length for better summaries
       });
+
+      console.log("Summary received:", result ? "success" : "empty");
+      if (!result) {
+        throw new Error("Received empty summary");
+      }
 
       setSummary(result);
       setShowSummary(true);
@@ -197,6 +206,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     } catch (error: any) {
       console.error('Error summarizing text:', error);
       toast.error(`Failed to summarize: ${error.message}`);
+      setShowSummary(false);
     } finally {
       setIsSummarizing(false);
     }

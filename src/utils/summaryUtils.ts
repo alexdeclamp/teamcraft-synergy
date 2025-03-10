@@ -24,9 +24,12 @@ export async function summarizeText({
   }
 
   try {
-    toast.info(`Summarizing text using ${model === 'claude' ? 'Claude' : 'OpenAI'}...`, {
-      duration: 5000,
+    const toastId = toast.info(`Summarizing text using ${model === 'claude' ? 'Claude' : 'OpenAI'}...`, {
+      duration: 10000,
     });
+
+    console.log(`Summarizing text with ${model}. Text length: ${text.length} characters`);
+    console.log(`Sending to Supabase function with projectId: ${projectId || 'none'}`);
 
     const { data, error } = await supabase.functions.invoke('summarize-text', {
       body: {
@@ -38,18 +41,27 @@ export async function summarizeText({
       },
     });
 
+    // Dismiss the pending toast
+    toast.dismiss(toastId);
+
     if (error) {
       console.error('Error from summarize-text function:', error);
+      toast.error(`Summarization failed: ${error.message || 'Unknown error'}`);
       throw error;
     }
 
     if (!data || !data.summary) {
-      throw new Error('Received empty response from the summarization service');
+      const errorMsg = 'Received empty response from the summarization service';
+      console.error(errorMsg);
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
 
+    toast.success(`Summary generated successfully using ${model === 'claude' ? 'Claude' : 'OpenAI'}`);
     return data.summary;
   } catch (error: any) {
     console.error('Error summarizing text:', error);
+    toast.error(`Failed to summarize text: ${error.message || 'Unknown error'}`);
     throw new Error(`Failed to summarize text: ${error.message || 'Unknown error'}`);
   }
 }
