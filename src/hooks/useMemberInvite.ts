@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -72,9 +71,9 @@ export const useMemberInvite = ({ projectId, onSuccess, onClose }: UseMemberInvi
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    inviteMember();
+    await inviteMember();
   };
 
   return {
