@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,26 +44,58 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
     console.log('Looking up user by email:', email);
     
     try {
-      // Do a standard select without expecting single result
-      const { data, error } = await supabase
+      // First check auth.users table (this requires service_role access)
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers({
+        filters: {
+          email: email.toLowerCase()
+        }
+      });
+      
+      if (authError) {
+        console.error('Error checking auth users:', authError);
+      } else {
+        console.log('Auth users search results:', authUsers);
+        
+        if (authUsers.users && authUsers.users.length > 0) {
+          const user = authUsers.users[0];
+          console.log('User found in auth.users:', user);
+          
+          // Now get the profile to ensure it exists
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (profileData?.id) {
+            return profileData.id;
+          }
+          
+          // If we found the user in auth but not in profiles, return the auth id anyway
+          return user.id;
+        }
+      }
+      
+      // Fallback to profiles table search
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, email')
         .ilike('email', email);
 
-      if (error) {
-        console.error('Error querying profiles:', error);
-        throw error;
+      if (profilesError) {
+        console.error('Error querying profiles:', profilesError);
+        throw profilesError;
       }
       
-      console.log('Search results:', data);
+      console.log('Profiles search results:', profiles);
       
       // Find the first matching profile
-      const matchingProfile = data?.find(profile => 
+      const matchingProfile = profiles?.find(profile => 
         profile.email?.toLowerCase() === email.toLowerCase()
       );
       
       if (matchingProfile?.id) {
-        console.log('User found:', matchingProfile);
+        console.log('User found in profiles:', matchingProfile);
         return matchingProfile.id;
       }
       
