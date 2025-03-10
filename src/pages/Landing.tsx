@@ -6,8 +6,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import LandingNavbar from '@/components/landing/LandingNavbar';
 import FeatureCard from '@/components/landing/FeatureCard';
 import TestimonialCard from '@/components/landing/TestimonialCard';
+
 const Landing = () => {
   const navigate = useNavigate();
+  
   const howItWorks = [{
     icon: <Upload className="h-10 w-10 text-primary" />,
     title: "1️⃣ Upload Your Knowledge",
@@ -27,6 +29,7 @@ const Landing = () => {
     imageUrl: "https://images.unsplash.com/photo-1565616424931-f04411bde104",
     imagePosition: "right" as const
   }];
+
   const audiences = [{
     name: "Consultants & Analysts",
     description: "Keep research organized."
@@ -40,6 +43,7 @@ const Landing = () => {
     name: "Anyone who hates losing information",
     description: "Find what you need when you need it."
   }];
+
   const testimonials = [{
     name: "John D.",
     role: "Product Manager",
@@ -51,6 +55,7 @@ const Landing = () => {
     content: "It's like having an AI assistant that actually knows my work.",
     avatar: "ML"
   }];
+
   return <div className="min-h-screen bg-background overflow-hidden">
       <LandingNavbar />
       
@@ -81,7 +86,13 @@ const Landing = () => {
         <div className="flex justify-center mb-16">
           <div className="relative w-full max-w-4xl">
             <div className="apple-glass rounded-xl shadow-xl overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085" alt="Bra3n Platform Preview" className="w-full h-auto rounded-lg" width={1200} height={675} />
+              <img 
+                src="https://fatckypxdqeaczndclbd.supabase.co/storage/v1/object/public/website%20images//hero%20image.png" 
+                alt="Bra3n Platform Preview" 
+                className="w-full h-auto rounded-lg" 
+                width={1200} 
+                height={675} 
+              />
               <div className="absolute inset-0 bg-primary/10 rounded-xl"></div>
             </div>
             <div className="absolute -bottom-6 -right-6 -z-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl"></div>
@@ -235,4 +246,5 @@ const Landing = () => {
       </footer>
     </div>;
 };
+
 export default Landing;
