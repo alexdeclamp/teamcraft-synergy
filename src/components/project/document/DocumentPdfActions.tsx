@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle, ExternalLink, Info, BookText, SendHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from '@/integrations/supabase/client';
 
 interface DocumentPdfActionsProps {
-  onGenerateSummary: () => void;
+  onGenerateSummary: () => void; // Added this property to fix the TypeScript error
   isGenerating: boolean;
   onChatClick: () => void;
   onAskQuestion: () => void;
