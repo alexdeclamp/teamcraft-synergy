@@ -76,14 +76,30 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         profiles = profilesData || [];
       }
       
-      const notesWithCreators = notesData?.map(note => {
+      // Convert database notes to Note type with properly typed source_document
+      const notesWithCreators: Note[] = (notesData || []).map(note => {
         const creator = profiles.find(profile => profile.id === note.user_id);
+        
+        // Process source_document to ensure it matches the expected type
+        let typedSourceDocument = null;
+        if (note.source_document) {
+          const docData = note.source_document as any;
+          if (docData && docData.type && docData.url && docData.name) {
+            typedSourceDocument = {
+              type: docData.type as 'pdf' | 'image',
+              url: docData.url as string,
+              name: docData.name as string
+            };
+          }
+        }
+        
         return {
           ...note,
           creator_name: creator?.full_name || 'Unknown User',
-          creator_avatar: creator?.avatar_url
+          creator_avatar: creator?.avatar_url,
+          source_document: typedSourceDocument
         };
-      }) || [];
+      });
       
       setNotes(notesWithCreators);
     } catch (error: any) {
@@ -151,10 +167,16 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         
       if (error) throw error;
       
-      const newNote = {
+      // Process the new note to ensure it has the correct type
+      const newNote: Note = {
         ...data,
         creator_name: user.user_metadata?.full_name || 'Unknown User',
-        creator_avatar: user.user_metadata?.avatar_url
+        creator_avatar: user.user_metadata?.avatar_url,
+        source_document: data.source_document ? {
+          type: (data.source_document as any).type,
+          url: (data.source_document as any).url,
+          name: (data.source_document as any).name
+        } : null
       };
       
       setNotes([newNote, ...notes]);
@@ -197,10 +219,16 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         
       if (error) throw error;
       
-      const updatedNote = {
+      // Process the updated note to ensure it has the correct type
+      const updatedNote: Note = {
         ...data,
         creator_name: currentNote.creator_name,
-        creator_avatar: currentNote.creator_avatar
+        creator_avatar: currentNote.creator_avatar,
+        source_document: data.source_document ? {
+          type: (data.source_document as any).type,
+          url: (data.source_document as any).url,
+          name: (data.source_document as any).name
+        } : null
       };
       
       setNotes(notes.map(note => note.id === updatedNote.id ? updatedNote : note));

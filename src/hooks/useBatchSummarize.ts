@@ -74,7 +74,7 @@ export function useBatchSummarize({ projectId, model = 'claude' }: UseBatchSumma
       const createdNotes = [];
       
       for (const result of data.results) {
-        // Create source document reference
+        // Create properly typed source document reference
         const sourceDocument = {
           type: 'pdf' as const,
           url: result.pdfUrl,
