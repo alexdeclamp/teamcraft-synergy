@@ -101,7 +101,16 @@ async function summarizeWithClaude(text: string, maxLength: number): Promise<str
         messages: [
           {
             role: 'user',
-            content: `Please summarize the following text. Use proper formatting with paragraphs, bullet points, and headings where appropriate. Make sure to leave proper spacing between paragraphs and after headings. Focus on the key points and main ideas:
+            content: `Please summarize the following text. 
+
+FORMAT YOUR SUMMARY WITH PROPER STRUCTURE:
+1. Use clear headings with hash symbols (# for main headings, ## for subheadings)
+2. Always add TWO line breaks after each heading (not just one)
+3. Use bullet points (•) for lists with proper indentation
+4. Ensure paragraphs have double line breaks between them
+5. Make sure there are no spacing issues that could affect rendering
+
+Here's the text to summarize:
 
 ${text.slice(0, 100000)}`
           }
@@ -138,7 +147,14 @@ async function summarizeWithOpenAI(text: string, maxLength: number): Promise<str
         messages: [
           {
             role: 'system',
-            content: 'You are an AI assistant that summarizes documents. Create a concise but comprehensive summary that captures the key points and main ideas. Use proper formatting with paragraphs, bullet points, and headings as appropriate. Make sure to leave proper spacing between paragraphs and after headings.'
+            content: `You are an AI assistant that summarizes documents. Create a concise but comprehensive summary that captures the key points and main ideas.
+
+FORMAT YOUR SUMMARY WITH PROPER STRUCTURE:
+1. Use clear headings with hash symbols (# for main headings, ## for subheadings)
+2. Always add TWO line breaks after each heading (not just one)
+3. Use bullet points (•) for lists with proper indentation
+4. Ensure paragraphs have double line breaks between them
+5. Make sure there are no spacing issues that could affect rendering`
           },
           {
             role: 'user',

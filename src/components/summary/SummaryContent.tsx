@@ -28,58 +28,80 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
       return <p>No content available</p>;
     }
 
+    // Pre-process the text to fix common formatting issues
+    content = content
+      // Ensure consistent line breaks
+      .replace(/\r\n/g, '\n')
+      // Fix inconsistent spacing around headings
+      .replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
+      // Ensure proper spacing after headings
+      .replace(/^(#{1,6}\s[^\n]+)(?!\n\n)/gm, '$1\n\n')
+      // Ensure proper spacing between paragraphs that aren't headings or lists
+      .replace(/([^\n])\n([^#\s•*-])/g, '$1\n\n$2')
+      // Normalize bullet points
+      .replace(/^[-*•]\s*/gm, '• ');
+
     const lines = content.split('\n');
     
     return (
-      <div className="prose max-w-none">
+      <div className="prose prose-sm max-w-none dark:prose-invert">
         {lines.map((line, index) => {
+          // Handle empty lines as paragraph breaks
           if (line.trim() === '') {
-            return <div key={index} className="my-2"></div>;
+            return <div key={`space-${index}`} className="my-3"></div>;
           }
           
+          // Process text formatting (bold, italic, underline)
           const formattedLine = line
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
             .replace(/__(.*?)__/g, '<u>$1</u>')
             .replace(/^\* /, '• ');
           
+          // Handle headings with different levels
           if (line.trim().match(/^#{1,6}\s/)) {
             const level = line.trim().match(/^#+/)[0].length;
+            const classes = "font-bold mt-5 mb-3";
             let fontSize;
+            
             switch(level) {
-              case 1: fontSize = "1.4rem"; break;
-              case 2: fontSize = "1.25rem"; break;
-              case 3: fontSize = "1.15rem"; break;
-              default: fontSize = "1.05rem";
+              case 1: fontSize = "1.5rem"; break;
+              case 2: fontSize = "1.3rem"; break;
+              case 3: fontSize = "1.2rem"; break;
+              case 4: fontSize = "1.1rem"; break;
+              default: fontSize = "1rem";
             }
             
             return (
               <div 
-                key={index} 
-                className="font-bold mb-3 mt-4" 
+                key={`heading-${index}`} 
+                className={classes} 
                 style={{fontSize}}
                 dangerouslySetInnerHTML={{__html: formattedLine.replace(/^#+\s*/, '')}}
               />
             );
           }
           
-          if (line.trim().match(/^[-*•]\s/)) {
+          // Handle bullet points
+          if (line.trim().match(/^[•*-]\s/)) {
             return (
-              <div key={index} className="flex ml-4 my-2">
+              <div key={`bullet-${index}`} className="flex ml-4 my-2">
                 <span className="mr-2">•</span>
-                <span dangerouslySetInnerHTML={{__html: formattedLine.replace(/^[-*•]\s/, '')}} />
+                <span dangerouslySetInnerHTML={{__html: formattedLine.replace(/^[•*-]\s/, '')}} />
               </div>
             );
           }
           
+          // Handle horizontal rules
           if (line.includes('--') && line.includes('|')) {
-            return <hr key={index} className="my-2" />;
+            return <hr key={`hr-${index}`} className="my-2" />;
           }
           
+          // Handle table rows
           if (line.includes('|')) {
             const cells = line.split('|').filter(cell => cell.trim() !== '');
             return (
-              <div key={index} className="grid grid-cols-12 gap-2 py-2 border-b border-border/50">
+              <div key={`table-${index}`} className="grid grid-cols-12 gap-2 py-2 border-b border-border/50">
                 {cells.map((cell, cellIndex) => {
                   const formattedCell = cell.trim()
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -88,7 +110,7 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
                   
                   return (
                     <div 
-                      key={`${index}-${cellIndex}`}
+                      key={`cell-${index}-${cellIndex}`}
                       className={cn(
                         "px-2", 
                         cellIndex === 0 ? "col-span-3 font-medium" : "col-span-9/cells.length",
@@ -102,9 +124,10 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
             );
           }
           
+          // Regular paragraph with improved spacing
           return (
             <div 
-              key={index} 
+              key={`para-${index}`} 
               className="my-2 leading-relaxed"
               dangerouslySetInnerHTML={{ __html: formattedLine }}
             />
