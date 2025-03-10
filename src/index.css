@@ -1,52 +1,51 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Manus.in inspired color palette */
+    /* manus.im inspired color palette */
     --background: 0 0% 100%; /* White */
-    --foreground: 240 10% 3.9%; /* Dark text */
+    --foreground: 220 9% 15%; /* Dark text color - closer to manus.im */
 
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 220 9% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover-foreground: 220 9% 15%;
 
-    /* Rich blue similar to manus.in */
-    --primary: 230 80% 55%;
+    /* manus.im primary color - purple */
+    --primary: 250 87% 56%; 
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 5% 96%;
-    --secondary-foreground: 240 10% 3.9%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 9% 15%;
 
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 45%;
 
-    --accent: 230 80% 96%;
-    --accent-foreground: 230 80% 45%;
+    --accent: 250 87% 97%;
+    --accent-foreground: 250 87% 56%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    /* Softer borders like manus.in */
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
-    --ring: 230 80% 55%;
+    /* Light subtle borders like manus.im */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 250 87% 56%;
 
-    /* Rounded corners, similar to manus.in */
-    --radius: 8px;
+    /* Rounded corners matching manus.im more closely */
+    --radius: 6px;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 240 10% 3.9%;
-    --sidebar-primary: 230 80% 55%;
+    --sidebar-foreground: 220 9% 15%;
+    --sidebar-primary: 250 87% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 230 80% 96%;
-    --sidebar-accent-foreground: 230 80% 45%;
-    --sidebar-border: 240 6% 90%;
-    --sidebar-ring: 230 80% 55%;
+    --sidebar-accent: 250 87% 97%;
+    --sidebar-accent-foreground: 250 87% 56%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 250 87% 56%;
   }
 
   * {
@@ -100,13 +99,13 @@
   }
 }
 
-/* Import Inter font which is closer to manus.in style */
+/* Import Inter font which is closer to manus.im style */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.cdnfonts.com/css/sf-pro-display');
 @import url('https://fonts.cdnfonts.com/css/sf-mono');
 
 @layer components {
-  /* Manus.in inspired components */
+  /* manus.im inspired components */
   .glass-panel {
     @apply bg-white/80 backdrop-blur-sm border border-border/30 shadow-sm;
   }
@@ -116,36 +115,36 @@
   }
   
   .subtle-ring-focus {
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+    @apply focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:ring-offset-1 focus-visible:ring-offset-background;
   }
   
-  /* Manus.in inspired components */
+  /* manus.im inspired buttons and gradients */
   .manus-button {
-    @apply rounded-md px-5 py-2 bg-primary text-primary-foreground font-medium transition-all duration-200 hover:shadow-md;
+    @apply rounded-md px-4 py-2 bg-primary text-primary-foreground font-medium transition-all duration-200 hover:opacity-90;
   }
   
   .manus-gradient {
-    @apply bg-gradient-to-br from-primary/15 to-primary/5 backdrop-blur-sm;
+    @apply bg-gradient-to-r from-primary/15 to-primary/5;
   }
   
-  /* Clean, minimal styling for formula text */
+  /* Clean, minimal styling for UI elements */
   .formula-text {
     @apply font-mono text-sm tracking-tight;
   }
   
-  /* Card with hover effect */
+  /* Card with hover effect similar to manus.im */
   .hover-card {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
   }
   
-  /* Soft shadows like manus.in */
+  /* Soft shadows like manus.im */
   .soft-shadow {
-    @apply shadow-[0_2px_10px_rgba(0,0,0,0.04)];
+    @apply shadow-[0_1px_4px_rgba(0,0,0,0.04)];
   }
   
-  /* Text gradient similar to manus.in highlights */
+  /* Text gradient for highlights */
   .text-gradient {
-    @apply bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent;
   }
 }
 
