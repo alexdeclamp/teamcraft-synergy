@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle, ExternalLink, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -43,6 +42,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   const [diagnosisInfo, setDiagnosisInfo] = useState<string | null>(null);
   const [pdfInfo, setPdfInfo] = useState<{pageCount: number; isEncrypted: boolean; fingerprint: string} | null>(null);
   const [textLength, setTextLength] = useState(0);
+  const textContainerRef = useRef<HTMLPreElement>(null);
 
   const handleDisabledFeatureClick = () => {
     toast.info("This feature is currently disabled");
@@ -108,14 +108,15 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
       
       try {
         const result = await extractPdfText(pdfUrl);
-        if (result.text) {
+        if (result.text && result.text.trim().length > 0) {
           setExtractedText(result.text);
+          setPageCount(result.pageCount || 0);
+          setTextLength(result.text.length);
+          toast.success(`Successfully extracted ${result.text.length.toLocaleString()} characters from ${result.pageCount || 0} pages`);
         } else {
-          setExtractedText('No text content found in the document.');
+          setExtractedText('');
+          toast.warning("No text content found in the document.");
         }
-        setPageCount(result.pageCount || 0);
-        setTextLength(result.text.length);
-        toast.success(`Successfully extracted ${result.text.length.toLocaleString()} characters from ${result.pageCount || 0} pages`);
       } catch (extractionError: any) {
         console.error('PDF extraction failed:', extractionError);
         setDiagnosisInfo(`Extraction error: ${extractionError.message}`);
@@ -154,6 +155,17 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     
     toast.success('Text downloaded successfully');
   };
+
+  useEffect(() => {
+    if (showTextModal && !isExtracting && extractedText && textContainerRef.current) {
+      textContainerRef.current.style.display = 'none';
+      setTimeout(() => {
+        if (textContainerRef.current) {
+          textContainerRef.current.style.display = 'block';
+        }
+      }, 0);
+    }
+  }, [showTextModal, isExtracting, extractedText]);
 
   return (
     <>
@@ -242,7 +254,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
             )}
           </DialogHeader>
           
-          <ScrollArea className="flex-1 p-4 mt-4 max-h-[500px]">
+          <ScrollArea className="flex-1 p-4 mt-4 max-h-[500px] overflow-auto">
             {isExtracting ? (
               <div className="flex flex-col items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-2" />
@@ -265,7 +277,12 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
                 </div>
               </div>
             ) : extractedText ? (
-              <pre className="whitespace-pre-wrap font-mono text-sm">{extractedText}</pre>
+              <pre 
+                ref={textContainerRef}
+                className="whitespace-pre-wrap font-mono text-sm w-full overflow-visible"
+              >
+                {extractedText}
+              </pre>
             ) : (
               <div className="text-center text-muted-foreground py-8">
                 No text content was extracted from this PDF. It might be an image-based PDF.

@@ -64,7 +64,7 @@ export async function extractPdfText(pdfUrl: string): Promise<{ text: string; pa
       const page = await pdf.getPage(i);
       
       try {
-        // Get text content with appropriate parameters
+        // Get text content with default parameters
         const content = await page.getTextContent();
         
         // Process text content more carefully
@@ -108,7 +108,7 @@ export async function extractPdfText(pdfUrl: string): Promise<{ text: string; pa
     console.log(`Total text extracted: ${textContent.length} characters`);
     
     return { 
-      text: textContent, 
+      text: textContent.trim(), 
       pageCount: pdf.numPages 
     };
   } catch (error: any) {
@@ -144,13 +144,16 @@ export async function getPdfInfo(pdfUrl: string): Promise<{ pageCount: number; i
     const loadingTask = pdfjs.getDocument({ data: new Uint8Array(pdfData) });
     const pdf = await loadingTask.promise;
     
-    // Check if PDF is encrypted
-    // PDF.js doesn't directly expose isEncrypted in the type definitions
-    // but it might be available at runtime
-    const isEncrypted = 'isEncrypted' in pdf ? (pdf as any).isEncrypted : false;
+    // For pdfjs-dist v3.x, we need to check properties in a different way
+    // Use typescript "as any" temporarily to access non-typed properties
+    const pdfAny = pdf as any;
     
-    // Use fingerprints (plural) as it's the correct property name
-    const fingerprint = pdf.fingerprints?.[0] || '';
+    // Get encrypted status safely
+    const isEncrypted = pdfAny._pdfInfo?.encrypted || false;
+    
+    // Get fingerprint safely
+    // First try fingerprints (array), then fall back to fingerprint (string)
+    const fingerprint = pdf.fingerprints?.[0] || pdfAny.fingerprint || '';
     
     return {
       pageCount: pdf.numPages,
