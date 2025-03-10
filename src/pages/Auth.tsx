@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +20,7 @@ const INVITATION_CODE = "I NEED BRA3N";
 const Auth = () => {
   const { signIn, signUp, session, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [loading, setLoading] = useState(false);
   
@@ -38,7 +38,14 @@ const Auth = () => {
     if (session && !isLoading) {
       navigate('/dashboard');
     }
-  }, [session, isLoading, navigate]);
+    
+    // Check URL params for tab selection
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab === 'register') {
+      setActiveTab('register');
+    }
+  }, [session, isLoading, navigate, location]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

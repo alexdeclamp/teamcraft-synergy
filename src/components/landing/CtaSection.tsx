@@ -19,11 +19,11 @@ const CtaSection: React.FC = () => {
       </p>
       <Button 
         size="lg" 
-        onClick={() => navigate('/auth')} 
+        onClick={() => navigate('/auth?tab=register')} 
         className="rounded-full px-8 gap-2"
       >
         <Sparkles className="h-4 w-4" />
-        Get Started Now
+        Try Bra3n
       </Button>
     </section>
   );

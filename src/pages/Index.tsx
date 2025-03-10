@@ -20,8 +20,8 @@ const Index = () => {
           Intelligent analysis for your projects. Seamlessly organize documents, generate insights, and collaborate with your team.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button onClick={() => navigate('/auth')} size="lg" className="rounded-md px-8 text-base shadow-sm w-full sm:w-auto">
-            Get Started
+          <Button onClick={() => navigate('/auth?tab=register')} size="lg" className="rounded-md px-8 text-base shadow-sm w-full sm:w-auto">
+            Try Bra3n
             <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
           <Button 
