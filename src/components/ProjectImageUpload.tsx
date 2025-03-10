@@ -230,6 +230,18 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
     });
   };
 
+  const sanitizeFileName = (fileName: string): string => {
+    const name = fileName.split('.').slice(0, -1).join('.');
+    const ext = fileName.split('.').pop();
+    
+    const sanitized = name
+      .replace(/[^a-zA-Z0-9]/g, '_')
+      .replace(/_+/g, '_')
+      .toLowerCase();
+      
+    return `${sanitized}.${ext}`;
+  };
+
   const handleUpload = async () => {
     if (!selectedFile || !projectId || !user) return;
     
@@ -240,8 +252,8 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
       const compressedImage = await compressImage(selectedFile, maxWidth, maxHeight);
       setUploadProgress(40);
 
-      const fileName = `${Date.now()}-${selectedFile.name.replace(/\s+/g, '_')}`;
-      const filePath = `${projectId}/${fileName}`;
+      const sanitizedFileName = sanitizeFileName(`${Date.now()}-${selectedFile.name}`);
+      const filePath = `${projectId}/${sanitizedFileName}`;
       
       const { data, error } = await supabase
         .storage
@@ -273,7 +285,7 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
       handleCloseDialog();
     } catch (error: any) {
       console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
+      toast.error('Failed to upload image: ' + (error.message || 'Unknown error'));
     } finally {
       setIsUploading(false);
     }
