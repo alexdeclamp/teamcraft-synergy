@@ -62,7 +62,6 @@ serve(async (req) => {
     console.log(`Chat with PDF request received for: ${fileName || 'unnamed document'}`);
     console.log(`Using model: ${model}`);
     console.log(`User message: ${message}`);
-    console.log(`Document context length: ${documentContext ? documentContext.length : 0}`);
     
     if (!message || message.trim() === '') {
       return new Response(
@@ -71,7 +70,24 @@ serve(async (req) => {
       );
     }
     
-    // Prepare the context for the AI - simplified logic
+    // Check if we should use provided document context or extract from PDF URL
+    if ((!documentContext || documentContext.trim() === '') && !pdfUrl) {
+      return new Response(
+        JSON.stringify({ error: 'Either document context or PDF URL is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Check if the requested model's API key is available
+    if ((model === 'claude' && !anthropicApiKey) || (model === 'openai' && !openAIApiKey)) {
+      const missingKey = model === 'claude' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY';
+      return new Response(
+        JSON.stringify({ error: `${missingKey} is not configured` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Prepare the context for the AI
     let contextContent = '';
     
     if (documentContext && documentContext.trim() !== '') {
@@ -107,18 +123,21 @@ serve(async (req) => {
         "\n\n[Note: The document is too large and has been truncated. Some information may be missing.]";
     }
     
-    // Simple system message for both models
-    const systemMessage = `You are an AI assistant that helps users understand documents. 
-      The current document is: "${fileName || 'Document'}".
+    // System message for both models
+    const systemMessage = `You are an AI assistant that helps users understand and analyze documents. 
+      The current document is: "${fileName || 'Unnamed document'}".
       
       Use the following content from the document to answer the user's questions:
       
       ${contextContent}
       
       Guidelines:
-      1. Answer based solely on the document content provided.
-      2. If you don't know the answer, say so rather than making things up.
-      3. Be clear and concise in your responses.`;
+      1. Base your answers solely on the document content provided. Don't reference external information.
+      2. If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
+      3. When quoting from the document, use quotation marks and be precise.
+      4. If the document is truncated, mention that some information might be missing.
+      5. Format your responses in a clear, easy-to-read manner with proper spacing.
+      6. For technical or complex documents, explain terms when appropriate.`;
 
     // Call the selected API
     try {
@@ -135,7 +154,7 @@ serve(async (req) => {
             'anthropic-version': '2023-06-01'
           },
           body: JSON.stringify({
-            model: "claude-3-haiku-20240307",
+            model: "claude-3-7-sonnet-20250219",
             max_tokens: 1500,
             system: systemMessage,
             messages: [
@@ -155,6 +174,11 @@ serve(async (req) => {
         
         data = await response.json();
         console.log('Claude API response received successfully');
+        
+        if (!data.content || !data.content[0] || !data.content[0].text) {
+          console.error('Invalid response from Claude API:', data);
+          throw new Error('Invalid response format from Claude API');
+        }
         
         return new Response(
           JSON.stringify({ 
@@ -204,6 +228,7 @@ serve(async (req) => {
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      
     } catch (apiError) {
       console.error(`Error calling ${model.toUpperCase()} API:`, apiError);
       return new Response(
@@ -214,6 +239,7 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
   } catch (error) {
     console.error('Error in chat-with-pdf function:', error);
     return new Response(

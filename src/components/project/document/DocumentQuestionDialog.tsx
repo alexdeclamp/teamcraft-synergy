@@ -1,181 +1,279 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { SendHorizontal, Loader2 } from "lucide-react";
-import { supabase } from '@/integrations/supabase/client';
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { SendHorizontal, Loader2, Copy, Download, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useDialog } from '@/hooks/useDialog';
+import SummaryFeedback from '@/components/summary/SummaryFeedback';
 
 interface DocumentQuestionDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  documentText: string;
-  documentName: string;
-  documentUrl?: string;
+  document: {
+    id: string;
+    file_name: string;
+    file_url: string;
+    content_text?: string;
+  };
+  projectId: string;
 }
 
 const DocumentQuestionDialog: React.FC<DocumentQuestionDialogProps> = ({
   isOpen,
   onClose,
-  documentText,
-  documentName,
-  documentUrl
+  document,
+  projectId
 }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
+  const [currentStep, setCurrentStep] = useState<'question' | 'answer'>('question');
+  const [userQuestion, setUserQuestion] = useState('');
+  const [answer, setAnswer] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('openai');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isCopied, setIsCopied] = useState(false);
+  const [feedbackGiven, setFeedbackGiven] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const answerRef = useRef<HTMLDivElement>(null);
   
-  // Reset messages when dialog opens/closes
   useEffect(() => {
-    if (!isOpen) {
-      setMessages([]);
-      setInput('');
+    if (isOpen && currentStep === 'question' && textareaRef.current) {
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
     }
-  }, [isOpen]);
+  }, [isOpen, currentStep]);
   
-  // Scroll to bottom when new messages are added
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-
-  const handleSendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+  const handleAskQuestion = async () => {
+    if (!userQuestion.trim() || isLoading) return;
     
-    // Add user message
-    const userMessage = { role: 'user' as const, content: input };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
     setIsLoading(true);
+    setCurrentStep('answer');
     
     try {
-      console.log(`Sending message to chat-with-pdf function with document context length: ${documentText.length}`);
-      
-      const { data, error } = await supabase.functions.invoke('chat-with-pdf', {
+      const { data, error } = await supabase.functions.invoke('ask-pdf-question', {
         body: {
-          message: userMessage.content,
-          documentContext: documentText,
-          fileName: documentName,
-          pdfUrl: documentUrl,
-          model: selectedModel
+          pdfUrl: document.file_url,
+          fileName: document.file_name,
+          userQuestion: userQuestion.trim(),
+          documentContext: document.content_text || ''
         }
       });
       
       if (error) {
-        console.error('Error chatting with document text:', error);
-        throw error;
+        console.error('Function invocation error:', error);
+        throw new Error(`Error calling function: ${error.message}`);
       }
       
-      // Add AI response
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: data.answer || 'Sorry, I could not process the document.'
-      }]);
-    } catch (error) {
-      console.error('Error chatting with document text:', error);
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: 'Sorry, there was an error processing your request. Please try again.'
-      }]);
+      if (!data || !data.success || !data.answer) {
+        const errorMsg = data?.error || 'Invalid response from service';
+        console.error('Service error:', errorMsg);
+        throw new Error(errorMsg);
+      }
+      
+      setAnswer(data.answer);
+    } catch (error: any) {
+      console.error('Error asking PDF question:', error);
+      toast.error(`Failed to get answer: ${error.message || 'Unknown error'}`);
+      setAnswer("I'm sorry, I encountered an error processing your question. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey && currentStep === 'question') {
       e.preventDefault();
-      handleSendMessage();
+      handleAskQuestion();
     }
   };
+  
+  const handleCopy = () => {
+    if (!answer) return;
+    
+    navigator.clipboard.writeText(answer)
+      .then(() => {
+        setIsCopied(true);
+        toast.success('Answer copied to clipboard');
+        setTimeout(() => setIsCopied(false), 2000);
+      })
+      .catch(err => {
+        console.error('Failed to copy text:', err);
+        toast.error('Failed to copy to clipboard');
+      });
+  };
+  
+  const handleDownload = () => {
+    if (!answer) return;
+    
+    const blob = new Blob([`Question: ${userQuestion}\n\nAnswer: ${answer}`], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = window.document.createElement('a');
+    a.href = url;
+    a.download = `${document.file_name.replace(/\.[^/.]+$/, '')}-question.txt`;
+    window.document.body.appendChild(a);
+    a.click();
+    window.document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+  
+  const handleCreateNote = async () => {
+    if (!answer || !userQuestion) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('project_notes')
+        .insert({
+          project_id: projectId,
+          title: `Question about ${document.file_name}`,
+          content: `**Question:** ${userQuestion}\n\n**Answer:** ${answer}`,
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        })
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      toast.success('Created note from answer');
+      onClose();
+    } catch (error: any) {
+      console.error('Error creating note:', error);
+      toast.error(`Failed to create note: ${error.message}`);
+    }
+  };
+  
+  const handleReset = () => {
+    setCurrentStep('question');
+    setAnswer('');
+  };
 
+  const handleFeedback = (isPositive: boolean) => {
+    setFeedbackGiven(true);
+    toast.success('Thanks for your feedback!');
+  };
+  
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col">
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) onClose();
+    }}>
+      <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Ask Questions About This Document</DialogTitle>
+          <DialogTitle>Ask a Question about "{document.file_name}"</DialogTitle>
+          <DialogDescription>
+            {currentStep === 'question' 
+              ? 'Ask a specific question about this document to get an AI-powered answer'
+              : 'AI-generated answer based on the document content'}
+          </DialogDescription>
         </DialogHeader>
         
-        <div className="flex justify-end my-2">
-          <Select value={selectedModel} onValueChange={setSelectedModel}>
-            <SelectTrigger className="w-[140px] sm:w-[180px]">
-              <SelectValue placeholder="Select Model" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="openai">OpenAI (GPT-4o mini)</SelectItem>
-              <SelectItem value="claude">Claude</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <ScrollArea className="flex-grow min-h-[300px] border rounded-md p-3 mb-3">
-          {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              <p>Ask a question about the document</p>
-              <p className="text-xs mt-1">For example: "What are the key points in this document?"</p>
+        <div className="flex-1 overflow-hidden">
+          {currentStep === 'question' ? (
+            <div className="space-y-4 py-4">
+              <Textarea
+                ref={textareaRef}
+                value={userQuestion}
+                onChange={(e) => setUserQuestion(e.target.value)}
+                placeholder="What would you like to know about this document?"
+                className="min-h-[150px] text-base"
+                onKeyDown={handleKeyDown}
+              />
+              <Button 
+                onClick={handleAskQuestion} 
+                className="w-full"
+                disabled={!userQuestion.trim() || isLoading}
+              >
+                <ArrowRight className="mr-2 h-4 w-4" />
+                Get Answer
+              </Button>
             </div>
           ) : (
-            <div className="space-y-4">
-              {messages.map((message, index) => (
-                <div 
-                  key={index} 
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div 
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-foreground'
-                    }`}
-                  >
-                    {message.content}
-                  </div>
+            <div className="py-4 space-y-4">
+              <div className="bg-muted p-3 rounded-md">
+                <p className="font-semibold text-sm">Your question:</p>
+                <p className="mt-1">{userQuestion}</p>
+              </div>
+              
+              <ScrollArea className="h-[300px] border rounded-md p-4">
+                <div ref={answerRef} className="prose prose-sm max-w-none">
+                  {isLoading ? (
+                    <div className="flex justify-center items-center h-full py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                      <span className="ml-2 text-muted-foreground">Getting your answer...</span>
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-line">
+                      {answer}
+                    </div>
+                  )}
                 </div>
-              ))}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-muted rounded-lg p-3">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  </div>
+              </ScrollArea>
+              
+              <div className="flex flex-wrap gap-2 justify-between items-center pt-2">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopy}
+                    disabled={isLoading || !answer}
+                  >
+                    <Copy className="h-4 w-4 mr-1" />
+                    {isCopied ? 'Copied' : 'Copy'}
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownload}
+                    disabled={isLoading || !answer}
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Save
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReset}
+                    disabled={isLoading}
+                  >
+                    Ask Another Question
+                  </Button>
+                </div>
+                
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleCreateNote}
+                  disabled={isLoading || !answer}
+                >
+                  Create Note
+                </Button>
+              </div>
+              
+              {!isLoading && answer && (
+                <div className="flex items-center justify-start mt-4">
+                  {feedbackGiven ? (
+                    <p className="text-sm text-muted-foreground">Thanks for your feedback!</p>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground mr-2">Was this answer helpful?</p>
+                      <SummaryFeedback 
+                        feedbackGiven={feedbackGiven}
+                        onFeedback={handleFeedback}
+                      />
+                    </>
+                  )}
                 </div>
               )}
-              <div ref={messagesEndRef}></div>
             </div>
           )}
-        </ScrollArea>
-        
-        <div className="flex gap-2">
-          <Input
-            placeholder="Type your question..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={isLoading}
-            className="flex-grow"
-          />
-          <Button 
-            onClick={handleSendMessage} 
-            disabled={!input.trim() || isLoading}
-            size="icon"
-          >
-            {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <SendHorizontal className="h-5 w-5" />}
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
