@@ -1,51 +1,51 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Manus.im inspired color palette - simplified and clean */
+    /* manus.im inspired color palette */
     --background: 0 0% 100%; /* White */
-    --foreground: 0 0% 10%; /* Almost black text */
+    --foreground: 220 9% 15%; /* Dark text color - closer to manus.im */
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 220 9% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 220 9% 15%;
 
-    --primary: 0 0% 10%; /* Almost black */
+    /* manus.im primary color - purple */
+    --primary: 250 87% 56%; 
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 9% 15%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 45%;
 
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 250 87% 97%;
+    --accent-foreground: 250 87% 56%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    /* Light subtle borders */
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 70%;
+    /* Light subtle borders like manus.im */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 250 87% 56%;
 
-    /* Subtle rounded corners */
-    --radius: 8px;
+    /* Rounded corners matching manus.im more closely */
+    --radius: 6px;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 0 0% 10%;
+    --sidebar-foreground: 220 9% 15%;
+    --sidebar-primary: 250 87% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 0 0% 70%;
+    --sidebar-accent: 250 87% 97%;
+    --sidebar-accent-foreground: 250 87% 56%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 250 87% 56%;
   }
 
   * {
@@ -59,23 +59,27 @@
   /* Smooth page transitions */
   .page-transition-enter {
     opacity: 0;
+    transform: translateY(5px);
   }
   
   .page-transition-enter-active {
     opacity: 1;
-    transition: opacity 300ms;
+    transform: translateY(0);
+    transition: opacity 300ms, transform 300ms;
   }
   
   .page-transition-exit {
     opacity: 1;
+    transform: translateY(0);
   }
   
   .page-transition-exit-active {
     opacity: 0;
-    transition: opacity 300ms;
+    transform: translateY(-5px);
+    transition: opacity 300ms, transform 300ms;
   }
 
-  /* Minimal scrollbar */
+  /* Custom scrollbar - more subtle */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -95,21 +99,32 @@
   }
 }
 
-/* Import Inter font which is similar to manus.im style */
+/* Import Inter font which is closer to manus.im style */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+@import url('https://fonts.cdnfonts.com/css/sf-mono');
 
 @layer components {
-  /* Manus.im inspired components */
+  /* manus.im inspired components */
   .glass-panel {
-    @apply bg-white border border-border/30 shadow-sm;
+    @apply bg-white/80 backdrop-blur-sm border border-border/30 shadow-sm;
   }
   
   .glass-card {
-    @apply glass-panel rounded-lg transition-all duration-300;
+    @apply glass-panel rounded-lg transition-all duration-300 hover:shadow-md;
   }
   
   .subtle-ring-focus {
     @apply focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/50 focus-visible:ring-offset-1 focus-visible:ring-offset-background;
+  }
+  
+  /* manus.im inspired buttons and gradients */
+  .manus-button {
+    @apply rounded-md px-4 py-2 bg-primary text-primary-foreground font-medium transition-all duration-200 hover:opacity-90;
+  }
+  
+  .manus-gradient {
+    @apply bg-gradient-to-r from-primary/15 to-primary/5;
   }
   
   /* Clean, minimal styling for UI elements */
@@ -117,29 +132,29 @@
     @apply font-mono text-sm tracking-tight;
   }
   
-  /* Simple hover effect */
+  /* Card with hover effect similar to manus.im */
   .hover-card {
-    @apply transition-all duration-200 hover:-translate-y-0.5;
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
   }
   
-  /* Soft shadows */
+  /* Soft shadows like manus.im */
   .soft-shadow {
-    @apply shadow-[0_1px_2px_rgba(0,0,0,0.05)];
+    @apply shadow-[0_1px_4px_rgba(0,0,0,0.04)];
   }
   
-  /* Apple-like glass morphism */
-  .apple-glass {
-    @apply bg-white border border-gray-100 shadow-sm;
+  /* Text gradient for highlights */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent;
   }
 }
 
-/* Markdown styling - cleaner, more minimal */
+/* Markdown styling for chat - cleaner, more minimal */
 .prose {
   @apply text-foreground;
 }
 
 .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
-  @apply font-medium my-3;
+  @apply font-semibold my-3;
 }
 
 .prose h1 {
@@ -183,7 +198,7 @@
 }
 
 .prose blockquote {
-  @apply pl-4 border-l-2 border-muted-foreground/30 italic my-3;
+  @apply pl-4 border-l-4 border-muted-foreground/30 italic my-3;
 }
 
 .prose a {

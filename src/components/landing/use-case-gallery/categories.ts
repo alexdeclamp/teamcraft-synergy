@@ -1,7 +1,7 @@
 
 import { UseCaseCategory } from './types';
 
-// Define all available categories in a simpler format
+// Define all available categories
 export const categories: UseCaseCategory[] = [
   'Featured', 
   'Research', 
@@ -12,5 +12,7 @@ export const categories: UseCaseCategory[] = [
   'Finance', 
   'Legal', 
   'Healthcare', 
-  'Technology'
+  'Government', 
+  'Technology', 
+  'Marketing'
 ];

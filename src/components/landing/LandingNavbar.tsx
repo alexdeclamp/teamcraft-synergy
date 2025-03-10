@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sparkles } from "lucide-react";
 import { Button } from '@/components/ui/button';
 
 const LandingNavbar = () => {
@@ -20,50 +20,63 @@ const LandingNavbar = () => {
   }, []);
 
   const navLinks = [
-    { name: "Intro", href: "#intro" },
-    { name: "Use cases", href: "#use-cases" },
-    { name: "Benchmarks", href: "#benchmarks" }
+    { name: "Features", href: "#features" },
+    { name: "Pricing", href: "#pricing" },
+    { name: "About", href: "#about" },
+    { name: "Blog", href: "#blog" }
   ];
 
   return (
     <header 
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 sm:px-6 py-4",
-        scrolled ? "bg-white/90 backdrop-blur-sm border-b shadow-sm" : "bg-transparent"
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 sm:px-6 py-3",
+        scrolled ? "bg-white/80 backdrop-blur-sm border-b shadow-sm" : "bg-transparent"
       )}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link to="/" className="font-medium text-lg flex items-center">
-          <span className="mr-1">Bra</span>
-          <span className="font-semibold">3</span>
-          <span>n</span>
+        <Link to="/" className="flex items-center space-x-2">
+          <div className="flex items-center justify-center">
+            <Sparkles className="h-8 w-8 text-primary" />
+          </div>
+          <span className="font-semibold text-lg tracking-tight">
+            Bra<span className="text-primary">3</span>n
+          </span>
         </Link>
 
         {/* Desktop Menu */}
         <nav className="hidden md:flex items-center space-x-1">
-          <div className="flex items-center space-x-8 mr-8">
+          <div className="flex items-center space-x-6 mr-6">
             {navLinks.map((link) => (
               <a 
                 key={link.name}
                 href={link.href}
-                className="text-sm font-medium text-foreground hover:text-foreground/80 transition-colors"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 {link.name}
               </a>
             ))}
           </div>
           
-          <Button 
-            className="bg-black text-white hover:bg-black/90 rounded-full px-6 h-9 text-sm font-medium"
-            onClick={() => navigate('/auth')}
-          >
-            Get Started
-          </Button>
+          <div className="flex items-center space-x-3">
+            <Button 
+              variant="outline" 
+              className="rounded-full"
+              onClick={() => navigate('/auth')}
+            >
+              Log in
+            </Button>
+            <Button 
+              className="rounded-full"
+              onClick={() => navigate('/auth')}
+            >
+              Sign up
+            </Button>
+          </div>
         </nav>
 
         {/* Mobile menu button */}
         <button 
-          className="md:hidden"
+          className="md:hidden p-2 rounded-md hover:bg-accent"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle menu"
           aria-expanded={mobileMenuOpen}
@@ -78,7 +91,7 @@ const LandingNavbar = () => {
       {/* Mobile Menu */}
       <div 
         className={cn(
-          "fixed inset-x-0 top-[61px] bg-white transform transition-transform duration-300 ease-in-out md:hidden z-50 border-b",
+          "fixed inset-x-0 top-[61px] bg-white shadow-lg border-t transform transition-transform duration-300 ease-in-out md:hidden z-50",
           mobileMenuOpen ? "translate-y-0" : "-translate-y-full"
         )}
       >
@@ -88,7 +101,7 @@ const LandingNavbar = () => {
               <a 
                 key={link.name}
                 href={link.href}
-                className="text-sm font-medium py-2"
+                className="text-sm font-medium py-2 px-3 rounded-md hover:bg-accent"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {link.name}
@@ -96,15 +109,25 @@ const LandingNavbar = () => {
             ))}
           </div>
           
-          <div className="pt-3 border-t">
+          <div className="flex flex-col space-y-3 pt-3 border-t">
             <Button 
-              className="bg-black text-white hover:bg-black/90 rounded-full w-full justify-center h-10"
+              variant="outline" 
+              className="w-full justify-center"
               onClick={() => { 
                 navigate('/auth');
                 setMobileMenuOpen(false);
               }}
             >
-              Get Started
+              Log in
+            </Button>
+            <Button 
+              className="w-full justify-center"
+              onClick={() => { 
+                navigate('/auth');
+                setMobileMenuOpen(false);
+              }}
+            >
+              Sign up
             </Button>
           </div>
         </div>
