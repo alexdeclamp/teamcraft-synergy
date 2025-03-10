@@ -17,7 +17,7 @@ export const categories: UseCaseCategory[] = [
   'Marketing'
 ];
 
-// Define use cases - with 8 featured cases
+// Define use cases - with exactly 8 featured cases
 export const useCasesData: UseCase[] = [
   // Featured use cases (exactly 8)
   {
