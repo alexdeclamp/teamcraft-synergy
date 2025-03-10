@@ -43,9 +43,20 @@ serve(async (req) => {
     
     console.log(`Starting to extract text from PDF: ${pdfUrl.substring(0, 50)}...`);
     
+    // Validate pdfUrl format
+    try {
+      new URL(pdfUrl);
+    } catch (urlError) {
+      console.error("Invalid PDF URL format:", urlError.message);
+      return new Response(
+        JSON.stringify({ error: `Invalid PDF URL format: ${urlError.message}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     try {
       // Fetch the PDF with timeout and retry logic
-      const response = await fetchWithRetry(pdfUrl, 3);
+      const response = await fetchWithRetry(pdfUrl, 3, 45000); // 45 second timeout
       
       if (!response.ok) {
         const errorText = await response.text().catch(() => "Could not read error response");
@@ -58,6 +69,10 @@ serve(async (req) => {
       
       // Initialize pdf.js
       console.log("PDF data received, size:", pdfData.byteLength);
+      
+      if (pdfData.byteLength === 0) {
+        throw new Error("PDF data is empty");
+      }
       
       // Load the PDF with pdf.js
       const loadingTask = pdfjs.getDocument({ data: new Uint8Array(pdfData) });
@@ -112,22 +127,23 @@ serve(async (req) => {
 });
 
 // Utility function to fetch with retry
-async function fetchWithRetry(url: string, maxRetries: number): Promise<Response> {
+async function fetchWithRetry(url, maxRetries, timeout = 30000) {
   let lastError;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`Fetch attempt ${attempt}/${maxRetries} for ${url.substring(0, 50)}...`);
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
       
       try {
         const response = await fetch(url, { 
           signal: controller.signal,
           headers: {
-            // Add additional headers that might be needed for fetching from storage
             'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
+            'Pragma': 'no-cache',
+            'Accept': '*/*',
+            'User-Agent': 'Deno/1.0 Supabase/EdgeFunction'
           }
         });
         clearTimeout(timeoutId);

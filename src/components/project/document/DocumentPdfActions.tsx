@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle } from 'lucide-react';
+import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -9,7 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogClose,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from '@/integrations/supabase/client';
@@ -39,57 +40,94 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionError, setExtractionError] = useState<string | null>(null);
   const [pageCount, setPageCount] = useState(0);
+  const [diagnosisInfo, setDiagnosisInfo] = useState<string | null>(null);
 
   const handleDisabledFeatureClick = () => {
     toast.info("This feature is currently disabled");
   };
 
+  const verifyPdfUrl = async (url: string): Promise<boolean> => {
+    try {
+      console.log('Verifying PDF URL:', url);
+      
+      // First try to validate the URL format
+      try {
+        new URL(url);
+      } catch (e) {
+        throw new Error(`Invalid URL format: ${e.message}`);
+      }
+      
+      // Try a HEAD request first to check if the PDF is accessible
+      const headResponse = await fetch(url, { method: 'HEAD' });
+      
+      if (!headResponse.ok) {
+        throw new Error(`PDF URL is not accessible: ${headResponse.status} ${headResponse.statusText}`);
+      }
+      
+      console.log('PDF URL is valid and accessible');
+      return true;
+    } catch (error: any) {
+      console.error('PDF URL verification failed:', error);
+      setDiagnosisInfo(`URL verification failed: ${error.message}`);
+      return false;
+    }
+  };
+
   const handleExtractText = async () => {
     setIsExtracting(true);
     setExtractionError(null);
+    setDiagnosisInfo(null);
     setShowTextModal(true);
     
     try {
       toast.info("Extracting text from PDF...", {
-        duration: 3000,
+        duration: 5000,
       });
       
-      console.log('Calling extract-pdf-text edge function with URL:', pdfUrl.substring(0, 50) + '...');
+      console.log('PDF URL to extract:', pdfUrl);
       
-      // First check if the PDF is accessible
+      // First verify the URL is accessible
+      const isUrlValid = await verifyPdfUrl(pdfUrl);
+      
+      if (!isUrlValid) {
+        throw new Error('PDF URL is not accessible. Please check the file exists and try again.');
+      }
+      
+      // Extract the text using the edge function
       try {
-        const urlCheck = await fetch(pdfUrl, { method: 'HEAD' });
-        if (!urlCheck.ok) {
-          throw new Error(`PDF URL is not accessible: ${urlCheck.status} ${urlCheck.statusText}`);
+        console.log('Calling extract-pdf-text edge function');
+        const { data, error } = await supabase.functions.invoke('extract-pdf-text', {
+          body: { pdfUrl }
+        });
+        
+        if (error) {
+          console.error('Edge function error:', error);
+          throw new Error(`Edge function error: ${error.message || 'Unknown error'}`);
         }
-      } catch (urlError: any) {
-        console.error('PDF URL check failed:', urlError);
-        throw new Error(`Cannot access PDF: ${urlError.message}`);
+        
+        console.log('Edge function response:', data);
+        
+        if (!data) {
+          throw new Error('Received empty response from Edge Function');
+        }
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        if (!data.success || !data.text) {
+          throw new Error(data.error || 'Failed to extract text from PDF');
+        }
+        
+        setExtractedText(data.text);
+        setPageCount(data.pageCount || 0);
+        toast.success(`Successfully extracted text from ${data.pageCount || 0} pages`);
+      } catch (edgeFunctionError: any) {
+        console.error('Edge function call failed:', edgeFunctionError);
+        // Collect diagnostic information about the error
+        setDiagnosisInfo(`Edge function error: ${edgeFunctionError.message}`);
+        throw edgeFunctionError;
       }
-      
-      // Now call the edge function
-      const { data, error } = await supabase.functions.invoke('extract-pdf-text', {
-        body: { pdfUrl }
-      });
-      
-      if (error) {
-        console.error('Edge function error:', error);
-        throw new Error(`Failed to send a request to the Edge Function: ${error.message}`);
-      }
-      
-      console.log('Edge function response:', data);
-      
-      if (!data || data.error) {
-        throw new Error(data?.error || 'Failed to extract text from PDF');
-      }
-      
-      if (!data.success || !data.text) {
-        throw new Error(data.error || 'Failed to extract text from PDF');
-      }
-      
-      setExtractedText(data.text);
-      setPageCount(data.pageCount || 0);
-      toast.success(`Successfully extracted text from ${data.pageCount || 0} pages`);
     } catch (error: any) {
       console.error('Error extracting text:', error);
       const errorMessage = error.message || 'Failed to extract text from the PDF';
@@ -102,6 +140,10 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   
   const handleRetryExtraction = () => {
     handleExtractText();
+  };
+  
+  const handleOpenPdfDirectly = () => {
+    window.open(pdfUrl, '_blank');
   };
   
   const handleDownloadText = () => {
@@ -191,6 +233,11 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
               Extracted Text - {fileName}
               {pageCount > 0 && <span className="text-sm text-muted-foreground ml-2">({pageCount} pages)</span>}
             </DialogTitle>
+            {diagnosisInfo && (
+              <DialogDescription className="text-amber-500">
+                Diagnostic info: {diagnosisInfo}
+              </DialogDescription>
+            )}
           </DialogHeader>
           
           <ScrollArea className="flex-1 p-4 mt-4">
@@ -207,7 +254,13 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
                 <div className="text-sm text-muted-foreground mb-6 max-w-md">
                   This could be due to network issues, an invalid PDF format, or the PDF might be password-protected.
                 </div>
-                <Button onClick={handleRetryExtraction}>Retry Extraction</Button>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button onClick={handleRetryExtraction}>Retry Extraction</Button>
+                  <Button variant="outline" onClick={handleOpenPdfDirectly} className="flex items-center gap-1">
+                    <ExternalLink className="h-4 w-4" />
+                    Open PDF Directly
+                  </Button>
+                </div>
               </div>
             ) : (
               <div className="whitespace-pre-wrap font-mono text-sm">
