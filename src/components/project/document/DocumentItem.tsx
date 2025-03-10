@@ -188,6 +188,8 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
               onChatClick={handleChatClick}
               onAskQuestion={handleAskQuestion}
               hasSavedSummary={hasSavedSummary}
+              pdfUrl={pdfUrl}
+              fileName={document.file_name}
             />
           )}
           
