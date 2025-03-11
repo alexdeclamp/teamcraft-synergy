@@ -2,19 +2,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, GraduationCap, Sparkles } from "lucide-react";
+import { LayoutDashboard, Sparkles } from "lucide-react";
 import { useOnboarding } from '@/contexts/OnboardingContext';
 
 const NavLinks = () => {
   const location = useLocation();
   const { startOnboarding } = useOnboarding();
-  
-  const handleTutorialClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    // Dispatch a custom event to trigger tutorial
-    const event = new CustomEvent('start-dashboard-tutorial');
-    window.dispatchEvent(event);
-  };
 
   const navLinks = [
     { 
@@ -38,17 +31,6 @@ const NavLinks = () => {
           </Button>
         </Link>
       ))}
-      
-      {/* Tutorial Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="subtle-ring-focus"
-        onClick={handleTutorialClick}
-      >
-        <GraduationCap className="h-4 w-4 mr-2" />
-        Tutorial
-      </Button>
       
       {/* Onboarding Button */}
       <Button
