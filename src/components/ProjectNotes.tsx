@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -323,18 +322,18 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         <EmptyNotesList onCreateNote={handleOpenCreateDialog} />
       ) : (
         <>
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <TagFilter 
-                allTags={allTags} 
-                activeTag={activeTag} 
-                setActiveTag={setActiveTag} 
-              />
+          <div className="mb-6">
+            <TagFilter 
+              allTags={allTags} 
+              activeTag={activeTag} 
+              setActiveTag={setActiveTag} 
+            />
+            <div className="mt-4 flex justify-end">
+              <Button onClick={handleOpenCreateDialog} className="flex items-center gap-1">
+                <PlusCircle className="h-4 w-4" />
+                New Note
+              </Button>
             </div>
-            <Button onClick={handleOpenCreateDialog} className="flex items-center gap-1">
-              <PlusCircle className="h-4 w-4" />
-              New Note
-            </Button>
           </div>
 
           <div className="space-y-2">
