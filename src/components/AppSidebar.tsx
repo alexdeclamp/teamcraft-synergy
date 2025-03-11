@@ -8,7 +8,8 @@ import {
   BrainCircuit,
   UserCircle,
   GraduationCap,
-  BookOpen
+  BookOpen,
+  Sparkles
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,17 +39,12 @@ const AppSidebar = () => {
       path: '/dashboard',
     },
     {
-      icon: PlusCircle,
-      label: 'New Brain',
-      path: '/new-project',
-    },
-    {
       icon: UserCircle,
       label: 'Profile',
       path: '/profile',
     },
     {
-      icon: GraduationCap,
+      icon: Sparkles,
       label: 'Onboarding',
       path: '/onboarding',
     },
@@ -56,6 +52,11 @@ const AppSidebar = () => {
       icon: BookOpen,
       label: 'Tutorial',
       path: '/tutorial',
+    },
+    {
+      icon: PlusCircle,
+      label: 'New Brain',
+      path: '/new-project',
     }
   ];
 

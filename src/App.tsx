@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +10,9 @@ import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
+import Onboarding from "./pages/Onboarding";
+import Tutorial from "./pages/Tutorial";
 import NewProject from "./pages/NewProject";
 import Project from "./pages/Project";
 import NotFound from "./pages/NotFound";
@@ -52,7 +56,7 @@ const App = () => (
                   <OnboardingSidebar />
                   <WelcomeDialog />
                   <div className="pl-16">
-                    <Dashboard /> {/* Will be replaced with Profile component when created */}
+                    <Profile />
                   </div>
                 </OnboardingProvider>
               </ProtectedRoute>
@@ -64,7 +68,7 @@ const App = () => (
                   <OnboardingSidebar />
                   <WelcomeDialog />
                   <div className="pl-16">
-                    <Dashboard /> {/* Will be replaced with Onboarding component when created */}
+                    <Onboarding />
                   </div>
                 </OnboardingProvider>
               </ProtectedRoute>
@@ -76,7 +80,7 @@ const App = () => (
                   <OnboardingSidebar />
                   <WelcomeDialog />
                   <div className="pl-16">
-                    <Dashboard /> {/* Will be replaced with Tutorial component when created */}
+                    <Tutorial />
                   </div>
                 </OnboardingProvider>
               </ProtectedRoute>
