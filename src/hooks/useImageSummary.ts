@@ -72,11 +72,12 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
     try {
       if (!projectId || !imageUrl) return;
 
+      // Instead of using containsObject, we'll use a JSON query approach
       const { data, error } = await supabase
         .from('project_notes')
         .select('id')
         .eq('project_id', projectId)
-        .containsObject('source_document', { url: imageUrl })
+        .filter('source_document->url', 'eq', imageUrl)
         .maybeSingle();
 
       if (error) {
