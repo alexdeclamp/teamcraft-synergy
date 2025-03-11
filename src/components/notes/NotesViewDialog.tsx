@@ -31,10 +31,10 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[650px] max-h-[80vh] overflow-y-auto bg-gradient-to-b from-white to-slate-50">
+      <DialogContent className="sm:max-w-[650px] max-h-[80vh] overflow-y-auto overflow-x-hidden bg-gradient-to-b from-white to-slate-50">
         <DialogHeader>
           <div className="flex justify-between items-start">
-            <DialogTitle className="pr-8 text-xl font-semibold text-slate-800">{note.title}</DialogTitle>
+            <DialogTitle className="pr-8 text-xl font-semibold text-slate-800 break-words">{note.title}</DialogTitle>
             <div className="flex space-x-1">
               {note.user_id === userId && (
                 <>
@@ -66,22 +66,22 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
           </div>
           <DialogDescription className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
             <div className="flex items-center">
-              <User className="h-3 w-3 mr-1" />
+              <User className="h-3 w-3 mr-1 flex-shrink-0" />
               <div className="flex items-center">
                 {note.creator_avatar ? (
-                  <Avatar className="h-5 w-5 mr-1">
+                  <Avatar className="h-5 w-5 mr-1 flex-shrink-0">
                     <AvatarImage src={note.creator_avatar} alt={note.creator_name} />
                     <AvatarFallback>
                       {note.creator_name?.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 ) : null}
-                <span>{note.creator_name}</span>
+                <span className="truncate max-w-[150px]">{note.creator_name}</span>
               </div>
             </div>
             <span>•</span>
             <div className="flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
+              <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
               <span>{formatDate(note.updated_at)}</span>
             </div>
           </DialogDescription>
@@ -100,17 +100,17 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
         {note.source_document && (
           <div className="mb-4 flex items-center gap-2 p-2 bg-muted/40 rounded-md text-sm border border-muted-foreground/20">
             {note.source_document.type === 'pdf' ? (
-              <FileText className="h-4 w-4 text-blue-500" />
+              <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
             ) : (
-              <Image className="h-4 w-4 text-green-500" />
+              <Image className="h-4 w-4 text-green-500 flex-shrink-0" />
             )}
-            <span className="text-muted-foreground">Source:</span>
+            <span className="text-muted-foreground flex-shrink-0">Source:</span>
             <span className="font-medium flex-grow truncate">{note.source_document.name}</span>
             <a 
               href={note.source_document.url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center text-primary hover:underline"
+              className="flex items-center text-primary hover:underline flex-shrink-0"
             >
               <ExternalLink className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">View Original</span>

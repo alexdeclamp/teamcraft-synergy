@@ -33,17 +33,17 @@ const NotesCard: React.FC<NotesCardProps> = ({
   return (
     <Card 
       key={note.id} 
-      className="hover:bg-accent/5 transition-colors cursor-pointer border-l-4 border-l-primary/40 shadow-sm w-full" 
+      className="hover:bg-accent/5 transition-colors cursor-pointer border-l-4 border-l-primary/40 shadow-sm w-full overflow-hidden" 
       onClick={() => onView(note)}
     >
       <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1 min-w-0"> {/* Added min-width to prevent flex items from overflowing */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0 overflow-hidden"> 
             <div className="flex items-center gap-2 mb-2">
               {note.source_document?.type === 'image' ? (
-                <Image className="h-4 w-4 text-green-500" />
+                <Image className="h-4 w-4 text-green-500 flex-shrink-0" />
               ) : (
-                <FileText className="h-4 w-4 text-primary/80" />
+                <FileText className="h-4 w-4 text-primary/80 flex-shrink-0" />
               )}
               <h3 className="font-medium text-lg text-slate-800 truncate">{note.title}</h3>
             </div>
@@ -71,7 +71,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
                 <User className="h-3 w-3 mr-1 flex-shrink-0" />
                 <div className="flex items-center">
                   {note.creator_avatar ? (
-                    <Avatar className="h-4 w-4 mr-1">
+                    <Avatar className="h-4 w-4 mr-1 flex-shrink-0">
                       <AvatarImage src={note.creator_avatar} alt={note.creator_name} />
                       <AvatarFallback>
                         {note.creator_name?.substring(0, 2).toUpperCase()}
