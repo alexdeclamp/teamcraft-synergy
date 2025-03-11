@@ -8,7 +8,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { FileText, User, Clock, Edit, Trash2 } from 'lucide-react';
 import NoteSummaryButton from '../NoteSummaryButton';
 import { Note } from './types';
-import NoteContentDisplay from './NotesFormatter';
 
 interface NotesCardProps {
   note: Note;
@@ -43,10 +42,6 @@ const NotesCard: React.FC<NotesCardProps> = ({
             <div className="flex items-center gap-2 mb-2">
               <FileText className="h-4 w-4 text-primary/80" />
               <h3 className="font-medium text-lg text-slate-800">{note.title}</h3>
-            </div>
-            
-            <div className="mb-2 text-muted-foreground opacity-75">
-              <NoteContentDisplay content={note.content} isPreview={true} />
             </div>
             
             {note.tags && note.tags.length > 0 && (
