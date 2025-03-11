@@ -5,11 +5,7 @@ import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
   PlusCircle,
-  BrainCircuit,
-  UserCircle,
-  GraduationCap,
-  BookOpen,
-  Sparkles
+  BrainCircuit 
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,10 +19,7 @@ const AppSidebar = () => {
   const isProtectedRoute = 
     location.pathname.startsWith('/dashboard') || 
     location.pathname.startsWith('/project') ||
-    location.pathname.startsWith('/new-project') ||
-    location.pathname.startsWith('/profile') ||
-    location.pathname.startsWith('/onboarding') ||
-    location.pathname.startsWith('/tutorial');
+    location.pathname.startsWith('/new-project');
   
   if (!isProtectedRoute || !user) {
     return null;
@@ -39,31 +32,11 @@ const AppSidebar = () => {
       path: '/dashboard',
     },
     {
-      icon: UserCircle,
-      label: 'Profile',
-      path: '/profile',
-    },
-    {
-      icon: Sparkles,
-      label: 'Onboarding',
-      path: '/onboarding',
-    },
-    {
-      icon: BookOpen,
-      label: 'Tutorial',
-      path: '/tutorial',
-    },
-    {
       icon: PlusCircle,
       label: 'New Brain',
       path: '/new-project',
-    }
+    },
   ];
-
-  // Helper function to check if a path is active
-  const isPathActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(`${path}/`);
-  };
 
   return (
     <div className={cn(
@@ -81,7 +54,7 @@ const AppSidebar = () => {
               <TooltipTrigger asChild>
                 <Link to={item.path}>
                   <Button
-                    variant={isPathActive(item.path) ? "default" : "ghost"}
+                    variant={location.pathname === item.path ? "default" : "ghost"}
                     size="icon"
                     className="h-10 w-10 rounded-md"
                     aria-label={item.label}
