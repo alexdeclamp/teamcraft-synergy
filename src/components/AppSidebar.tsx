@@ -5,7 +5,10 @@ import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
   PlusCircle,
-  BrainCircuit 
+  BrainCircuit,
+  UserCircle,
+  GraduationCap,
+  BookOpen
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,6 +39,21 @@ const AppSidebar = () => {
       label: 'New Brain',
       path: '/new-project',
     },
+    {
+      icon: UserCircle,
+      label: 'Profile',
+      path: '/profile',
+    },
+    {
+      icon: GraduationCap,
+      label: 'Onboarding',
+      path: '/onboarding',
+    },
+    {
+      icon: BookOpen,
+      label: 'Tutorial',
+      path: '/tutorial',
+    }
   ];
 
   return (
