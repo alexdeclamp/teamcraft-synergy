@@ -1,0 +1,26 @@
+
+@tailwind utilities;
+
+@layer utilities {
+  .page-transition-enter {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  
+  .page-transition-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 300ms, transform 300ms;
+  }
+  
+  .page-transition-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .page-transition-exit-active {
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: opacity 300ms, transform 300ms;
+  }
+}
