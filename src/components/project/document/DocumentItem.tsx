@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import DocumentActions from './DocumentActions';
 import DocumentPdfActions from './DocumentPdfActions';
 import DocumentItemHeader from './DocumentItemHeader';
-import DocumentSummaryHandler from './DocumentSummaryHandler';
+import useDocumentSummary from './DocumentSummaryHandler';
 
 interface DocumentItemProps {
   document: {
@@ -40,7 +40,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
     hasSavedSummary,
     handleGenerateSummary,
     SummaryDialogComponent
-  } = DocumentSummaryHandler({
+  } = useDocumentSummary({
     fileName: document.file_name,
     fileUrl: pdfUrl,
     isPdf,

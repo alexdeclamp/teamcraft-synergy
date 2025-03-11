@@ -11,12 +11,13 @@ interface DocumentSummaryHandlerProps {
   projectId: string;
 }
 
-const DocumentSummaryHandler: React.FC<DocumentSummaryHandlerProps> = ({
+// Changed from React.FC to a custom hook
+const useDocumentSummary = ({
   fileName,
   fileUrl,
   isPdf,
   projectId
-}) => {
+}: DocumentSummaryHandlerProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [summary, setSummary] = useState('');
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
@@ -99,6 +100,21 @@ const DocumentSummaryHandler: React.FC<DocumentSummaryHandlerProps> = ({
     }
   };
 
+  const SummaryDialogComponent = () => (
+    <SummaryDialog
+      isOpen={isSummaryOpen}
+      onClose={() => setIsSummaryOpen(false)}
+      title={fileName}
+      summary={summary}
+      isLoading={isGenerating}
+      projectId={projectId}
+      imageName={fileName}
+      hasSavedVersion={hasSavedSummary}
+      sourceUrl={fileUrl}
+      sourceType="pdf"
+    />
+  );
+
   return {
     isGenerating,
     summary,
@@ -106,21 +122,8 @@ const DocumentSummaryHandler: React.FC<DocumentSummaryHandlerProps> = ({
     setIsSummaryOpen,
     hasSavedSummary,
     handleGenerateSummary,
-    SummaryDialogComponent: () => (
-      <SummaryDialog
-        isOpen={isSummaryOpen}
-        onClose={() => setIsSummaryOpen(false)}
-        title={fileName}
-        summary={summary}
-        isLoading={isGenerating}
-        projectId={projectId}
-        imageName={fileName}
-        hasSavedVersion={hasSavedSummary}
-        sourceUrl={fileUrl}
-        sourceType="pdf"
-      />
-    )
+    SummaryDialogComponent
   };
 };
 
-export default DocumentSummaryHandler;
+export default useDocumentSummary;
