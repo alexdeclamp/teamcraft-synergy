@@ -1,5 +1,4 @@
-
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { AlertCircle, Download, ExternalLink, Info, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -13,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from '@/components/ui/button';
-import { SummaryOptions } from './SummaryOptions';
+import SummaryOptions from './SummaryOptions';
 
 interface TextExtractionDialogProps {
   showTextModal: boolean;
