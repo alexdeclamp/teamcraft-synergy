@@ -60,6 +60,11 @@ const AppSidebar = () => {
     }
   ];
 
+  // Helper function to check if a path is active
+  const isPathActive = (path: string) => {
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
+
   return (
     <div className={cn(
       "fixed left-0 top-0 z-40 h-full w-16 bg-background border-r transition-all animate-slide-in-left",
@@ -76,7 +81,7 @@ const AppSidebar = () => {
               <TooltipTrigger asChild>
                 <Link to={item.path}>
                   <Button
-                    variant={location.pathname === item.path ? "default" : "ghost"}
+                    variant={isPathActive(item.path) ? "default" : "ghost"}
                     size="icon"
                     className="h-10 w-10 rounded-md"
                     aria-label={item.label}
