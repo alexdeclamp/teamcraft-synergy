@@ -3,19 +3,15 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
-  DialogClose
 } from "@/components/ui/dialog";
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import SummaryDialogHeader from './SummaryDialogHeader';
 import SummaryContent from './SummaryContent';
-import SummaryFeedback from './SummaryFeedback';
-import SummaryActions from './SummaryActions';
-import { AlertCircle, X } from 'lucide-react';
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import SummaryFooter from './SummaryFooter';
+import SummaryAlert from './SummaryAlert';
+import SummaryCloseButton from './SummaryCloseButton';
 
 interface SummaryDialogProps {
   isOpen: boolean;
@@ -135,19 +131,14 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   };
 
   const hasSummary = summary.trim() !== '' && !isLoading;
-
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
     }}>
       <DialogContent className="sm:max-w-[750px] max-h-[85vh] flex flex-col">
         <div className="absolute right-4 top-4">
-          <DialogClose asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </Button>
-          </DialogClose>
+          <SummaryCloseButton />
         </div>
         
         <SummaryDialogHeader 
@@ -164,39 +155,26 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           />
         </div>
         
-        {!localHasSavedVersion && hasSummary && projectId && (
-          <Alert variant="default" className="mt-4 bg-amber-50 border-amber-200">
-            <AlertCircle className="h-4 w-4 text-amber-600" />
-            <AlertDescription>
-              <strong>Important:</strong> Click "Save as Note" to add this summary to your project's Brain. This allows your AI to learn from this document.
-            </AlertDescription>
-          </Alert>
-        )}
+        <SummaryAlert 
+          hasSummary={hasSummary}
+          localHasSavedVersion={localHasSavedVersion}
+          projectId={projectId}
+        />
         
-        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 mt-4">
-          <div className="flex items-center space-x-2 mt-4 sm:mt-0">
-            {!isLoading && localHasSavedVersion && !feedbackGiven && (
-              <SummaryFeedback 
-                feedbackGiven={feedbackGiven} 
-                onFeedback={handleFeedback} 
-              />
-            )}
-            {feedbackGiven && (
-              <p className="text-sm text-muted-foreground">Thanks for your feedback!</p>
-            )}
-          </div>
-          
-          <SummaryActions 
-            summary={summary}
-            onCopy={handleCopy}
-            onDownload={handleDownload}
-            onCreateNote={handleCreateNote}
-            isCreatingNote={isCreatingNote}
-            projectId={projectId}
-            hasSummary={hasSummary}
-            buttonText={localHasSavedVersion ? "Already Saved" : "Save as Note"}
-          />
-        </DialogFooter>
+        <SummaryFooter 
+          isLoading={isLoading}
+          localHasSavedVersion={localHasSavedVersion}
+          feedbackGiven={feedbackGiven}
+          summary={summary}
+          isCreatingNote={isCreatingNote}
+          projectId={projectId}
+          hasSummary={hasSummary}
+          buttonText={localHasSavedVersion ? "Already Saved" : "Save as Note"}
+          onFeedback={handleFeedback}
+          onCopy={handleCopy}
+          onDownload={handleDownload}
+          onCreateNote={handleCreateNote}
+        />
       </DialogContent>
     </Dialog>
   );
