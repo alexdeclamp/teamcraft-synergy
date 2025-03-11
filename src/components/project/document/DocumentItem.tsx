@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { File } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -172,8 +173,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
             <DocumentPdfActions
               onGenerateSummary={handleGenerateSummary}
               isGenerating={isGenerating}
-              onChatClick={() => {}}
-              onAskQuestion={() => {}}
               hasSavedSummary={hasSavedSummary}
               pdfUrl={pdfUrl}
               fileName={document.file_name}
