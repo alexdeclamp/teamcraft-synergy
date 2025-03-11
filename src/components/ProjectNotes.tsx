@@ -1,12 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
-
-// Import our new components
 import NotesDialog from './notes/NotesDialog';
 import NotesCard from './notes/NotesCard';
 import TagFilter from './notes/TagFilter';
@@ -14,6 +11,7 @@ import EmptyNotesList from './notes/EmptyNotesList';
 import NotesLoading from './notes/NotesLoading';
 import NotesViewDialog from './notes/NotesViewDialog';
 import { Note } from './notes/types';
+import { ContentAlert } from "@/components/ui/content-alert";
 
 interface ProjectNotesProps {
   projectId: string;
@@ -76,11 +74,9 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         profiles = profilesData || [];
       }
       
-      // Convert database notes to Note type with properly typed source_document
       const notesWithCreators: Note[] = (notesData || []).map(note => {
         const creator = profiles.find(profile => profile.id === note.user_id);
         
-        // Process source_document to ensure it matches the expected type
         let typedSourceDocument = null;
         if (note.source_document) {
           const docData = note.source_document as any;
@@ -167,7 +163,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         
       if (error) throw error;
       
-      // Process the new note to ensure it has the correct type
       const newNote: Note = {
         ...data,
         creator_name: user.user_metadata?.full_name || 'Unknown User',
@@ -219,7 +214,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         
       if (error) throw error;
       
-      // Process the updated note to ensure it has the correct type
       const updatedNote: Note = {
         ...data,
         creator_name: currentNote.creator_name,
@@ -320,6 +314,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 
   return (
     <div className="space-y-4">
+      <ContentAlert />
       <div className="flex justify-between items-center mb-6">
         <Button onClick={handleOpenCreateDialog} className="flex items-center gap-1">
           <PlusCircle className="h-4 w-4" />
