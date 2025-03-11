@@ -19,13 +19,7 @@ const Navbar = () => {
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const location = useLocation();
-  const { signOut, user } = useAuth();
-
-  // Check if this is a protected route with sidebar
-  const isProtectedRoute = 
-    location.pathname.startsWith('/dashboard') || 
-    location.pathname.startsWith('/project') ||
-    location.pathname.startsWith('/new-project');
+  const { signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -49,8 +43,7 @@ const Navbar = () => {
     <header 
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 sm:px-6 py-3",
-        scrolled ? "bg-white/80 backdrop-blur-sm border-b shadow-sm" : "bg-transparent",
-        isProtectedRoute && user ? "ml-16" : ""
+        scrolled ? "bg-white/80 backdrop-blur-sm border-b shadow-sm" : "bg-transparent"
       )}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
