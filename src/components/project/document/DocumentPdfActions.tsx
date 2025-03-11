@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Eye, MessageSquare, HelpCircle, FileText, FileSearch, Download, AlertCircle, ExternalLink, Info, BookText, SendHorizontal } from 'lucide-react';
+import { Eye, FileSearch, Download, AlertCircle, ExternalLink, Info, BookText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -22,11 +21,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Textarea } from "@/components/ui/textarea";
-import { supabase } from '@/integrations/supabase/client';
+import { Badge } from "@/components/ui/badge";
 
 interface DocumentPdfActionsProps {
-  onGenerateSummary: () => void; // Added this property to fix the TypeScript error
+  onGenerateSummary: () => void;
   isGenerating: boolean;
   onChatClick: () => void;
   onAskQuestion: () => void;
@@ -39,8 +37,6 @@ interface DocumentPdfActionsProps {
 const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   onGenerateSummary,
   isGenerating,
-  onChatClick,
-  onAskQuestion,
   hasSavedSummary = false,
   pdfUrl,
   fileName,
@@ -58,102 +54,6 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [summary, setSummary] = useState('');
   const [showSummary, setShowSummary] = useState(false);
-  
-  const [showChatWithTextModal, setShowChatWithTextModal] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{role: 'user' | 'assistant', content: string}[]>([]);
-  const [messageInput, setMessageInput] = useState('');
-  const [isChatLoading, setIsChatLoading] = useState(false);
-  const chatScrollAreaRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (chatScrollAreaRef.current && showChatWithTextModal) {
-      const scrollElement = chatScrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-      }
-    }
-  }, [chatMessages, showChatWithTextModal]);
-
-  const handleChatWithText = () => {
-    if (!extractedText) {
-      toast.error('No text available to chat with');
-      return;
-    }
-
-    setShowChatWithTextModal(true);
-    
-    if (chatMessages.length === 0) {
-      setChatMessages([{
-        role: 'assistant',
-        content: `👋 I'm your document assistant for "${fileName}". Ask me any questions about this document!`
-      }]);
-    }
-  };
-
-  const handleSendMessage = async () => {
-    if (!messageInput.trim() || isChatLoading) return;
-    
-    const userMessage = messageInput.trim();
-    setMessageInput('');
-    
-    setChatMessages(prev => [...prev, { role: 'user', content: userMessage }]);
-    setIsChatLoading(true);
-    
-    try {
-      console.log('Sending message to chat-with-pdf function with document context length:', extractedText.length);
-      
-      const trimmedContext = extractedText.length > 100000 
-        ? extractedText.substring(0, 100000) + "... [text truncated due to size]" 
-        : extractedText;
-      
-      const response = await supabase.functions.invoke('chat-with-pdf', {
-        body: {
-          pdfUrl,
-          fileName,
-          message: userMessage,
-          documentContext: trimmedContext,
-          model: 'openai'
-        },
-        // Add timeout to prevent hanging requests
-        options: {
-          timeout: 60000 // 60 seconds timeout
-        }
-      });
-      
-      const { data, error } = response;
-      
-      if (error) {
-        console.error('Function invocation error:', error);
-        throw new Error(`Error calling function: ${error.message}`);
-      }
-      
-      if (!data || !data.success || !data.answer) {
-        const errorMsg = data?.error || 'Invalid response from chat service';
-        console.error('Service error:', errorMsg);
-        throw new Error(errorMsg);
-      }
-      
-      console.log('Received response from chat-with-pdf function:', data);
-      setChatMessages(prev => [...prev, { role: 'assistant', content: data.answer }]);
-    } catch (error: any) {
-      console.error('Error chatting with document text:', error);
-      toast.error(`Failed to get response: ${error.message || 'Unknown error'}`);
-      
-      setChatMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: "I'm sorry, I encountered an error processing your request. Please try extracting the text again or with a smaller document." 
-      }]);
-    } finally {
-      setIsChatLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
 
   const handleExtractText = async () => {
     setIsExtracting(true);
@@ -346,25 +246,6 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     return result;
   };
 
-  const formatChatMessage = (message: {role: 'user' | 'assistant', content: string}) => {
-    return (
-      <div 
-        key={`message-${Math.random()}`} 
-        className={`mb-4 ${message.role === 'assistant' ? 'pr-8' : 'pl-8'}`}
-      >
-        <div 
-          className={`px-4 py-3 rounded-lg ${
-            message.role === 'assistant' 
-              ? 'bg-muted text-foreground rounded-tl-none' 
-              : 'bg-primary text-primary-foreground ml-auto rounded-tr-none'
-          }`}
-        >
-          <div className="whitespace-pre-wrap">{message.content}</div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <>
       <Button 
@@ -376,7 +257,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
       >
         {hasSavedSummary ? (
           <>
-            <FileText className="h-4 w-4" />
+            <Eye className="h-4 w-4" />
             <span className="hidden sm:inline">View Summary</span>
           </>
         ) : (
@@ -396,26 +277,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
       >
         <FileSearch className="h-4 w-4" />
         <span className="hidden sm:inline">Extract Text</span>
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        size="sm" 
-        className="flex items-center gap-1"
-        onClick={onAskQuestion}
-      >
-        <HelpCircle className="h-4 w-4" />
-        <span className="hidden sm:inline">Ask Question</span>
-      </Button>
-      
-      <Button 
-        variant="default" 
-        size="sm" 
-        className="flex items-center gap-1"
-        onClick={onChatClick}
-      >
-        <MessageSquare className="h-4 w-4" />
-        <span className="sm:inline">Chat</span>
+        <Badge variant="outline" className="ml-1 text-xs py-0 h-5">BETA</Badge>
       </Button>
 
       <Dialog open={showTextModal} onOpenChange={setShowTextModal}>
@@ -536,15 +398,6 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    
-                    <Button 
-                      variant="outline"
-                      className="flex items-center gap-1"
-                      onClick={handleChatWithText}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      Chat with Text
-                    </Button>
                   </>
                 )}
               </div>
@@ -560,69 +413,9 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
           )}
         </DialogContent>
       </Dialog>
-
-      <Dialog open={showChatWithTextModal} onOpenChange={setShowChatWithTextModal}>
-        <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col">
-          <div className="absolute right-4 top-4">
-            <DialogClose asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </Button>
-            </DialogClose>
-          </div>
-          
-          <DialogHeader>
-            <DialogTitle>Chat about "{fileName}"</DialogTitle>
-            <DialogDescription>
-              Ask questions about the extracted text content to get AI-powered answers
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex flex-col h-[500px]">
-            <ScrollArea ref={chatScrollAreaRef} className="flex-1 pr-4">
-              <div className="space-y-2 p-2">
-                {chatMessages.map((message, index) => (
-                  formatChatMessage(message)
-                ))}
-                
-                {isChatLoading && (
-                  <div className="flex justify-start">
-                    <div className="bg-muted rounded-lg p-3">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
-            
-            <div className="pt-4 border-t mt-4">
-              <div className="flex gap-2">
-                <Textarea
-                  value={messageInput}
-                  onChange={(e) => setMessageInput(e.target.value)}
-                  placeholder="Ask a question about this document..."
-                  className="min-h-[60px]"
-                  onKeyDown={handleKeyDown}
-                  disabled={isChatLoading}
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={isChatLoading || !messageInput.trim()}
-                  className="px-3"
-                >
-                  <SendHorizontal className="h-5 w-5" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                Press Enter to send. Use Shift+Enter for a new line.
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 };
 
 export default DocumentPdfActions;
+

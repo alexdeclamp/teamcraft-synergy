@@ -1,12 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { File } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import SummaryDialog from '@/components/summary/SummaryDialog';
-import DocumentChatDialog from './DocumentChatDialog';
-import DocumentQuestionDialog from './DocumentQuestionDialog';
 import DocumentActions from './DocumentActions';
 import DocumentPdfActions from './DocumentPdfActions';
 
@@ -37,8 +34,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [summary, setSummary] = useState('');
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isQuestionOpen, setIsQuestionOpen] = useState(false);
   const [hasSavedSummary, setHasSavedSummary] = useState(false);
 
   const fileExtension = document.file_name.split('.').pop()?.toLowerCase();
@@ -157,14 +152,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
     }
   };
 
-  const handleChatClick = () => {
-    setIsChatOpen(true);
-  };
-
-  const handleAskQuestion = () => {
-    setIsQuestionOpen(true);
-  };
-
   return (
     <>
       <div className="flex items-center justify-between p-4 border rounded-lg mb-2 bg-card w-full">
@@ -185,11 +172,12 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
             <DocumentPdfActions
               onGenerateSummary={handleGenerateSummary}
               isGenerating={isGenerating}
-              onChatClick={handleChatClick}
-              onAskQuestion={handleAskQuestion}
+              onChatClick={() => {}}
+              onAskQuestion={() => {}}
               hasSavedSummary={hasSavedSummary}
               pdfUrl={pdfUrl}
               fileName={document.file_name}
+              projectId={projectId}
             />
           )}
           
@@ -212,20 +200,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
         hasSavedVersion={hasSavedSummary}
         sourceUrl={pdfUrl}
         sourceType="pdf"
-      />
-      
-      <DocumentChatDialog
-        isOpen={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-        document={document}
-        projectId={projectId}
-      />
-      
-      <DocumentQuestionDialog
-        isOpen={isQuestionOpen}
-        onClose={() => setIsQuestionOpen(false)}
-        document={document}
-        projectId={projectId}
       />
     </>
   );
