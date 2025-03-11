@@ -22,6 +22,7 @@ const ProjectDocuments: React.FC<ProjectDocumentsProps> = ({ projectId }) => {
     <div className="space-y-6">
       <ContentAlert 
         message="Generate notes from your PDFs to make their content available to the project chat assistant. PDF content is not directly accessible without creating notes."
+        documentType="pdf"
       />
       
       <ProjectDocumentUpload 

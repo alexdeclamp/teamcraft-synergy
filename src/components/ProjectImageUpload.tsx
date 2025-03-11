@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useImageUpload } from './image-upload/useImageUpload';
@@ -51,6 +52,7 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
     <div>
       <ContentAlert 
         message="Generate notes from your images to make their content available to the project chat assistant. Image content is not directly accessible without creating notes."
+        documentType="image"
       />
       
       <div className="flex flex-wrap gap-3 mb-6">
