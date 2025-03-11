@@ -16,7 +16,6 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingSidebar from "./components/onboarding/OnboardingSidebar";
 import WelcomeDialog from "./components/onboarding/WelcomeDialog";
-import AppSidebar from "./components/AppSidebar";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +26,6 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AppSidebar />
           <Routes>
             {/* Public routes without onboarding */}
             <Route path="/" element={<Landing />} />
@@ -40,9 +38,7 @@ const App = () => (
                 <OnboardingProvider>
                   <OnboardingSidebar />
                   <WelcomeDialog />
-                  <div className="pl-16">
-                    <Dashboard />
-                  </div>
+                  <Dashboard />
                 </OnboardingProvider>
               </ProtectedRoute>
             } />
@@ -51,9 +47,7 @@ const App = () => (
                 <OnboardingProvider>
                   <OnboardingSidebar />
                   <WelcomeDialog />
-                  <div className="pl-16">
-                    <NewProject />
-                  </div>
+                  <NewProject />
                 </OnboardingProvider>
               </ProtectedRoute>
             } />
@@ -62,9 +56,7 @@ const App = () => (
                 <OnboardingProvider>
                   <OnboardingSidebar />
                   <WelcomeDialog />
-                  <div className="pl-16">
-                    <Project />
-                  </div>
+                  <Project />
                 </OnboardingProvider>
               </ProtectedRoute>
             } />
