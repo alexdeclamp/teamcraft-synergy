@@ -1,11 +1,9 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from "@/lib/utils";
-import { User, LogOut, LayoutDashboard, GraduationCap, Sparkles } from "lucide-react";
+import { User, LogOut, LayoutDashboard } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
-import { useOnboarding } from '@/contexts/OnboardingContext';
-import { toast } from 'sonner';
 
 type MobileMenuProps = {
   isOpen: boolean;
@@ -15,24 +13,6 @@ type MobileMenuProps = {
 
 const MobileMenu = ({ isOpen, onProfileClick, onSignOutClick }: MobileMenuProps) => {
   const location = useLocation();
-  const { startOnboarding } = useOnboarding();
-  
-  const handleTutorialClick = () => {
-    // Dispatch a custom event to trigger tutorial
-    const event = new CustomEvent('start-dashboard-tutorial');
-    window.dispatchEvent(event);
-    toast.info("Tutorial started! Follow the instructions to learn more.");
-  };
-  
-  // Listen for tutorial events from other components
-  useEffect(() => {
-    const startTutorial = () => {
-      console.log("Tutorial event received in MobileMenu");
-    };
-
-    window.addEventListener('start-dashboard-tutorial', startTutorial);
-    return () => window.removeEventListener('start-dashboard-tutorial', startTutorial);
-  }, []);
   
   const navLinks = [
     { 
@@ -62,25 +42,6 @@ const MobileMenu = ({ isOpen, onProfileClick, onSignOutClick }: MobileMenuProps)
             {link.name}
           </Link>
         ))}
-        
-        {/* Tutorial Link */}
-        <button
-          onClick={handleTutorialClick}
-          className="w-full flex items-center px-3 py-2 rounded-md hover:bg-accent text-left"
-        >
-          <GraduationCap className="h-4 w-4 mr-2" />
-          Tutorial
-        </button>
-        
-        {/* Onboarding Link */}
-        <button
-          onClick={startOnboarding}
-          className="w-full flex items-center px-3 py-2 rounded-md hover:bg-accent text-left"
-        >
-          <Sparkles className="h-4 w-4 mr-2" />
-          Onboarding
-        </button>
-        
         <div className="border-t my-2 pt-2">
           <button
             onClick={onProfileClick}

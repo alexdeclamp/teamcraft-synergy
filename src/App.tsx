@@ -10,13 +10,16 @@ import Landing from "./pages/Landing";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
+import Onboarding from "./pages/Onboarding";
+import Tutorial from "./pages/Tutorial";
 import NewProject from "./pages/NewProject";
 import Project from "./pages/Project";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingSidebar from "./components/onboarding/OnboardingSidebar";
 import WelcomeDialog from "./components/onboarding/WelcomeDialog";
-import DashboardTutorial from "./components/tutorial/DashboardTutorial";
+import AppSidebar from "./components/AppSidebar";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +30,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <AppSidebar />
           <Routes>
             {/* Public routes without onboarding */}
             <Route path="/" element={<Landing />} />
@@ -39,17 +43,57 @@ const App = () => (
                 <OnboardingProvider>
                   <OnboardingSidebar />
                   <WelcomeDialog />
-                  <DashboardTutorial />
-                  <Dashboard />
+                  <div className="pl-16">
+                    <Dashboard />
+                  </div>
                 </OnboardingProvider>
               </ProtectedRoute>
             } />
+
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
+                  <div className="pl-16">
+                    <Profile />
+                  </div>
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/onboarding" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
+                  <div className="pl-16">
+                    <Onboarding />
+                  </div>
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/tutorial" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
+                  <div className="pl-16">
+                    <Tutorial />
+                  </div>
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+
             <Route path="/new-project" element={
               <ProtectedRoute>
                 <OnboardingProvider>
                   <OnboardingSidebar />
                   <WelcomeDialog />
-                  <NewProject />
+                  <div className="pl-16">
+                    <NewProject />
+                  </div>
                 </OnboardingProvider>
               </ProtectedRoute>
             } />
@@ -58,7 +102,9 @@ const App = () => (
                 <OnboardingProvider>
                   <OnboardingSidebar />
                   <WelcomeDialog />
-                  <Project />
+                  <div className="pl-16">
+                    <Project />
+                  </div>
                 </OnboardingProvider>
               </ProtectedRoute>
             } />
