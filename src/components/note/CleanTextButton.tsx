@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Magic, Loader2 } from 'lucide-react';
+import { Wand2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -92,7 +92,7 @@ const CleanTextButton: React.FC<CleanTextButtonProps> = ({
                 >
                   {isCleaning ? 
                     <Loader2 className="h-4 w-4 animate-spin" /> : 
-                    <Magic className="h-4 w-4" />}
+                    <Wand2 className="h-4 w-4" />}
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
