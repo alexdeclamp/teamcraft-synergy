@@ -28,7 +28,14 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
     console.log('Image Name:', imageName);
   }, [params, projectId, imageUrl, imageName]);
 
-  const { isGenerating, summary, hasSummary, generateSummary } = useImageSummary({
+  const { 
+    isGenerating, 
+    summary, 
+    hasSummary, 
+    isNoteSaved,
+    generateSummary, 
+    setIsNoteSaved 
+  } = useImageSummary({
     imageUrl,
     projectId
   });
@@ -51,6 +58,10 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
     setIsDialogOpen(false);
   };
 
+  const handleNoteSaved = () => {
+    setIsNoteSaved(true);
+  };
+
   return (
     <>
       <div className="flex space-x-1">
@@ -68,11 +79,12 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         title={`Description of "${imageName}"`}
         summary={summary}
         isLoading={isGenerating}
-        hasSavedVersion={hasSummary}
+        hasSavedVersion={isNoteSaved}
         projectId={projectId}
         imageName={imageName}
         sourceUrl={imageUrl}
         sourceType="image"
+        onNoteSaved={handleNoteSaved}
       />
     </>
   );

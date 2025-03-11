@@ -24,6 +24,7 @@ interface SummaryDialogProps {
   imageName?: string;
   sourceUrl?: string;
   sourceType?: 'pdf' | 'image';
+  onNoteSaved?: () => void;
 }
 
 const SummaryDialog: React.FC<SummaryDialogProps> = ({
@@ -36,7 +37,8 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   projectId,
   imageName,
   sourceUrl,
-  sourceType = 'pdf'
+  sourceType = 'pdf',
+  onNoteSaved
 }) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
@@ -49,6 +51,19 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
       setLocalHasSavedVersion(hasSavedVersion);
     }
   }, [isOpen, hasSavedVersion]);
+
+  // Debug logging to identify issues
+  useEffect(() => {
+    console.log('SummaryDialog props:', { 
+      title, 
+      hasSavedVersion, 
+      localHasSavedVersion, 
+      projectId, 
+      imageName, 
+      sourceUrl, 
+      sourceType 
+    });
+  }, [title, hasSavedVersion, localHasSavedVersion, projectId, imageName, sourceUrl, sourceType]);
 
   const handleCopy = () => {
     if (!summary || summary.trim() === '') {
@@ -127,6 +142,11 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
 
       toast.success('Summary saved as a note successfully');
       setLocalHasSavedVersion(true);
+      
+      // Notify parent that a note was saved if callback exists
+      if (onNoteSaved) {
+        onNoteSaved();
+      }
     } catch (error: any) {
       console.error('Error creating note:', error);
       toast.error(`Failed to create note: ${error.message}`);

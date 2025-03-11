@@ -26,6 +26,15 @@ const SummaryActions: React.FC<SummaryActionsProps> = ({
 }) => {
   const hasValidSummary = summary && summary.trim() !== '';
   
+  // Debug logging
+  console.log('SummaryActions props:', { 
+    hasValidSummary, 
+    buttonText, 
+    projectId, 
+    hasSummary,
+    summary: summary ? summary.substring(0, 20) + '...' : 'none'
+  });
+  
   if (!hasSummary) {
     return null;
   }

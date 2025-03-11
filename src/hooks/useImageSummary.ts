@@ -13,6 +13,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [summary, setSummary] = useState('');
   const [hasSummary, setHasSummary] = useState(false);
+  const [isNoteSaved, setIsNoteSaved] = useState(false);
   const { user } = useAuth();
 
   // Reset states when props change
@@ -20,7 +21,9 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
     if (imageUrl) {
       setSummary('');
       setHasSummary(false);
+      setIsNoteSaved(false);
       fetchExistingSummary();
+      checkForExistingNote();
     }
   }, [imageUrl, projectId]);
 
@@ -61,6 +64,30 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
     } catch (error) {
       console.error('Error checking for existing summary:', error);
       setHasSummary(false);
+    }
+  };
+
+  // Check if this image summary has already been saved as a note
+  const checkForExistingNote = async () => {
+    try {
+      if (!projectId || !imageUrl) return;
+
+      const { data, error } = await supabase
+        .from('project_notes')
+        .select('id')
+        .eq('project_id', projectId)
+        .containsObject('source_document', { url: imageUrl })
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking for existing note:', error);
+        return;
+      }
+
+      setIsNoteSaved(!!data);
+      console.log('Is note already saved:', !!data);
+    } catch (error) {
+      console.error('Error checking for existing note:', error);
     }
   };
 
@@ -123,6 +150,9 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       setHasSummary(true);
       toast.success('Summary generated and saved successfully');
       
+      // Check if a note already exists for this image after generation
+      checkForExistingNote();
+      
     } catch (error: any) {
       console.error('Error generating image summary:', error);
       setSummary('');
@@ -137,7 +167,9 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
     isGenerating,
     summary,
     hasSummary,
+    isNoteSaved,
     generateSummary,
-    setSummary
+    setSummary,
+    setIsNoteSaved
   };
 }
