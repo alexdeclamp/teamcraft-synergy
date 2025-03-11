@@ -132,28 +132,36 @@ const ProjectUpdateItem: React.FC<ProjectUpdateItemProps> = ({
                 </Badge>
               ))}
               
-              {userId === update.user_id && activeUpdateId !== update.id && (
+              {userId === update.user_id && (
                 <Button 
-                  variant="ghost" 
+                  variant={activeUpdateId === update.id ? "default" : "outline"}
                   size="sm" 
-                  className="h-5 w-5 p-0 rounded-full"
-                  onClick={() => setActiveUpdateId(update.id)}
+                  className="h-6 text-xs flex items-center gap-1.5 px-2 py-1"
+                  onClick={() => setActiveUpdateId(activeUpdateId === update.id ? null : update.id)}
                   title="Add tag"
                 >
-                  <Plus className="h-3 w-3" />
+                  {activeUpdateId === update.id ? (
+                    <>Cancel</>
+                  ) : (
+                    <>
+                      <Tag className="h-3 w-3" />
+                      <span>Add Tag</span>
+                    </>
+                  )}
                 </Button>
               )}
             </div>
             
             {/* Tag input */}
             {activeUpdateId === update.id && (
-              <div className="flex gap-2 mt-2 items-center">
-                <Tag className="h-3 w-3 text-muted-foreground" />
+              <div className="flex gap-2 mt-2 items-center p-2 rounded-md bg-accent/20 border border-accent/30">
+                <Tag className="h-3.5 w-3.5 text-muted-foreground" />
                 <Input
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   placeholder="Add a tag..."
                   className="h-7 text-xs py-1"
+                  autoFocus
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -170,17 +178,6 @@ const ProjectUpdateItem: React.FC<ProjectUpdateItemProps> = ({
                   onClick={() => handleAddTag(update.id)}
                 >
                   Add
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 px-2 py-0"
-                  onClick={() => {
-                    setActiveUpdateId(null);
-                    setTagInput('');
-                  }}
-                >
-                  Cancel
                 </Button>
               </div>
             )}
