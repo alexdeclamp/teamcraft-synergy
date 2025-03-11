@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,349 +9,108 @@ import TagFilter from './notes/TagFilter';
 import EmptyNotesList from './notes/EmptyNotesList';
 import NotesLoading from './notes/NotesLoading';
 import NotesViewDialog from './notes/NotesViewDialog';
-import { Note } from './notes/types';
 import { ContentAlert } from "@/components/ui/content-alert";
+import { useProjectNotes } from '@/hooks/useProjectNotes';
+import { useNoteForm } from '@/hooks/useNoteForm';
 
 interface ProjectNotesProps {
   projectId: string;
 }
 
 const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
-  const { user } = useAuth();
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isViewOpen, setIsViewOpen] = useState(false);
-  const [currentNote, setCurrentNote] = useState<Note | null>(null);
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [tagInput, setTagInput] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [allTags, setAllTags] = useState<string[]>([]);
-  const [aiModel, setAiModel] = useState<'claude' | 'openai'>('claude');
+  const {
+    notes,
+    setNotes,
+    loading,
+    allTags,
+    activeTag,
+    setActiveTag,
+    aiModel,
+    setAiModel,
+    handleDeleteNote,
+    formatDate,
+    user
+  } = useProjectNotes(projectId);
 
-  useEffect(() => {
-    fetchNotes();
-  }, [projectId, activeTag]);
+  const {
+    isCreateOpen,
+    setIsCreateOpen,
+    isEditOpen,
+    setIsEditOpen,
+    isViewOpen,
+    setIsViewOpen,
+    currentNote,
+    title,
+    setTitle,
+    content,
+    setContent,
+    tagInput,
+    setTagInput,
+    tags,
+    saving,
+    addTag,
+    removeTag,
+    handleTagInputKeyDown,
+    handleRegenerateTitle,
+    handleRegenerateTags,
+    handleRegenerateBoth,
+    handleCreateNote,
+    handleEditNote,
+    openEditDialog,
+    openViewDialog,
+    handleOpenCreateDialog
+  } = useNoteForm(projectId, notes, setNotes, allTags, setAllTags);
 
-  const fetchNotes = async () => {
-    if (!projectId || !user) return;
-    try {
-      setLoading(true);
-      let query = supabase.from('project_notes').select('*').eq('project_id', projectId);
-      if (activeTag) {
-        query = query.contains('tags', [activeTag]);
-      }
-      const { data: notesData, error: notesError } = await query.order('updated_at', {
-        ascending: false
-      });
-      
-      if (notesError) throw notesError;
-      
-      const userIds = [...new Set(notesData?.map(note => note.user_id) || [])];
-      const tagSet = new Set<string>();
-      
-      notesData?.forEach(note => {
-        if (note.tags && Array.isArray(note.tags)) {
-          note.tags.forEach(tag => tagSet.add(tag));
-        }
-      });
-      
-      setAllTags(Array.from(tagSet));
-      
-      let profiles: any[] = [];
-      if (userIds.length > 0) {
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url')
-          .in('id', userIds);
-          
-        if (profilesError) throw profilesError;
-        profiles = profilesData || [];
-      }
-      
-      const notesWithCreators: Note[] = (notesData || []).map(note => {
-        const creator = profiles.find(profile => profile.id === note.user_id);
-        
-        let typedSourceDocument = null;
-        if (note.source_document) {
-          const docData = note.source_document as any;
-          if (docData && docData.type && docData.url && docData.name) {
-            typedSourceDocument = {
-              type: docData.type as 'pdf' | 'image',
-              url: docData.url as string,
-              name: docData.name as string
-            };
-          }
-        }
-        
-        return {
-          ...note,
-          creator_name: creator?.full_name || 'Unknown User',
-          creator_avatar: creator?.avatar_url,
-          source_document: typedSourceDocument
-        };
-      });
-      
-      setNotes(notesWithCreators);
-    } catch (error: any) {
-      console.error('Error fetching notes:', error);
-      toast.error('Failed to load notes');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addTag = () => {
-    if (!tagInput.trim() || tags.includes(tagInput.trim())) {
-      return;
-    }
-    setTags([...tags, tagInput.trim()]);
-    setTagInput('');
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
-
-  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      addTag();
-    }
-  };
-
-  const handleRegenerateTitle = (newTitle: string) => {
-    setTitle(newTitle);
-    toast.success('Title regenerated successfully');
-  };
-
-  const handleRegenerateTags = (newTags: string[]) => {
-    setTags(newTags);
-    toast.success('Tags regenerated successfully');
-  };
-
-  const handleRegenerateBoth = (data: { title: string; tags: string[] }) => {
-    setTitle(data.title);
-    setTags(data.tags);
-    toast.success('Title and tags regenerated successfully');
-  };
-
-  const handleCreateNote = async () => {
-    if (!title.trim() || !projectId || !user) {
-      toast.error('Please enter a title for your note');
-      return;
+  // Render notes list or empty/loading states
+  const renderNotesList = () => {
+    if (loading) {
+      return <NotesLoading />;
     }
     
-    try {
-      setSaving(true);
-      const { data, error } = await supabase
-        .from('project_notes')
-        .insert({
-          title,
-          content,
-          project_id: projectId,
-          user_id: user.id,
-          tags: tags.length > 0 ? tags : null
-        })
-        .select()
-        .single();
-        
-      if (error) throw error;
-      
-      const newNote: Note = {
-        ...data,
-        creator_name: user.user_metadata?.full_name || 'Unknown User',
-        creator_avatar: user.user_metadata?.avatar_url,
-        source_document: data.source_document ? {
-          type: (data.source_document as any).type,
-          url: (data.source_document as any).url,
-          name: (data.source_document as any).name
-        } : null
-      };
-      
-      setNotes([newNote, ...notes]);
-      setIsCreateOpen(false);
-      resetForm();
-      toast.success('Note created successfully');
-      
-      const newTags = tags.filter(tag => !allTags.includes(tag));
-      if (newTags.length > 0) {
-        setAllTags([...allTags, ...newTags]);
-      }
-    } catch (error: any) {
-      console.error('Error creating note:', error);
-      toast.error('Failed to create note');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleEditNote = async () => {
-    if (!title.trim() || !currentNote || !user) {
-      toast.error('Please enter a title for your note');
-      return;
+    if (notes.length === 0) {
+      return <EmptyNotesList onCreateNote={handleOpenCreateDialog} />;
     }
     
-    try {
-      setSaving(true);
-      const { data, error } = await supabase
-        .from('project_notes')
-        .update({
-          title,
-          content,
-          updated_at: new Date().toISOString(),
-          tags: tags.length > 0 ? tags : null
-        })
-        .eq('id', currentNote.id)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-        
-      if (error) throw error;
-      
-      const updatedNote: Note = {
-        ...data,
-        creator_name: currentNote.creator_name,
-        creator_avatar: currentNote.creator_avatar,
-        source_document: data.source_document ? {
-          type: (data.source_document as any).type,
-          url: (data.source_document as any).url,
-          name: (data.source_document as any).name
-        } : null
-      };
-      
-      setNotes(notes.map(note => note.id === updatedNote.id ? updatedNote : note));
-      setIsEditOpen(false);
-      resetForm();
-      toast.success('Note updated successfully');
-      
-      const newTags = tags.filter(tag => !allTags.includes(tag));
-      if (newTags.length > 0) {
-        setAllTags([...allTags, ...newTags]);
-      }
-    } catch (error: any) {
-      console.error('Error updating note:', error);
-      toast.error('Failed to update note');
-    } finally {
-      setSaving(false);
-    }
-  };
+    return (
+      <>
+        <div className="mb-6">
+          <TagFilter 
+            allTags={allTags} 
+            activeTag={activeTag} 
+            setActiveTag={setActiveTag} 
+          />
+          <div className="mt-4 flex justify-end">
+            <Button onClick={handleOpenCreateDialog} className="flex items-center gap-1">
+              <PlusCircle className="h-4 w-4" />
+              New Note
+            </Button>
+          </div>
+        </div>
 
-  const handleDeleteNote = async (noteId: string) => {
-    if (!noteId || !user) return;
-    
-    const confirmed = window.confirm('Are you sure you want to delete this note?');
-    if (!confirmed) return;
-    
-    try {
-      const { error } = await supabase
-        .from('project_notes')
-        .delete()
-        .eq('id', noteId)
-        .eq('user_id', user.id);
-        
-      if (error) throw error;
-      
-      setNotes(notes.filter(note => note.id !== noteId));
-      toast.success('Note deleted successfully');
-      
-      const remainingTags = new Set<string>();
-      notes
-        .filter(note => note.id !== noteId)
-        .forEach(note => {
-          if (note.tags) {
-            note.tags.forEach(tag => remainingTags.add(tag));
-          }
-        });
-        
-      setAllTags(Array.from(remainingTags));
-    } catch (error: any) {
-      console.error('Error deleting note:', error);
-      toast.error('Failed to delete note');
-    }
-  };
-
-  const openEditDialog = (note: Note) => {
-    setCurrentNote(note);
-    setTitle(note.title);
-    setContent(note.content || '');
-    setTags(note.tags || []);
-    setIsEditOpen(true);
-  };
-
-  const openViewDialog = (note: Note) => {
-    setCurrentNote(note);
-    setIsViewOpen(true);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const handleOpenCreateDialog = () => {
-    resetForm();
-    setIsCreateOpen(true);
-  };
-
-  const resetForm = () => {
-    setTitle('');
-    setContent('');
-    setTags([]);
-    setTagInput('');
-    setCurrentNote(null);
+        <div className="space-y-2">
+          {notes.map(note => (
+            <NotesCard
+              key={note.id}
+              note={note}
+              userId={user?.id}
+              activeTag={activeTag}
+              setActiveTag={setActiveTag}
+              onView={openViewDialog}
+              onEdit={openEditDialog}
+              onDelete={handleDeleteNote}
+              formatDate={formatDate}
+            />
+          ))}
+        </div>
+      </>
+    );
   };
 
   return (
     <div className="space-y-4">
       <ContentAlert />
       
-      {loading ? (
-        <NotesLoading />
-      ) : notes.length === 0 ? (
-        <EmptyNotesList onCreateNote={handleOpenCreateDialog} />
-      ) : (
-        <>
-          <div className="mb-6">
-            <TagFilter 
-              allTags={allTags} 
-              activeTag={activeTag} 
-              setActiveTag={setActiveTag} 
-            />
-            <div className="mt-4 flex justify-end">
-              <Button onClick={handleOpenCreateDialog} className="flex items-center gap-1">
-                <PlusCircle className="h-4 w-4" />
-                New Note
-              </Button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            {notes.map(note => (
-              <NotesCard
-                key={note.id}
-                note={note}
-                userId={user?.id}
-                activeTag={activeTag}
-                setActiveTag={setActiveTag}
-                onView={openViewDialog}
-                onEdit={openEditDialog}
-                onDelete={handleDeleteNote}
-                formatDate={formatDate}
-              />
-            ))}
-          </div>
-        </>
-      )}
+      {renderNotesList()}
 
       <NotesViewDialog
         isOpen={isViewOpen}
