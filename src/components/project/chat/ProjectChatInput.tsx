@@ -35,32 +35,7 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLo
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-3 mb-2">
-        <Select value={selectedModel} onValueChange={setSelectedModel}>
-          <SelectTrigger className="w-[180px] h-9 bg-white">
-            <div className="flex items-center">
-              {selectedModel === 'openai' ? (
-                <Sparkles className="h-4 w-4 text-blue-500 mr-2" />
-              ) : (
-                <Bot className="h-4 w-4 text-purple-500 mr-2" />
-              )}
-              <span>{selectedModel === 'openai' ? 'OpenAI (GPT-4o mini)' : 'Claude'}</span>
-            </div>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="openai" className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-blue-500" />
-              <span>OpenAI (GPT-4o mini)</span>
-            </SelectItem>
-            <SelectItem value="claude" className="flex items-center gap-2">
-              <Bot className="h-4 w-4 text-purple-500" />
-              <span>Claude</span>
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="flex gap-2 items-end">
+      <div className="flex gap-2 items-end relative">
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -68,18 +43,46 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLo
           className="min-h-[80px] focus-visible:ring-primary/30 bg-white resize-none p-4 rounded-xl"
           onKeyDown={handleKeyDown}
         />
-        <Button
-          onClick={handleSend}
-          disabled={isLoading || !input.trim()}
-          className="h-12 w-12 rounded-full flex-shrink-0 shadow-sm"
-          aria-label="Send message"
-        >
-          {isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <SendHorizontal className="h-5 w-5" />
-          )}
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button
+            onClick={handleSend}
+            disabled={isLoading || !input.trim()}
+            className="h-12 w-12 rounded-full flex-shrink-0 shadow-sm"
+            aria-label="Send message"
+          >
+            {isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <SendHorizontal className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+      </div>
+      
+      <div className="flex items-center text-sm text-muted-foreground">
+        <span className="mr-2">Using:</span>
+        <Select value={selectedModel} onValueChange={setSelectedModel}>
+          <SelectTrigger className="h-7 px-2 bg-transparent border-0 w-auto focus:ring-0 focus-visible:ring-0 focus:outline-none p-0 hover:bg-muted/20 rounded">
+            <div className="flex items-center gap-1.5">
+              {selectedModel === 'openai' ? (
+                <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+              ) : (
+                <Bot className="h-3.5 w-3.5 text-purple-500" />
+              )}
+              <span className="font-medium">{selectedModel === 'openai' ? 'OpenAI (GPT-4o mini)' : 'Claude'}</span>
+            </div>
+          </SelectTrigger>
+          <SelectContent align="start" side="top" className="w-[180px]">
+            <SelectItem value="openai" className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 text-blue-500" />
+              <span>OpenAI (GPT-4o mini)</span>
+            </SelectItem>
+            <SelectItem value="claude" className="flex items-center gap-2">
+              <Bot className="h-3.5 w-3.5 text-purple-500" />
+              <span>Claude</span>
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
