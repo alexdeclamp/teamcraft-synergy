@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
 import { Loader2, X } from 'lucide-react';
 import RegenerateMetadataButton from '../note/RegenerateMetadataButton';
+import CleanTextButton from '../note/CleanTextButton';
 import NotesFormatting from './NotesFormatting';
 
 interface NotesDialogProps {
@@ -96,7 +97,15 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
           <div className="grid gap-2">
             <div className="flex justify-between items-center">
               <Label htmlFor={contentId}>Content</Label>
-              <NotesFormatting contentId={contentId} />
+              <div className="flex items-center gap-2">
+                <CleanTextButton 
+                  noteContent={content}
+                  onTextCleaned={onContentChange}
+                  model={aiModel}
+                  onModelChange={onModelChange}
+                />
+                <NotesFormatting contentId={contentId} />
+              </div>
             </div>
             <Textarea 
               id={contentId} 
