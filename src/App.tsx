@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingSidebar from "./components/onboarding/OnboardingSidebar";
 import WelcomeDialog from "./components/onboarding/WelcomeDialog";
+import DashboardTutorial from "./components/tutorial/DashboardTutorial";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
                 <OnboardingProvider>
                   <OnboardingSidebar />
                   <WelcomeDialog />
+                  <DashboardTutorial />
                   <Dashboard />
                 </OnboardingProvider>
               </ProtectedRoute>

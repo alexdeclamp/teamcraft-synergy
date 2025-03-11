@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from "@/lib/utils";
 import { User, LogOut, LayoutDashboard, GraduationCap, Sparkles } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { toast } from 'sonner';
 
 type MobileMenuProps = {
   isOpen: boolean;
@@ -20,7 +21,18 @@ const MobileMenu = ({ isOpen, onProfileClick, onSignOutClick }: MobileMenuProps)
     // Dispatch a custom event to trigger tutorial
     const event = new CustomEvent('start-dashboard-tutorial');
     window.dispatchEvent(event);
+    toast.info("Tutorial started! Follow the instructions to learn more.");
   };
+  
+  // Listen for tutorial events from other components
+  useEffect(() => {
+    const startTutorial = () => {
+      console.log("Tutorial event received in MobileMenu");
+    };
+
+    window.addEventListener('start-dashboard-tutorial', startTutorial);
+    return () => window.removeEventListener('start-dashboard-tutorial', startTutorial);
+  }, []);
   
   const navLinks = [
     { 

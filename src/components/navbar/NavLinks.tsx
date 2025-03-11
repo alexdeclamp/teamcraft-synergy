@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, GraduationCap, Sparkles } from "lucide-react";
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { toast } from 'sonner';
 
 const NavLinks = () => {
   const location = useLocation();
@@ -14,7 +15,19 @@ const NavLinks = () => {
     // Dispatch a custom event to trigger tutorial
     const event = new CustomEvent('start-dashboard-tutorial');
     window.dispatchEvent(event);
+    toast.info("Tutorial started! Follow the instructions to learn more.");
   };
+
+  // Listen for tutorial events from other components
+  useEffect(() => {
+    const startTutorial = () => {
+      console.log("Tutorial event received in NavLinks");
+      toast.info("Tutorial started! Follow the instructions to learn more.");
+    };
+
+    window.addEventListener('start-dashboard-tutorial', startTutorial);
+    return () => window.removeEventListener('start-dashboard-tutorial', startTutorial);
+  }, []);
 
   const navLinks = [
     { 
