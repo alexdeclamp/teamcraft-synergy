@@ -1,0 +1,31 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+@import url('https://fonts.cdnfonts.com/css/sf-mono');
+
+@tailwind base;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 9% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 9% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 9% 15%;
+    --primary: 250 87% 56%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 220 9% 15%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 45%;
+    --accent: 250 87% 97%;
+    --accent-foreground: 250 87% 56%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 250 87% 56%;
+    --radius: 6px;
+  }
+}
