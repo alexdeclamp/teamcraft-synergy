@@ -4,10 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
-  PlusCircle, 
-  Settings, 
-  UserPlus, 
-  Users, 
+  PlusCircle,
   BrainCircuit 
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -38,11 +35,6 @@ const AppSidebar = () => {
       icon: PlusCircle,
       label: 'New Brain',
       path: '/new-project',
-    },
-    {
-      icon: Users,
-      label: 'Team',
-      path: '/team',
     },
   ];
 
@@ -78,26 +70,6 @@ const AppSidebar = () => {
           ))}
         </TooltipProvider>
       </nav>
-      
-      <div className="mt-auto pt-6">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 rounded-md opacity-80 hover:opacity-100"
-                aria-label="Settings"
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>Settings</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
     </div>
   );
 };
