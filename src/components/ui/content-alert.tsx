@@ -1,14 +1,19 @@
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Lightbulb } from "lucide-react"
+import { Info } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-export function ContentAlert({ className }: { className?: string }) {
+interface ContentAlertProps {
+  className?: string;
+  message?: string;
+}
+
+export function ContentAlert({ className, message }: ContentAlertProps) {
   return (
     <Alert className={cn("mb-4 border-primary/40 bg-primary/10", className)}>
-      <Lightbulb className="h-4 w-4 text-primary" />
+      <Info className="h-4 w-4 text-primary" />
       <AlertDescription className="text-foreground font-medium">
-        Content added here will be available to your project chat assistant.
+        {message || "Content added here will be available to your project chat assistant."}
       </AlertDescription>
     </Alert>
   )

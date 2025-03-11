@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useImageUpload } from './image-upload/useImageUpload';
 import UploadDialog from './image-upload/UploadDialog';
 import GalleryDialog from './image-upload/GalleryDialog';
 import ImageGrid from './image-upload/ImageGrid';
+import { ContentAlert } from '@/components/ui/content-alert';
 
 interface ProjectImageUploadProps {
   projectId: string;
@@ -49,6 +49,10 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
 
   return (
     <div>
+      <ContentAlert 
+        message="Generate notes from your images to make their content available to the project chat assistant. Image content is not directly accessible without creating notes."
+      />
+      
       <div className="flex flex-wrap gap-3 mb-6">
         <UploadDialog
           selectedFile={selectedFile}
