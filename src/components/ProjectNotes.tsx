@@ -23,6 +23,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     setNotes,
     loading,
     allTags,
+    setAllTags,
     activeTag,
     setActiveTag,
     aiModel,

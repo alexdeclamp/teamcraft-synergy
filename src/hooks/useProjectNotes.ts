@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +12,6 @@ export function useProjectNotes(projectId: string) {
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [aiModel, setAiModel] = useState<'claude' | 'openai'>('claude');
 
-  // Fetch notes based on projectId and activeTag
   const fetchNotes = async () => {
     if (!projectId || !user) return;
     try {
@@ -96,7 +94,6 @@ export function useProjectNotes(projectId: string) {
     });
   };
 
-  // Function to handle note deletion
   const handleDeleteNote = async (noteId: string) => {
     if (!noteId || !user) return;
     
@@ -136,6 +133,7 @@ export function useProjectNotes(projectId: string) {
     setNotes,
     loading,
     allTags,
+    setAllTags,
     activeTag,
     setActiveTag,
     aiModel,
