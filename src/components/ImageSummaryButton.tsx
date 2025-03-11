@@ -70,6 +70,8 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         hasSavedVersion={hasSummary}
         projectId={projectId}
         imageName={imageName}
+        sourceUrl={imageUrl}
+        sourceType="image"
       />
     </>
   );
