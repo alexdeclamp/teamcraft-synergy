@@ -24,19 +24,43 @@ export function ContentAlert({ className, message, documentType }: ContentAlertP
     if (documentType === 'pdf') {
       return (
         <>
-          <DropdownMenuItem className="cursor-default">1. Upload your PDF document</DropdownMenuItem>
-          <DropdownMenuItem className="cursor-default">2. Click on the document in the list</DropdownMenuItem>
-          <DropdownMenuItem className="cursor-default">3. Select "Generate Summary" from the actions menu</DropdownMenuItem>
-          <DropdownMenuItem className="cursor-default">4. Review the generated content and save as a note</DropdownMenuItem>
+          <DropdownMenuItem className="cursor-default flex items-center py-3 px-4">
+            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-primary/10 text-primary text-sm mr-3">1</span>
+            Upload your PDF document
+          </DropdownMenuItem>
+          <DropdownMenuItem className="cursor-default flex items-center py-3 px-4">
+            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-primary/10 text-primary text-sm mr-3">2</span>
+            Click on the document in the list
+          </DropdownMenuItem>
+          <DropdownMenuItem className="cursor-default flex items-center py-3 px-4">
+            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-primary/10 text-primary text-sm mr-3">3</span>
+            Select "Generate Summary" from the actions menu
+          </DropdownMenuItem>
+          <DropdownMenuItem className="cursor-default flex items-center py-3 px-4">
+            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-primary/10 text-primary text-sm mr-3">4</span>
+            Review the generated content and save as a note
+          </DropdownMenuItem>
         </>
       );
     } else if (documentType === 'image') {
       return (
         <>
-          <DropdownMenuItem className="cursor-default">1. Upload your image</DropdownMenuItem>
-          <DropdownMenuItem className="cursor-default">2. Click on the image in the gallery</DropdownMenuItem>
-          <DropdownMenuItem className="cursor-default">3. Click "Generate Summary" from the actions</DropdownMenuItem>
-          <DropdownMenuItem className="cursor-default">4. Review the generated content and save as a note</DropdownMenuItem>
+          <DropdownMenuItem className="cursor-default flex items-center py-3 px-4">
+            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-primary/10 text-primary text-sm mr-3">1</span>
+            Upload your image
+          </DropdownMenuItem>
+          <DropdownMenuItem className="cursor-default flex items-center py-3 px-4">
+            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-primary/10 text-primary text-sm mr-3">2</span>
+            Click on the image in the gallery
+          </DropdownMenuItem>
+          <DropdownMenuItem className="cursor-default flex items-center py-3 px-4">
+            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-primary/10 text-primary text-sm mr-3">3</span>
+            Click "Generate Summary" from the actions
+          </DropdownMenuItem>
+          <DropdownMenuItem className="cursor-default flex items-center py-3 px-4">
+            <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-primary/10 text-primary text-sm mr-3">4</span>
+            Review the generated content and save as a note
+          </DropdownMenuItem>
         </>
       );
     }
@@ -45,11 +69,11 @@ export function ContentAlert({ className, message, documentType }: ContentAlertP
   };
 
   return (
-    <Alert className={cn("mb-4 border-primary/40 bg-primary/10", className)}>
-      <Info className="h-4 w-4 text-primary" />
+    <Alert className={cn("mb-4 border-primary/40 bg-primary/10 shadow-sm", className)}>
+      <Info className="h-5 w-5 text-primary" />
       <div className="flex flex-col w-full">
-        <div className="flex justify-between items-center">
-          <AlertDescription className="text-foreground font-medium">
+        <div className="flex justify-between items-center gap-4">
+          <AlertDescription className="text-foreground font-medium py-1">
             {message || "Content added here will be available to your project chat assistant."}
           </AlertDescription>
           
@@ -57,20 +81,23 @@ export function ContentAlert({ className, message, documentType }: ContentAlertP
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button 
-                  variant="ghost" 
+                  variant="outline"
                   size="sm" 
-                  className="h-6 px-2 text-xs"
+                  className="h-8 px-3 text-sm border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/40"
                   onClick={() => setIsOpen(!isOpen)}
                 >
                   How to
                   {isOpen ? (
-                    <ChevronUp className="ml-1 h-3 w-3" />
+                    <ChevronUp className="ml-1.5 h-4 w-4" />
                   ) : (
-                    <ChevronDown className="ml-1 h-3 w-3" />
+                    <ChevronDown className="ml-1.5 h-4 w-4" />
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-white">
+              <DropdownMenuContent 
+                align="end" 
+                className="w-[360px] bg-white/95 backdrop-blur-sm border-primary/20 shadow-lg"
+              >
                 {renderSteps()}
               </DropdownMenuContent>
             </DropdownMenu>
