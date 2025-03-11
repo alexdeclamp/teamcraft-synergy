@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -64,7 +64,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+          <DialogDescription className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
             <div className="flex items-center">
               <User className="h-3 w-3 mr-1" />
               <div className="flex items-center">
@@ -84,7 +84,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
               <Clock className="h-3 w-3 mr-1" />
               <span>{formatDate(note.updated_at)}</span>
             </div>
-          </div>
+          </DialogDescription>
         </DialogHeader>
         
         {note.tags && note.tags.length > 0 && (
@@ -115,6 +115,16 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
               <ExternalLink className="h-4 w-4 mr-1" />
               <span className="hidden sm:inline">View Original</span>
             </a>
+          </div>
+        )}
+        
+        {note.source_document?.type === 'image' && (
+          <div className="mt-2 mb-4">
+            <img 
+              src={note.source_document.url} 
+              alt={note.source_document.name}
+              className="rounded-md border border-border max-h-[300px] object-contain mx-auto"
+            />
           </div>
         )}
         

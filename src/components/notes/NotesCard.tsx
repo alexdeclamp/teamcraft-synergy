@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { FileText, User, Clock, Edit, Trash2 } from 'lucide-react';
+import { FileText, User, Clock, Edit, Trash2, Image } from 'lucide-react';
 import NoteSummaryButton from '../NoteSummaryButton';
 import { Note } from './types';
 
@@ -33,15 +33,19 @@ const NotesCard: React.FC<NotesCardProps> = ({
   return (
     <Card 
       key={note.id} 
-      className="hover:bg-accent/5 transition-colors cursor-pointer border-l-4 border-l-primary/40 shadow-sm" 
+      className="hover:bg-accent/5 transition-colors cursor-pointer border-l-4 border-l-primary/40 shadow-sm w-full" 
       onClick={() => onView(note)}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
-          <div className="flex-1">
+          <div className="flex-1 min-w-0"> {/* Added min-width to prevent flex items from overflowing */}
             <div className="flex items-center gap-2 mb-2">
-              <FileText className="h-4 w-4 text-primary/80" />
-              <h3 className="font-medium text-lg text-slate-800">{note.title}</h3>
+              {note.source_document?.type === 'image' ? (
+                <Image className="h-4 w-4 text-green-500" />
+              ) : (
+                <FileText className="h-4 w-4 text-primary/80" />
+              )}
+              <h3 className="font-medium text-lg text-slate-800 truncate">{note.title}</h3>
             </div>
             
             {note.tags && note.tags.length > 0 && (
@@ -64,7 +68,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
             
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground border-t pt-2 mt-2 border-slate-100">
               <div className="flex items-center">
-                <User className="h-3 w-3 mr-1" />
+                <User className="h-3 w-3 mr-1 flex-shrink-0" />
                 <div className="flex items-center">
                   {note.creator_avatar ? (
                     <Avatar className="h-4 w-4 mr-1">
@@ -74,18 +78,18 @@ const NotesCard: React.FC<NotesCardProps> = ({
                       </AvatarFallback>
                     </Avatar>
                   ) : null}
-                  <span>{note.creator_name}</span>
+                  <span className="truncate max-w-[120px]">{note.creator_name}</span>
                 </div>
               </div>
               <div className="flex items-center">
-                <Clock className="h-3 w-3 mr-1" />
+                <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
                 <span>{formatDate(note.updated_at)}</span>
               </div>
             </div>
           </div>
           
           {note.user_id === userId && (
-            <div className="flex space-x-1 ml-2" onClick={e => e.stopPropagation()}>
+            <div className="flex space-x-1 ml-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
