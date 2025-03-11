@@ -37,15 +37,16 @@ const ImageTagManager: React.FC<ImageTagManagerProps> = ({ imageUrl, projectId }
     <Popover open={isTagPopoverOpen} onOpenChange={setIsTagPopoverOpen}>
       <PopoverTrigger asChild>
         <Button 
-          variant="ghost" 
-          size="icon" 
+          variant="outline" 
+          size="sm" 
           className={cn(
-            "h-7 w-7 relative transition-all",
-            tags.length > 0 && "after:content-[''] after:absolute after:top-0 after:right-0 after:w-2 after:h-2 after:bg-primary after:rounded-full"
+            "text-xs px-2 py-1 h-7 flex items-center gap-1.5 transition-all",
+            tags.length > 0 && "after:content-[''] after:ml-1 after:w-2 after:h-2 after:bg-primary after:rounded-full"
           )}
           title={tags.length > 0 ? `${tags.length} Tags` : "Add Tags"}
         >
           <Tag className="h-3.5 w-3.5" />
+          <span>{tags.length > 0 ? `Tags (${tags.length})` : "Add Tags"}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-3 animate-scale-in" side="top">

@@ -56,9 +56,9 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
     <>
       <div className="flex space-x-1">
         <Button 
-          variant="ghost" 
-          size="icon"
-          className={`h-7 w-7 ${hasSummary ? 'text-green-500' : ''}`}
+          variant="outline" 
+          size="sm"
+          className={`text-xs px-2 py-1 h-7 flex items-center gap-1.5 ${hasSummary ? 'text-green-500 border-green-200 bg-green-50' : ''}`}
           onClick={handleButtonClick}
           disabled={isGenerating || !projectId}
           title={hasSummary ? "View AI Summary" : "Generate AI Summary"}
@@ -67,9 +67,8 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 
             <MessageSquare className="h-3.5 w-3.5" />
           }
+          <span>{hasSummary ? "View Summary" : "AI Summary"}</span>
         </Button>
-
-        <ImageTagManager imageUrl={imageUrl} projectId={projectId} />
       </div>
 
       <SummaryDialog

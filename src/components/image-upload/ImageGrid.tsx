@@ -3,7 +3,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, FileWarning, Trash2, Info } from 'lucide-react';
+import { Loader2, FileWarning, Trash2, Copy, Link } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/tooltip";
 import { toast } from 'sonner';
 import ImageSummaryButton from '@/components/ImageSummaryButton';
+import ImageTagManager from '@/components/ImageTagManager';
 import { formatFileSize } from '@/utils/fileUtils';
 import { UploadedImage } from './GalleryDialog';
 
@@ -76,53 +77,71 @@ const ImageGrid: React.FC<ImageGridProps> = ({
             </div>
           </div>
           <CardContent className="p-3">
-            <div className="flex justify-between items-start gap-2">
-              <div className="truncate">
-                <p className="font-medium text-sm truncate" title={image.name}>
-                  {image.name}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  {formatFileSize(image.size)}
-                </p>
-                {image.tags && image.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {image.tags.slice(0, 3).map(tag => (
-                      <Badge key={tag.id} variant="outline" className="text-xs px-1 py-0">
-                        {tag.tag}
-                      </Badge>
-                    ))}
-                    {image.tags.length > 3 && (
-                      <Badge variant="outline" className="text-xs px-1 py-0">
-                        +{image.tags.length - 3}
-                      </Badge>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex space-x-1">
-                <ImageSummaryButton 
-                  imageUrl={image.url}
-                  imageName={image.name}
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 flex-shrink-0"
-                  onClick={() => {
-                    navigator.clipboard.writeText(image.url);
-                    toast.success('Image URL copied to clipboard');
-                  }}
-                >
-                  <Info className="h-3.5 w-3.5" />
-                </Button>
-              </div>
+            <div className="truncate">
+              <p className="font-medium text-sm truncate" title={image.name}>
+                {image.name}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {formatFileSize(image.size)}
+              </p>
+              {image.tags && image.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {image.tags.slice(0, 3).map(tag => (
+                    <Badge key={tag.id} variant="outline" className="text-xs px-1 py-0">
+                      {tag.tag}
+                    </Badge>
+                  ))}
+                  {image.tags.length > 3 && (
+                    <Badge variant="outline" className="text-xs px-1 py-0">
+                      +{image.tags.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              )}
             </div>
-            <Input
-              value={image.url}
-              readOnly
-              onClick={(e) => e.currentTarget.select()}
-              className="mt-2 text-xs"
-            />
+            
+            <div className="flex flex-wrap gap-2 mt-3">
+              <ImageSummaryButton 
+                imageUrl={image.url}
+                imageName={image.name}
+              />
+              
+              <ImageTagManager 
+                imageUrl={image.url}
+                projectId={image.path.split('/')[0]}
+              />
+                
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs px-2 py-1 h-7 flex items-center gap-1.5"
+                onClick={() => {
+                  navigator.clipboard.writeText(image.url);
+                  toast.success('Image URL copied to clipboard');
+                }}
+              >
+                <Copy className="h-3.5 w-3.5" />
+                <span>Copy URL</span>
+              </Button>
+            </div>
+            
+            <div className="mt-2 relative">
+              <Input
+                value={image.url}
+                readOnly
+                onClick={(e) => e.currentTarget.select()}
+                className="text-xs pr-8"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 absolute right-1 top-1/2 -translate-y-1/2"
+                onClick={() => window.open(image.url, '_blank')}
+                title="Open image in new tab"
+              >
+                <Link className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ))}
