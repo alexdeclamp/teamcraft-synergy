@@ -34,13 +34,13 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLo
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 border-t border-border/50 pt-3">
       <div className="flex gap-2 items-end relative">
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message here..."
-          className="min-h-[80px] focus-visible:ring-primary/30 bg-white resize-none p-4 rounded-xl"
+          className="min-h-[80px] focus-visible:ring-primary/30 bg-background resize-none p-4 rounded-xl"
           onKeyDown={handleKeyDown}
         />
         <div className="flex flex-col gap-2">
@@ -62,7 +62,7 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLo
       <div className="flex items-center text-sm text-muted-foreground">
         <span className="mr-2">Using:</span>
         <Select value={selectedModel} onValueChange={setSelectedModel}>
-          <SelectTrigger className="h-7 px-2 bg-transparent border-0 w-auto focus:ring-0 focus-visible:ring-0 focus:outline-none p-0 hover:bg-muted/20 rounded">
+          <SelectTrigger className="h-7 px-2 bg-transparent border-0 w-auto focus:ring-0 focus-visible:ring-0 focus:outline-none hover:bg-accent/20 rounded">
             <div className="flex items-center gap-1.5">
               {selectedModel === 'openai' ? (
                 <Sparkles className="h-3.5 w-3.5 text-blue-500" />

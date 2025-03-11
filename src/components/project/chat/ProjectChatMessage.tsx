@@ -26,14 +26,14 @@ const ProjectChatMessage: React.FC<ProjectChatMessageProps> = ({ message }) => {
       <div
         className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
           isUser
-            ? 'bg-primary text-primary-foreground ml-4'
-            : 'bg-muted/80 text-foreground'
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-accent/50 text-foreground'
         }`}
       >
         {isUser ? (
           <div>{message.content}</div>
         ) : (
-          <div className="prose prose-sm dark:prose-invert max-w-none">
+          <div className="prose prose-sm max-w-none">
             <ReactMarkdown>
               {message.content}
             </ReactMarkdown>

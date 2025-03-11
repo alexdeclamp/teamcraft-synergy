@@ -33,7 +33,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
   return (
     <Card 
       key={note.id} 
-      className="hover:bg-accent/5 transition-colors cursor-pointer border-l-4 border-l-primary/40 shadow-sm w-full overflow-hidden" 
+      className="hover-card border-l-4 border-l-primary/40 shadow-sm w-full overflow-hidden" 
       onClick={() => onView(note)}
     >
       <CardContent className="p-4">
@@ -54,7 +54,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
               ) : (
                 <FileText className="h-4 w-4 text-primary/80 flex-shrink-0" />
               )}
-              <h3 className="font-medium text-lg text-slate-800 truncate">{note.title}</h3>
+              <h3 className="font-medium text-lg text-foreground truncate">{note.title}</h3>
             </div>
             
             {note.tags && note.tags.length > 0 && (
@@ -75,7 +75,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
               </div>
             )}
             
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground border-t pt-2 mt-2 border-slate-100">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground border-t pt-2 mt-2 border-border/50">
               <div className="flex items-center">
                 <User className="h-3 w-3 mr-1 flex-shrink-0" />
                 <div className="flex items-center">
