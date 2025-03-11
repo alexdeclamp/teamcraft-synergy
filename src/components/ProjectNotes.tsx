@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -315,39 +316,43 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
   return (
     <div className="space-y-4">
       <ContentAlert />
-      <div className="flex justify-between items-center mb-6">
-        <Button onClick={handleOpenCreateDialog} className="flex items-center gap-1">
-          <PlusCircle className="h-4 w-4" />
-          New Note
-        </Button>
-      </div>
-
-      <TagFilter 
-        allTags={allTags} 
-        activeTag={activeTag} 
-        setActiveTag={setActiveTag} 
-      />
-
+      
       {loading ? (
         <NotesLoading />
       ) : notes.length === 0 ? (
         <EmptyNotesList onCreateNote={handleOpenCreateDialog} />
       ) : (
-        <div className="space-y-2">
-          {notes.map(note => (
-            <NotesCard
-              key={note.id}
-              note={note}
-              userId={user?.id}
-              activeTag={activeTag}
-              setActiveTag={setActiveTag}
-              onView={openViewDialog}
-              onEdit={openEditDialog}
-              onDelete={handleDeleteNote}
-              formatDate={formatDate}
-            />
-          ))}
-        </div>
+        <>
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <TagFilter 
+                allTags={allTags} 
+                activeTag={activeTag} 
+                setActiveTag={setActiveTag} 
+              />
+            </div>
+            <Button onClick={handleOpenCreateDialog} className="flex items-center gap-1">
+              <PlusCircle className="h-4 w-4" />
+              New Note
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {notes.map(note => (
+              <NotesCard
+                key={note.id}
+                note={note}
+                userId={user?.id}
+                activeTag={activeTag}
+                setActiveTag={setActiveTag}
+                onView={openViewDialog}
+                onEdit={openEditDialog}
+                onDelete={handleDeleteNote}
+                formatDate={formatDate}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       <NotesViewDialog
