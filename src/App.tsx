@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -46,6 +45,43 @@ const App = () => (
                 </OnboardingProvider>
               </ProtectedRoute>
             } />
+
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
+                  <div className="pl-16">
+                    <Dashboard /> {/* Will be replaced with Profile component when created */}
+                  </div>
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/onboarding" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
+                  <div className="pl-16">
+                    <Dashboard /> {/* Will be replaced with Onboarding component when created */}
+                  </div>
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/tutorial" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
+                  <div className="pl-16">
+                    <Dashboard /> {/* Will be replaced with Tutorial component when created */}
+                  </div>
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+
             <Route path="/new-project" element={
               <ProtectedRoute>
                 <OnboardingProvider>

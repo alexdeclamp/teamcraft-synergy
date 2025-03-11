@@ -22,7 +22,10 @@ const AppSidebar = () => {
   const isProtectedRoute = 
     location.pathname.startsWith('/dashboard') || 
     location.pathname.startsWith('/project') ||
-    location.pathname.startsWith('/new-project');
+    location.pathname.startsWith('/new-project') ||
+    location.pathname.startsWith('/profile') ||
+    location.pathname.startsWith('/onboarding') ||
+    location.pathname.startsWith('/tutorial');
   
   if (!isProtectedRoute || !user) {
     return null;
