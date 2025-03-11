@@ -1,10 +1,10 @@
-
 import React, { useEffect } from 'react';
+import { FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Loader2, FileText } from 'lucide-react';
 import { useParams, useLocation } from 'react-router-dom';
 import SummaryDialog from './summary/SummaryDialog';
 import { useNoteSummary } from '@/hooks/useNoteSummary';
+import ImageSummaryButtonUI from './summary/ImageSummaryButtonUI';
 
 interface NoteSummaryButtonProps {
   noteId: string;
@@ -42,6 +42,8 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
     };
   }, [location.pathname, isDialogOpen, setIsDialogOpen]);
 
+  // For the note summary button, we want to keep the existing icon button style
+  // rather than using the standard summary button UI
   return (
     <>
       <Button 
@@ -63,7 +65,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
         ) : hasSummary ? (
           <FileText className="h-4 w-4 text-blue-500" />
         ) : (
-          <MessageSquare className="h-4 w-4" />
+          <FileText className="h-4 w-4" />
         )}
       </Button>
 
