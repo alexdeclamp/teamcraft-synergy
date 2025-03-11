@@ -40,8 +40,17 @@ const NotesCard: React.FC<NotesCardProps> = ({
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0 overflow-hidden"> 
             <div className="flex items-center gap-2 mb-2">
-              {note.source_document?.type === 'image' ? (
-                <Image className="h-4 w-4 text-green-500 flex-shrink-0" />
+              {note.source_document ? (
+                <div className="flex items-center gap-2">
+                  {note.source_document.type === 'image' ? (
+                    <Image className="h-4 w-4 text-green-500 flex-shrink-0" />
+                  ) : (
+                    <FileText className="h-4 w-4 text-primary/80 flex-shrink-0" />
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    From: {note.source_document.name}
+                  </span>
+                </div>
               ) : (
                 <FileText className="h-4 w-4 text-primary/80 flex-shrink-0" />
               )}
