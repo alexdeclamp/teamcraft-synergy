@@ -31,7 +31,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[650px] max-h-[80vh] overflow-y-auto overflow-x-hidden bg-gradient-to-b from-white to-slate-50">
+      <DialogContent className="sm:max-w-[800px] md:max-w-[900px] lg:max-w-[1000px] w-[calc(100vw-3rem)] max-h-[85vh] overflow-y-auto overflow-x-hidden bg-gradient-to-b from-white to-slate-50">
         <DialogHeader>
           <div className="flex justify-between items-start">
             <DialogTitle className="pr-8 text-xl font-semibold text-slate-800 break-words">{note.title}</DialogTitle>
