@@ -1,3 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
+@import url('https://fonts.cdnfonts.com/css/sf-mono');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -98,11 +102,6 @@
     background: hsl(var(--muted-foreground));
   }
 }
-
-/* Import Inter font which is closer to manus.im style */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import url('https://fonts.cdnfonts.com/css/sf-pro-display');
-@import url('https://fonts.cdnfonts.com/css/sf-mono');
 
 @layer components {
   /* manus.im inspired components */

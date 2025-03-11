@@ -1,9 +1,11 @@
 
 import * as pdfjs from 'pdfjs-dist';
 
-// Initialize pdf.js worker
-const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.entry');
-pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+// Initialize pdf.js worker without using top-level await
+const pdfjsWorker = import('pdfjs-dist/build/pdf.worker.entry');
+pdfjsWorker.then(worker => {
+  pdfjs.GlobalWorkerOptions.workerSrc = worker;
+});
 
 // Define custom interfaces for PDF.js text content items
 interface TextItem {
@@ -30,6 +32,9 @@ function isTextItem(item: any): item is TextItem {
  */
 export async function extractPdfText(pdfUrl: string): Promise<{ text: string; pageCount: number }> {
   try {
+    // Wait for the worker to be initialized
+    await pdfjsWorker;
+    
     // Fetch the PDF
     const response = await fetch(pdfUrl, {
       cache: 'no-cache',
@@ -124,6 +129,9 @@ export async function extractPdfText(pdfUrl: string): Promise<{ text: string; pa
  */
 export async function getPdfInfo(pdfUrl: string): Promise<{ pageCount: number; isEncrypted: boolean; fingerprint: string }> {
   try {
+    // Wait for the worker to be initialized
+    await pdfjsWorker;
+    
     // Fetch the PDF
     const response = await fetch(pdfUrl, {
       cache: 'no-cache',
