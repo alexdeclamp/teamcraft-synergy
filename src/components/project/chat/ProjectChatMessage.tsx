@@ -1,6 +1,7 @@
 
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import { User, Bot } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -12,17 +13,25 @@ interface ProjectChatMessageProps {
 }
 
 const ProjectChatMessage: React.FC<ProjectChatMessageProps> = ({ message }) => {
+  const isUser = message.role === 'user';
+  
   return (
-    <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex items-start ${isUser ? 'justify-end' : 'justify-start'}`}>
+      {!isUser && (
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center mr-3">
+          <Bot className="h-5 w-5" />
+        </div>
+      )}
+      
       <div
-        className={`max-w-[80%] rounded-lg p-3 ${
-          message.role === 'user'
+        className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
+          isUser
             ? 'bg-primary text-primary-foreground ml-4'
-            : 'bg-muted text-muted-foreground mr-4'
+            : 'bg-muted/80 text-foreground'
         }`}
       >
-        {message.role === 'user' ? (
-          message.content
+        {isUser ? (
+          <div>{message.content}</div>
         ) : (
           <div className="prose prose-sm dark:prose-invert max-w-none">
             <ReactMarkdown>
@@ -31,6 +40,12 @@ const ProjectChatMessage: React.FC<ProjectChatMessageProps> = ({ message }) => {
           </div>
         )}
       </div>
+      
+      {isUser && (
+        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center ml-3">
+          <User className="h-5 w-5" />
+        </div>
+      )}
     </div>
   );
 };

@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Info, Maximize2 } from 'lucide-react';
+import { Loader2, Info, Maximize2, Send } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -40,9 +40,14 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
 
   return (
     <>
-      <Card className="flex flex-col h-[600px] border shadow-sm">
-        <div className="flex justify-between items-center p-3 border-b">
-          <h3 className="text-lg font-medium">Project Assistant</h3>
+      <Card className="flex flex-col h-[600px] border shadow-sm overflow-hidden">
+        <div className="flex justify-between items-center p-4 border-b bg-gradient-to-r from-primary/5 to-transparent">
+          <h3 className="text-lg font-semibold text-foreground flex items-center">
+            <span className="bg-primary/10 text-primary p-1.5 rounded-md mr-3">
+              <Send className="h-4 w-4" />
+            </span>
+            Project Assistant
+          </h3>
           <div className="flex items-center space-x-1">
             <Button 
               variant="ghost" 
@@ -83,15 +88,16 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
             </Popover>
           </div>
         </div>
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
+        <ScrollArea className="flex-1 py-6 px-4 bg-gradient-to-b from-background/50 to-background/30">
+          <div className="space-y-6">
             {messages.map((message, index) => (
               <ProjectChatMessage key={index} message={message} />
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-muted rounded-lg p-3">
-                  <Loader2 className="h-5 w-5 animate-spin" />
+                <div className="glass-panel p-3 rounded-lg flex items-center space-x-2.5">
+                  <Loader2 className="h-5 w-5 text-primary animate-spin" />
+                  <span className="text-sm text-muted-foreground">Thinking...</span>
                 </div>
               </div>
             )}
@@ -106,9 +112,10 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
           />
         )}
 
-        <div className="p-4 border-t bg-muted/30">
+        <div className="p-4 border-t bg-white">
           {messages.length > 0 && (
             <div className="mb-3">
+              <div className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Suggested questions</div>
               <ProjectChatSuggestions 
                 questions={predefinedQuestions} 
                 onSelectQuestion={handlePredefinedQuestion} 

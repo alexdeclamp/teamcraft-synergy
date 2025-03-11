@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { SendHorizontal } from 'lucide-react';
+import { SendHorizontal, Loader2 } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -34,10 +34,10 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLo
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="flex justify-end">
         <Select value={selectedModel} onValueChange={setSelectedModel}>
-          <SelectTrigger className="w-[140px] sm:w-[180px]">
+          <SelectTrigger className="w-[140px] sm:w-[180px] bg-white border-muted">
             <SelectValue placeholder="Select Model" />
           </SelectTrigger>
           <SelectContent>
@@ -46,21 +46,25 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLo
           </SelectContent>
         </Select>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-end">
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about your project..."
-          className="min-h-[60px]"
+          placeholder="Type your message here..."
+          className="min-h-[80px] focus-visible:ring-primary/30 bg-white resize-none p-4 rounded-xl"
           onKeyDown={handleKeyDown}
         />
         <Button
           onClick={handleSend}
           disabled={isLoading || !input.trim()}
-          className="px-3 flex-shrink-0"
+          className="h-12 w-12 rounded-full flex-shrink-0 shadow-sm"
           aria-label="Send message"
         >
-          <SendHorizontal className="h-5 w-5" />
+          {isLoading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <SendHorizontal className="h-5 w-5" />
+          )}
         </Button>
       </div>
     </div>
