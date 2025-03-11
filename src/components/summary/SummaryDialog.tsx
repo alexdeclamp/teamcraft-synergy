@@ -99,11 +99,16 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
         ? `Summary: ${imageName}` 
         : "Document Summary";
       
+      // Ensure we have the complete source document information
       const sourceDocument = (sourceUrl && imageName) ? {
         type: sourceType,
         url: sourceUrl,
         name: imageName
       } : null;
+      
+      console.log('Creating note with source document:', sourceDocument);
+      console.log('Source URL:', sourceUrl);
+      console.log('Image name:', imageName);
       
       const { data, error } = await supabase
         .from('project_notes')

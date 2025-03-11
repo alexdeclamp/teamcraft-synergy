@@ -25,7 +25,8 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
     console.log('Current params:', params);
     console.log('Project ID from params:', projectId);
     console.log('Image URL:', imageUrl);
-  }, [params, projectId, imageUrl]);
+    console.log('Image Name:', imageName);
+  }, [params, projectId, imageUrl, imageName]);
 
   const { isGenerating, summary, hasSummary, generateSummary } = useImageSummary({
     imageUrl,
