@@ -33,7 +33,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
   return (
     <Card 
       key={note.id} 
-      className="hover:bg-accent/5 transition-colors cursor-pointer border-l-4 border-l-primary/40 shadow-sm w-full overflow-hidden" 
+      className="hover:bg-accent/5 transition-colors cursor-pointer border-l-4 border-l-primary/40 shadow-sm w-[calc(100vw-3rem)] max-w-[900px] overflow-hidden" 
       onClick={() => onView(note)}
     >
       <CardContent className="p-4">
