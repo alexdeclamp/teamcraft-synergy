@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
@@ -67,27 +66,22 @@ function formatSummaryText(text) {
   if (!text) return '';
   
   // Ensure proper markdown formatting
+  let formatted = text
+    // Fix headings that are missing spaces after #
+    .replace(/^(#{1,6})([^\s])/gm, '$1 $2')
+    // Ensure double line breaks between sections
+    .replace(/\n(#{1,6}\s)/g, '\n\n$1')
+    // Fix bullet points formatting
+    .replace(/^[-*•]\s*/gm, '• ')
+    // Ensure proper spacing between paragraphs
+    .replace(/([^\n])\n([^\s#•-])/g, '$1\n\n$2')
+    // Remove extra spaces
+    .replace(/\s{3,}/g, '\n\n')
+    // Ensure proper heading spacing
+    .replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
+    .replace(/^(#{1,6}\s.*)\n([^\n])/gm, '$1\n\n$2');
   
-  // Ensure double line breaks between paragraphs
-  text = text.replace(/\n{3,}/g, '\n\n'); // Replace 3+ newlines with just 2
-  
-  // Fix headings format (ensure # has a space after it)
-  text = text.replace(/^(#{1,6})([^\s])/gm, '$1 $2');
-  
-  // Ensure proper spacing around headings
-  text = text.replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2');
-  text = text.replace(/^(#{1,6}\s[^\n]+)(?!\n\n)/gm, '$1\n\n');
-  
-  // Ensure bullet points have proper spacing
-  text = text.replace(/^([-*•])\s*/gm, '• ');
-  
-  // Ensure proper spacing between paragraphs
-  text = text.replace(/([^\n])\n([^#\s•-])/g, '$1\n\n$2');
-  
-  // Remove extra spaces
-  text = text.replace(/\s{2,}/g, ' ');
-  
-  return text.trim();
+  return formatted.trim();
 }
 
 async function summarizeWithClaude(text: string, maxLength: number, title?: string): Promise<string> {

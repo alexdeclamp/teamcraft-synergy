@@ -30,22 +30,24 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
 
   const formatExtractedText = (text: string) => {
     if (!text) return '';
-    let formatted = text.replace(/[ \t]+/g, ' ');
-    formatted = formatted.replace(/\n{3,}/g, '\n\n');
-    const lines = formatted.split('\n');
-    let result = '';
     
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (line === '') {
-        if (i > 0 && lines[i-1].trim() !== '') {
-          result += '\n\n';
-        }
-        continue;
-      }
-      result += line + '\n';
-    }
-    return result;
+    // Fix markdown formatting issues
+    let formatted = text
+      // Fix headings that are missing spaces after #
+      .replace(/^(#{1,6})([^\s])/gm, '$1 $2')
+      // Ensure double line breaks between sections
+      .replace(/\n(#{1,6}\s)/g, '\n\n$1')
+      // Fix bullet points formatting
+      .replace(/^[-*•]\s*/gm, '• ')
+      // Ensure proper spacing between paragraphs
+      .replace(/([^\n])\n([^\s#•-])/g, '$1\n\n$2')
+      // Remove extra spaces
+      .replace(/\s{3,}/g, '\n\n')
+      // Ensure proper heading spacing
+      .replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
+      .replace(/^(#{1,6}\s.*)\n([^\n])/gm, '$1\n\n$2');
+    
+    return formatted.trim();
   };
 
   if (isExtracting) {
@@ -92,7 +94,7 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
       {showSummary && summary ? (
         <div className="prose prose-sm max-w-none dark:prose-invert">
           <ReactMarkdown>
-            {summary}
+            {formatExtractedText(summary)}
           </ReactMarkdown>
         </div>
       ) : extractedText ? (
