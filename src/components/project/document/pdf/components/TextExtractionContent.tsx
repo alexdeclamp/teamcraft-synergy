@@ -31,21 +31,21 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
   const formatExtractedText = (text: string) => {
     if (!text) return '';
     
-    // Fix markdown formatting issues
+    // Convert "Heading:" and "Subheading:" patterns to markdown
     let formatted = text
-      // Fix headings that are missing spaces after #
-      .replace(/^(#{1,6})([^\s])/gm, '$1 $2')
+      // Convert "Heading:" to markdown heading
+      .replace(/^Heading:\s*(.*?)$/gm, '# $1')
+      .replace(/^Subheading:\s*(.*?)$/gm, '## $1')
       // Ensure double line breaks between sections
-      .replace(/\n(#{1,6}\s)/g, '\n\n$1')
-      // Fix bullet points formatting
+      .replace(/\n(#+ )/g, '\n\n$1')
+      // Fix bullet points
       .replace(/^[-*•]\s*/gm, '• ')
       // Ensure proper spacing between paragraphs
       .replace(/([^\n])\n([^\s#•-])/g, '$1\n\n$2')
       // Remove extra spaces
       .replace(/\s{3,}/g, '\n\n')
       // Ensure proper heading spacing
-      .replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
-      .replace(/^(#{1,6}\s.*)\n([^\n])/gm, '$1\n\n$2');
+      .replace(/^(#+ .*)\n([^\n])/gm, '$1\n\n$2');
     
     return formatted.trim();
   };
@@ -92,7 +92,7 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
   return (
     <ScrollArea className="flex-1 p-4 mt-4 max-h-[500px] overflow-auto">
       {showSummary && summary ? (
-        <div className="prose prose-sm max-w-none dark:prose-invert">
+        <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:mt-6 prose-headings:mb-4">
           <ReactMarkdown>
             {formatExtractedText(summary)}
           </ReactMarkdown>

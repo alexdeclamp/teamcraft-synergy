@@ -65,21 +65,21 @@ serve(async (req) => {
 function formatSummaryText(text) {
   if (!text) return '';
   
-  // Ensure proper markdown formatting
+  // Replace "Heading:" and "Subheading:" with proper markdown headings
   let formatted = text
-    // Fix headings that are missing spaces after #
-    .replace(/^(#{1,6})([^\s])/gm, '$1 $2')
+    // Convert "Heading:" to markdown heading
+    .replace(/^Heading:\s*(.*?)$/gm, '# $1')
+    .replace(/^Subheading:\s*(.*?)$/gm, '## $1')
     // Ensure double line breaks between sections
-    .replace(/\n(#{1,6}\s)/g, '\n\n$1')
-    // Fix bullet points formatting
+    .replace(/\n(#+ )/g, '\n\n$1')
+    // Fix bullet points
     .replace(/^[-*•]\s*/gm, '• ')
     // Ensure proper spacing between paragraphs
     .replace(/([^\n])\n([^\s#•-])/g, '$1\n\n$2')
     // Remove extra spaces
     .replace(/\s{3,}/g, '\n\n')
     // Ensure proper heading spacing
-    .replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
-    .replace(/^(#{1,6}\s.*)\n([^\n])/gm, '$1\n\n$2');
+    .replace(/^(#+ .*)\n([^\n])/gm, '$1\n\n$2');
   
   return formatted.trim();
 }
@@ -102,15 +102,11 @@ async function summarizeWithClaude(text: string, maxLength: number, title?: stri
             role: 'user',
             content: `Please summarize the following ${title ? 'document titled "' + title + '"' : 'text'}. 
 
-FORMAT YOUR SUMMARY AS CLEAN MARKDOWN WITH STRICT ADHERENCE TO THESE FORMATTING RULES:
-1. Use clear markdown headings with hash symbols (# for main headings, ## for subheadings)
-2. Always add TWO line breaks after each heading
-3. Use bullet points (•) for lists with proper indentation
-4. Ensure paragraphs have double line breaks between them
-5. Make sure there are no spacing issues in the final output
-6. Don't use excessive line breaks or irregular spacing
-7. Format all section titles consistently
-8. Don't run section headings into the content underneath them
+Use proper markdown formatting:
+1. For headings, use "Heading" and "Subheading" instead of # symbols
+2. Use bullet points (•) for lists
+3. Use proper paragraphs with double line breaks
+4. Make the summary easy to read with clear sections
 
 Here's the text to summarize:
 
