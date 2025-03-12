@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProjectHeader from '@/components/project/ProjectHeader';
 import ProjectTabs from '@/components/project/ProjectTabs';
+import FloatingChatButton from '@/components/project/chat/FloatingChatButton';
+import ProjectChatFullscreen from '@/components/project/chat/ProjectChatFullscreen';
 
 interface ProjectLayoutProps {
   loading: boolean;
@@ -53,6 +55,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
   setShowInviteDialog
 }) => {
   const navigate = useNavigate();
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   if (loading) {
     return (
@@ -115,6 +118,20 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
           setActiveTab={setActiveTab}
         />
       </main>
+
+      {/* Only show floating button when not on overview tab */}
+      {activeTab !== 'overview' && (
+        <FloatingChatButton 
+          onClick={() => setIsChatOpen(true)} 
+          className="shadow-xl" 
+        />
+      )}
+
+      <ProjectChatFullscreen 
+        projectId={project.id}
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
     </div>
   );
 };

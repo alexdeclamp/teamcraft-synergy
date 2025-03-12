@@ -14,7 +14,9 @@ import ProjectChatMessage from '@/components/project/chat/ProjectChatMessage';
 import ProjectChatInput from '@/components/project/chat/ProjectChatInput';
 import ProjectChatSuggestions from '@/components/project/chat/ProjectChatSuggestions';
 import ProjectChatWelcome from '@/components/project/chat/ProjectChatWelcome';
-import ProjectChatFullscreen from '@/components/project/chat/ProjectChatFullscreen';
+
+// We're no longer importing ProjectChatFullscreen directly here
+// since it's now managed at the ProjectLayout level
 
 interface ProjectChatProps {
   projectId: string;
@@ -126,12 +128,6 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
           <ProjectChatInput onSendMessage={sendMessage} isLoading={isLoading} />
         </div>
       </Card>
-
-      <ProjectChatFullscreen 
-        projectId={projectId}
-        isOpen={isFullscreen}
-        onClose={() => setIsFullscreen(false)}
-      />
     </>
   );
 };
