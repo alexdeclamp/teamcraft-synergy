@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -119,13 +118,10 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
         />
       </main>
 
-      {/* Only show floating button when not on overview tab */}
-      {activeTab !== 'overview' && (
-        <FloatingChatButton 
-          onClick={() => setIsChatOpen(true)} 
-          className="shadow-xl" 
-        />
-      )}
+      <FloatingChatButton 
+        onClick={() => setIsChatOpen(true)} 
+        className="shadow-xl" 
+      />
 
       <ProjectChatFullscreen 
         projectId={project.id}

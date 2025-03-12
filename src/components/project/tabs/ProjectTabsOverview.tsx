@@ -1,7 +1,6 @@
 
 import React from 'react';
 import ProjectOverview from '../ProjectOverview';
-import ProjectChat from '@/components/ProjectChat';
 
 interface ProjectTabsOverviewProps {
   project: any;
@@ -53,13 +52,6 @@ const ProjectTabsOverview: React.FC<ProjectTabsOverviewProps> = ({
         onAddMember={onAddMember}
         onTabChange={onTabChange}
       />
-      
-      <div className="mt-6">
-        <ProjectChat 
-          projectId={projectId} 
-          disableAutoScroll={true} 
-        />
-      </div>
     </div>
   );
 };
