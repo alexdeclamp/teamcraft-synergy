@@ -3,6 +3,7 @@ import React, { useRef } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { AlertCircle, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ReactMarkdown from 'react-markdown';
 
 interface TextExtractionContentProps {
   isExtracting: boolean;
@@ -90,7 +91,9 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
     <ScrollArea className="flex-1 p-4 mt-4 max-h-[500px] overflow-auto">
       {showSummary && summary ? (
         <div className="prose prose-sm max-w-none dark:prose-invert">
-          {summary}
+          <ReactMarkdown>
+            {summary}
+          </ReactMarkdown>
         </div>
       ) : extractedText ? (
         <pre 

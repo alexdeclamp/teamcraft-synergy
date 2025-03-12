@@ -37,7 +37,7 @@ serve(async (req) => {
       throw new Error('No API key available for the selected model');
     }
 
-    // Format summary text - ensure paragraphs have proper spacing
+    // Format summary text - ensure it has proper markdown formatting
     summary = formatSummaryText(summary);
 
     return new Response(
@@ -65,6 +65,8 @@ serve(async (req) => {
 
 function formatSummaryText(text) {
   if (!text) return '';
+  
+  // Ensure proper markdown formatting
   
   // Ensure double line breaks between paragraphs
   text = text.replace(/\n{3,}/g, '\n\n'); // Replace 3+ newlines with just 2
@@ -106,8 +108,8 @@ async function summarizeWithClaude(text: string, maxLength: number, title?: stri
             role: 'user',
             content: `Please summarize the following ${title ? 'document titled "' + title + '"' : 'text'}. 
 
-FORMAT YOUR SUMMARY WITH STRICT ADHERENCE TO THESE FORMATTING RULES:
-1. Use clear headings with hash symbols (# for main headings, ## for subheadings)
+FORMAT YOUR SUMMARY AS CLEAN MARKDOWN WITH STRICT ADHERENCE TO THESE FORMATTING RULES:
+1. Use clear markdown headings with hash symbols (# for main headings, ## for subheadings)
 2. Always add TWO line breaks after each heading
 3. Use bullet points (•) for lists with proper indentation
 4. Ensure paragraphs have double line breaks between them
@@ -155,8 +157,8 @@ async function summarizeWithOpenAI(text: string, maxLength: number, title?: stri
             role: 'system',
             content: `You are an AI assistant that summarizes documents. Create a concise but comprehensive summary that captures the key points and main ideas.
 
-FORMAT YOUR SUMMARY WITH STRICT ADHERENCE TO THESE FORMATTING RULES:
-1. Use clear headings with hash symbols (# for main headings, ## for subheadings)
+FORMAT YOUR SUMMARY AS CLEAN MARKDOWN WITH STRICT ADHERENCE TO THESE FORMATTING RULES:
+1. Use clear markdown headings with hash symbols (# for main headings, ## for subheadings)
 2. Always add TWO line breaks after each heading
 3. Use bullet points (•) for lists with proper indentation
 4. Ensure paragraphs have double line breaks between them

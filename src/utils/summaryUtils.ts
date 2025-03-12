@@ -57,43 +57,11 @@ export async function summarizeText({
       throw new Error(errorMsg);
     }
 
-    // Format the summary to ensure consistent spacing
-    const formattedSummary = formatSummary(data.summary);
-
     toast.success(`Summary generated successfully using ${model === 'claude' ? 'Claude' : 'OpenAI'}`);
-    return formattedSummary;
+    return data.summary;
   } catch (error: any) {
     console.error('Error summarizing text:', error);
     toast.error(`Failed to summarize text: ${error.message || 'Unknown error'}`);
     throw new Error(`Failed to summarize text: ${error.message || 'Unknown error'}`);
   }
-}
-
-// Helper function to ensure consistent summary formatting
-function formatSummary(text: string): string {
-  if (!text) return '';
-  
-  // Ensure clean paragraph breaks
-  let formatted = text.replace(/\n{3,}/g, '\n\n');
-  
-  // Fix headings format (ensure # has a space after it)
-  formatted = formatted.replace(/^(#{1,6})([^\s])/gm, '$1 $2');
-  
-  // Ensure bullet points have consistent spacing
-  formatted = formatted.replace(/^[-*•]\s*/gm, '• ');
-  
-  // Ensure headers have consistent spacing
-  formatted = formatted.replace(/^(#{1,6}\s[^\n]+)(?!\n\n)/gm, '$1\n\n');
-  
-  // Ensure proper spacing after paragraphs
-  formatted = formatted.replace(/([^\n])\n([^#\s•-])/g, '$1\n\n$2');
-  
-  // Ensure consistent spacing around headings
-  formatted = formatted.replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2');
-  
-  // Fix any double spaces
-  formatted = formatted.replace(/\s{2,}/g, ' ');
-  
-  // Trim extra whitespace
-  return formatted.trim();
 }
