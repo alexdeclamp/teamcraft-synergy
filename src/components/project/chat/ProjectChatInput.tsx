@@ -2,27 +2,19 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { SendHorizontal, Loader2, Bot, Sparkles } from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { SendHorizontal, Loader2 } from 'lucide-react';
 
 interface ProjectChatInputProps {
-  onSendMessage: (message: string, model: string) => void;
+  onSendMessage: (message: string) => void;
   isLoading: boolean;
 }
 
 const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLoading }) => {
   const [input, setInput] = useState('');
-  const [selectedModel, setSelectedModel] = useState('openai');
 
   const handleSend = () => {
     if (!input.trim()) return;
-    onSendMessage(input, selectedModel);
+    onSendMessage(input);
     setInput('');
   };
 
@@ -57,32 +49,6 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLo
             )}
           </Button>
         </div>
-      </div>
-      
-      <div className="flex items-center text-sm text-muted-foreground">
-        <span className="mr-2">Using:</span>
-        <Select value={selectedModel} onValueChange={setSelectedModel}>
-          <SelectTrigger className="h-7 px-2 bg-transparent border-0 w-auto focus:ring-0 focus-visible:ring-0 focus:outline-none hover:bg-accent/20 rounded">
-            <div className="flex items-center gap-1.5">
-              {selectedModel === 'openai' ? (
-                <Sparkles className="h-3.5 w-3.5 text-blue-500" />
-              ) : (
-                <Bot className="h-3.5 w-3.5 text-purple-500" />
-              )}
-              <span className="font-medium">{selectedModel === 'openai' ? 'OpenAI (GPT-4o mini)' : 'Claude'}</span>
-            </div>
-          </SelectTrigger>
-          <SelectContent align="start" side="top" className="w-[180px]">
-            <SelectItem value="openai" className="flex items-center gap-2">
-              <Sparkles className="h-3.5 w-3.5 text-blue-500" />
-              <span>OpenAI (GPT-4o mini)</span>
-            </SelectItem>
-            <SelectItem value="claude" className="flex items-center gap-2">
-              <Bot className="h-3.5 w-3.5 text-purple-500" />
-              <span>Claude</span>
-            </SelectItem>
-          </SelectContent>
-        </Select>
       </div>
     </div>
   );

@@ -65,7 +65,7 @@ export function useProjectChat(projectId: string) {
     }
   }, [projectId]);
 
-  const sendMessage = async (messageContent: string, model: string = 'openai') => {
+  const sendMessage = async (messageContent: string) => {
     if (!messageContent.trim() || !user) return;
 
     // Add user message to the list
@@ -83,7 +83,7 @@ export function useProjectChat(projectId: string) {
           userId: user.id,
           description: state.projectData.description,
           aiPersona: state.projectData.aiPersona,
-          model: model
+          model: 'openai'
         }
       });
 
