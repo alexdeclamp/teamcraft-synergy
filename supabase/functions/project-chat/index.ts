@@ -20,6 +20,8 @@ serve(async (req) => {
   try {
     const { projectId, message, userId, description, aiPersona } = await req.json();
     
+    console.log(`Processing chat request for project: ${projectId}`);
+    
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
@@ -39,6 +41,21 @@ serve(async (req) => {
       console.error('Error inserting API call record:', error);
     }
     
+    // Verify project exists and get the latest data
+    const { data: projectData, error: projectError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .single();
+    
+    if (projectError) {
+      console.error('Error fetching project data:', projectError);
+      return new Response(
+        JSON.stringify({ error: 'Project not found or access denied' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     // Fetch project context
     const { data: notes } = await supabase
       .from('project_notes')
@@ -50,7 +67,7 @@ serve(async (req) => {
     const { data: imageSummaries } = await supabase
       .from('image_summaries')
       .select('summary, is_favorite, is_important, is_archived')
-      .eq('user_id', userId);
+      .eq('project_id', projectId);
     
     const { data: documents } = await supabase
       .from('project_documents')
@@ -91,8 +108,11 @@ serve(async (req) => {
 
     // Combine project context
     const projectContext = `
+    Project Title:
+    ${projectData.title || 'No project title available.'}
+    
     Project Description:
-    ${description || 'No project description available.'}
+    ${projectData.description || 'No project description available.'}
     
     Project Notes:
     ${notes?.map(note => {
@@ -137,8 +157,12 @@ serve(async (req) => {
       return `Update by ${update.user_name} on ${new Date(update.created_at).toLocaleDateString()}${metadataStr}: ${update.content}`;
     }).join('\n') || 'No recent updates.'}`;
 
+    console.log(`Project context generated for: ${projectData.title}`);
+
     // Construct system message
     const systemMessage = `You are a Project Management Officer (PMO) assistant who helps discuss and analyze projects. 
+    You are currently working on the project: "${projectData.title}".
+    
     Use the following context about the project's notes, images, documents and updates to inform your responses:
     
     ${projectContext}
@@ -149,9 +173,11 @@ serve(async (req) => {
     3. Be aware of ARCHIVED items but don't focus on them unless explicitly asked
     4. Provide actionable insights and suggestions
     5. Stay focused on project management best practices
-    6. Be concise but informative`;
+    6. Be concise but informative
+    7. ONLY discuss the current project, do not mention other projects like "Hotel booking funnel optimization" unless it's actually this project`;
 
     // Use OpenAI API
+    console.log('Selected model: openai');
     const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {

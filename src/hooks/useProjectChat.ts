@@ -27,12 +27,13 @@ export function useProjectChat(projectId: string) {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // Effect to fetch project data when projectId changes
   useEffect(() => {
     const fetchProjectData = async () => {
       try {
         const { data, error } = await supabase
           .from('projects')
-          .select('description, ai_persona')
+          .select('description, ai_persona, title')
           .eq('id', projectId)
           .single();
 
@@ -45,12 +46,20 @@ export function useProjectChat(projectId: string) {
             aiPersona: data.ai_persona
           }
         }));
+        
+        console.log(`Loaded project data for: ${data.title} (${projectId})`);
       } catch (error) {
         console.error('Error fetching project data:', error);
       }
     };
 
     if (projectId) {
+      // Reset messages when switching projects
+      setState(prev => ({
+        ...prev,
+        messages: []
+      }));
+      
       fetchProjectData();
     }
   }, [projectId]);
