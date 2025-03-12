@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { X, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -77,16 +76,14 @@ const ProjectChatFullscreen: React.FC<ProjectChatFullscreenProps> = ({
         </ScrollArea>
         
         <div className="p-6 border-t bg-white shadow-sm">
-          {messages.length > 0 && (
-            <div className="mb-5">
-              <div className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Suggested questions</div>
-              <ProjectChatSuggestions 
-                questions={predefinedQuestions} 
-                onSelectQuestion={handlePredefinedQuestion} 
-                compact 
-              />
-            </div>
-          )}
+          <div className="mb-5">
+            <div className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Suggested questions</div>
+            <ProjectChatSuggestions 
+              questions={predefinedQuestions} 
+              onSelectQuestion={handlePredefinedQuestion} 
+              compact 
+            />
+          </div>
           <div className="max-w-3xl mx-auto">
             <ProjectChatInput onSendMessage={sendMessage} isLoading={isLoading} />
           </div>
