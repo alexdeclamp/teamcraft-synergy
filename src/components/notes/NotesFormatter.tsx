@@ -25,13 +25,7 @@ export const formatNoteContent = (text: string) => {
       return <div key={`space-${index}`} className="h-4"></div>;
     }
     
-    // Process text formatting (bold, italic, underline)
-    let formattedLine = line
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/__(.*?)__/g, '<u>$1</u>');
-    
-    // Handle headings
+    // Check if the line is a heading before applying other formatting
     if (line.trim().match(/^#{1,6}\s/)) {
       const level = line.trim().match(/^#+/)[0].length;
       let fontSize;
@@ -44,17 +38,31 @@ export const formatNoteContent = (text: string) => {
         default: fontSize = "1.1rem";
       }
       
-      const headingContent = line.replace(/^#+\s*/, '').trim();
+      // Get the heading content by removing the markdown heading syntax completely
+      // Use a more precise regex to capture the entire heading text
+      const headingContent = line.replace(/^#{1,6}\s+/, '');
+      
+      // Process text formatting within the heading
+      const formattedHeadingContent = headingContent
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/__(.*?)__/g, '<u>$1</u>');
       
       return (
         <div 
           key={`heading-${index}`} 
           className={className}
           style={{fontSize}}
-          dangerouslySetInnerHTML={{__html: headingContent}}
+          dangerouslySetInnerHTML={{__html: formattedHeadingContent}}
         />
       );
     }
+    
+    // Process text formatting (bold, italic, underline)
+    let formattedLine = line
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/__(.*?)__/g, '<u>$1</u>');
     
     // Handle bullet points (all types of list markers)
     if (line.trim().match(/^[•*-]\s/)) {
