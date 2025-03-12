@@ -38,9 +38,12 @@ export const formatNoteContent = (text: string) => {
         default: fontSize = "1.1rem";
       }
       
-      // Extract the heading content with a more precise approach
-      // Make sure to capture ALL characters including the last one
-      const headingText = line.substring(line.indexOf(' ') + 1);
+      // New approach: Use string slicing to ensure we capture every character
+      // Get the index of the first space after the # symbols and add 1 to get to the first character of the heading text
+      const startIndex = line.indexOf(' ') + 1;
+      
+      // Get the entire rest of the line without trimming, to preserve all characters
+      const headingText = line.slice(startIndex);
       
       // Process text formatting within the heading
       const formattedHeadingContent = headingText
