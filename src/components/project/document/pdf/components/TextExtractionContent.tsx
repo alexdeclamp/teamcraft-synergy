@@ -50,6 +50,18 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
     return formatted.trim();
   };
 
+  const getSelectedText = () => {
+    if (textContainerRef.current) {
+      const selection = window.getSelection();
+      if (selection && selection.toString().length > 0) {
+        let selectedText = selection.toString();
+        // Format as a blockquote for note creation
+        return `> ${selectedText.replace(/\n/g, '\n> ')}`;
+      }
+    }
+    return '';
+  };
+
   if (isExtracting) {
     return (
       <div className="flex flex-col items-center justify-center py-8">

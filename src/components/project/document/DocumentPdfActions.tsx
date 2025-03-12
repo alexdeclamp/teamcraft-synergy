@@ -94,6 +94,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
         summary={summary}
         showSummary={showSummary}
         toggleTextView={toggleTextView}
+        projectId={projectId}
       />
     </>
   );

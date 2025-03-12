@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { extractPdfText, getPdfInfo } from '@/utils/pdfUtils';
 import { summarizeText, SummaryModel } from '@/utils/summaryUtils';
@@ -22,6 +22,7 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [summary, setSummary] = useState('');
   const [showSummary, setShowSummary] = useState(false);
+  const textSelectionRef = useRef('');
 
   const verifyPdfUrl = async (url: string): Promise<boolean> => {
     try {
@@ -179,6 +180,7 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
     handleExtractText,
     handleSummarizeText,
     toggleTextView,
-    handleRetryExtraction
+    handleRetryExtraction,
+    projectId
   };
 };
