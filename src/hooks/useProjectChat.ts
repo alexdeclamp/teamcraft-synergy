@@ -18,16 +18,6 @@ interface ProjectChatState {
   };
 }
 
-const PREDEFINED_QUESTIONS = [
-  "What's the latest update on this project?",
-  "Summarize the project notes",
-  "What are the key documents in this project?",
-  "Show me recent activity",
-  "What's the project status?",
-  "What are the important items in this project?",
-  "Show me my favorite documents",
-];
-
 export function useProjectChat(projectId: string) {
   const [state, setState] = useState<ProjectChatState>({
     messages: [],
@@ -82,8 +72,7 @@ export function useProjectChat(projectId: string) {
           message: messageContent,
           userId: user.id,
           description: state.projectData.description,
-          aiPersona: state.projectData.aiPersona,
-          model: 'openai'
+          aiPersona: state.projectData.aiPersona
         }
       });
 
@@ -105,10 +94,21 @@ export function useProjectChat(projectId: string) {
     }
   };
 
+  // Predefined questions that are relevant for any project
+  const predefinedQuestions = [
+    "What's the latest update on this project?",
+    "Summarize the project notes",
+    "What are the key documents in this project?",
+    "Show me recent activity",
+    "What's the project status?",
+    "What are the important items in this project?",
+    "Show me my favorite documents"
+  ];
+
   return {
     messages: state.messages,
     isLoading: state.isLoading,
-    predefinedQuestions: PREDEFINED_QUESTIONS,
+    predefinedQuestions,
     sendMessage
   };
 }

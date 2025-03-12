@@ -4,7 +4,6 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -19,29 +18,28 @@ serve(async (req) => {
   }
 
   try {
-    const { projectId, message, userId, description, aiPersona, model = 'openai' } = await req.json();
+    const { projectId, message, userId, description, aiPersona } = await req.json();
     
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
-    // Log an API call before making the request
-    const apiType = model === 'claude' ? 'claude_api_call' : 'openai_api_call';
+    // Log the API call
     try {
       const { error: logError } = await supabase
         .from('user_usage_stats')
         .insert({
           user_id: userId,
-          action_type: apiType,
+          action_type: 'openai_api_call',
         });
       
       if (logError) {
-        console.error(`Error logging ${apiType}:`, logError);
+        console.error('Error logging API call:', logError);
       }
     } catch (error) {
-      console.error(`Error inserting ${apiType} record:`, error);
+      console.error('Error inserting API call record:', error);
     }
     
-    // Fetch project notes with favorite and important flags
+    // Fetch project context
     const { data: notes } = await supabase
       .from('project_notes')
       .select('content, title, tags, is_favorite, is_important, is_archived')
@@ -49,39 +47,32 @@ serve(async (req) => {
       .order('is_favorite', { ascending: false })
       .order('is_important', { ascending: false });
 
-    // Fetch image summaries with metadata
     const { data: imageSummaries } = await supabase
       .from('image_summaries')
       .select('summary, is_favorite, is_important, is_archived')
       .eq('user_id', userId);
     
-    // Fetch project documents with metadata
     const { data: documents } = await supabase
       .from('project_documents')
       .select('file_name, content_text, is_favorite, is_important, is_archived')
       .eq('project_id', projectId);
     
-    // Fetch project updates
     const { data: updatesData } = await supabase
       .from('project_updates')
       .select('content, created_at, user_id, is_important, is_archived')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false })
       .limit(10);
-    
+
     // Process updates if they exist
     let updatesWithUserNames = [];
     if (updatesData && updatesData.length > 0) {
-      // Extract user IDs
       const userIds = [...new Set(updatesData.map(update => update.user_id))];
-      
-      // Fetch profiles for these users
       const { data: profilesData } = await supabase
         .from('profiles')
         .select('id, full_name')
         .in('id', userIds);
       
-      // Create a user map
       const userMap = {};
       if (profilesData) {
         profilesData.forEach(profile => {
@@ -89,7 +80,6 @@ serve(async (req) => {
         });
       }
       
-      // Join the data manually
       updatesWithUserNames = updatesData.map(update => ({
         content: update.content,
         created_at: update.created_at,
@@ -99,7 +89,7 @@ serve(async (req) => {
       }));
     }
 
-    // Combine all project context
+    // Combine project context
     const projectContext = `
     Project Description:
     ${description || 'No project description available.'}
@@ -145,14 +135,10 @@ serve(async (req) => {
       
       const metadataStr = metadata.length > 0 ? ` [${metadata.join(', ')}]` : '';
       return `Update by ${update.user_name} on ${new Date(update.created_at).toLocaleDateString()}${metadataStr}: ${update.content}`;
-    }).join('\n') || 'No recent updates.'}
-    `;
+    }).join('\n') || 'No recent updates.'}`;
 
-    console.log('Project context assembled from multiple sources');
-    console.log('Selected model:', model);
-    
-    // Construct the system message with the AI persona
-    let systemMessage = `You are a Project Management Officer (PMO) assistant who helps discuss and analyze projects. 
+    // Construct system message
+    const systemMessage = `You are a Project Management Officer (PMO) assistant who helps discuss and analyze projects. 
     Use the following context about the project's notes, images, documents and updates to inform your responses:
     
     ${projectContext}
@@ -164,79 +150,36 @@ serve(async (req) => {
     4. Provide actionable insights and suggestions
     5. Stay focused on project management best practices
     6. Be concise but informative`;
-    
-    // Add the AI persona if provided
-    if (aiPersona) {
-      console.log('Using custom AI persona:', aiPersona.substring(0, 100) + (aiPersona.length > 100 ? '...' : ''));
-      systemMessage += `\n\nAdditional persona instructions: ${aiPersona}`;
+
+    // Use OpenAI API
+    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: systemMessage
+          },
+          {
+            role: 'user',
+            content: message
+          }
+        ],
+        temperature: 0.7,
+      }),
+    });
+
+    if (!openaiResponse.ok) {
+      throw new Error(`OpenAI API error: ${openaiResponse.statusText}`);
     }
-    
-    let aiResponse;
-    
-    if (model === 'claude' && anthropicApiKey) {
-      // Use Claude API
-      console.log('Using Claude API');
-      const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': anthropicApiKey,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: "claude-3-7-sonnet-20250219",
-          max_tokens: 1500,
-          system: systemMessage,
-          messages: [
-            {
-              role: "user",
-              content: message
-            }
-          ]
-        })
-      });
-      
-      if (!claudeResponse.ok) {
-        throw new Error(`Claude API error: ${claudeResponse.statusText}`);
-      }
-      
-      const claudeData = await claudeResponse.json();
-      aiResponse = claudeData.content[0].text;
-      
-    } else {
-      // Default to OpenAI API
-      console.log('Using OpenAI API');
-      const openaiMessages = [
-        {
-          role: 'system',
-          content: systemMessage
-        },
-        {
-          role: 'user',
-          content: message
-        }
-      ];
 
-      const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: openaiMessages,
-          temperature: 0.7,
-        }),
-      });
-
-      if (!openaiResponse.ok) {
-        throw new Error(`OpenAI API error: ${openaiResponse.statusText}`);
-      }
-
-      const openaiData = await openaiResponse.json();
-      aiResponse = openaiData.choices[0].message.content;
-    }
+    const openaiData = await openaiResponse.json();
+    const aiResponse = openaiData.choices[0].message.content;
 
     return new Response(JSON.stringify({ response: aiResponse }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
