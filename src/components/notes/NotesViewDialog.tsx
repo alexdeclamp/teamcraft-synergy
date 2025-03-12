@@ -64,7 +64,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
               )}
             </div>
           </div>
-          <DialogDescription className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
             <div className="flex items-center">
               <User className="h-3 w-3 mr-1 flex-shrink-0" />
               <div className="flex items-center">
@@ -84,7 +84,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
               <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
               <span>{formatDate(note.updated_at)}</span>
             </div>
-          </DialogDescription>
+          </div>
         </DialogHeader>
         
         {note.tags && note.tags.length > 0 && (

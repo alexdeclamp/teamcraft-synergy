@@ -44,12 +44,14 @@ export const formatNoteContent = (text: string) => {
         default: fontSize = "1.1rem";
       }
       
+      const headingContent = line.replace(/^#+\s*/, '').trim();
+      
       return (
         <div 
           key={`heading-${index}`} 
           className={className}
           style={{fontSize}}
-          dangerouslySetInnerHTML={{__html: formattedLine.replace(/^#+\s*/, '')}}
+          dangerouslySetInnerHTML={{__html: headingContent}}
         />
       );
     }
