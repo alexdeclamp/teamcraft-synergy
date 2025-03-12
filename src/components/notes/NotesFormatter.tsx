@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const formatNoteContent = (text: string) => {
@@ -8,10 +7,10 @@ export const formatNoteContent = (text: string) => {
   text = text
     // Ensure consistent line breaks
     .replace(/\r\n/g, '\n')
-    // Fix inconsistent spacing around headings
+    // Fix inconsistent spacing around headings but preserve the heading line intact
     .replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
-    // Ensure proper spacing after headings
-    .replace(/^(#{1,6}\s[^\n]+)(?!\n\n)/gm, '$1\n\n')
+    // Ensure proper spacing after headings without affecting the heading content
+    .replace(/(^#{1,6}\s.*?)(\n(?!\n))/gm, '$1\n')
     // Ensure proper spacing between paragraphs that aren't headings or lists
     .replace(/([^\n])\n([^#\s•*-])/g, '$1\n\n$2')
     // Normalize bullet points
@@ -25,9 +24,9 @@ export const formatNoteContent = (text: string) => {
       return <div key={`space-${index}`} className="h-4"></div>;
     }
     
-    // Check if the line is a heading before applying other formatting
-    if (line.trim().match(/^#{1,6}\s/)) {
-      const level = line.trim().match(/^#+/)[0].length;
+    // Check if the line is a heading and process it as a complete unit
+    if (line.match(/^#{1,6}\s/)) {
+      const level = line.match(/^#+/)[0].length;
       let fontSize;
       let className = "font-bold mb-3 mt-5 text-slate-800";
       
@@ -38,15 +37,11 @@ export const formatNoteContent = (text: string) => {
         default: fontSize = "1.1rem";
       }
       
-      // New approach: Use string slicing to ensure we capture every character
-      // Get the index of the first space after the # symbols and add 1 to get to the first character of the heading text
-      const startIndex = line.indexOf(' ') + 1;
-      
-      // Get the entire rest of the line without trimming, to preserve all characters
-      const headingText = line.slice(startIndex);
+      // Get everything after the #s and initial space as a single unit
+      const headingContent = line.replace(/^#{1,6}\s/, '');
       
       // Process text formatting within the heading
-      const formattedHeadingContent = headingText
+      const formattedHeadingContent = headingContent
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/__(.*?)__/g, '<u>$1</u>');
