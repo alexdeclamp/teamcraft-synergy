@@ -38,15 +38,21 @@ export const formatNoteContent = (text: string) => {
         default: fontSize = "1.1rem";
       }
       
-      // Get the heading content by removing the markdown heading syntax completely
-      // Use a more precise regex to capture the entire heading text
-      const headingContent = line.replace(/^#{1,6}\s+/, '');
+      // Extract heading content with a more accurate regex
+      // The issue might be that we're trimming the content, causing characters to be lost
+      // Use a careful replacement that preserves ALL content after the heading markers
+      const fullLine = line;
+      const headingContent = fullLine.replace(/^#{1,6}\s+/, '');
       
       // Process text formatting within the heading
       const formattedHeadingContent = headingContent
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/__(.*?)__/g, '<u>$1</u>');
+      
+      console.log("Original heading line:", fullLine);
+      console.log("Extracted heading content:", headingContent);
+      console.log("Formatted heading content:", formattedHeadingContent);
       
       return (
         <div 
