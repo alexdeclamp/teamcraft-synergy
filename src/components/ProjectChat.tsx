@@ -33,9 +33,9 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
     }
   }, [messages, disableAutoScroll]);
 
-  // Handler for predefined questions that defaults to openai
+  // Handler for predefined questions
   const handlePredefinedQuestion = (question: string) => {
-    sendMessage(question, 'openai');
+    sendMessage(question);
   };
 
   return (

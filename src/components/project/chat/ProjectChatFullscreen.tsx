@@ -30,9 +30,9 @@ const ProjectChatFullscreen: React.FC<ProjectChatFullscreenProps> = ({
     }
   }, [messages]);
 
-  // Handler for predefined questions that defaults to openai
+  // Handler for predefined questions
   const handlePredefinedQuestion = (question: string) => {
-    sendMessage(question, 'openai');
+    sendMessage(question);
   };
 
   return (
