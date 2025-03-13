@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, MessageSquare, Users } from 'lucide-react';
+import { Sparkles, ArrowRight, MessageSquare, Users, Map } from 'lucide-react';
 import { InvitationBanner } from '@/components/ui/invitation-banner';
 
 const Index = () => {
@@ -52,6 +52,15 @@ const Index = () => {
           </div>
         </div>
       </div>
+      
+      <footer className="mt-auto py-4 border-t">
+        <div className="max-w-4xl mx-auto px-6 flex justify-center">
+          <Link to="/sitemap" className="text-sm text-muted-foreground flex items-center hover:text-foreground transition-colors">
+            <Map className="mr-1 h-3.5 w-3.5" />
+            Sitemap
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }

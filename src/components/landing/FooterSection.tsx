@@ -1,43 +1,84 @@
 
 import React from 'react';
-import { Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Sparkles, Github, Twitter, Linkedin, Map } from 'lucide-react';
 
-const FooterSection: React.FC = () => {
+const FooterSection = () => {
+  // Get the current year for the copyright notice
+  const currentYear = new Date().getFullYear();
+  
   return (
-    <footer className="border-t py-12 px-4 sm:px-6 lg:px-8 bg-background">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div className="md:col-span-2">
+    <footer className="border-t border-border/40 bg-background/95 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10">
+        {/* Logo & Description */}
+        <div className="md:col-span-1">
           <div className="flex items-center space-x-2 mb-4">
-            <Sparkles className="h-6 w-6 text-primary" />
+            <Sparkles className="h-5 w-5 text-primary" />
             <span className="font-semibold text-lg tracking-tight">
               Bra<span className="text-primary">3</span>n
             </span>
           </div>
-          <p className="text-muted-foreground text-sm max-w-md">
-            AI-powered knowledge hub for your projects. Organize, search, and retrieve insights instantly.
+          <p className="text-sm text-muted-foreground max-w-xs">
+            Your second brain powered by AI. Organize thoughts, boost productivity, and collaborate effortlessly.
           </p>
         </div>
         
+        {/* Product Links */}
         <div>
           <h3 className="font-medium mb-4">Product</h3>
-          <ul className="space-y-3 text-sm text-muted-foreground">
-            <li><Link to="/" className="hover:text-foreground transition-colors">Home</Link></li>
-            <li><Link to="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link></li>
+          <ul className="space-y-3">
+            <li><a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a></li>
+            <li><a href="#use-cases" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Use Cases</a></li>
+            <li><a href="#benefits" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Benefits</a></li>
+            <li><Link to="/sitemap" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center">
+              Sitemap
+              <Map className="ml-1 h-3.5 w-3.5" />
+            </Link></li>
           </ul>
         </div>
         
+        {/* Company Links */}
+        <div>
+          <h3 className="font-medium mb-4">Company</h3>
+          <ul className="space-y-3">
+            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">About</a></li>
+            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</a></li>
+            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Careers</a></li>
+            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a></li>
+          </ul>
+        </div>
+        
+        {/* Legal Links */}
         <div>
           <h3 className="font-medium mb-4">Legal</h3>
-          <ul className="space-y-3 text-sm text-muted-foreground">
-            <li><Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link></li>
-            <li><Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link></li>
+          <ul className="space-y-3">
+            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</a></li>
+            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy</a></li>
+            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Cookies</a></li>
+            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Licenses</a></li>
           </ul>
         </div>
       </div>
       
-      <div className="max-w-7xl mx-auto mt-12 pt-6 border-t text-center text-sm text-muted-foreground">
-        <p>© {new Date().getFullYear()} Bra3n. All rights reserved.</p>
+      <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-border/30 flex flex-col md:flex-row justify-between items-center">
+        <div className="text-sm text-muted-foreground">
+          © {currentYear} Bra3n AI. All rights reserved.
+        </div>
+        
+        <div className="flex space-x-6 mt-4 md:mt-0">
+          <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Github className="h-5 w-5" />
+            <span className="sr-only">GitHub</span>
+          </a>
+          <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Twitter className="h-5 w-5" />
+            <span className="sr-only">Twitter</span>
+          </a>
+          <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Linkedin className="h-5 w-5" />
+            <span className="sr-only">LinkedIn</span>
+          </a>
+        </div>
       </div>
     </footer>
   );
