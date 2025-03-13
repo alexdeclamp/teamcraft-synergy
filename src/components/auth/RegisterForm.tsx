@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import PrivateBetaNotice from './PrivateBetaNotice';
 
 const INVITATION_CODE = "I NEED BRA3N";
@@ -102,6 +103,13 @@ const RegisterForm = () => {
           {invitationError && (
             <p className="text-xs text-red-500">{invitationError}</p>
           )}
+          <div className="text-xs text-muted-foreground">
+            Don't have an invitation code?{" "}
+            <Link to="/waitlist" className="text-primary hover:underline">
+              Join our waitlist
+            </Link>
+            {" "}to request access.
+          </div>
         </div>
         <Button 
           type="submit" 
