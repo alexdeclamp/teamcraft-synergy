@@ -51,7 +51,9 @@ export async function handleRequest(req: Request): Promise<Response> {
     
     try {
       if (type === 'image') {
+        console.log('Processing image:', imageUrl);
         summary = await processImage(imageUrl);
+        console.log('Image processing complete, saving summary...');
         await saveImageSummary(imageUrl, projectId, userId, summary);
       } else {
         summary = await processText(content);

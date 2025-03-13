@@ -6,8 +6,13 @@ export async function processImage(imageUrl: string): Promise<string> {
   try {
     console.log('Processing image URL:', imageUrl);
     
-    // Download the image from the URL with proper error handling
-    const imageResponse = await fetch(imageUrl);
+    // Use a simpler approach for fetching the image to avoid recursion issues
+    const imageResponse = await fetch(imageUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'image/*',
+      },
+    });
     
     if (!imageResponse.ok) {
       throw new Error(`Failed to fetch image: ${imageResponse.status} ${imageResponse.statusText}`);
@@ -18,7 +23,12 @@ export async function processImage(imageUrl: string): Promise<string> {
     
     // Convert the blob to base64
     const imageArrayBuffer = await imageBlob.arrayBuffer();
-    const base64Image = btoa(String.fromCharCode(...new Uint8Array(imageArrayBuffer)));
+    const bytes = new Uint8Array(imageArrayBuffer);
+    let binaryString = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binaryString += String.fromCharCode(bytes[i]);
+    }
+    const base64Image = btoa(binaryString);
     
     // Determine content type
     const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
@@ -67,7 +77,7 @@ async function analyzeImageWithOpenAI(dataUrl: string): Promise<string> {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4-vision-preview',
+        model: 'gpt-4o',
         messages: messages,
         max_tokens: 500,
       }),
