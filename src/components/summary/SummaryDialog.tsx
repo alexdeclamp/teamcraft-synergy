@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -26,6 +25,7 @@ interface SummaryDialogProps {
   sourceType?: 'pdf' | 'image';
   onNoteSaved?: () => void;
   error?: string | null;
+  onRetry?: () => void;
 }
 
 const SummaryDialog: React.FC<SummaryDialogProps> = ({
@@ -40,7 +40,8 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   sourceUrl,
   sourceType = 'pdf',
   onNoteSaved,
-  error
+  error,
+  onRetry
 }) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
@@ -54,7 +55,6 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     }
   }, [isOpen, hasSavedVersion]);
 
-  // Debug logging to identify issues
   useEffect(() => {
     console.log('SummaryDialog props:', { 
       title, 
@@ -116,7 +116,6 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
         ? `Summary: ${imageName}` 
         : "Document Summary";
       
-      // Create a proper source_document object
       const sourceDocument = sourceUrl && imageName ? {
         type: sourceType,
         url: sourceUrl,
@@ -143,7 +142,6 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
       toast.success('Summary saved as a note successfully');
       setLocalHasSavedVersion(true);
       
-      // Notify parent that a note was saved if callback exists
       if (onNoteSaved) {
         onNoteSaved();
       }
@@ -201,6 +199,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           onDownload={handleDownload}
           onCreateNote={handleCreateNote}
           error={error}
+          onRetry={onRetry}
         />
       </DialogContent>
     </Dialog>
