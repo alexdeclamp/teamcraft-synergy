@@ -28,6 +28,7 @@ const HomepageChatDialog: React.FC<HomepageChatDialogProps> = ({ isOpen, onClose
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showSuggestions, setShowSuggestions] = useState(true); // Always show suggestions initially
 
   // Predefined questions relevant to Bra3n
   const suggestedQuestions = [
@@ -52,6 +53,7 @@ const HomepageChatDialog: React.FC<HomepageChatDialogProps> = ({ isOpen, onClose
     // Add user message to the chat
     setMessages(prev => [...prev, { role: 'user', content: input }]);
     setIsLoading(true);
+    setShowSuggestions(false); // Hide suggestions after user sends a message
     
     try {
       const { data, error } = await supabase.functions.invoke('homepage-chat', {
@@ -85,6 +87,7 @@ const HomepageChatDialog: React.FC<HomepageChatDialogProps> = ({ isOpen, onClose
   const handleSuggestedQuestion = (question: string) => {
     setInput(question);
     setMessages(prev => [...prev, { role: 'user', content: question }]);
+    setShowSuggestions(false); // Hide suggestions after clicking one
     
     // We need to use the question in the next cycle to ensure the UI updates properly
     setTimeout(() => {
@@ -180,7 +183,7 @@ const HomepageChatDialog: React.FC<HomepageChatDialogProps> = ({ isOpen, onClose
         </ScrollArea>
         
         <div className="p-4 border-t bg-white shadow-sm">
-          {messages.length <= 2 && (
+          {showSuggestions && (
             <div className="mb-4">
               <div className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Suggested questions</div>
               <div className="flex flex-wrap gap-2">

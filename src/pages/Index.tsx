@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight } from 'lucide-react';
@@ -9,6 +9,16 @@ import HomepageChatDialog from '@/components/landing/HomepageChatDialog';
 const Index = () => {
   const navigate = useNavigate();
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [showChatButton, setShowChatButton] = useState(false);
+
+  // Show chat button after a short delay for better UX
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowChatButton(true);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -38,10 +48,12 @@ const Index = () => {
         </div>
       </div>
       
-      <HomepageChatButton 
-        onClick={() => setIsChatOpen(true)} 
-        className="shadow-xl" 
-      />
+      {showChatButton && (
+        <HomepageChatButton 
+          onClick={() => setIsChatOpen(true)} 
+          className="shadow-xl" 
+        />
+      )}
       
       <HomepageChatDialog 
         isOpen={isChatOpen}
