@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.cdnfonts.com/css/sf-pro-display');
 @import url('https://fonts.cdnfonts.com/css/sf-mono');
@@ -8,7 +9,7 @@
 
 @layer base {
   :root {
-    /* manus.im inspired color palette */
+    /* Blue-based color palette (previously purple) */
     --background: 0 0% 100%; /* White */
     --foreground: 220 9% 15%; /* Dark text color - closer to manus.im */
 
@@ -18,8 +19,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 9% 15%;
 
-    /* manus.im primary color - purple */
-    --primary: 250 87% 56%; 
+    /* Blue primary color (was purple) */
+    --primary: 210 100% 50%; 
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 14% 96%;
@@ -28,28 +29,28 @@
     --muted: 220 14% 96%;
     --muted-foreground: 220 9% 45%;
 
-    --accent: 250 87% 97%;
-    --accent-foreground: 250 87% 56%;
+    --accent: 210 100% 97%;
+    --accent-foreground: 210 100% 50%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    /* Light subtle borders like manus.im */
+    /* Light subtle borders */
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 250 87% 56%;
+    --ring: 210 100% 50%;
 
-    /* Rounded corners matching manus.im more closely */
+    /* Rounded corners */
     --radius: 6px;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 220 9% 15%;
-    --sidebar-primary: 250 87% 56%;
+    --sidebar-primary: 210 100% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 87% 97%;
-    --sidebar-accent-foreground: 250 87% 56%;
+    --sidebar-accent: 210 100% 97%;
+    --sidebar-accent-foreground: 210 100% 50%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 250 87% 56%;
+    --sidebar-ring: 210 100% 50%;
   }
 
   * {
