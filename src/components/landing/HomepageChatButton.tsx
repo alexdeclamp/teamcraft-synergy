@@ -14,19 +14,23 @@ const HomepageChatButton: React.FC<HomepageChatButtonProps> = ({
   className
 }) => {
   return (
-    <div className="fixed bottom-4 right-4 z-[99999]" style={{ pointerEvents: 'auto' }}>
+    <div 
+      className="fixed bottom-6 right-6 z-[999999]" 
+      style={{ 
+        pointerEvents: 'auto',
+      }}
+    >
       <Button
         onClick={onClick}
-        variant="default"
         className={cn(
-          "h-16 w-16 rounded-full shadow-lg bg-primary hover:bg-primary/90",
-          "animate-pulse border-4 border-white",
+          "h-20 w-20 rounded-full shadow-2xl bg-primary hover:bg-primary/90",
+          "border-4 border-white animate-bounce",
           "flex items-center justify-center",
           className
         )}
         aria-label="Chat with Bra3n Assistant"
       >
-        <MessageSquare className="h-8 w-8 text-white" />
+        <MessageSquare className="h-10 w-10 text-white" />
       </Button>
     </div>
   );

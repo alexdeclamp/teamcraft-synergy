@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight } from 'lucide-react';
@@ -11,7 +11,7 @@ const Index = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background" style={{ position: 'relative' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
       <div className="max-w-3xl mx-auto px-6 text-center">
         <div className="flex items-center justify-center mb-6">
           <Sparkles className="h-12 w-12 sm:h-14 sm:w-14 text-primary" />
@@ -38,11 +38,22 @@ const Index = () => {
         </div>
       </div>
       
-      {/* Always render the chat button */}
-      <HomepageChatButton 
-        onClick={() => setIsChatOpen(true)} 
-        className="shadow-2xl" 
-      />
+      {/* Directly embed the chat button HTML instead of using the component */}
+      <div 
+        className="fixed bottom-6 right-6 z-[999999]" 
+        style={{ 
+          pointerEvents: 'auto',
+        }}
+      >
+        <Button
+          onClick={() => setIsChatOpen(true)}
+          className="h-20 w-20 rounded-full shadow-2xl bg-primary hover:bg-primary/90 
+                    border-4 border-white animate-bounce flex items-center justify-center"
+          aria-label="Chat with Bra3n Assistant"
+        >
+          <span className="text-white text-2xl">💬</span>
+        </Button>
+      </div>
       
       <HomepageChatDialog 
         isOpen={isChatOpen}
