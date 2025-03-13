@@ -17,6 +17,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const params = useParams<{ projectId?: string; id?: string }>();
+  
   // Use projectId from params or from id (support both formats)
   const projectId = params.projectId || params.id;
 
