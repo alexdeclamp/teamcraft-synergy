@@ -33,7 +33,6 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
     projectId
   });
   
-  // Close dialog when navigation happens
   useEffect(() => {
     return () => {
       if (isDialogOpen) {
@@ -42,8 +41,6 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
     };
   }, [location.pathname, isDialogOpen, setIsDialogOpen]);
 
-  // For the note summary button, we want to keep the existing icon button style
-  // rather than using the standard summary button UI
   return (
     <>
       <Button 
