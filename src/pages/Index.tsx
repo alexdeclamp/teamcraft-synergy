@@ -1,11 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight } from 'lucide-react';
+import HomepageChatButton from '@/components/landing/HomepageChatButton';
+import HomepageChatDialog from '@/components/landing/HomepageChatDialog';
 
 const Index = () => {
   const navigate = useNavigate();
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -34,6 +37,16 @@ const Index = () => {
           </Button>
         </div>
       </div>
+      
+      <HomepageChatButton 
+        onClick={() => setIsChatOpen(true)} 
+        className="shadow-xl" 
+      />
+      
+      <HomepageChatDialog 
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
     </div>
   );
 };
