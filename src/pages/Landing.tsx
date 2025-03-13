@@ -14,8 +14,10 @@ import { InvitationBanner } from '@/components/ui/invitation-banner';
 const Landing = () => {
   return (
     <div className="min-h-screen bg-background overflow-hidden">
-      <InvitationBanner />
-      <LandingNavbar />
+      <div className="flex flex-col">
+        <InvitationBanner />
+        <LandingNavbar />
+      </div>
       <HeroSection />
       <TimelineSection />
       <KeyFeaturesSection />

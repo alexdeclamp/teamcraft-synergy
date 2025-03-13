@@ -11,7 +11,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <InvitationBanner />
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex items-center justify-center pt-20 flex-1">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight mb-4">
             Let's build something new.
@@ -54,6 +54,6 @@ const Index = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Index;
