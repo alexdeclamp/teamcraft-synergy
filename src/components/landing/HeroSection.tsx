@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,9 @@ const HeroSection: React.FC = () => {
           Bra<span className="text-primary">3</span>n
         </h1>
         <p className="text-2xl sm:text-3xl font-medium text-foreground mb-4">Stop Searching. Start Knowing. Take Actions.</p>
-        <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto mb-8">Bra3n organizes your notes, PDFs, and images into an AI-powered knowledge hub, where you can retrieve insights instantly.</p>
+        <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto mb-8">
+          Bra3n organizes your notes, PDFs, and documents into an AI-powered knowledge hub, where you can retrieve insights instantly.
+        </p>
         <Button onClick={() => navigate('/auth?tab=register')} size="lg" className="rounded-full px-8 text-base shadow-sm">
           Try Bra3n
           <ArrowRight className="ml-1 h-4 w-4" />
