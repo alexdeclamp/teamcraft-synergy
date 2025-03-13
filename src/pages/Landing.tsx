@@ -9,10 +9,12 @@ import TestimonialsSection from '@/components/landing/TestimonialsSection';
 import KeyFeaturesSection from '@/components/landing/KeyFeaturesSection';
 import CtaSection from '@/components/landing/CtaSection';
 import FooterSection from '@/components/landing/FooterSection';
+import { InvitationBanner } from '@/components/ui/invitation-banner';
 
 const Landing = () => {
   return (
     <div className="min-h-screen bg-background overflow-hidden">
+      <InvitationBanner />
       <LandingNavbar />
       <HeroSection />
       <TimelineSection />
