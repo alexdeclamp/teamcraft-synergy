@@ -408,6 +408,45 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          invite_code: string | null
+          processed_at: string | null
+          reason: string
+          receive_updates: boolean
+          status: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          invite_code?: string | null
+          processed_at?: string | null
+          reason: string
+          receive_updates?: boolean
+          status?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          invite_code?: string | null
+          processed_at?: string | null
+          reason?: string
+          receive_updates?: boolean
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
