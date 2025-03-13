@@ -32,9 +32,9 @@ const Index = () => {
             
             <Button 
               onClick={() => navigate('/auth?tab=register')}
-              variant="cta"
+              variant="outline" 
               size="lg"
-              className="rounded-md px-8 text-base w-full sm:w-auto"
+              className="rounded-md px-8 text-base w-full sm:w-auto border-primary/20 bg-white shadow-[0_0_15px_rgba(155,135,245,0.2)] hover:bg-white/90"
             >
               <Users className="mr-2 h-4 w-4" />
               Collaborate on a Pro Trial
