@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from 'sonner';
@@ -52,33 +53,83 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
   const noteCreation = useNoteCreationFromText({ projectId, fileName, pdfUrl });
   
   const handleOpenPdfDirectly = () => {
-    window.open(pdfUrl, '_blank');
+    try {
+      window.open(pdfUrl, '_blank');
+      // Fallback if window.open is blocked
+      if (!window.open) {
+        toast.info("Opening PDF in a new tab was blocked by your browser", {
+          description: "You may need to allow popups for this site.",
+          duration: 5000
+        });
+        
+        // Create a clickable link as an alternative
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.click();
+      }
+    } catch (error) {
+      console.error('Error opening PDF directly:', error);
+      toast.error("Could not open the PDF directly", {
+        description: "Try downloading the PDF first, then opening it with your PDF viewer.",
+        action: {
+          label: "Copy URL",
+          onClick: () => {
+            navigator.clipboard.writeText(pdfUrl);
+            toast.success("PDF URL copied to clipboard");
+          }
+        }
+      });
+    }
   };
   
   const handleDownloadText = () => {
-    if (!extractedText) return;
+    if (!extractedText && !summary) {
+      toast.error("No content available to download");
+      return;
+    }
     
-    const content = showSummary && summary ? summary : extractedText;
-    const fileNameSuffix = showSummary && summary ? '-summary' : '-extracted-text';
-    
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${fileName.replace('.pdf', '')}${fileNameSuffix}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    // Show a success toast
-    const successMessage = `${showSummary ? 'Summary' : 'Text'} downloaded successfully`;
-    toast.success(successMessage);
+    try {
+      const content = showSummary && summary ? summary : extractedText;
+      const fileNameSuffix = showSummary && summary ? '-summary' : '-extracted-text';
+      
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName.replace('.pdf', '')}${fileNameSuffix}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      // Show a success toast
+      const successMessage = `${showSummary ? 'Summary' : 'Text'} downloaded successfully`;
+      toast.success(successMessage);
+    } catch (error) {
+      console.error('Error downloading text:', error);
+      toast.error("Failed to download text", {
+        description: "There was an error creating the download. Please try again."
+      });
+    }
   };
 
   const handleCreateNote = () => {
-    const textToUse = showSummary && summary ? summary : extractedText;
-    noteCreation.handleCreateNote(textToUse, showSummary);
+    try {
+      if (!extractedText && !summary) {
+        toast.error("Cannot create a note without content");
+        return;
+      }
+      
+      const textToUse = showSummary && summary ? summary : extractedText;
+      noteCreation.handleCreateNote(textToUse, showSummary);
+    } catch (error) {
+      console.error('Error creating note:', error);
+      toast.error("Failed to create note", {
+        description: "An unexpected error occurred. Please try again."
+      });
+    }
   };
 
   return (

@@ -22,22 +22,38 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
   const [isSummarizing, setIsSummarizing] = useState(false);
   const [summary, setSummary] = useState('');
   const [showSummary, setShowSummary] = useState(false);
-  const textSelectionRef = useRef('');
+  const extractionAttempts = useRef(0);
+  const maxExtractionAttempts = 2;
 
   const verifyPdfUrl = async (url: string): Promise<boolean> => {
     try {
       console.log('Verifying PDF URL:', url);
       
+      // Validate URL format
       try {
         new URL(url);
-      } catch (e) {
+      } catch (e: any) {
         throw new Error(`Invalid URL format: ${e.message}`);
       }
       
-      const headResponse = await fetch(url, { method: 'HEAD' });
-      
-      if (!headResponse.ok) {
-        throw new Error(`PDF URL is not accessible: ${headResponse.status} ${headResponse.statusText}`);
+      // Check if the URL is accessible with a HEAD request
+      try {
+        const headResponse = await fetch(url, { 
+          method: 'HEAD',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+          } 
+        });
+        
+        if (!headResponse.ok) {
+          throw new Error(`PDF URL is not accessible: ${headResponse.status} ${headResponse.statusText}`);
+        }
+      } catch (fetchError: any) {
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Request timed out. The server took too long to respond.');
+        }
+        throw new Error(`Failed to access PDF: ${fetchError.message}`);
       }
       
       console.log('PDF URL is valid and accessible');
@@ -58,10 +74,11 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
     setSummary('');
     setShowSummary(false);
     setShowTextModal(true);
+    extractionAttempts.current = 0;
     
     try {
-      toast.info("Extracting text from PDF...", {
-        duration: 5000,
+      const toastId = toast.loading("Extracting text from PDF...", {
+        duration: 10000,
       });
       
       console.log('PDF URL to extract:', pdfUrl);
@@ -69,42 +86,55 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
       const isUrlValid = await verifyPdfUrl(pdfUrl);
       
       if (!isUrlValid) {
+        toast.dismiss(toastId);
         throw new Error('PDF URL is not accessible. Please check the file exists and try again.');
       }
       
+      // Get PDF info
       try {
         const info = await getPdfInfo(pdfUrl);
         setPdfInfo(info);
         console.log('PDF info:', info);
         
         if (info.isEncrypted) {
-          setDiagnosisInfo('Warning: This PDF appears to be encrypted, which may limit text extraction');
+          setDiagnosisInfo('Warning: This PDF appears to be encrypted, which may limit text extraction capabilities.');
         }
-      } catch (infoError) {
+      } catch (infoError: any) {
         console.error('Failed to get PDF info:', infoError);
+        setDiagnosisInfo(`Info retrieval issue: ${infoError.message}`);
       }
       
+      // Extract text from PDF
       try {
         const result = await extractPdfText(pdfUrl);
         if (result.text && result.text.trim().length > 0) {
           setExtractedText(result.text);
           setPageCount(result.pageCount || 0);
           setTextLength(result.text.length);
+          toast.dismiss(toastId);
           toast.success(`Successfully extracted ${result.text.length.toLocaleString()} characters from ${result.pageCount || 0} pages`);
         } else {
           setExtractedText('');
-          toast.warning("No text content found in the document.");
+          toast.dismiss(toastId);
+          toast.warning("No text content found in the document. It may be an image-based PDF.", {
+            description: "Try a different document or one with embedded text content.",
+            duration: 5000
+          });
         }
       } catch (extractionError: any) {
         console.error('PDF extraction failed:', extractionError);
         setDiagnosisInfo(`Extraction error: ${extractionError.message}`);
+        toast.dismiss(toastId);
         throw extractionError;
       }
     } catch (error: any) {
       console.error('Error extracting text:', error);
       const errorMessage = error.message || 'Failed to extract text from the PDF';
       setExtractionError(errorMessage);
-      toast.error(`Extraction failed: ${errorMessage}`);
+      toast.error(`Extraction failed: ${errorMessage}`, {
+        description: "If this persists, try downloading the PDF and re-uploading it, or use a different PDF.",
+        duration: 5000
+      });
     } finally {
       setIsExtracting(false);
     }
@@ -112,7 +142,9 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
 
   const handleSummarizeText = async (model: SummaryModel = 'claude') => {
     if (!extractedText) {
-      toast.error('No text available to summarize');
+      toast.error('No text available to summarize', {
+        description: "Text must be extracted before it can be summarized.",
+      });
       return;
     }
 
@@ -123,25 +155,57 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
       console.log(`Starting summarization with ${model}...`);
       console.log(`Text length: ${extractedText.length} characters`);
       
-      const result = await summarizeText({
-        text: extractedText,
-        model,
-        title: fileName,
-        projectId,
-        maxLength: 2000
+      const toastId = toast.loading(`Summarizing text using ${model === 'claude' ? 'Claude' : 'OpenAI'}...`, {
+        duration: 30000, // Longer duration for summarization
       });
+      
+      try {
+        const result = await summarizeText({
+          text: extractedText,
+          model,
+          title: fileName,
+          projectId,
+          maxLength: 2000
+        });
 
-      console.log("Summary received:", result ? "success" : "empty");
-      if (!result) {
-        throw new Error("Received empty summary");
+        console.log("Summary received:", result ? "success" : "empty");
+        
+        if (!result) {
+          throw new Error("Received empty summary from the service");
+        }
+
+        setSummary(result);
+        setShowSummary(true);
+        toast.dismiss(toastId);
+        toast.success(`Text summarized successfully using ${model === 'claude' ? 'Claude' : 'OpenAI'}`);
+      } catch (summaryError: any) {
+        toast.dismiss(toastId);
+        throw summaryError;
       }
-
-      setSummary(result);
-      setShowSummary(true);
-      toast.success(`Text summarized successfully using ${model === 'claude' ? 'Claude' : 'OpenAI'}`);
     } catch (error: any) {
       console.error('Error summarizing text:', error);
-      toast.error(`Failed to summarize: ${error.message}`);
+      
+      // Provide more specific error messages based on common issues
+      let errorMessage = 'Failed to summarize text';
+      let description = '';
+      
+      if (error.message.includes('token')) {
+        errorMessage = 'Text too large to summarize';
+        description = 'The document contains too much text for the AI model. Try extracting a smaller portion.';
+      } else if (error.message.includes('rate limit') || error.message.includes('429')) {
+        errorMessage = 'Rate limit exceeded';
+        description = 'Please wait a moment before trying again. Our AI service has temporary limits.';
+      } else if (error.message.includes('network') || error.message.includes('timeout')) {
+        errorMessage = 'Network issue during summarization';
+        description = 'Check your internet connection and try again.';
+      } else {
+        description = error.message;
+      }
+      
+      toast.error(errorMessage, {
+        description: description,
+        duration: 6000
+      });
       setShowSummary(false);
     } finally {
       setIsSummarizing(false);
@@ -153,6 +217,15 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
   };
 
   const handleRetryExtraction = () => {
+    extractionAttempts.current += 1;
+    
+    if (extractionAttempts.current > maxExtractionAttempts) {
+      toast.warning("Multiple extraction attempts detected", {
+        description: "If extraction continues to fail, the PDF may be incompatible or corrupted. Try with a different document.",
+        duration: 6000
+      });
+    }
+    
     handleExtractText();
   };
 

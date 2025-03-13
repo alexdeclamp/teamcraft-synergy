@@ -86,9 +86,15 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
         <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-        <div className="text-destructive mb-4">{extractionError}</div>
+        <div className="text-destructive mb-4 font-medium">{extractionError}</div>
         <div className="text-sm text-muted-foreground mb-6 max-w-md">
-          This could be due to network issues, an invalid PDF format, or the PDF might be password-protected.
+          <p className="mb-2">This could be due to:</p>
+          <ul className="list-disc text-left pl-8 space-y-1">
+            <li>Network connectivity issues</li>
+            <li>Invalid or corrupted PDF format</li>
+            <li>Password-protected or encrypted PDF</li>
+            <li>Temporary service unavailability</li>
+          </ul>
         </div>
         <div className="flex flex-col sm:flex-row gap-4">
           <Button onClick={onRetryExtraction}>Retry Extraction</Button>
@@ -117,8 +123,10 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
           {formatExtractedText(extractedText)}
         </pre>
       ) : (
-        <div className="text-center text-muted-foreground py-8">
-          No text content was extracted from this PDF. It might be an image-based PDF.
+        <div className="text-center text-muted-foreground py-8 flex flex-col items-center">
+          <AlertCircle className="h-6 w-6 mb-3 text-amber-500" />
+          <p className="mb-2">No text content was extracted from this PDF.</p>
+          <p className="text-sm max-w-md">This is usually because the PDF contains only images or scanned content without embedded text. Try using a different PDF or one with selectable text.</p>
         </div>
       )}
     </ScrollArea>

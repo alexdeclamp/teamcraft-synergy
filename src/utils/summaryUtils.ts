@@ -31,37 +31,61 @@ export async function summarizeText({
     console.log(`Summarizing text with ${model}. Text length: ${text.length} characters`);
     console.log(`Sending to Supabase function with projectId: ${projectId || 'none'}`);
 
-    const { data, error } = await supabase.functions.invoke('summarize-text', {
-      body: {
-        text: text.slice(0, 100000), // Limit to 100k chars to avoid payload issues
-        model,
-        maxLength,
-        title,
-        projectId
-      },
-    });
-
-    // Dismiss the pending toast
-    toast.dismiss(toastId);
-
-    if (error) {
-      console.error('Error from summarize-text function:', error);
-      toast.error(`Summarization failed: ${error.message || 'Unknown error'}`);
-      throw error;
+    // If text is too long, truncate it to avoid payload size issues
+    const maxPayloadSize = 100000; // 100k chars
+    let textToSummarize = text;
+    let truncationWarning = '';
+    
+    if (text.length > maxPayloadSize) {
+      console.warn(`Text too long (${text.length} chars), truncating to ${maxPayloadSize} chars`);
+      textToSummarize = text.slice(0, maxPayloadSize);
+      truncationWarning = `\n\nNote: The original text was ${text.length.toLocaleString()} characters, but was truncated to ${maxPayloadSize.toLocaleString()} characters for processing.`;
     }
 
-    if (!data || !data.summary) {
-      const errorMsg = 'Received empty response from the summarization service';
-      console.error(errorMsg);
-      toast.error(errorMsg);
-      throw new Error(errorMsg);
-    }
+    try {
+      const { data, error } = await supabase.functions.invoke('summarize-text', {
+        body: {
+          text: textToSummarize,
+          model,
+          maxLength,
+          title,
+          projectId
+        },
+      });
 
-    toast.success(`Summary generated successfully using ${model === 'claude' ? 'Claude' : 'OpenAI'}`);
-    return data.summary;
+      // Dismiss the pending toast
+      toast.dismiss(toastId);
+
+      if (error) {
+        console.error('Error from summarize-text function:', error);
+        
+        // Handle specific error types
+        if (error.message?.includes('timeout')) {
+          throw new Error('The summarization service took too long to respond. The document may be too complex.');
+        } else if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
+          throw new Error('AI service quota exceeded. Please try again in a few minutes.');
+        } else {
+          throw new Error(`Summarization failed: ${error.message || 'Unknown error'}`);
+        }
+      }
+
+      if (!data || !data.summary) {
+        const errorMsg = 'Received empty response from the summarization service';
+        console.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+
+      toast.success(`Summary generated successfully using ${model === 'claude' ? 'Claude' : 'OpenAI'}`);
+      
+      // Add truncation warning if text was truncated
+      return data.summary + truncationWarning;
+    } catch (functionError: any) {
+      toast.dismiss(toastId);
+      console.error('Function invocation error:', functionError);
+      throw functionError;
+    }
   } catch (error: any) {
     console.error('Error summarizing text:', error);
-    toast.error(`Failed to summarize text: ${error.message || 'Unknown error'}`);
     throw new Error(`Failed to summarize text: ${error.message || 'Unknown error'}`);
   }
 }
