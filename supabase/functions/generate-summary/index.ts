@@ -11,11 +11,12 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Received request:', req.method, new URL(req.url).pathname);
     const response = await handleRequest(req);
-    console.log('Successfully processed request');
+    console.log('Successfully processed request with status:', response.status);
     return response;
   } catch (error) {
-    console.error('Error in generate-summary function:', error);
+    console.error('Unhandled error in generate-summary function:', error);
     return new Response(JSON.stringify({ error: error.message || 'Unknown error occurred' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
