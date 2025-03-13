@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Lock } from 'lucide-react';
+import { Sparkles, Lock, Users } from 'lucide-react';
 
 const CtaSection: React.FC = () => {
   const navigate = useNavigate();
@@ -17,14 +17,25 @@ const CtaSection: React.FC = () => {
         <Lock className="h-4 w-4" />
         <span>Currently invite-only. Join our waitlist for early access.</span>
       </p>
-      <Button 
-        size="lg" 
-        onClick={() => navigate('/waitlist')} 
-        className="rounded-full px-8 gap-2"
-      >
-        <Sparkles className="h-4 w-4" />
-        Join Waitlist
-      </Button>
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <Button 
+          size="lg" 
+          onClick={() => navigate('/waitlist')} 
+          className="rounded-full px-8 gap-2"
+        >
+          <Sparkles className="h-4 w-4" />
+          Join Waitlist
+        </Button>
+        <Button 
+          variant="cta"
+          size="lg"
+          onClick={() => navigate('/auth?tab=register')}
+          className="rounded-full px-8 gap-2"
+        >
+          <Users className="h-4 w-4" />
+          Collaborate on a Pro Trial
+        </Button>
+      </div>
     </section>
   );
 };

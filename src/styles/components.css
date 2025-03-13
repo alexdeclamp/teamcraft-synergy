@@ -37,4 +37,18 @@
   .text-gradient {
     @apply bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent;
   }
+  
+  .cta-glow {
+    @apply relative;
+  }
+  
+  .cta-glow::before {
+    content: '';
+    @apply absolute inset-0 -z-10 rounded-md bg-gradient-to-r from-primary/20 to-primary/10 blur-md opacity-75;
+    transform: scale(1.05);
+  }
+  
+  .cta-button {
+    @apply bg-white text-primary font-medium border border-primary/20 shadow-[0_0_15px_rgba(16,132,234,0.2)] hover:shadow-[0_0_20px_rgba(16,132,234,0.4)] transition-shadow duration-300;
+  }
 }
