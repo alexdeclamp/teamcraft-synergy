@@ -11,17 +11,14 @@ const Index = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showChatButton, setShowChatButton] = useState(false);
 
-  // Show chat button after a short delay for better UX
+  // Show chat button immediately
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowChatButton(true);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
+    // Show immediately instead of a delay
+    setShowChatButton(true);
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-background relative">
       <div className="max-w-3xl mx-auto px-6 text-center">
         <div className="flex items-center justify-center mb-6">
           <Sparkles className="h-12 w-12 sm:h-14 sm:w-14 text-primary" />
@@ -51,7 +48,7 @@ const Index = () => {
       {showChatButton && (
         <HomepageChatButton 
           onClick={() => setIsChatOpen(true)} 
-          className="shadow-xl" 
+          className="shadow-2xl" 
         />
       )}
       
