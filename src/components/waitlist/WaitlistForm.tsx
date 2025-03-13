@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { SendIcon } from 'lucide-react';
+import { SendIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +37,8 @@ interface WaitlistFormProps {
 }
 
 export const WaitlistForm: React.FC<WaitlistFormProps> = ({ onSuccess }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<WaitlistFormValues>({
     resolver: zodResolver(waitlistFormSchema),
     defaultValues: {
@@ -51,6 +53,8 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ onSuccess }) => {
 
   const onSubmit = async (data: WaitlistFormValues) => {
     try {
+      setIsSubmitting(true);
+      
       // Submit to Supabase waitlist table
       const { error } = await supabase
         .from('waitlist')
@@ -74,6 +78,8 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ onSuccess }) => {
     } catch (error) {
       console.error("Error submitting waitlist request:", error);
       toast.error("There was a problem submitting your request. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -87,7 +93,7 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ onSuccess }) => {
             <FormItem>
               <FormLabel>Full Name</FormLabel>
               <FormControl>
-                <Input placeholder="Your name" {...field} />
+                <Input placeholder="Your name" {...field} disabled={isSubmitting} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -101,7 +107,7 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ onSuccess }) => {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="you@example.com" type="email" {...field} />
+                <Input placeholder="you@example.com" type="email" {...field} disabled={isSubmitting} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -115,7 +121,7 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ onSuccess }) => {
             <FormItem>
               <FormLabel>Company (Optional)</FormLabel>
               <FormControl>
-                <Input placeholder="Your organization" {...field} />
+                <Input placeholder="Your organization" {...field} disabled={isSubmitting} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -133,6 +139,7 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ onSuccess }) => {
                   placeholder="Tell us how you plan to use Bra3n..." 
                   className="min-h-[100px]" 
                   {...field} 
+                  disabled={isSubmitting}
                 />
               </FormControl>
               <FormMessage />
@@ -147,7 +154,7 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ onSuccess }) => {
             <FormItem>
               <FormLabel>Invitation Code (Optional)</FormLabel>
               <FormControl>
-                <Input placeholder="Have an invite code? Enter it here" {...field} />
+                <Input placeholder="Have an invite code? Enter it here" {...field} disabled={isSubmitting} />
               </FormControl>
               <FormDescription>
                 If you received an invitation code, enter it for priority access.
@@ -166,6 +173,7 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ onSuccess }) => {
                 <Checkbox
                   checked={field.value}
                   onCheckedChange={field.onChange}
+                  disabled={isSubmitting}
                 />
               </FormControl>
               <div className="space-y-1 leading-none">
@@ -180,9 +188,18 @@ export const WaitlistForm: React.FC<WaitlistFormProps> = ({ onSuccess }) => {
           )}
         />
         
-        <Button type="submit" className="w-full">
-          <SendIcon className="mr-2 h-4 w-4" />
-          Submit Request
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Submitting...
+            </>
+          ) : (
+            <>
+              <SendIcon className="mr-2 h-4 w-4" />
+              Submit Request
+            </>
+          )}
         </Button>
       </form>
     </Form>
