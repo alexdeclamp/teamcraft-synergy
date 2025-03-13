@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight } from 'lucide-react';
+import { Sparkles, ArrowRight, MessageSquare } from 'lucide-react';
 import HomepageChatButton from '@/components/landing/HomepageChatButton';
 import HomepageChatDialog from '@/components/landing/HomepageChatDialog';
 
@@ -29,6 +29,14 @@ const Index = () => {
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
             <Button 
+              onClick={() => setIsChatOpen(true)}
+              size="lg"
+              className="rounded-md px-8 text-base bg-primary hover:bg-primary/90 text-white w-full sm:w-auto"
+            >
+              Chat with AI
+              <MessageSquare className="ml-1 h-4 w-4" />
+            </Button>
+            <Button 
               onClick={() => window.open('https://docs.example.com', '_blank')} 
               variant="outline" 
               size="lg"
@@ -39,12 +47,6 @@ const Index = () => {
           </div>
         </div>
       </div>
-      
-      {/* Use the HomepageChatButton component directly */}
-      <HomepageChatButton 
-        onClick={() => setIsChatOpen(true)}
-        className="bg-red-500 hover:bg-red-600"
-      />
       
       <HomepageChatDialog 
         isOpen={isChatOpen}
