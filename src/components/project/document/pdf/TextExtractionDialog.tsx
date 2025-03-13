@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from 'sonner';
@@ -159,17 +158,14 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
   };
 
   const handleRegenerateTitle = () => {
-    // This would be implemented with AI regeneration
     toast.info('Title regeneration not implemented');
   };
 
   const handleRegenerateTags = () => {
-    // This would be implemented with AI regeneration
     toast.info('Tags regeneration not implemented');
   };
 
   const handleRegenerateBoth = () => {
-    // This would be implemented with AI regeneration
     toast.info('Metadata regeneration not implemented');
   };
 

@@ -84,9 +84,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
         <div className="flex items-center gap-2">
           {isPdf && (
             <DocumentPdfActions
-              onGenerateSummary={handleGenerateSummary}
-              isGenerating={isGenerating}
-              hasSavedSummary={hasSavedSummary}
               pdfUrl={pdfUrl}
               fileName={document.file_name}
               projectId={projectId}
