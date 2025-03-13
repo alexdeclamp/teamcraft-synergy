@@ -3,7 +3,6 @@ import React from 'react';
 import { DialogFooter } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Download, Pencil } from 'lucide-react';
-import SummaryOptions from '../SummaryOptions';
 
 interface TextExtractionFooterProps {
   isExtracting: boolean;
@@ -11,7 +10,6 @@ interface TextExtractionFooterProps {
   extractedText: string;
   showSummary: boolean;
   handleDownloadText: () => void;
-  handleSummarizeText: (model: 'claude' | 'openai') => void;
   handleCreateNote?: () => void;
   projectId?: string;
 }
@@ -22,7 +20,6 @@ const TextExtractionFooter: React.FC<TextExtractionFooterProps> = ({
   extractedText,
   showSummary,
   handleDownloadText,
-  handleSummarizeText,
   handleCreateNote,
   projectId
 }) => {
@@ -30,10 +27,6 @@ const TextExtractionFooter: React.FC<TextExtractionFooterProps> = ({
     return (
       <DialogFooter className="mt-4 flex flex-wrap justify-between gap-2">
         <div className="flex gap-2">
-          {!showSummary && (
-            <SummaryOptions onSummarize={handleSummarizeText} />
-          )}
-          
           {projectId && handleCreateNote && (
             <Button 
               onClick={handleCreateNote}
