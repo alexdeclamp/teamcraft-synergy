@@ -18,14 +18,14 @@ const HomepageChatButton: React.FC<HomepageChatButtonProps> = ({
       onClick={onClick}
       size="icon"
       className={cn(
-        "fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-xl z-50 bg-primary hover:bg-primary/90",
-        "animate-bounce", // Changed from pulse to bounce for more attention
+        "fixed bottom-8 right-8 h-20 w-20 rounded-full shadow-2xl z-[9999] bg-primary hover:bg-primary/90",
+        "animate-bounce", // More noticeable animation
         "transition-all duration-300",
         className
       )}
       aria-label="Chat with Bra3n Assistant"
     >
-      <MessageCircle className="h-7 w-7" />
+      <MessageCircle className="h-9 w-9" />
     </Button>
   );
 };
