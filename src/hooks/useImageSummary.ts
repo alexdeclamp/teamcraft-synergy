@@ -74,13 +74,13 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
     try {
       if (!projectId || !imageUrl) return;
 
-      // Query for notes that contain this image URL
+      // Fix: Replace the problematic filter operation with a more direct query approach
       const { data, error } = await supabase
         .from('project_notes')
         .select('id')
         .eq('project_id', projectId)
-        .eq('source_document->type', 'image')
-        .filter('source_document->url', 'eq', imageUrl)
+        .eq('source_document->>type', 'image')
+        .eq('source_document->>url', imageUrl)
         .maybeSingle();
 
       if (error) {
