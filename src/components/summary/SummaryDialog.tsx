@@ -26,7 +26,6 @@ interface SummaryDialogProps {
   sourceType?: 'pdf' | 'image';
   onNoteSaved?: () => void;
   error?: string | null;
-  onRetry?: () => void;
 }
 
 const SummaryDialog: React.FC<SummaryDialogProps> = ({
@@ -41,8 +40,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   sourceUrl,
   sourceType = 'pdf',
   onNoteSaved,
-  error,
-  onRetry
+  error
 }) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
@@ -203,7 +201,6 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           onDownload={handleDownload}
           onCreateNote={handleCreateNote}
           error={error}
-          onRetry={onRetry}
         />
       </DialogContent>
     </Dialog>

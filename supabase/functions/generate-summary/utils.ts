@@ -3,7 +3,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 // Configuration
 export const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-export const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 export const supabaseUrl = Deno.env.get('SUPABASE_URL');
 export const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -30,14 +29,14 @@ export const logApiUsage = async (userId: string) => {
       .from('user_usage_stats')
       .insert({
         user_id: userId,
-        action_type: 'claude_api_call',
+        action_type: 'openai_api_call',
       });
     
     if (logError) {
-      console.error('Error logging Claude API call:', logError);
+      console.error('Error logging OpenAI API call:', logError);
     }
   } catch (error) {
-    console.error('Error inserting Claude API call record:', error);
+    console.error('Error inserting OpenAI API call record:', error);
   }
 };
 

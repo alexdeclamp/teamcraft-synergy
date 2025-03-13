@@ -64,12 +64,6 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
     setIsNoteSaved(true);
   };
 
-  const handleRetry = () => {
-    if (projectId) {
-      generateSummary();
-    }
-  };
-
   return (
     <>
       <div className="flex space-x-1">
@@ -94,7 +88,6 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         sourceType="image"
         onNoteSaved={handleNoteSaved}
         error={error}
-        onRetry={handleRetry}
       />
     </>
   );
