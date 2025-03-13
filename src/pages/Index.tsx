@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight } from 'lucide-react';
@@ -8,10 +9,9 @@ import HomepageChatDialog from '@/components/landing/HomepageChatDialog';
 const Index = () => {
   const navigate = useNavigate();
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [showChatButton, setShowChatButton] = useState(true);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background" style={{ position: 'relative' }}>
       <div className="max-w-3xl mx-auto px-6 text-center">
         <div className="flex items-center justify-center mb-6">
           <Sparkles className="h-12 w-12 sm:h-14 sm:w-14 text-primary" />
@@ -38,6 +38,7 @@ const Index = () => {
         </div>
       </div>
       
+      {/* Always render the chat button */}
       <HomepageChatButton 
         onClick={() => setIsChatOpen(true)} 
         className="shadow-2xl" 
