@@ -34,6 +34,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
     summary, 
     hasSummary, 
     isNoteSaved,
+    error,
     generateSummary, 
     setIsNoteSaved 
   } = useImageSummary({
@@ -86,6 +87,7 @@ const ImageSummaryButton: React.FC<ImageSummaryButtonProps> = ({
         sourceUrl={imageUrl}
         sourceType="image"
         onNoteSaved={handleNoteSaved}
+        error={error}
       />
     </>
   );

@@ -25,6 +25,7 @@ interface SummaryDialogProps {
   sourceUrl?: string;
   sourceType?: 'pdf' | 'image';
   onNoteSaved?: () => void;
+  error?: string | null;
 }
 
 const SummaryDialog: React.FC<SummaryDialogProps> = ({
@@ -38,7 +39,8 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
   imageName,
   sourceUrl,
   sourceType = 'pdf',
-  onNoteSaved
+  onNoteSaved,
+  error
 }) => {
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [isCreatingNote, setIsCreatingNote] = useState(false);
@@ -175,6 +177,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
             isLoading={isLoading} 
             summary={summary} 
             hasSummary={hasSummary} 
+            error={error}
           />
         </div>
         
@@ -197,6 +200,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           onCopy={handleCopy}
           onDownload={handleDownload}
           onCreateNote={handleCreateNote}
+          error={error}
         />
       </DialogContent>
     </Dialog>

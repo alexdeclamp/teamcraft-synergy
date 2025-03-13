@@ -14,6 +14,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
   const [summary, setSummary] = useState('');
   const [hasSummary, setHasSummary] = useState(false);
   const [isNoteSaved, setIsNoteSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
   // Reset states when props change
@@ -22,6 +23,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       setSummary('');
       setHasSummary(false);
       setIsNoteSaved(false);
+      setError(null);
       fetchExistingSummary();
       checkForExistingNote();
     }
@@ -72,13 +74,13 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
     try {
       if (!projectId || !imageUrl) return;
 
-      // Use a more reliable approach that works on all platforms
+      // Query for notes that contain this image URL
       const { data, error } = await supabase
         .from('project_notes')
         .select('id')
         .eq('project_id', projectId)
         .eq('source_document->type', 'image')
-        .contains('source_document', { url: imageUrl })
+        .filter('source_document->url', 'eq', imageUrl)
         .maybeSingle();
 
       if (error) {
@@ -99,6 +101,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       setIsGenerating(true);
       setHasSummary(false);
       setSummary('');
+      setError(null);
       
       console.log('Generating summary for image:', imageUrl);
       console.log('For project:', projectId);
@@ -159,6 +162,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       console.error('Error generating image summary:', error);
       setSummary('');
       setHasSummary(false);
+      setError(error.message || 'Failed to generate summary');
       toast.error(`Failed to generate summary: ${error.message}`);
     } finally {
       setIsGenerating(false);
@@ -170,6 +174,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
     summary,
     hasSummary,
     isNoteSaved,
+    error,
     generateSummary,
     setSummary,
     setIsNoteSaved

@@ -39,6 +39,10 @@ export async function processImage(imageUrl: string): Promise<string> {
 
 // Analyze image with OpenAI
 async function analyzeImageWithOpenAI(dataUrl: string): Promise<string> {
+  if (!openAIApiKey) {
+    throw new Error('OpenAI API key is not configured');
+  }
+
   const systemPrompt = `You are an AI assistant specialized in analyzing images and extracting ALL information visible in them.
 
 Your task is to:
@@ -67,42 +71,51 @@ IMPORTANT: Your PRIMARY goal is information extraction - ensure NO detail or tex
 
   const userPrompt = "Please analyze this image and extract ALL information visible in it. Include every piece of text, number, table content, and visual data present. Format tables and structured content appropriately using markdown.";
   
-  // Set up messages for OpenAI with image
-  const messages = [
-    {
-      role: 'system',
-      content: systemPrompt
-    },
-    {
-      role: 'user',
-      content: [
-        { type: 'text', text: userPrompt },
-        { type: 'image_url', image_url: { url: dataUrl } }
-      ]
+  try {
+    // Set up messages for OpenAI with image
+    const messages = [
+      {
+        role: 'system',
+        content: systemPrompt
+      },
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: userPrompt },
+          { type: 'image_url', image_url: { url: dataUrl } }
+        ]
+      }
+    ];
+    
+    // Call OpenAI API
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: messages,
+        temperature: 0.3, // Lower temperature for more accurate extraction
+        max_tokens: 1500, // Increased token limit for comprehensive extraction
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API error:', response.status, errorText);
+      throw new Error(`OpenAI API error (${response.status}): ${errorText}`);
     }
-  ];
-  
-  // Call OpenAI API
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAIApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: messages,
-      temperature: 0.3, // Lower temperature for more accurate extraction
-      max_tokens: 1500, // Increased token limit for comprehensive extraction
-    }),
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('OpenAI API error:', response.status, errorText);
-    throw new Error(`OpenAI API error: ${response.statusText}`);
+    
+    const data = await response.json();
+    if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+      throw new Error('Invalid response format from OpenAI API');
+    }
+    
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error('Error in analyzeImageWithOpenAI:', error);
+    throw new Error(`Failed to analyze image: ${error.message}`);
   }
-  
-  const data = await response.json();
-  return data.choices[0].message.content;
 }

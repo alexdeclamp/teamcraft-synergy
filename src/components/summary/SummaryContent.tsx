@@ -1,19 +1,19 @@
 
 import React from 'react';
-import { Loader2, Save } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import ReactMarkdown from 'react-markdown';
+import { Loader2, Save, AlertCircle } from 'lucide-react';
 
 interface SummaryContentProps {
   isLoading: boolean;
   summary: string;
   hasSummary: boolean;
+  error?: string | null;
 }
 
 const SummaryContent: React.FC<SummaryContentProps> = ({
   isLoading,
   summary,
-  hasSummary
+  hasSummary,
+  error
 }) => {
   if (isLoading) {
     return (
@@ -22,26 +22,37 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
         <p className="text-sm text-muted-foreground">Generating summary...</p>
       </div>
     );
+  } 
+  
+  if (error) {
+    return (
+      <div className="p-4 bg-destructive/10 rounded-md flex items-start space-x-3">
+        <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="font-medium text-destructive">Error generating summary</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <p className="text-sm mt-2">
+            This could be due to server load or connection issues. Please try again in a few moments.
+          </p>
+        </div>
+      </div>
+    );
   }
-
-  if (hasSummary && summary.trim() !== '') {
+  
+  if (summary) {
     return (
       <>
         <div className="mb-2 px-2 text-sm text-muted-foreground flex items-center">
           <Save className="h-3 w-3 mr-1" />
           <span>Summary is saved and will be available instantly next time</span>
         </div>
-        <div className="p-4 bg-accent/20 rounded-md overflow-y-auto max-h-[50vh]">
-          <div className="prose prose-sm max-w-none dark:prose-invert">
-            <ReactMarkdown>
-              {summary}
-            </ReactMarkdown>
-          </div>
+        <div className="p-4 bg-accent/20 rounded-md whitespace-pre-wrap max-h-[50vh] overflow-y-auto">
+          {summary}
         </div>
       </>
     );
   }
-
+  
   return (
     <div className="p-4 bg-accent/10 rounded-md flex items-center justify-center h-32">
       <p className="text-muted-foreground">No summary available yet.</p>
