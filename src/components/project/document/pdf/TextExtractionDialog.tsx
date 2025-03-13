@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import NotesDialog from '@/components/notes/NotesDialog';
 import TextExtractionHeader from './components/TextExtractionHeader';
 import TextExtractionContent from './components/TextExtractionContent';
 import TextExtractionFooter from './components/TextExtractionFooter';
-import NotesDialog from '@/components/notes/NotesDialog';
+import { useNoteCreationFromText } from '@/hooks/useNoteCreationFromText';
 
 interface TextExtractionDialogProps {
   showTextModal: boolean;
@@ -42,7 +42,6 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
   fileName,
   pdfUrl,
   onRetryExtraction,
-  handleSummarizeText,
   isSummarizing,
   summary,
   showSummary,
@@ -50,13 +49,7 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
   projectId
 }) => {
   const { user } = useAuth();
-  const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
-  const [noteTitle, setNoteTitle] = useState('');
-  const [noteContent, setNoteContent] = useState('');
-  const [noteTags, setNoteTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [aiModel, setAiModel] = useState<'claude' | 'openai'>('claude');
+  const noteCreation = useNoteCreationFromText({ projectId, fileName, pdfUrl });
   
   const handleOpenPdfDirectly = () => {
     window.open(pdfUrl, '_blank');
@@ -78,95 +71,14 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    toast.success(`${showSummary ? 'Summary' : 'Text'} downloaded successfully`);
+    // Show a success toast
+    const successMessage = `${showSummary ? 'Summary' : 'Text'} downloaded successfully`;
+    toast.success(successMessage);
   };
 
   const handleCreateNote = () => {
-    const cleanFileName = fileName.replace('.pdf', '');
-    const defaultTitle = showSummary ? `Summary of ${cleanFileName}` : `Notes from ${cleanFileName}`;
-    
-    const defaultContent = showSummary && summary 
-      ? summary 
-      : extractedText;
-    
-    const defaultTags = ['pdf', 'document'];
-    if (showSummary) defaultTags.push('summary');
-    
-    setNoteTitle(defaultTitle);
-    setNoteContent(defaultContent);
-    setNoteTags(defaultTags);
-    setIsNoteDialogOpen(true);
-  };
-
-  const handleSubmitNote = async () => {
-    if (!noteTitle.trim() || !projectId || !user) {
-      toast.error('Please enter a title for your note');
-      return;
-    }
-    
-    try {
-      setSaving(true);
-      
-      const sourceDocument = {
-        type: 'pdf',
-        url: pdfUrl,
-        name: fileName
-      };
-      
-      const { data, error } = await supabase
-        .from('project_notes')
-        .insert({
-          title: noteTitle,
-          content: noteContent,
-          project_id: projectId,
-          user_id: user.id,
-          tags: noteTags.length > 0 ? noteTags : null,
-          source_document: sourceDocument
-        })
-        .select()
-        .single();
-        
-      if (error) throw error;
-      
-      toast.success('Note created successfully');
-      setIsNoteDialogOpen(false);
-      
-    } catch (error: any) {
-      console.error('Error creating note:', error);
-      toast.error('Failed to create note');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const addTag = () => {
-    if (tagInput.trim() && !noteTags.includes(tagInput.trim())) {
-      setNoteTags([...noteTags, tagInput.trim()]);
-      setTagInput('');
-    }
-  };
-
-  const removeTag = (tag: string) => {
-    setNoteTags(noteTags.filter(t => t !== tag));
-  };
-
-  const handleTagInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      addTag();
-    }
-  };
-
-  const handleRegenerateTitle = () => {
-    toast.info('Title regeneration not implemented');
-  };
-
-  const handleRegenerateTags = () => {
-    toast.info('Tags regeneration not implemented');
-  };
-
-  const handleRegenerateBoth = () => {
-    toast.info('Metadata regeneration not implemented');
+    const textToUse = showSummary && summary ? summary : extractedText;
+    noteCreation.handleCreateNote(textToUse, showSummary);
   };
 
   return (
@@ -202,7 +114,6 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
             extractedText={extractedText}
             showSummary={showSummary}
             handleDownloadText={handleDownloadText}
-            handleSummarizeText={handleSummarizeText}
             handleCreateNote={projectId ? handleCreateNote : undefined}
             projectId={projectId}
           />
@@ -210,26 +121,26 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
       </Dialog>
 
       <NotesDialog
-        isOpen={isNoteDialogOpen}
-        onOpenChange={setIsNoteDialogOpen}
+        isOpen={noteCreation.isNoteDialogOpen}
+        onOpenChange={noteCreation.setIsNoteDialogOpen}
         type="create"
-        title={noteTitle}
-        content={noteContent}
-        tagInput={tagInput}
-        tags={noteTags}
-        saving={saving}
-        aiModel={aiModel}
-        onTitleChange={setNoteTitle}
-        onContentChange={setNoteContent}
-        onTagInputChange={setTagInput}
-        onTagInputKeyDown={handleTagInputKeyDown}
-        addTag={addTag}
-        removeTag={removeTag}
-        handleSubmit={handleSubmitNote}
-        handleRegenerateTitle={handleRegenerateTitle}
-        handleRegenerateTags={handleRegenerateTags}
-        handleRegenerateBoth={handleRegenerateBoth}
-        onModelChange={setAiModel}
+        title={noteCreation.noteTitle}
+        content={noteCreation.noteContent}
+        tagInput={noteCreation.tagInput}
+        tags={noteCreation.noteTags}
+        saving={noteCreation.saving}
+        aiModel={noteCreation.aiModel}
+        onTitleChange={noteCreation.setNoteTitle}
+        onContentChange={noteCreation.setNoteContent}
+        onTagInputChange={noteCreation.setTagInput}
+        onTagInputKeyDown={noteCreation.handleTagInputKeyDown}
+        addTag={noteCreation.addTag}
+        removeTag={noteCreation.removeTag}
+        handleSubmit={() => user && noteCreation.handleSubmitNote(user.id)}
+        handleRegenerateTitle={noteCreation.handleRegenerateTitle}
+        handleRegenerateTags={noteCreation.handleRegenerateTags}
+        handleRegenerateBoth={noteCreation.handleRegenerateBoth}
+        onModelChange={noteCreation.setAiModel}
       />
     </>
   );
