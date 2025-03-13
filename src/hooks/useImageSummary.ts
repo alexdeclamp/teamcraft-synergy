@@ -74,7 +74,6 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
     try {
       if (!projectId || !imageUrl) return;
 
-      // Fix: Replace the problematic filter operation with a more direct query approach
       const { data, error } = await supabase
         .from('project_notes')
         .select('id')
@@ -103,7 +102,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       setSummary('');
       setError(null);
       
-      console.log('Generating summary for image:', imageUrl);
+      console.log('Generating summary for image with Claude:', imageUrl);
       console.log('For project:', projectId);
       
       // Ensure projectId is included as a string in the request
@@ -116,7 +115,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       }
       
       // For image summarization, we need to send the image URL
-      // The edge function will now download and process the image
+      // The edge function will now download and process the image with Claude
       const response = await supabase.functions.invoke('generate-summary', {
         body: {
           type: 'image',
@@ -142,7 +141,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       }
       
       if (data.error) {
-        throw new Error(`Error from OpenAI: ${data.error}`);
+        throw new Error(`Error from Claude: ${data.error}`);
       }
       
       if (!data.summary || data.summary.trim() === '') {
@@ -153,7 +152,7 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       console.log('Received summary data:', data);
       setSummary(data.summary);
       setHasSummary(true);
-      toast.success('Summary generated and saved successfully');
+      toast.success('Summary generated and saved successfully using Claude');
       
       // Check if a note already exists for this image after generation
       checkForExistingNote();

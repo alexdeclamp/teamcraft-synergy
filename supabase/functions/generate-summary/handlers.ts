@@ -37,7 +37,7 @@ export async function handleRequest(req: Request): Promise<Response> {
       });
     }
     
-    // Log the OpenAI API call
+    // Log the appropriate API call
     try {
       await logApiUsage(userId);
     } catch (logError: any) {
@@ -51,7 +51,9 @@ export async function handleRequest(req: Request): Promise<Response> {
     
     try {
       if (type === 'image') {
+        console.log('Processing image URL:', imageUrl);
         summary = await processImage(imageUrl);
+        console.log('Successfully generated image summary');
         await saveImageSummary(imageUrl, projectId, userId, summary);
       } else {
         summary = await processText(content);
