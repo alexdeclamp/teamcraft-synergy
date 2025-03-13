@@ -22,11 +22,11 @@ const Index = () => {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
-              onClick={() => navigate('/auth?tab=register')} 
+              onClick={() => navigate('/waitlist')} 
               size="lg" 
               className="rounded-md px-8 text-base shadow-sm w-full sm:w-auto bg-primary hover:bg-primary/90"
             >
-              Try Bra3n
+              Join Waitlist
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
             

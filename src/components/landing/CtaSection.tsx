@@ -15,15 +15,15 @@ const CtaSection: React.FC = () => {
       </p>
       <p className="text-primary text-sm flex items-center justify-center gap-1 mb-10">
         <Lock className="h-4 w-4" />
-        <span>Currently invite-only. Please contact us for access.</span>
+        <span>Currently invite-only. Join our waitlist for early access.</span>
       </p>
       <Button 
         size="lg" 
-        onClick={() => navigate('/auth?tab=register')} 
+        onClick={() => navigate('/waitlist')} 
         className="rounded-full px-8 gap-2"
       >
         <Sparkles className="h-4 w-4" />
-        Try Bra3n
+        Join Waitlist
       </Button>
     </section>
   );

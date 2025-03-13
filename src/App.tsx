@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import NewProject from "./pages/NewProject";
 import Project from "./pages/Project";
 import NotFound from "./pages/NotFound";
+import WaitlistPage from "./pages/Waitlist";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingSidebar from "./components/onboarding/OnboardingSidebar";
 import WelcomeDialog from "./components/onboarding/WelcomeDialog";
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/home" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/waitlist" element={<WaitlistPage />} />
 
             {/* Protected routes with onboarding */}
             <Route path="/dashboard" element={

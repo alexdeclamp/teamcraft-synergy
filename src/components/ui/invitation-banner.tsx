@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Lock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 interface InvitationBannerProps {
@@ -14,7 +15,13 @@ export function InvitationBanner({ className }: InvitationBannerProps) {
       className
     )}>
       <Lock className="h-3.5 w-3.5 text-primary" />
-      <span>Currently in private beta. Join our waitlist or use an invitation code to access.</span>
+      <span>
+        Currently in private beta. 
+        <Link to="/waitlist" className="ml-1 text-primary hover:underline">
+          Join our waitlist
+        </Link>
+        {' '}or use an invitation code to access.
+      </span>
     </div>
   );
 }
