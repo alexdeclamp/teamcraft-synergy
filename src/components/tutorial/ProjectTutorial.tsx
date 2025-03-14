@@ -8,9 +8,14 @@ import { toast } from 'sonner';
 interface ProjectTutorialProps {
   activeTab: string;
   className?: string;
+  size?: string; // Add size prop to interface
 }
 
-const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ activeTab, className }) => {
+const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ 
+  activeTab, 
+  className,
+  size // Destructure the size prop
+}) => {
   // Define the tutorial steps based on the active tab
   const getTutorialConfig = (): TutorialConfig => {
     const baseSteps = [
@@ -95,7 +100,7 @@ const ProjectTutorial: React.FC<ProjectTutorialProps> = ({ activeTab, className 
   // Render the tutorial tooltip if active
   return (
     <>
-      <TutorialButton onClick={tutorial.startTutorial} className={className} />
+      <TutorialButton onClick={tutorial.startTutorial} className={className} size={size} />
       
       {tutorial.isActive && tutorial.currentStep && (
         <TutorialTooltip
