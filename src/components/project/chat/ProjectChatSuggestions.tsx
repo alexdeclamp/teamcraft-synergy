@@ -1,18 +1,28 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ProjectChatSuggestionsProps {
   questions: string[];
   onSelectQuestion: (question: string) => void;
   compact?: boolean;
+  forceShow?: boolean;
 }
 
 const ProjectChatSuggestions: React.FC<ProjectChatSuggestionsProps> = ({ 
   questions, 
   onSelectQuestion,
-  compact = false
+  compact = false,
+  forceShow = false
 }) => {
+  const isMobile = useIsMobile();
+  
+  // Hide on mobile unless explicitly forced to show
+  if (isMobile && !forceShow) {
+    return null;
+  }
+
   return (
     <div className={compact ? "flex flex-wrap gap-2" : "flex flex-wrap gap-2 justify-center max-w-full"}>
       {questions.map((question, index) => (

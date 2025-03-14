@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { X, Send, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { useProjectChat } from '@/hooks/useProjectChat';
 import ProjectChatMessage from './ProjectChatMessage';
 import ProjectChatInput from './ProjectChatInput';
 import ProjectChatSuggestions from './ProjectChatSuggestions';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ProjectChatFullscreenProps {
   projectId: string;
@@ -21,6 +23,7 @@ const ProjectChatFullscreen: React.FC<ProjectChatFullscreenProps> = ({
 }) => {
   const { messages, isLoading, predefinedQuestions, sendMessage } = useProjectChat(projectId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   // Scroll to bottom when new messages are added
   useEffect(() => {
@@ -76,14 +79,16 @@ const ProjectChatFullscreen: React.FC<ProjectChatFullscreenProps> = ({
         </ScrollArea>
         
         <div className="p-6 border-t bg-white shadow-sm">
-          <div className="mb-5">
-            <div className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Suggested questions</div>
-            <ProjectChatSuggestions 
-              questions={predefinedQuestions} 
-              onSelectQuestion={handlePredefinedQuestion} 
-              compact 
-            />
-          </div>
+          {!isMobile && (
+            <div className="mb-5">
+              <div className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Suggested questions</div>
+              <ProjectChatSuggestions 
+                questions={predefinedQuestions} 
+                onSelectQuestion={handlePredefinedQuestion} 
+                compact 
+              />
+            </div>
+          )}
           <div className="max-w-3xl mx-auto">
             <ProjectChatInput onSendMessage={sendMessage} isLoading={isLoading} />
           </div>

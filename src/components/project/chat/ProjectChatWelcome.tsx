@@ -6,11 +6,13 @@ import ProjectChatSuggestions from './ProjectChatSuggestions';
 interface ProjectChatWelcomeProps {
   questions: string[];
   onSelectQuestion: (question: string) => void;
+  forceShow?: boolean;
 }
 
 const ProjectChatWelcome: React.FC<ProjectChatWelcomeProps> = ({ 
   questions, 
-  onSelectQuestion 
+  onSelectQuestion,
+  forceShow = false
 }) => {
   return (
     <div className="px-4 py-6 flex flex-col items-center justify-center text-center">
@@ -21,7 +23,8 @@ const ProjectChatWelcome: React.FC<ProjectChatWelcomeProps> = ({
       </p>
       <ProjectChatSuggestions 
         questions={questions} 
-        onSelectQuestion={onSelectQuestion} 
+        onSelectQuestion={onSelectQuestion}
+        forceShow={forceShow}
       />
     </div>
   );

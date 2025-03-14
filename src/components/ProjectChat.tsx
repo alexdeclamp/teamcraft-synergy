@@ -14,9 +14,7 @@ import ProjectChatMessage from '@/components/project/chat/ProjectChatMessage';
 import ProjectChatInput from '@/components/project/chat/ProjectChatInput';
 import ProjectChatSuggestions from '@/components/project/chat/ProjectChatSuggestions';
 import ProjectChatWelcome from '@/components/project/chat/ProjectChatWelcome';
-
-// We're no longer importing ProjectChatFullscreen directly here
-// since it's now managed at the ProjectLayout level
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ProjectChatProps {
   projectId: string;
@@ -27,6 +25,7 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
   const { messages, isLoading, predefinedQuestions, sendMessage } = useProjectChat(projectId);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
   
   // Scroll to bottom when new messages are added, unless disableAutoScroll is true
   useEffect(() => {
@@ -111,11 +110,12 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
           <ProjectChatWelcome 
             questions={predefinedQuestions} 
             onSelectQuestion={handlePredefinedQuestion} 
+            forceShow={!isMobile} 
           />
         )}
 
         <div className="p-4 border-t bg-white">
-          {messages.length > 0 && (
+          {messages.length > 0 && !isMobile && (
             <div className="mb-3">
               <div className="mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">Suggested questions</div>
               <ProjectChatSuggestions 
