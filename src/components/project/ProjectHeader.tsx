@@ -5,6 +5,7 @@ import { UserPlus, Star, Users, Calendar, Image } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import ProjectActionsMenu from './ProjectActionsMenu';
 import MemberInvite from '@/components/MemberInvite';
 
 interface ProjectHeaderProps {
@@ -64,17 +65,20 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           <p className="text-muted-foreground">{project.description || "No description provided"}</p>
         </div>
         
-        {canInvite && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-1" 
-            onClick={() => setShowInviteDialog(true)}
-          >
-            <UserPlus className="h-4 w-4" />
-            Invite
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {canInvite && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-1" 
+              onClick={() => setShowInviteDialog(true)}
+            >
+              <UserPlus className="h-4 w-4" />
+              Invite
+            </Button>
+          )}
+          <ProjectActionsMenu projectId={project.id} userRole={userRole} />
+        </div>
       </div>
       
       <div className="flex items-center space-x-4 pt-4">
