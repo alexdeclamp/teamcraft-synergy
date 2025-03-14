@@ -12,16 +12,17 @@ import {
 interface TutorialButtonProps {
   onClick: () => void;
   className?: string;
+  size?: string; // Add size prop to interface
 }
 
-const TutorialButton: React.FC<TutorialButtonProps> = ({ onClick, className }) => {
+const TutorialButton: React.FC<TutorialButtonProps> = ({ onClick, className, size }) => {
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
           <Button 
             variant="ghost" 
-            size="sm" 
+            size={size as any || "sm"} // Add support for the size prop
             className={className}
             onClick={onClick}
           >
