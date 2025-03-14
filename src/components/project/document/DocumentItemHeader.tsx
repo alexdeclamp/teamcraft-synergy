@@ -22,13 +22,13 @@ const DocumentItemHeader: React.FC<DocumentItemHeaderProps> = ({
   };
 
   return (
-    <div className="flex items-center space-x-4">
-      <div className="p-2 bg-muted rounded-md">
+    <div className="flex items-center space-x-3 overflow-hidden">
+      <div className="p-2 bg-muted rounded-md flex-shrink-0">
         <File className="h-6 w-6 text-muted-foreground" />
       </div>
-      <div>
-        <h4 className="font-medium">{fileName}</h4>
-        <p className="text-sm text-muted-foreground">
+      <div className="min-w-0 flex-1">
+        <h4 className="font-medium text-sm sm:text-base truncate">{fileName}</h4>
+        <p className="text-xs text-muted-foreground">
           {formatDate(createdAt)}
         </p>
       </div>

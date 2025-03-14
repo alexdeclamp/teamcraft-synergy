@@ -75,13 +75,13 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
 
   return (
     <>
-      <div className="flex items-center justify-between p-4 border rounded-lg mb-2 bg-card w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg mb-2 bg-card w-full gap-3">
         <DocumentItemHeader
           fileName={document.file_name}
           createdAt={document.created_at}
         />
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-2 ml-auto mt-2 sm:mt-0">
           {isPdf && (
             <DocumentPdfActions
               pdfUrl={pdfUrl}

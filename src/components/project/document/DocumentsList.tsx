@@ -37,23 +37,19 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex-1"></div>
-        
-        <div className="flex items-center gap-2">
-          {onRefresh && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={onRefresh} 
-              disabled={isRefreshing}
-              className="h-8"
-            >
-              <RefreshCw className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          )}
-        </div>
+      <div className="flex items-center justify-end mb-4">
+        {onRefresh && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onRefresh} 
+            disabled={isRefreshing}
+            className="h-8"
+          >
+            <RefreshCw className={`h-4 w-4 mr-1 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        )}
       </div>
       
       <div className="space-y-2">

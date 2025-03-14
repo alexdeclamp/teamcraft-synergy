@@ -98,22 +98,24 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
         )}
         
         {note.source_document && (
-          <div className="mb-4 flex items-center gap-2 p-2 bg-muted/40 rounded-md text-sm border border-muted-foreground/20">
-            {note.source_document.type === 'pdf' ? (
-              <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
-            ) : (
-              <Image className="h-4 w-4 text-green-500 flex-shrink-0" />
-            )}
-            <span className="text-muted-foreground flex-shrink-0">Source:</span>
-            <span className="font-medium flex-grow truncate">{note.source_document.name}</span>
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-muted/40 rounded-md text-sm border border-muted-foreground/20">
+            <div className="flex items-center">
+              {note.source_document.type === 'pdf' ? (
+                <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
+              ) : (
+                <Image className="h-4 w-4 text-green-500 flex-shrink-0" />
+              )}
+              <span className="text-muted-foreground ml-1 mr-1 flex-shrink-0">Source:</span>
+              <span className="font-medium truncate">{note.source_document.name}</span>
+            </div>
             <a 
               href={note.source_document.url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center text-primary hover:underline flex-shrink-0"
+              className="flex items-center text-primary hover:underline flex-shrink-0 mt-1 sm:mt-0 sm:ml-auto"
             >
               <ExternalLink className="h-4 w-4 mr-1" />
-              <span className="hidden sm:inline">View Original</span>
+              <span>View Original</span>
             </a>
           </div>
         )}
