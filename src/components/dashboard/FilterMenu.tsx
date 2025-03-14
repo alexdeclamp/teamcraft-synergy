@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Filter, Star } from 'lucide-react';
+import { Filter, Star, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type FilterType = 'all' | 'owned' | 'member' | 'favorites';
+type FilterType = 'all' | 'owned' | 'member' | 'favorites' | 'archived';
 
 interface FilterMenuProps {
   currentFilter: FilterType;
@@ -23,7 +23,8 @@ const FilterMenu: React.FC<FilterMenuProps> = ({ currentFilter, onFilterChange }
     'all': 'All',
     'owned': 'Owned',
     'member': 'Member',
-    'favorites': 'Favorites'
+    'favorites': 'Favorites',
+    'archived': 'Archived'
   };
 
   return (
@@ -43,6 +44,11 @@ const FilterMenu: React.FC<FilterMenuProps> = ({ currentFilter, onFilterChange }
         <DropdownMenuItem onClick={() => onFilterChange('favorites')}>
           <Star className="h-4 w-4 mr-2" />
           Favorites
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => onFilterChange('archived')}>
+          <Archive className="h-4 w-4 mr-2" />
+          Archived
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

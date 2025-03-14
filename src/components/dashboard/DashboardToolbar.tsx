@@ -7,8 +7,8 @@ import SortMenu from './SortMenu';
 interface DashboardToolbarProps {
   searchTerm: string;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  filter: 'all' | 'owned' | 'member' | 'favorites';
-  onFilterChange: (filter: 'all' | 'owned' | 'member' | 'favorites') => void;
+  filter: 'all' | 'owned' | 'member' | 'favorites' | 'archived';
+  onFilterChange: (filter: 'all' | 'owned' | 'member' | 'favorites' | 'archived') => void;
   sortOrder: 'newest' | 'oldest' | 'alphabetical';
   onSortChange: (order: 'newest' | 'oldest' | 'alphabetical') => void;
 }
