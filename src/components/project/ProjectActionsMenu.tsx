@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Settings, Edit, Archive, ArchiveRestore } from "lucide-react";
+import { MoreHorizontal, Edit, Archive, ArchiveRestore } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -71,34 +71,25 @@ const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({
           </DropdownMenuItem>
         )}
         
-        {isOwnerOrAdmin && !isArchived && (
-          <DropdownMenuItem onClick={() => navigate(`/projects/${projectId}/settings`)}>
-            <Settings className="h-4 w-4 mr-2" />
-            Brain Settings
-          </DropdownMenuItem>
-        )}
+        {isOwnerOrAdmin && !isArchived && <DropdownMenuSeparator />}
         
         {isOwnerOrAdmin && (
-          <>
-            {!isArchived && <DropdownMenuSeparator />}
-            
-            <DropdownMenuItem 
-              className={isArchived ? "text-green-600 focus:text-green-600" : "text-destructive focus:text-destructive"}
-              onClick={handleArchiveToggle}
-            >
-              {isArchived ? (
-                <>
-                  <ArchiveRestore className="h-4 w-4 mr-2" />
-                  Restore Brain
-                </>
-              ) : (
-                <>
-                  <Archive className="h-4 w-4 mr-2" />
-                  Archive Brain
-                </>
-              )}
-            </DropdownMenuItem>
-          </>
+          <DropdownMenuItem 
+            className={isArchived ? "text-green-600 focus:text-green-600" : "text-destructive focus:text-destructive"}
+            onClick={handleArchiveToggle}
+          >
+            {isArchived ? (
+              <>
+                <ArchiveRestore className="h-4 w-4 mr-2" />
+                Restore Brain
+              </>
+            ) : (
+              <>
+                <Archive className="h-4 w-4 mr-2" />
+                Archive Brain
+              </>
+            )}
+          </DropdownMenuItem>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
