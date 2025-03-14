@@ -9,6 +9,8 @@ import ProjectTabs from '@/components/project/ProjectTabs';
 import FloatingChatButton from '@/components/project/chat/FloatingChatButton';
 import ProjectChatFullscreen from '@/components/project/chat/ProjectChatFullscreen';
 import { useIsMobile } from '@/hooks/use-mobile';
+import MobileBottomNav from '@/components/project/navigation/MobileBottomNav';
+import MobileMoreMenu from '@/components/project/navigation/MobileMoreMenu';
 
 interface ProjectLayoutProps {
   loading: boolean;
@@ -117,10 +119,35 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
         />
       </main>
 
-      <FloatingChatButton 
-        onClick={() => setIsChatOpen(true)} 
-        className="shadow-xl" 
-      />
+      {isMobile && (
+        <div className="pb-16"></div>
+      )}
+
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 flex bg-background border-t">
+          <div className="flex-1">
+            <MobileBottomNav 
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              userRole={userRole}
+            />
+          </div>
+          <div className="border-l flex items-end">
+            <MobileMoreMenu
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              userRole={userRole}
+            />
+          </div>
+        </div>
+      )}
+
+      {!isMobile && (
+        <FloatingChatButton 
+          onClick={() => setIsChatOpen(true)} 
+          className="shadow-xl" 
+        />
+      )}
 
       <ProjectChatFullscreen 
         projectId={project.id}

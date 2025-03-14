@@ -19,6 +19,11 @@ const ProjectTabsNavigation: React.FC<ProjectTabsNavigationProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
+  // Don't render the tabs on mobile as we use bottom navigation instead
+  if (isMobile) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
       <ScrollArea className="w-full" type="scroll">
@@ -84,12 +89,10 @@ const ProjectTabsNavigation: React.FC<ProjectTabsNavigationProps> = ({
         </TabsList>
       </ScrollArea>
       
-      {!isMobile && (
-        <div className="flex items-center gap-2">
-          <StartOnboardingButton />
-          <ProjectTutorial activeTab={activeTab} />
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        <StartOnboardingButton />
+        <ProjectTutorial activeTab={activeTab} />
+      </div>
     </div>
   );
 };
