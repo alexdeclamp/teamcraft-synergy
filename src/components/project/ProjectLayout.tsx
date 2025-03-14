@@ -9,8 +9,6 @@ import ProjectTabs from '@/components/project/ProjectTabs';
 import FloatingChatButton from '@/components/project/chat/FloatingChatButton';
 import ProjectChatFullscreen from '@/components/project/chat/ProjectChatFullscreen';
 import { useIsMobile } from '@/hooks/use-mobile';
-import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton';
-import ProjectTutorial from '@/components/tutorial/ProjectTutorial';
 
 interface ProjectLayoutProps {
   loading: boolean;
@@ -96,13 +94,6 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
           showInviteDialog={showInviteDialog}
           setShowInviteDialog={setShowInviteDialog}
         />
-        
-        {isMobile && (
-          <div className="flex items-center justify-end gap-2 mb-3">
-            <StartOnboardingButton size="sm" />
-            <ProjectTutorial activeTab={activeTab} size="sm" />
-          </div>
-        )}
         
         <ProjectTabs
           projectId={project.id}

@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useOnboarding } from '@/contexts/OnboardingContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export type TutorialStep = {
   id: string;
@@ -20,14 +21,15 @@ export const useTutorial = (config: TutorialConfig) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [hasCompletedTutorial, setHasCompletedTutorial] = useState(false);
   const { isOnboardingActive } = useOnboarding();
+  const isMobile = useIsMobile();
 
   const startTutorial = useCallback(() => {
-    // Don't start this tutorial if onboarding is active
-    if (isOnboardingActive) return;
+    // Don't start this tutorial if onboarding is active or on mobile
+    if (isOnboardingActive || isMobile) return;
     
     setIsActive(true);
     setCurrentStepIndex(0);
-  }, [isOnboardingActive]);
+  }, [isOnboardingActive, isMobile]);
 
   const stopTutorial = useCallback(() => {
     setIsActive(false);
@@ -58,11 +60,11 @@ export const useTutorial = (config: TutorialConfig) => {
   const isFirstStep = currentStepIndex === 0;
 
   useEffect(() => {
-    // Deactivate this tutorial if onboarding becomes active
-    if (isOnboardingActive && isActive) {
+    // Deactivate this tutorial if onboarding becomes active or if on mobile
+    if ((isOnboardingActive || isMobile) && isActive) {
       setIsActive(false);
     }
-  }, [isOnboardingActive, isActive]);
+  }, [isOnboardingActive, isMobile, isActive]);
 
   useEffect(() => {
     // Only scroll if autoScroll is explicitly set to true and tutorial is active
