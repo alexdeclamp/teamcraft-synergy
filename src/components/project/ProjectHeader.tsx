@@ -1,11 +1,8 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { UserPlus, Star, Users, Calendar, Image, MoreHorizontal } from 'lucide-react';
+import { UserPlus, Star, Users, Calendar, Image } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import ProjectActionsMenu from './ProjectActionsMenu';
 import MemberInvite from '@/components/MemberInvite';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -46,8 +43,6 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     setFavorite(!favorite);
   };
 
-  const canInvite = userRole === 'owner' || userRole === 'admin';
-
   return (
     <div className="pb-4 sm:pb-6">
       <div className="flex justify-between items-start">
@@ -68,31 +63,6 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
             <p className="text-muted-foreground text-sm line-clamp-2">{project.description}</p>
           )}
         </div>
-        
-        <div className="flex items-center gap-2">
-          {canInvite && !isMobile && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-1" 
-              onClick={() => setShowInviteDialog(true)}
-            >
-              <UserPlus className="h-4 w-4" />
-              Invite
-            </Button>
-          )}
-          {isMobile && canInvite ? (
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => setShowInviteDialog(true)}
-            >
-              <UserPlus className="h-4 w-4" />
-            </Button>
-          ) : null}
-          <ProjectActionsMenu projectId={project.id} userRole={userRole} />
-        </div>
       </div>
       
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-4">
@@ -110,9 +80,6 @@ const ProjectHeader: React.FC<ProjectHeaderProps> = ({
           <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
           <span>Created {format(new Date(project.created_at), 'MMM d, yyyy')}</span>
         </div>
-        {daysSinceCreation < 7 && (
-          <Badge variant="outline" className="text-xs">New</Badge>
-        )}
       </div>
       
       {/* Member Invite Dialog */}
