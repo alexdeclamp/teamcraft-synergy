@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pencil, UserPlus, Archive, Star } from 'lucide-react';
+import { Pencil, UserPlus, Archive, Star, ArchiveRestore } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -20,13 +20,17 @@ interface ProjectCardActionsProps {
   isOwner?: boolean;
   isFavorite: boolean;
   setFavorite: (state: boolean) => void;
+  isArchived?: boolean;
+  onArchiveStatusChange?: () => void;
 }
 
 const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
   id,
   isOwner,
   isFavorite,
-  setFavorite
+  setFavorite,
+  isArchived = false,
+  onArchiveStatusChange
 }) => {
   const navigate = useNavigate();
 
@@ -42,11 +46,30 @@ const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
     navigate(`/project/${id}?tab=members`);
   };
 
-  const handleArchiveBrain = (e: React.MouseEvent) => {
+  const handleArchiveToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // This would be implemented in a future update
-    toast.info("Archive functionality coming soon");
+    
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ 
+          is_archived: !isArchived,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      toast.success(isArchived ? 'Brain restored successfully' : 'Brain archived successfully');
+      
+      if (onArchiveStatusChange) {
+        onArchiveStatusChange();
+      }
+    } catch (error) {
+      console.error('Error toggling archive status:', error);
+      toast.error('Failed to update brain');
+    }
   };
 
   const toggleFavorite = async (e: React.MouseEvent) => {
@@ -96,18 +119,34 @@ const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[180px]">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={handleEditBrain}>
-            <Pencil className="h-4 w-4 mr-2" />
-            Edit brain
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleManageMembers}>
-            <UserPlus className="h-4 w-4 mr-2" />
-            Manage members
-          </DropdownMenuItem>
+          {!isArchived && (
+            <>
+              <DropdownMenuItem onClick={handleEditBrain}>
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit brain
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleManageMembers}>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Manage members
+              </DropdownMenuItem>
+            </>
+          )}
           {isOwner && (
-            <DropdownMenuItem onClick={handleArchiveBrain}>
-              <Archive className="h-4 w-4 mr-2" />
-              Archive brain
+            <DropdownMenuItem 
+              onClick={handleArchiveToggle}
+              className={isArchived ? "text-green-600" : "text-destructive"}
+            >
+              {isArchived ? (
+                <>
+                  <ArchiveRestore className="h-4 w-4 mr-2" />
+                  Restore brain
+                </>
+              ) : (
+                <>
+                  <Archive className="h-4 w-4 mr-2" />
+                  Archive brain
+                </>
+              )}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

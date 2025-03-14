@@ -28,6 +28,8 @@ export interface ProjectCardProps {
   tags?: string[];
   className?: string;
   isFavorite?: boolean;
+  isArchived?: boolean;
+  onArchiveStatusChange?: () => void;
 }
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -42,18 +44,23 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   tags = [],
   className,
   isFavorite = false,
+  isArchived = false,
+  onArchiveStatusChange,
 }) => {
   const [favorite, setFavorite] = useState(isFavorite);
+
+  const cardStatus = isArchived ? 'archived' : status;
 
   return (
     <Card className={cn(
       "overflow-hidden transition-all duration-300 bg-white border hover:shadow-md animate-scale-in",
+      isArchived && "opacity-75",
       className
     )}>
       <CardHeader className="relative pb-4">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
-            <ProjectCardBadge status={status} />
+            <ProjectCardBadge status={cardStatus} />
             <CardTitle className="text-xl font-semibold">{title}</CardTitle>
             <CardDescription className="text-sm text-muted-foreground line-clamp-2">
               {description}
@@ -64,6 +71,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             isOwner={isOwner} 
             isFavorite={favorite}
             setFavorite={setFavorite}
+            isArchived={isArchived}
+            onArchiveStatusChange={onArchiveStatusChange}
           />
         </div>
       </CardHeader>

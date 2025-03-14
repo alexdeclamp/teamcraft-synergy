@@ -10,11 +10,12 @@ interface UseDashboardDataResult {
   filteredProjects: ProjectCardProps[];
   loading: boolean;
   searchTerm: string;
-  filter: 'all' | 'owned' | 'member' | 'favorites';
+  filter: 'all' | 'owned' | 'member' | 'favorites' | 'archived';
   sortOrder: 'newest' | 'oldest' | 'alphabetical';
   setSearchTerm: (term: string) => void;
-  setFilter: (filter: 'all' | 'owned' | 'member' | 'favorites') => void;
+  setFilter: (filter: 'all' | 'owned' | 'member' | 'favorites' | 'archived') => void;
   setSortOrder: (order: 'newest' | 'oldest' | 'alphabetical') => void;
+  refreshProjects: () => Promise<void>;
 }
 
 export const useDashboardData = (): UseDashboardDataResult => {
@@ -22,107 +23,111 @@ export const useDashboardData = (): UseDashboardDataResult => {
   const [projects, setProjects] = useState<ProjectCardProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'all' | 'owned' | 'member' | 'favorites'>('all');
+  const [filter, setFilter] = useState<'all' | 'owned' | 'member' | 'favorites' | 'archived'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      if (!user) return;
+  const fetchProjects = async () => {
+    if (!user) return;
 
-      try {
-        setLoading(true);
-        
-        const { data: ownedProjects, error: ownedError } = await supabase
-          .from('projects')
-          .select(`
+    try {
+      setLoading(true);
+      
+      const { data: ownedProjects, error: ownedError } = await supabase
+        .from('projects')
+        .select(`
+          id,
+          title,
+          description,
+          created_at,
+          updated_at,
+          owner_id,
+          is_favorite,
+          is_archived
+        `)
+        .eq('owner_id', user.id);
+
+      if (ownedError) throw ownedError;
+
+      const { data: memberProjects, error: memberError } = await supabase
+        .from('project_members')
+        .select(`
+          project_id,
+          role,
+          projects (
             id,
             title,
             description,
             created_at,
             updated_at,
             owner_id,
-            is_favorite
-          `)
-          .eq('owner_id', user.id);
+            is_favorite,
+            is_archived
+          )
+        `)
+        .eq('user_id', user.id);
 
-        if (ownedError) throw ownedError;
+      if (memberError) throw memberError;
 
-        const { data: memberProjects, error: memberError } = await supabase
+      const formattedOwnedProjects = ownedProjects.map(project => ({
+        id: project.id,
+        title: project.title,
+        description: project.description || '',
+        createdAt: project.created_at,
+        updatedAt: project.updated_at,
+        status: 'active' as const,
+        memberCount: 1,
+        isOwner: true,
+        isFavorite: project.is_favorite,
+        isArchived: project.is_archived
+      }));
+
+      const memberProjectsMap = new Map();
+      memberProjects.forEach(item => {
+        if (item.projects && item.project_id) {
+          const project = item.projects;
+          if (project.owner_id !== user.id) {
+            memberProjectsMap.set(project.id, {
+              id: project.id,
+              title: project.title,
+              description: project.description || '',
+              createdAt: project.created_at,
+              updatedAt: project.updated_at,
+              status: 'active' as const,
+              memberCount: 1,
+              isOwner: false,
+              role: item.role,
+              isFavorite: project.is_favorite,
+              isArchived: project.is_archived
+            });
+          }
+        }
+      });
+
+      const formattedMemberProjects = Array.from(memberProjectsMap.values());
+      
+      const allProjects = [...formattedOwnedProjects, ...formattedMemberProjects];
+      
+      await Promise.all(allProjects.map(async (project) => {
+        const { count, error: countError } = await supabase
           .from('project_members')
-          .select(`
-            project_id,
-            role,
-            projects (
-              id,
-              title,
-              description,
-              created_at,
-              updated_at,
-              owner_id,
-              is_favorite
-            )
-          `)
-          .eq('user_id', user.id);
+          .select('*', { count: 'exact', head: true })
+          .eq('project_id', project.id);
+          
+        if (!countError) {
+          project.memberCount = (count || 0) + 1;
+        }
+      }));
 
-        if (memberError) throw memberError;
+      setProjects(allProjects);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      toast.error("Failed to load projects");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        const formattedOwnedProjects = ownedProjects.map(project => ({
-          id: project.id,
-          title: project.title,
-          description: project.description || '',
-          createdAt: project.created_at,
-          updatedAt: project.updated_at,
-          status: 'active' as const,
-          memberCount: 1,
-          isOwner: true,
-          isFavorite: project.is_favorite
-        }));
-
-        const memberProjectsMap = new Map();
-        memberProjects.forEach(item => {
-          if (item.projects && item.project_id) {
-            const project = item.projects;
-            if (project.owner_id !== user.id) {
-              memberProjectsMap.set(project.id, {
-                id: project.id,
-                title: project.title,
-                description: project.description || '',
-                createdAt: project.created_at,
-                updatedAt: project.updated_at,
-                status: 'active' as const,
-                memberCount: 1,
-                isOwner: false,
-                role: item.role,
-                isFavorite: project.is_favorite
-              });
-            }
-          }
-        });
-
-        const formattedMemberProjects = Array.from(memberProjectsMap.values());
-        
-        const allProjects = [...formattedOwnedProjects, ...formattedMemberProjects];
-        
-        await Promise.all(allProjects.map(async (project) => {
-          const { count, error: countError } = await supabase
-            .from('project_members')
-            .select('*', { count: 'exact', head: true })
-            .eq('project_id', project.id);
-            
-          if (!countError) {
-            project.memberCount = (count || 0) + 1;
-          }
-        }));
-
-        setProjects(allProjects);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
-        toast.error("Failed to load projects");
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  useEffect(() => {
     fetchProjects();
   }, [user]);
 
@@ -132,12 +137,13 @@ export const useDashboardData = (): UseDashboardDataResult => {
         project.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
         project.description.toLowerCase().includes(searchTerm.toLowerCase());
       
-      if (filter === 'all') return matchesSearch;
-      if (filter === 'owned') return matchesSearch && project.isOwner;
-      if (filter === 'member') return matchesSearch && !project.isOwner;
-      if (filter === 'favorites') return matchesSearch && project.isFavorite;
+      if (filter === 'all') return matchesSearch && !project.isArchived;
+      if (filter === 'owned') return matchesSearch && project.isOwner && !project.isArchived;
+      if (filter === 'member') return matchesSearch && !project.isOwner && !project.isArchived;
+      if (filter === 'favorites') return matchesSearch && project.isFavorite && !project.isArchived;
+      if (filter === 'archived') return matchesSearch && project.isArchived;
       
-      return matchesSearch;
+      return matchesSearch && !project.isArchived;
     })
     .sort((a, b) => {
       if (sortOrder === 'newest') {
@@ -158,6 +164,7 @@ export const useDashboardData = (): UseDashboardDataResult => {
     sortOrder,
     setSearchTerm,
     setFilter,
-    setSortOrder
+    setSortOrder,
+    refreshProjects: fetchProjects
   };
 };

@@ -15,7 +15,8 @@ const Dashboard = () => {
     sortOrder,
     setSearchTerm,
     setFilter,
-    setSortOrder
+    setSortOrder,
+    refreshProjects
   } = useDashboardData();
 
   return (
@@ -39,6 +40,7 @@ const Dashboard = () => {
           loading={loading}
           searchTerm={searchTerm}
           filter={filter}
+          refreshProjects={refreshProjects}
         />
       </main>
     </div>

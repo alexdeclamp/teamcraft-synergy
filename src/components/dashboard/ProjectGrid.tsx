@@ -9,10 +9,17 @@ interface ProjectGridProps {
   projects: ProjectCardProps[];
   loading: boolean;
   searchTerm: string;
-  filter: 'all' | 'owned' | 'member' | 'favorites';
+  filter: 'all' | 'owned' | 'member' | 'favorites' | 'archived';
+  refreshProjects: () => Promise<void>;
 }
 
-const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, loading, searchTerm, filter }) => {
+const ProjectGrid: React.FC<ProjectGridProps> = ({ 
+  projects, 
+  loading, 
+  searchTerm, 
+  filter,
+  refreshProjects
+}) => {
   const navigate = useNavigate();
 
   if (loading) {
@@ -28,7 +35,12 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, loading, searchTerm
       <div className="text-center py-12">
         <h3 className="text-lg font-medium mb-2">No brains found</h3>
         <p className="text-muted-foreground mb-6">
-          {searchTerm || filter !== 'all' ? 'Try adjusting your search or filters' : 'Get started by creating your first brain'}
+          {filter === 'archived' 
+            ? 'No archived brains found' 
+            : searchTerm || filter !== 'all' 
+              ? 'Try adjusting your search or filters' 
+              : 'Get started by creating your first brain'
+          }
         </p>
         {!searchTerm && filter === 'all' && (
           <Button 
@@ -49,6 +61,7 @@ const ProjectGrid: React.FC<ProjectGridProps> = ({ projects, loading, searchTerm
           key={project.id} 
           {...project} 
           className="h-full"
+          onArchiveStatusChange={refreshProjects}
         />
       ))}
     </div>
