@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -7,6 +8,9 @@ import ProjectHeader from '@/components/project/ProjectHeader';
 import ProjectTabs from '@/components/project/ProjectTabs';
 import FloatingChatButton from '@/components/project/chat/FloatingChatButton';
 import ProjectChatFullscreen from '@/components/project/chat/ProjectChatFullscreen';
+import { useIsMobile } from '@/hooks/use-mobile';
+import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton';
+import ProjectTutorial from '@/components/tutorial/ProjectTutorial';
 
 interface ProjectLayoutProps {
   loading: boolean;
@@ -55,6 +59,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
 }) => {
   const navigate = useNavigate();
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   if (loading) {
     return (
@@ -80,7 +85,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
     <div className="min-h-screen bg-background pb-12 animate-fade-in">
       <Navbar />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-16 sm:pt-20">
         <ProjectHeader
           project={project}
           userRole={userRole}
@@ -90,11 +95,14 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
           onAddMember={handleAddMember}
           showInviteDialog={showInviteDialog}
           setShowInviteDialog={setShowInviteDialog}
-          onInviteSuccess={() => {
-            // Refresh members list when invitation is successful
-            // This would typically trigger a re-fetch
-          }}
         />
+        
+        {isMobile && (
+          <div className="flex items-center justify-end gap-2 mb-3">
+            <StartOnboardingButton size="sm" />
+            <ProjectTutorial activeTab={activeTab} size="sm" />
+          </div>
+        )}
         
         <ProjectTabs
           projectId={project.id}
