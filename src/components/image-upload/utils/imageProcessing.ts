@@ -15,6 +15,7 @@ export const compressImage = (file: File, maxWidth: number, maxHeight: number): 
         let width = img.width;
         let height = img.height;
         
+        // Calculate aspect ratio to maintain proportions
         if (width > maxWidth) {
           height = (height * maxWidth) / width;
           width = maxWidth;
@@ -31,6 +32,7 @@ export const compressImage = (file: File, maxWidth: number, maxHeight: number): 
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
         
+        // Use higher quality compression for better image quality
         canvas.toBlob(
           (blob) => {
             if (!blob) {
@@ -40,7 +42,7 @@ export const compressImage = (file: File, maxWidth: number, maxHeight: number): 
             resolve(blob);
           },
           'image/jpeg',
-          0.8
+          0.9 // Higher quality setting (0.9 instead of 0.8)
         );
       };
       

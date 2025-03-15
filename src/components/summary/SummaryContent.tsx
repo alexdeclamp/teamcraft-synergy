@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Loader2, Save, AlertCircle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SummaryContentProps {
   isLoading: boolean;
@@ -15,6 +16,8 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
   hasSummary,
   error
 }) => {
+  const isMobile = useIsMobile();
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-8 space-y-4">
@@ -42,11 +45,13 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
   if (summary) {
     return (
       <>
-        <div className="mb-2 px-2 text-sm text-muted-foreground flex items-center">
-          <Save className="h-3 w-3 mr-1" />
-          <span>Summary is saved and will be available instantly next time</span>
-        </div>
-        <div className="p-4 bg-accent/20 rounded-md whitespace-pre-wrap max-h-[50vh] overflow-y-auto">
+        {!isMobile && (
+          <div className="mb-2 px-2 text-sm text-muted-foreground flex items-center">
+            <Save className="h-3 w-3 mr-1" />
+            <span>Summary is saved and will be available instantly next time</span>
+          </div>
+        )}
+        <div className="p-4 bg-accent/20 rounded-md whitespace-pre-wrap max-h-[55vh] overflow-y-auto">
           {summary}
         </div>
       </>

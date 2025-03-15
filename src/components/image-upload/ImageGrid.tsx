@@ -19,6 +19,7 @@ import ImageSummaryButton from '@/components/ImageSummaryButton';
 import ImageTagManager from '@/components/ImageTagManager';
 import { formatFileSize } from '@/utils/fileUtils';
 import { UploadedImage } from './GalleryDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ImageGridProps {
   uploadedImages: UploadedImage[];
@@ -31,6 +32,8 @@ const ImageGrid: React.FC<ImageGridProps> = ({
   isLoading,
   onDeleteImage
 }) => {
+  const isMobile = useIsMobile();
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-10">
@@ -49,10 +52,10 @@ const ImageGrid: React.FC<ImageGridProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       {uploadedImages.map((image) => (
         <Card key={image.path} className="overflow-hidden">
-          <div className="relative h-40">
+          <div className="relative h-48 sm:h-40">
             <img 
               src={image.url} 
               alt={image.name} 

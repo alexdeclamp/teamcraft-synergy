@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, Copy, ThumbsUp, ThumbsDown, FileText, RefreshCw } from 'lucide-react';
+import { Loader2, Download, Copy, FileText, RefreshCw } from 'lucide-react';
 
 interface SummaryFooterProps {
   isLoading: boolean;
@@ -36,36 +36,18 @@ const SummaryFooter: React.FC<SummaryFooterProps> = ({
   onCreateNote,
   onRetry
 }) => {
+  const isMobile = window.innerWidth < 768;
+
   return (
     <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:space-x-2 mt-4">
-      <div className="flex items-center space-x-2 mt-4 sm:mt-0">
-        {!isLoading && summary && !feedbackGiven && !error && (
-          <>
-            <p className="text-sm text-muted-foreground mr-2">Was this summary helpful?</p>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => onFeedback(true)}
-              className="h-8 w-8"
-            >
-              <ThumbsUp className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => onFeedback(false)}
-              className="h-8 w-8"
-            >
-              <ThumbsDown className="h-4 w-4" />
-            </Button>
-          </>
-        )}
-        {feedbackGiven && (
-          <p className="text-sm text-muted-foreground">Thanks for your feedback!</p>
-        )}
-      </div>
+      {/* Only show feedback on desktop */}
+      {!isMobile && !isLoading && summary && !feedbackGiven && !error && (
+        <div className="flex items-center space-x-2 mt-4 sm:mt-0">
+          <p className="text-sm text-muted-foreground">Thanks for using our service!</p>
+        </div>
+      )}
       
-      <div className="flex space-x-2">
+      <div className="flex space-x-2 w-full sm:w-auto justify-end">
         {error && onRetry && (
           <Button 
             onClick={onRetry} 

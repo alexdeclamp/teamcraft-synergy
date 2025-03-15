@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { UploadedImage } from '@/types/project';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface UseProjectImagesResult {
   projectImages: UploadedImage[];
@@ -19,6 +20,7 @@ export const useProjectImages = (
   const [projectImages, setProjectImages] = useState<UploadedImage[]>([]);
   const [recentImages, setRecentImages] = useState<UploadedImage[]>([]);
   const [isImagesLoading, setIsImagesLoading] = useState(false);
+  const isMobile = useIsMobile();
 
   const fetchProjectImages = useCallback(async () => {
     if (!projectId || !userId) return;
@@ -60,8 +62,13 @@ export const useProjectImages = (
                   .eq('project_id', projectId)
                   .maybeSingle();
 
+                // Add cache-busting for mobile
+                const imageUrl = isMobile 
+                  ? `${urlData.publicUrl}?t=${new Date().getTime()}` 
+                  : urlData.publicUrl;
+
                 return {
-                  url: urlData.publicUrl,
+                  url: imageUrl,
                   path: `${projectId}/${item.name}`,
                   size: item.metadata?.size || 0,
                   name: item.name,
@@ -102,7 +109,7 @@ export const useProjectImages = (
     } finally {
       setIsImagesLoading(false);
     }
-  }, [projectId, userId]);
+  }, [projectId, userId, isMobile]);
 
   // Initial fetch of images when hook is initialized
   useEffect(() => {

@@ -18,9 +18,9 @@ interface ProjectImageUploadProps {
 const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
   projectId,
   onUploadComplete,
-  maxWidth = 1200,
-  maxHeight = 1200,
-  maxSizeInMB = 2,
+  maxWidth = 1600,
+  maxHeight = 1600,
+  maxSizeInMB = 5,
 }) => {
   const { user } = useAuth();
   
@@ -51,7 +51,7 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
   return (
     <div>
       <ContentAlert 
-        message="Generate notes from your images to make their content available to the project chat assistant. Image content is not directly accessible without creating notes."
+        message="Image content is not directly accessible to the project chat assistant. Generate notes from your images to make their content available."
         documentType="image"
       />
       

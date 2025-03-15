@@ -39,12 +39,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
             <Plus className="h-4 w-4 mr-2" />
             New Brain
           </Button>
-          {isMobile && (
-            <div className="flex items-center ml-3">
-              <StartOnboardingButton className="mr-2" />
-              <DashboardTutorial />
-            </div>
-          )}
         </div>
       </div>
     </div>

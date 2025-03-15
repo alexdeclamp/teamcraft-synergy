@@ -63,7 +63,7 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
     }}>
-      <DialogContent className="sm:max-w-[750px] max-h-[85vh] flex flex-col">
+      <DialogContent className="sm:max-w-[750px] max-h-[90vh] flex flex-col">
         <div className="absolute right-4 top-4">
           <SummaryCloseButton />
         </div>

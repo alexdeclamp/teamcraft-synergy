@@ -58,7 +58,7 @@ const ProjectTabsNavigation: React.FC<ProjectTabsNavigationProps> = ({
             className="text-xs sm:text-sm py-1.5 px-2 sm:px-3"
             onClick={() => onTabChange('documents')}
           >
-            Docs
+            Documents
           </TabsTrigger>
           <TabsTrigger 
             value="images" 
@@ -90,8 +90,8 @@ const ProjectTabsNavigation: React.FC<ProjectTabsNavigationProps> = ({
       </ScrollArea>
       
       <div className="flex items-center gap-2">
-        <StartOnboardingButton />
-        <ProjectTutorial activeTab={activeTab} />
+        {!isMobile && <StartOnboardingButton />}
+        {!isMobile && <ProjectTutorial activeTab={activeTab} />}
       </div>
     </div>
   );
