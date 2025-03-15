@@ -9,7 +9,6 @@ import TestimonialsSection from '@/components/landing/TestimonialsSection';
 import KeyFeaturesSection from '@/components/landing/KeyFeaturesSection';
 import CtaSection from '@/components/landing/CtaSection';
 import FooterSection from '@/components/landing/FooterSection';
-import { InvitationBanner } from '@/components/ui/invitation-banner';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Landing = () => {
@@ -17,13 +16,8 @@ const Landing = () => {
   
   return (
     <div className="min-h-screen bg-background overflow-hidden">
-      <div className="flex flex-col">
-        {/* Navigation bar first */}
-        <LandingNavbar />
-        
-        {/* Banner directly under the navbar */}
-        <InvitationBanner />
-      </div>
+      {/* Navigation bar */}
+      <LandingNavbar />
       
       <HeroSection />
       <TimelineSection />
