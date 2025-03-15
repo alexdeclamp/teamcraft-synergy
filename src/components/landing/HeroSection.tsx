@@ -19,7 +19,7 @@ const HeroSection: React.FC = () => {
           Bra<span className="text-primary">3</span>n
         </h1>
         <p className="text-2xl sm:text-3xl font-medium text-foreground mb-4">Your AI Project Assistant.</p>
-        <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto mb-8">Bra3n stores and generates notes from PDFs, images and texts into an AI-powered knowledge hub, where you can retrieve insights instantly.</p>
+        <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto mb-8">Turn any documents into actionable insights instantly with AI-powered summaries and search.</p>
         <Button onClick={() => navigate('/auth?tab=register')} size="lg" className="rounded-full px-8 text-base shadow-sm">
           Try Bra3n
           <ArrowRight className="ml-1 h-4 w-4" />
