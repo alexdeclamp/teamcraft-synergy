@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useImageUpload } from './image-upload/useImageUpload';
@@ -52,6 +51,10 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
     maxSizeInMB,
     onUploadComplete
   });
+  
+  const onDeleteImage = async (imagePath: string) => {
+    await handleDeleteImage(imagePath);
+  };
 
   return (
     <div>
@@ -193,7 +196,7 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
         <ImageGrid
           uploadedImages={uploadedImages}
           isLoading={isLoading}
-          onDeleteImage={handleDeleteImage}
+          onDeleteImage={onDeleteImage}
           projectId={projectId}
           onImageRenamed={fetchUploadedImages}
           inGalleryDialog={false}

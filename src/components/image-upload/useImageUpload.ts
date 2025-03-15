@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -30,6 +31,7 @@ export const useImageUpload = ({
   const [isGalleryDialogOpen, setIsGalleryDialogOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [deletedImagePaths, setDeletedImagePaths] = useState<string[]>([]);
 
   const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
 
@@ -56,6 +58,11 @@ export const useImageUpload = ({
 
             const imagePath = `${projectId}/${item.name}`;
             const imageUrl = urlData.publicUrl;
+            
+            // Skip this image if it's in our deletedImagePaths array
+            if (deletedImagePaths.includes(imagePath)) {
+              return null;
+            }
 
             const { data: tagData, error: tagError } = await supabase
               .from('image_tags')
@@ -78,7 +85,10 @@ export const useImageUpload = ({
           })
         );
 
-        setUploadedImages(imagesWithPaths);
+        // Filter out null values (deleted images)
+        const filteredImages = imagesWithPaths.filter(img => img !== null) as UploadedImage[];
+        
+        setUploadedImages(filteredImages);
       }
     } catch (error: any) {
       console.error('Error fetching images:', error);
@@ -86,7 +96,7 @@ export const useImageUpload = ({
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, userId]);
+  }, [projectId, userId, deletedImagePaths]);
 
   useEffect(() => {
     if (projectId && userId) {
@@ -186,14 +196,50 @@ export const useImageUpload = ({
     if (!confirmed) return;
     
     try {
-      const { error } = await supabase
+      // First, find the image and its URL in our local state
+      const imageToDelete = uploadedImages.find(img => img.path === imagePath);
+      
+      if (!imageToDelete) {
+        toast.error('Image not found');
+        return;
+      }
+      
+      // Delete the image from storage
+      const { error: storageError } = await supabase
         .storage
         .from('project_images')
         .remove([imagePath]);
         
-      if (error) throw error;
+      if (storageError) throw storageError;
       
-      setUploadedImages(uploadedImages.filter(img => img.path !== imagePath));
+      // Delete any tags associated with this image
+      const { error: tagError } = await supabase
+        .from('image_tags')
+        .delete()
+        .eq('image_url', imageToDelete.url)
+        .eq('project_id', projectId);
+      
+      if (tagError) {
+        console.error('Error deleting image tags:', tagError);
+      }
+      
+      // Delete any summaries associated with this image
+      const { error: summaryError } = await supabase
+        .from('image_summaries')
+        .delete()
+        .eq('image_url', imageToDelete.url)
+        .eq('project_id', projectId);
+      
+      if (summaryError) {
+        console.error('Error deleting image summary:', summaryError);
+      }
+      
+      // Update our local state by filtering out the deleted image
+      setUploadedImages(prev => prev.filter(img => img.path !== imagePath));
+      
+      // Add the path to our deletedImagePaths array to prevent it from reappearing
+      setDeletedImagePaths(prev => [...prev, imagePath]);
+      
       toast.success('Image deleted successfully');
     } catch (error: any) {
       console.error('Error deleting image:', error);
