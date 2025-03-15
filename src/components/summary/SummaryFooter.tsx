@@ -29,6 +29,7 @@ const SummaryFooter: React.FC<SummaryFooterProps> = ({
   hasSummary,
   buttonText,
   error,
+  onCreateNote,
   onRetry
 }) => {
   return (
