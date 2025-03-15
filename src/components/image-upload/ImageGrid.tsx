@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +29,7 @@ interface ImageGridProps {
   onDeleteImage: (imagePath: string) => Promise<void>;
   projectId: string;
   onImageRenamed?: () => void;
+  inGalleryDialog?: boolean;
 }
 
 const ImageGrid: React.FC<ImageGridProps> = ({
@@ -37,7 +37,8 @@ const ImageGrid: React.FC<ImageGridProps> = ({
   isLoading,
   onDeleteImage,
   projectId,
-  onImageRenamed
+  onImageRenamed,
+  inGalleryDialog
 }) => {
   const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState('');

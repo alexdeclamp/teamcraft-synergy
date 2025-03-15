@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -27,6 +26,7 @@ interface UploadDialogProps {
   maxSizeInMB: number;
 }
 
+// This component is no longer needed in the UI flow, but we'll keep it in case it's referenced elsewhere
 const UploadDialog: React.FC<UploadDialogProps> = ({
   selectedFile,
   preview,
