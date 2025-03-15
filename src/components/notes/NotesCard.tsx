@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Note } from './types';
 import { formatDistanceToNow } from 'date-fns';
 import { useNoteDateFormat } from '@/hooks/notes/useNoteDateFormat';
-import { CalendarClock, FileText } from 'lucide-react';
+import { CalendarClock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Dispatch, SetStateAction } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -47,46 +47,38 @@ const NotesCard: React.FC<NotesCardProps> = ({
 
   return (
     <Card 
-      className="group hover:shadow transition-all cursor-pointer overflow-hidden"
+      className="hover:shadow-sm transition-all cursor-pointer border-muted"
       onClick={handleCardClick}
     >
-      <CardContent className="p-5 pt-5">
-        <div className="space-y-2">
-          <div className="flex flex-col">
-            <div className="flex items-start justify-between mb-1">
-              <h3 className="font-medium text-lg sm:text-xl break-words line-clamp-2 overflow-hidden hyphens-auto">
-                {note.title || "Untitled Note"}
-              </h3>
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground mb-2">
-              <div className="flex items-center">
-                <CalendarClock className="h-3 w-3 mr-1 flex-shrink-0" />
-                <span>{formattedDate}</span>
-              </div>
-              
-              {note.source_document && (
-                <div className="flex items-center ml-2">
-                  <FileText className="h-3 w-3 mr-1 flex-shrink-0" />
-                  <span className="truncate max-w-[150px]">{note.source_document.name}</span>
-                </div>
-              )}
-            </div>
+      <CardContent className="p-4">
+        <h3 className="font-medium text-base break-words line-clamp-2 mb-2">
+          {note.title || "Untitled Note"}
+        </h3>
+        
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center text-xs text-muted-foreground">
+            <CalendarClock className="h-3 w-3 mr-1 flex-shrink-0" />
+            <span>{formattedDate}</span>
           </div>
           
-          <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 pt-2">
-            <div className="flex flex-wrap gap-1 mt-2 sm:mt-0">
-              {note.tags && note.tags.map(tag => (
+          {note.tags && note.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {note.tags.slice(0, 2).map(tag => (
                 <Badge 
                   key={tag} 
                   variant="secondary" 
-                  className="text-xs px-2 py-0 hover:bg-secondary/60"
+                  className="text-xs px-1.5 py-0 h-5"
                 >
                   {tag}
                 </Badge>
               ))}
+              {note.tags.length > 2 && (
+                <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
+                  +{note.tags.length - 2}
+                </Badge>
+              )}
             </div>
-          </div>
+          )}
         </div>
       </CardContent>
     </Card>

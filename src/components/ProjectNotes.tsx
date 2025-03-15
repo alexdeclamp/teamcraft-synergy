@@ -72,21 +72,19 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     
     return (
       <>
-        <div className="mb-6">
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <TagFilter 
             allTags={allTags} 
             activeTag={activeTag} 
             setActiveTag={setActiveTag} 
           />
-          <div className="mt-4 flex justify-end">
-            <Button onClick={handleOpenCreateDialog} className="flex items-center gap-1">
-              <PlusCircle className="h-4 w-4" />
-              New Note
-            </Button>
-          </div>
+          <Button onClick={handleOpenCreateDialog} className="flex items-center gap-1 shrink-0">
+            <PlusCircle className="h-4 w-4" />
+            New Note
+          </Button>
         </div>
 
-        <div className="space-y-2">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {notes.map(note => (
             <NotesCard
               key={note.id}
