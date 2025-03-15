@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProjectUpdatesHeader from './update/ProjectUpdatesHeader';
 import ProjectUpdatesList from './update/ProjectUpdatesList';
 import { Update } from './update/types';
-import { ContentAlert } from "@/components/ui/content-alert";
 
 interface ProjectUpdatesProps {
   projectId: string;
@@ -102,7 +102,6 @@ const ProjectUpdates: React.FC<ProjectUpdatesProps> = ({ projectId }) => {
 
   return (
     <div className="space-y-6">
-      <ContentAlert />
       <ProjectQuickUpdate 
         projectId={projectId}
         onUpdateAdded={fetchUpdates}

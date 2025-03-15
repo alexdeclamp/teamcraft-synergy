@@ -37,12 +37,12 @@ const ProjectUpdatesList: React.FC<ProjectUpdatesListProps> = ({
 
   return (
     <ScrollArea className="h-[350px]">
-      <div className="space-y-4 pr-4">
-        {updates.map((update) => (
+      <div className="pr-4 bg-white rounded-md shadow-sm">
+        {updates.map((update, index) => (
           <ProjectUpdateItem 
             key={update.id}
             update={update}
-            isLast={update.id === updates[updates.length - 1].id}
+            isLast={index === updates.length - 1}
             userId={userId}
             onRemove={onUpdateRemoved}
           />
