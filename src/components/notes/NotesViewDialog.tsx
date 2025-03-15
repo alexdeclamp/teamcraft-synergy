@@ -115,18 +115,6 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
               {isConfirmingDelete ? "Confirm" : "Delete"}
             </Button>
             
-            <Button 
-              variant="default"
-              size="sm"
-              className="col-span-2 h-9 mt-1 text-sm"
-              onClick={() => {
-                const summaryBtn = document.querySelector('[title*="Generate AI Summary"], [title*="View Saved AI Summary"]') as HTMLButtonElement;
-                if (summaryBtn) summaryBtn.click();
-              }}
-            >
-              Generate AI Summary
-            </Button>
-            
             <div className="hidden">
               <NoteSummaryButton 
                 noteId={note.id}
