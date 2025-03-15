@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import ImageGrid from './ImageGrid';
 import { Image } from 'lucide-react';
-import ImageFilters from './ImageFilters';
 import { useState, useEffect } from 'react';
 
 export interface UploadedImage {
@@ -104,14 +103,44 @@ const GalleryDialog: React.FC<GalleryDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <ImageFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          allTags={allTags}
-          selectedTags={selectedTags}
-          onTagSelect={handleTagSelect}
-          onClearFilters={handleClearFilters}
-        />
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              placeholder="Search images..."
+              className="px-3 py-2 border rounded-md flex-1"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            
+            {selectedTags.length > 0 && (
+              <button 
+                onClick={handleClearFilters}
+                className="px-3 py-2 bg-red-50 text-red-800 rounded-md text-sm"
+              >
+                Clear filters ({selectedTags.length})
+              </button>
+            )}
+          </div>
+          
+          {allTags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {allTags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => handleTagSelect(tag)}
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    selectedTags.includes(tag)
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         
         <ImageGrid 
           uploadedImages={filteredImages}

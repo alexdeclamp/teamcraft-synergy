@@ -34,8 +34,17 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({ projectId, onImagesUpdate
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [deletedImagePaths, setDeletedImagePaths] = useState<string[]>([]);
+  
+  // Use localStorage to persist deleted image paths across sessions
+  useEffect(() => {
+    // Load deleted image paths from localStorage on component mount
+    const storedDeletedPaths = localStorage.getItem(`deletedImages-${projectId}`);
+    if (storedDeletedPaths) {
+      setDeletedImagePaths(JSON.parse(storedDeletedPaths));
+    }
+  }, [projectId]);
 
-  // Fetch images when component mounts
+  // Fetch images when component mounts or after deletion
   useEffect(() => {
     fetchProjectImages();
   }, [projectId, deletedImagePaths]);
@@ -54,11 +63,15 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({ projectId, onImagesUpdate
       if (error) throw error;
 
       if (data) {
+        console.log('Fetched images:', data);
+        console.log('Currently deleted paths:', deletedImagePaths);
+        
         const imagePromises = data.map(async (item) => {
           const imagePath = `${projectId}/${item.name}`;
           
           // Skip images that have been deleted
           if (deletedImagePaths.includes(imagePath)) {
+            console.log('Skipping deleted image:', imagePath);
             return null;
           }
           
@@ -99,6 +112,7 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({ projectId, onImagesUpdate
           b.createdAt.getTime() - a.createdAt.getTime()
         );
 
+        console.log('Processed images after filtering deleted:', sortedImages.length);
         setUploadedImages(sortedImages);
         onImagesUpdated(sortedImages, sortedImages.slice(0, 3));
       }
@@ -137,8 +151,7 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({ projectId, onImagesUpdate
       const { error: tagError } = await supabase
         .from('image_tags')
         .delete()
-        .eq('image_url', imageToDelete.url)
-        .eq('project_id', projectId);
+        .eq('image_url', imageToDelete.url);
         
       if (tagError) {
         console.error('Error deleting image tags:', tagError);
@@ -148,18 +161,22 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({ projectId, onImagesUpdate
       const { error: summaryError } = await supabase
         .from('image_summaries')
         .delete()
-        .eq('image_url', imageToDelete.url)
-        .eq('project_id', projectId);
+        .eq('image_url', imageToDelete.url);
         
       if (summaryError) {
         console.error('Error deleting image summary:', summaryError);
       }
 
+      // Add to deleted paths and persist to localStorage
+      const updatedDeletedPaths = [...deletedImagePaths, imagePath];
+      setDeletedImagePaths(updatedDeletedPaths);
+      localStorage.setItem(`deletedImages-${projectId}`, JSON.stringify(updatedDeletedPaths));
+      
+      console.log('Image deleted:', imagePath);
+      console.log('Updated deleted paths:', updatedDeletedPaths);
+      
       // Update our local state
       const updatedImages = uploadedImages.filter(img => img.path !== imagePath);
-      
-      // Add to deleted paths to prevent re-fetching
-      setDeletedImagePaths(prev => [...prev, imagePath]);
       
       // Update both our local state and parent component state
       setUploadedImages(updatedImages);
@@ -177,6 +194,7 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({ projectId, onImagesUpdate
       <ProjectImageUpload 
         projectId={projectId} 
         onUploadComplete={handleImageUploadComplete}
+        deletedImagePaths={deletedImagePaths}
       />
       
       <GalleryDialog

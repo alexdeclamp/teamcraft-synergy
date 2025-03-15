@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useImageUpload } from './image-upload/useImageUpload';
@@ -17,6 +18,7 @@ interface ProjectImageUploadProps {
   maxWidth?: number;
   maxHeight?: number;
   maxSizeInMB?: number;
+  deletedImagePaths?: string[];
 }
 
 const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
@@ -25,6 +27,7 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
   maxWidth = 1600,
   maxHeight = 1600,
   maxSizeInMB = 5,
+  deletedImagePaths = []
 }) => {
   const { user } = useAuth();
   
@@ -49,7 +52,8 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
     maxWidth,
     maxHeight,
     maxSizeInMB,
-    onUploadComplete
+    onUploadComplete,
+    deletedImagePaths
   });
   
   const onDeleteImage = async (imagePath: string) => {

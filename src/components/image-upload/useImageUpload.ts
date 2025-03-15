@@ -12,6 +12,7 @@ interface UseImageUploadProps {
   maxHeight?: number;
   maxSizeInMB?: number;
   onUploadComplete?: (imageUrl: string, imagePath: string) => void;
+  deletedImagePaths?: string[];
 }
 
 export const useImageUpload = ({
@@ -20,7 +21,8 @@ export const useImageUpload = ({
   maxWidth = 1200,
   maxHeight = 1200,
   maxSizeInMB = 2,
-  onUploadComplete
+  onUploadComplete,
+  deletedImagePaths = []
 }: UseImageUploadProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -31,9 +33,21 @@ export const useImageUpload = ({
   const [isGalleryDialogOpen, setIsGalleryDialogOpen] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [deletedImagePaths, setDeletedImagePaths] = useState<string[]>([]);
+  const [localDeletedImagePaths, setLocalDeletedImagePaths] = useState<string[]>(deletedImagePaths);
+
+  // Sync with parent component's deletedImagePaths
+  useEffect(() => {
+    setLocalDeletedImagePaths(deletedImagePaths);
+  }, [deletedImagePaths]);
 
   const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
+
+  // Update deleted paths in localStorage when they change
+  useEffect(() => {
+    if (projectId) {
+      localStorage.setItem(`deletedImages-${projectId}`, JSON.stringify(localDeletedImagePaths));
+    }
+  }, [localDeletedImagePaths, projectId]);
 
   const fetchUploadedImages = useCallback(async () => {
     if (!projectId || !userId) return;
@@ -49,21 +63,26 @@ export const useImageUpload = ({
       if (error) throw error;
 
       if (data) {
+        console.log('useImageUpload fetched images:', data.length);
+        console.log('useImageUpload deleted paths:', localDeletedImagePaths);
+        
         const imagesWithPaths = await Promise.all(
           data.map(async (item) => {
-            const { data: urlData } = await supabase
-              .storage
-              .from('project_images')
-              .getPublicUrl(`${projectId}/${item.name}`);
-
             const imagePath = `${projectId}/${item.name}`;
-            const imageUrl = urlData.publicUrl;
             
             // Skip this image if it's in our deletedImagePaths array
-            if (deletedImagePaths.includes(imagePath)) {
+            if (localDeletedImagePaths.includes(imagePath)) {
+              console.log('useImageUpload skipping deleted image:', imagePath);
               return null;
             }
 
+            const { data: urlData } = await supabase
+              .storage
+              .from('project_images')
+              .getPublicUrl(imagePath);
+
+            const imageUrl = urlData.publicUrl;
+            
             const { data: tagData, error: tagError } = await supabase
               .from('image_tags')
               .select('*')
@@ -87,6 +106,7 @@ export const useImageUpload = ({
 
         // Filter out null values (deleted images)
         const filteredImages = imagesWithPaths.filter(img => img !== null) as UploadedImage[];
+        console.log('useImageUpload processed images after filtering:', filteredImages.length);
         
         setUploadedImages(filteredImages);
       }
@@ -96,7 +116,7 @@ export const useImageUpload = ({
     } finally {
       setIsLoading(false);
     }
-  }, [projectId, userId, deletedImagePaths]);
+  }, [projectId, userId, localDeletedImagePaths]);
 
   useEffect(() => {
     if (projectId && userId) {
@@ -238,7 +258,14 @@ export const useImageUpload = ({
       setUploadedImages(prev => prev.filter(img => img.path !== imagePath));
       
       // Add the path to our deletedImagePaths array to prevent it from reappearing
-      setDeletedImagePaths(prev => [...prev, imagePath]);
+      const updatedDeletedPaths = [...localDeletedImagePaths, imagePath];
+      setLocalDeletedImagePaths(updatedDeletedPaths);
+      
+      // Persist to localStorage
+      localStorage.setItem(`deletedImages-${projectId}`, JSON.stringify(updatedDeletedPaths));
+      
+      console.log('Image deleted successfully:', imagePath);
+      console.log('Updated deleted paths:', updatedDeletedPaths);
       
       toast.success('Image deleted successfully');
     } catch (error: any) {

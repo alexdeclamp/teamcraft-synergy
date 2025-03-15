@@ -21,12 +21,23 @@ export const useProjectImages = (
   const [recentImages, setRecentImages] = useState<UploadedImage[]>([]);
   const [isImagesLoading, setIsImagesLoading] = useState(false);
   const isMobile = useIsMobile();
+  
+  // Load deleted image paths from localStorage
+  const getDeletedImagePaths = useCallback(() => {
+    if (!projectId) return [];
+    
+    const storedDeletedPaths = localStorage.getItem(`deletedImages-${projectId}`);
+    return storedDeletedPaths ? JSON.parse(storedDeletedPaths) : [];
+  }, [projectId]);
 
   const fetchProjectImages = useCallback(async () => {
     if (!projectId || !userId) return;
 
     try {
       setIsImagesLoading(true);
+      
+      // Get deleted image paths from localStorage
+      const deletedImagePaths = getDeletedImagePaths();
       
       // Try to fetch the list of images from the storage bucket
       const { data, error } = await supabase
@@ -49,10 +60,18 @@ export const useProjectImages = (
           const imageUrls = await Promise.all(
             data.map(async (item) => {
               try {
+                const imagePath = `${projectId}/${item.name}`;
+                
+                // Skip this image if it's in the deletedImagePaths array
+                if (deletedImagePaths.includes(imagePath)) {
+                  console.log('useProjectImages skipping deleted image:', imagePath);
+                  return null;
+                }
+                
                 const { data: urlData } = await supabase
                   .storage
                   .from('project_images')
-                  .getPublicUrl(`${projectId}/${item.name}`);
+                  .getPublicUrl(imagePath);
                 
                 // Fetch summary if exists
                 const { data: summaryData } = await supabase
@@ -69,7 +88,7 @@ export const useProjectImages = (
 
                 return {
                   url: imageUrl,
-                  path: `${projectId}/${item.name}`,
+                  path: imagePath,
                   size: item.metadata?.size || 0,
                   name: item.name,
                   createdAt: new Date(item.created_at || Date.now()),
@@ -82,7 +101,7 @@ export const useProjectImages = (
             })
           );
 
-          // Filter out any null entries from failed image processing
+          // Filter out any null entries from failed image processing or deleted images
           const validImages = imageUrls.filter(img => img !== null) as UploadedImage[];
           
           const sortedImages = validImages.sort((a, b) => 
@@ -91,6 +110,8 @@ export const useProjectImages = (
 
           setProjectImages(sortedImages);
           setRecentImages(sortedImages.slice(0, 3));
+          
+          console.log('useProjectImages processed images after filtering:', sortedImages.length);
         } catch (processingError) {
           console.error('Error processing images:', processingError);
           setProjectImages([]);
@@ -109,7 +130,7 @@ export const useProjectImages = (
     } finally {
       setIsImagesLoading(false);
     }
-  }, [projectId, userId, isMobile]);
+  }, [projectId, userId, isMobile, getDeletedImagePaths]);
 
   // Initial fetch of images when hook is initialized
   useEffect(() => {
