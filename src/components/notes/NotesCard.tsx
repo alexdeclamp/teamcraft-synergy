@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 interface NotesCardProps {
   note: Note;
@@ -25,6 +26,7 @@ interface NotesCardProps {
   activeTag?: string;
   setActiveTag?: Dispatch<SetStateAction<string>>;
   formatDate?: (dateString: string) => string;
+  isLast?: boolean;
 }
 
 const NotesCard: React.FC<NotesCardProps> = ({ 
@@ -35,7 +37,8 @@ const NotesCard: React.FC<NotesCardProps> = ({
   userId,
   activeTag,
   setActiveTag,
-  formatDate: propFormatDate
+  formatDate: propFormatDate,
+  isLast = false
 }) => {
   const { formatDate: hookFormatDate } = useNoteDateFormat();
   const formatDateFn = propFormatDate || hookFormatDate;
@@ -65,11 +68,11 @@ const NotesCard: React.FC<NotesCardProps> = ({
     : '';
 
   return (
-    <Card 
-      className="hover:shadow-sm transition-all cursor-pointer border-muted"
-      onClick={handleCardClick}
-    >
-      <CardContent className="p-4">
+    <div className="group">
+      <div 
+        className="px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer rounded-md"
+        onClick={handleCardClick}
+      >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <h3 className="font-medium text-base break-words line-clamp-2">
             {note.title || "Untitled Note"}
@@ -140,8 +143,9 @@ const NotesCard: React.FC<NotesCardProps> = ({
             </DropdownMenu>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      {!isLast && <Separator className="my-1 opacity-40" />}
+    </div>
   );
 };
 

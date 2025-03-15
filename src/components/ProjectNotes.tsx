@@ -85,8 +85,8 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
           </Button>
         </div>
 
-        <div className="flex flex-col gap-3">
-          {notes.map(note => (
+        <div className="flex flex-col">
+          {notes.map((note, index) => (
             <NotesCard
               key={note.id}
               note={note}
@@ -97,6 +97,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
               onEdit={openEditDialog}
               onDelete={handleDeleteNote}
               formatDate={formatDate}
+              isLast={index === notes.length - 1}
             />
           ))}
         </div>
