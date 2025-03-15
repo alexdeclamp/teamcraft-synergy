@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -65,7 +64,6 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
     }
   };
   
-  // Use Sheet component for mobile view
   if (isMobile) {
     return (
       <Sheet open={isOpen} onOpenChange={finalSetIsOpen}>
@@ -78,7 +76,6 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
             </SheetHeader>
           </div>
           
-          {/* Metadata section - tags and date */}
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
             <span>{formatDateFn(note.updated_at || note.created_at)}</span>
             
@@ -97,7 +94,6 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
             )}
           </div>
           
-          {/* Action buttons organized in two rows */}
           <div className="grid grid-cols-2 gap-2 mb-4">
             <Button 
               variant="outline" 
@@ -132,7 +128,6 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
               Generate AI Summary
             </Button>
             
-            {/* Hidden button for functionality */}
             <div className="hidden">
               <NoteSummaryButton 
                 noteId={note.id}
@@ -143,7 +138,6 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
             </div>
           </div>
           
-          {/* Source document info if exists */}
           {note.source_document && (
             <div className="mb-4 p-3 bg-muted/40 rounded-md text-sm border border-muted-foreground/20">
               <div className="flex items-center overflow-hidden mb-1">
@@ -167,8 +161,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
             </div>
           )}
           
-          {/* Content */}
-          <div className="prose prose-sm max-w-none mt-2 text-sm overflow-hidden overflow-wrap-anywhere break-words hyphens-auto pb-10" style={{wordBreak: 'break-word'}}>
+          <div className="prose prose-sm max-w-none mt-2 text-xs overflow-hidden overflow-wrap-anywhere break-words hyphens-auto pb-10" style={{wordBreak: 'break-word'}}>
             <NotesFormatter content={note.content} />
           </div>
         </SheetContent>
@@ -176,16 +169,14 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
     );
   }
 
-  // Desktop view using Dialog
   return (
     <Dialog open={isOpen} onOpenChange={finalSetIsOpen}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader className="mb-2">
-          <DialogTitle className="text-lg sm:text-xl break-words hyphens-auto pr-8">
+          <DialogTitle className="text-xl sm:text-2xl break-words hyphens-auto pr-8">
             {note.title || "Untitled Note"}
           </DialogTitle>
           
-          {/* Metadata section - date and tags */}
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-2">
             <span>{formatDateFn(note.updated_at || note.created_at)}</span>
             
@@ -205,7 +196,6 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
           </div>
         </DialogHeader>
         
-        {/* Action buttons in a single organized row for desktop */}
         <div className="flex items-center gap-2 mb-4">
           <Button 
             variant="outline" 
@@ -237,7 +227,6 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
           </div>
         </div>
         
-        {/* Source document info if exists */}
         {note.source_document && (
           <div className="mb-4 flex flex-col sm:flex-row sm:items-center gap-2 p-3 bg-muted/40 rounded-md text-sm border border-muted-foreground/20">
             <div className="flex items-center flex-grow overflow-hidden">
@@ -261,8 +250,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
           </div>
         )}
         
-        {/* Content */}
-        <div className="prose prose-sm sm:prose prose-slate max-w-none mt-2 text-sm sm:text-base overflow-x-hidden break-words hyphens-auto">
+        <div className="prose prose-sm sm:prose prose-slate max-w-none mt-2 text-xs sm:text-sm overflow-x-hidden break-words hyphens-auto">
           <NotesFormatter content={note.content} />
         </div>
       </DialogContent>

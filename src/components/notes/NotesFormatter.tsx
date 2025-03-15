@@ -32,10 +32,10 @@ export const formatNoteContent = (text: string) => {
       let className = "font-bold mb-3 mt-5 text-slate-800 break-words hyphens-auto overflow-hidden";
       
       switch(level) {
-        case 1: fontSize = "1.5rem"; break;
-        case 2: fontSize = "1.3rem"; break;
-        case 3: fontSize = "1.2rem"; break;
-        default: fontSize = "1.1rem";
+        case 1: fontSize = "1.4rem"; break;
+        case 2: fontSize = "1.25rem"; break;
+        case 3: fontSize = "1.15rem"; break;
+        default: fontSize = "1.05rem";
       }
       
       // Get everything after the #s and initial space as a single unit
