@@ -57,7 +57,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
           {/* Mobile optimized title area */}
           <div className="flex flex-col">
             <div className="flex items-start justify-between mb-1">
-              <h3 className="font-medium text-base sm:text-lg break-words line-clamp-2 overflow-hidden">
+              <h3 className="font-medium text-base sm:text-lg break-words line-clamp-2 overflow-hidden hyphens-auto">
                 {note.title || "Untitled Note"}
               </h3>
             </div>

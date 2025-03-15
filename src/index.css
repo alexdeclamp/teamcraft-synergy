@@ -146,6 +146,13 @@
   .text-gradient {
     @apply bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent;
   }
+
+  /* Helper for text wrapping on mobile */
+  .overflow-wrap-anywhere {
+    overflow-wrap: anywhere;
+    word-wrap: break-word;
+    word-break: break-word;
+  }
 }
 
 /* Markdown styling for chat - cleaner, more minimal */
@@ -154,7 +161,7 @@
 }
 
 .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
-  @apply font-semibold my-3;
+  @apply font-semibold my-3 break-words hyphens-auto;
 }
 
 .prose h1 {
@@ -170,7 +177,7 @@
 }
 
 .prose p {
-  @apply my-2;
+  @apply my-2 break-words;
 }
 
 .prose ul, .prose ol {
@@ -186,23 +193,23 @@
 }
 
 .prose li {
-  @apply my-1;
+  @apply my-1 break-words;
 }
 
 .prose code {
-  @apply px-1 py-0.5 bg-muted rounded text-sm;
+  @apply px-1 py-0.5 bg-muted rounded text-sm break-words;
 }
 
 .prose pre {
-  @apply p-3 bg-muted rounded my-3 overflow-x-auto;
+  @apply p-3 bg-muted rounded my-3 overflow-x-auto break-words;
 }
 
 .prose blockquote {
-  @apply pl-4 border-l-4 border-muted-foreground/30 italic my-3;
+  @apply pl-4 border-l-4 border-muted-foreground/30 italic my-3 break-words;
 }
 
 .prose a {
-  @apply text-primary underline;
+  @apply text-primary underline break-words;
 }
 
 .prose table {
@@ -210,7 +217,7 @@
 }
 
 .prose th, .prose td {
-  @apply border border-muted-foreground/20 p-2;
+  @apply border border-muted-foreground/20 p-2 break-words;
 }
 
 .prose th {
