@@ -15,7 +15,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <InvitationBanner />
       <div className={cn("flex items-center justify-center flex-1", 
-        isMobile ? "pt-4" : "pt-20"
+        isMobile ? "pt-4" : "pt-16" // Increased padding-top on desktop
       )}>
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight mb-4">

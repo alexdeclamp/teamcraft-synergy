@@ -25,10 +25,10 @@ const Landing = () => {
           </>
         ) : (
           <>
+            <InvitationBanner />
             <div className="pt-10">
               <LandingNavbar />
             </div>
-            <InvitationBanner />
           </>
         )}
       </div>
