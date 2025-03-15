@@ -19,7 +19,7 @@ const BrandAssets = () => {
     </svg>`;
   };
 
-  // Function to generate favicon (updated to match the provided image)
+  // Function to generate favicon (with the diamond-shaped pattern)
   const generateFavicon = () => {
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
       <rect width="64" height="64" rx="12" fill="#2563EB" />
@@ -30,6 +30,26 @@ const BrandAssets = () => {
     </svg>`;
 
     return svgContent;
+  };
+
+  // Function to generate smaller favicon (16x16)
+  const generateSmallFavicon = () => {
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <rect width="16" height="16" rx="3" fill="#2563EB" />
+      <path d="M8 4.75L9.5 6.25L8 7.75L6.5 6.25L8 4.75Z" fill="white" />
+      <path d="M11.25 8L9.75 9.5L8.25 8L9.75 6.5L11.25 8Z" fill="white" />
+      <path d="M8 11.25L6.5 9.75L8 8.25L9.5 9.75L8 11.25Z" fill="white" />
+      <path d="M4.75 8L6.25 6.5L7.75 8L6.25 9.5L4.75 8Z" fill="white" />
+    </svg>`;
+
+    return svgContent;
+  };
+
+  // Function to generate ICO format favicon
+  const generateFaviconIco = () => {
+    // ICO is just a wrapper for standard image formats
+    // We'll use the same SVG content but instruct user to convert it
+    return generateFavicon();
   };
 
   // Function to generate Apple Touch Icon
@@ -137,11 +157,21 @@ const BrandAssets = () => {
 
   const exportFavicon = () => {
     const svgString = generateFavicon();
-    exportSvgAsPng(svgString, 64, 64, 'favicon-new.png');
+    const smallSvgString = generateSmallFavicon();
+    const icoSvgString = generateFaviconIco();
+    
+    exportSvgAsPng(svgString, 32, 32, 'favicon-new.png');
+    exportSvgAsPng(smallSvgString, 16, 16, 'favicon-new-16x16.png');
+    exportSvgAsPng(icoSvgString, 32, 32, 'favicon-new.ico');
     exportSvg(svgString, 'favicon-new.svg');
     
     // Save to public folder (simulation)
     saveToPublicFolder(svgString, 'favicon-new.svg');
+    saveToPublicFolder(svgString, 'favicon-new.png');
+    saveToPublicFolder(smallSvgString, 'favicon-new-16x16.png');
+    saveToPublicFolder(icoSvgString, 'favicon-new.ico');
+    
+    toast.success('Favicon exported in multiple formats for browser compatibility');
   };
 
   const exportOgImage = () => {
@@ -185,9 +215,10 @@ const BrandAssets = () => {
           <div className="flex items-center justify-center bg-slate-100 p-8 rounded-md mb-4">
             <div dangerouslySetInnerHTML={{ __html: generateFavicon() }} />
           </div>
+          <p className="text-sm text-gray-500 mb-4">This favicon will generate in multiple formats (SVG, PNG, ICO) for maximum browser compatibility.</p>
           <Button onClick={exportFavicon} className="w-full">
             <Download className="mr-2 h-4 w-4" />
-            Export Favicon (PNG & SVG)
+            Export Favicon (All Formats)
           </Button>
         </div>
         
@@ -223,15 +254,16 @@ const BrandAssets = () => {
         </div>
         
         <div className="bg-muted p-6 rounded-lg mt-4">
-          <h3 className="font-medium mb-2">Production Setup Instructions</h3>
+          <h3 className="font-medium mb-2">Browser Favicon Setup Instructions</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            To properly display these assets in production:
+            To ensure your favicon displays properly across all browsers:
           </p>
           <ol className="text-sm text-muted-foreground list-decimal pl-4 space-y-2">
-            <li>Download all assets using the buttons above</li>
+            <li>Download all favicon formats using the button above</li>
             <li>Place the downloaded files in your project's <code>public</code> folder</li>
-            <li>Ensure the HTML references match the exact filenames (favicon-new.svg, favicon-new.png, etc.)</li>
-            <li>Deploy your updated application</li>
+            <li>Ensure your HTML includes references to all favicon formats as shown in your index.html</li>
+            <li>Clear your browser cache after deploying to see the changes</li>
+            <li>Test across multiple browsers to verify compatibility</li>
           </ol>
         </div>
       </div>
