@@ -6,7 +6,6 @@ import NoteInfo from './NoteInfo';
 import NoteActions from './NoteActions';
 import NoteSourceDocument from './NoteSourceDocument';
 import NotesFormatter from '../NotesFormatter';
-import NoteSummaryButton from '@/components/NoteSummaryButton';
 
 interface MobileNoteViewProps {
   isOpen: boolean;
@@ -51,15 +50,6 @@ const MobileNoteView: React.FC<MobileNoteViewProps> = ({
           onDelete={onDelete}
           isMobile={true}
         />
-        
-        <div className="hidden">
-          <NoteSummaryButton 
-            noteId={note.id}
-            noteContent={note.content}
-            noteName={note.title}
-            projectId={note.project_id}
-          />
-        </div>
         
         <NoteSourceDocument sourceDocument={note.source_document} />
         

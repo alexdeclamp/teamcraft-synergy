@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import DocumentActions from './DocumentActions';
@@ -36,9 +36,6 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
   const pdfUrl = document.metadata?.pdf_url || document.file_url;
   
   const {
-    isGenerating,
-    hasSavedSummary,
-    handleGenerateSummary,
     SummaryDialogComponent
   } = useDocumentSummary({
     fileName: document.file_name,

@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
 import { Note } from '../types';
-import NoteSummaryButton from '@/components/NoteSummaryButton';
 
 interface NoteActionsProps {
   note: Note;
@@ -50,17 +49,6 @@ const NoteActions: React.FC<NoteActionsProps> = ({
         <Trash2 className="h-3.5 w-3.5 mr-1.5" />
         {isConfirmingDelete ? "Confirm" : "Delete"}
       </Button>
-      
-      {!isMobile && (
-        <div className="ml-auto">
-          <NoteSummaryButton 
-            noteId={note.id}
-            noteContent={note.content}
-            noteName={note.title}
-            projectId={note.project_id}
-          />
-        </div>
-      )}
     </div>
   );
 };

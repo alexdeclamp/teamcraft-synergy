@@ -1,11 +1,11 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Note } from './types';
 import { formatDistanceToNow } from 'date-fns';
 import { useNoteDateFormat } from '@/hooks/notes/useNoteDateFormat';
-import { CalendarClock, FileText, MessageSquare } from 'lucide-react';
+import { CalendarClock, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import NoteSummaryButton from '@/components/NoteSummaryButton';
 import { Dispatch, SetStateAction } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -85,15 +85,6 @@ const NotesCard: React.FC<NotesCardProps> = ({
                   {tag}
                 </Badge>
               ))}
-            </div>
-            
-            <div className="flex items-center justify-end gap-2">
-              <NoteSummaryButton
-                noteId={note.id}
-                noteContent={note.content}
-                noteName={note.title}
-                projectId={note.project_id}
-              />
             </div>
           </div>
         </div>
