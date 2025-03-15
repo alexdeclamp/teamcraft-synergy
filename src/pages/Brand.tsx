@@ -1,8 +1,9 @@
+
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import FooterSection from '@/components/landing/FooterSection';
 import { Separator } from '@/components/ui/separator';
-import { Download, Copy, Check, AlertCircle } from 'lucide-react';
+import { Download, Copy, Check, AlertCircle, FileSymlink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 const Brand = () => {
   const [copied, setCopied] = useState<string | null>(null);
@@ -92,11 +94,20 @@ const Brand = () => {
       
       <main className="flex-1 pt-24 pb-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h1 className="text-4xl font-bold tracking-tight mb-4">Brand Guidelines</h1>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
               Everything you need to know about using our brand assets consistently across all platforms.
             </p>
+            
+            <div className="mt-4 flex justify-center">
+              <Button variant="outline" asChild>
+                <Link to="/brand-assets" className="flex items-center gap-2">
+                  <FileSymlink className="h-4 w-4" />
+                  Asset Generator for Developers
+                </Link>
+              </Button>
+            </div>
           </div>
 
           <Tabs defaultValue="logo" className="w-full">
@@ -524,3 +535,4 @@ const Brand = () => {
 };
 
 export default Brand;
+
