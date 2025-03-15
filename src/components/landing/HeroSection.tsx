@@ -29,80 +29,100 @@ const HeroSection: React.FC = () => {
         </Button>
       </div>
       
-      {/* File Transformation Visual */}
-      <div className="flex justify-center mb-10">
-        <div className="relative max-w-4xl w-full">
-          {/* Files being dropped section */}
-          <div className="flex flex-wrap justify-center gap-4 mb-6">
-            {/* PDF File */}
-            <div className="animate-bounce-slow delay-100 bg-background rounded-lg p-4 shadow-md border border-border/30 flex items-center gap-2">
-              <File className="h-8 w-8 text-red-500" />
-              <span className="font-medium">Report.pdf</span>
-            </div>
-            
-            {/* Image File */}
-            <div className="animate-bounce-slow delay-300 bg-background rounded-lg p-4 shadow-md border border-border/30 flex items-center gap-2">
-              <FileImage className="h-8 w-8 text-blue-500" />
-              <span className="font-medium">Diagram.png</span>
-            </div>
-            
-            {/* Text File */}
-            <div className="animate-bounce-slow delay-500 bg-background rounded-lg p-4 shadow-md border border-border/30 flex items-center gap-2">
-              <FileText className="h-8 w-8 text-green-500" />
-              <span className="font-medium">Notes.txt</span>
-            </div>
+      {/* File Transformation Visual - Horizontal Flow */}
+      <div className="max-w-5xl mx-auto mb-16">
+        <div className="relative bg-background/50 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-border/30">
+          {/* Visualization header */}
+          <div className="text-center mb-6">
+            <h3 className="text-lg font-medium mb-2">How It Works</h3>
+            <p className="text-sm text-muted-foreground">Upload your documents and get instant AI-powered insights</p>
           </div>
           
-          {/* Arrow down */}
-          <div className="flex justify-center mb-6">
-            <div className="bg-primary/10 rounded-full p-2">
-              <ChevronDown className="h-8 w-8 text-primary animate-pulse" />
-            </div>
-          </div>
-          
-          {/* Transformation process */}
-          <div className="bg-background/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-primary/20 mb-6 max-w-2xl mx-auto">
-            <div className="flex items-center justify-center mb-3">
-              <Brain className="h-10 w-10 text-primary mr-2" />
-              <div className="h-2 bg-primary/20 rounded-full w-24 animate-pulse"></div>
-              <div className="h-2 bg-primary/30 rounded-full w-32 ml-2 animate-pulse delay-100"></div>
-              <div className="h-2 bg-primary/20 rounded-full w-20 ml-2 animate-pulse delay-200"></div>
-              <Zap className="h-6 w-6 text-primary ml-2 animate-pulse" />
-            </div>
-            <div className="h-2 bg-primary/10 rounded-full w-full animate-pulse"></div>
-            <div className="h-2 bg-primary/10 rounded-full w-5/6 mx-auto mt-2 animate-pulse delay-100"></div>
-            <div className="h-2 bg-primary/10 rounded-full w-4/6 mx-auto mt-2 animate-pulse delay-200"></div>
-          </div>
-          
-          {/* Resulting notes */}
-          <div className="flex flex-wrap justify-center gap-4">
-            <div className="bg-background rounded-lg p-4 shadow-md border border-border/30 max-w-xs">
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="h-5 w-5 text-primary" />
-                <span className="font-medium">AI Summary</span>
+          {/* Flow visualization */}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Input Files - Left Side */}
+            <div className="flex flex-col items-center gap-3 md:w-1/4">
+              <h4 className="text-sm font-medium text-muted-foreground mb-2">Your Documents</h4>
+              <div className="animate-bounce-slow delay-100 bg-background rounded-lg p-3 shadow-md border border-border/30 flex items-center gap-2 w-full">
+                <File className="h-6 w-6 text-red-500" />
+                <span className="font-medium text-sm">Report.pdf</span>
               </div>
-              <div className="space-y-1.5">
-                <div className="h-2 bg-muted rounded-full w-full"></div>
-                <div className="h-2 bg-muted rounded-full w-5/6"></div>
-                <div className="h-2 bg-muted rounded-full w-4/6"></div>
+              <div className="animate-bounce-slow delay-300 bg-background rounded-lg p-3 shadow-md border border-border/30 flex items-center gap-2 w-full">
+                <FileImage className="h-6 w-6 text-blue-500" />
+                <span className="font-medium text-sm">Diagram.png</span>
               </div>
-              <div className="mt-3 flex justify-end">
-                <div className="bg-primary/10 rounded-full px-2 py-1 text-xs text-primary font-medium">Key Insights</div>
+              <div className="animate-bounce-slow delay-500 bg-background rounded-lg p-3 shadow-md border border-border/30 flex items-center gap-2 w-full">
+                <FileText className="h-6 w-6 text-green-500" />
+                <span className="font-medium text-sm">Notes.txt</span>
               </div>
             </div>
             
-            <div className="bg-background rounded-lg p-4 shadow-md border border-border/30 max-w-xs">
-              <div className="flex items-center gap-2 mb-2">
-                <MessageSquare className="h-5 w-5 text-primary" />
-                <span className="font-medium">Notes Analysis</span>
+            {/* Arrow pointing right - Desktop only */}
+            <div className="hidden md:flex items-center">
+              <ArrowRight className="h-10 w-10 text-primary animate-pulse" />
+            </div>
+            
+            {/* Arrow pointing down - Mobile only */}
+            <div className="flex md:hidden items-center justify-center">
+              <ChevronDown className="h-10 w-10 text-primary animate-pulse" />
+            </div>
+            
+            {/* Processing/Brain - Middle */}
+            <div className="bg-background p-4 rounded-xl shadow-md border border-primary/20 md:w-1/3">
+              <div className="flex items-center justify-center mb-3">
+                <Brain className="h-12 w-12 text-primary animate-pulse" />
               </div>
-              <div className="space-y-1.5">
-                <div className="h-2 bg-muted rounded-full w-full"></div>
-                <div className="h-2 bg-muted rounded-full w-5/6"></div>
-                <div className="h-2 bg-muted rounded-full w-4/6"></div>
+              <div className="space-y-2">
+                <div className="h-2 bg-primary/20 rounded-full w-full animate-pulse"></div>
+                <div className="h-2 bg-primary/10 rounded-full w-5/6 mx-auto animate-pulse delay-100"></div>
+                <div className="h-2 bg-primary/20 rounded-full w-4/6 mx-auto animate-pulse delay-200"></div>
               </div>
-              <div className="mt-3 flex justify-end">
-                <div className="bg-primary/10 rounded-full px-2 py-1 text-xs text-primary font-medium">Action Items</div>
+              <div className="flex justify-center mt-2">
+                <Zap className="h-6 w-6 text-primary animate-pulse" />
+              </div>
+            </div>
+            
+            {/* Arrow pointing right - Desktop only */}
+            <div className="hidden md:flex items-center">
+              <ArrowRight className="h-10 w-10 text-primary animate-pulse" />
+            </div>
+            
+            {/* Arrow pointing down - Mobile only */}
+            <div className="flex md:hidden items-center justify-center">
+              <ChevronDown className="h-10 w-10 text-primary animate-pulse" />
+            </div>
+            
+            {/* Output/Results - Right Side */}
+            <div className="flex flex-col gap-3 md:w-1/4">
+              <h4 className="text-sm font-medium text-muted-foreground mb-2 text-center">AI Insights</h4>
+              
+              <div className="bg-background rounded-lg p-3 shadow-md border border-border/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <span className="font-medium text-sm">Key Summary</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="h-2 bg-muted rounded-full w-full"></div>
+                  <div className="h-2 bg-muted rounded-full w-5/6"></div>
+                  <div className="h-2 bg-muted rounded-full w-4/6"></div>
+                </div>
+              </div>
+              
+              <div className="bg-background rounded-lg p-3 shadow-md border border-border/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  <span className="font-medium text-sm">AI Chat</span>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1">
+                    <div className="w-4 h-4 rounded-full bg-primary/20 flex-shrink-0"></div>
+                    <div className="h-2 bg-muted rounded-full w-3/4"></div>
+                  </div>
+                  <div className="flex items-center gap-1 justify-end">
+                    <div className="h-2 bg-primary/20 rounded-full w-2/3"></div>
+                    <div className="w-4 h-4 rounded-full bg-foreground/10 flex-shrink-0"></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
