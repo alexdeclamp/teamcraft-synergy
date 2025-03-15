@@ -1,135 +1,197 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Brain, MessageSquare, FileText, FileImage, File, ArrowDown } from 'lucide-react';
+import { Sparkles, ArrowRight, Brain, MessageSquare } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-
 const HeroSection: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  
-  return (
-    <section className="relative pt-20 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+  return <section className="relative pt-20 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
       
-      {/* Two column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-        {/* Left column - Hero Text */}
-        <div className="flex flex-col">
-          <div className="inline-flex items-center justify-center lg:justify-start px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4 self-start">
-            <Sparkles className="h-4 w-4 mr-2" />
-            AI-Powered Knowledge Hub
-          </div>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight mb-4">
-            Bra<span className="text-primary">3</span>n
-          </h1>
-          <p className="text-2xl sm:text-3xl font-medium text-foreground mb-4">Your AI Project Assistant.</p>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mb-8">
-            Turn any documents into actionable insights instantly with AI-powered summaries and search.
-          </p>
-          <Button 
-            onClick={() => navigate('/auth?tab=register')} 
-            size="lg" 
-            className="rounded-full px-8 text-base shadow-sm self-start"
-          >
-            Try Bra3n
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
+      {/* Hero Text - Centered */}
+      <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+          <Sparkles className="h-4 w-4 mr-2" />
+          AI-Powered Knowledge Hub
         </div>
-        
-        {/* Right column - File Transformation Visual */}
-        <div className="relative bg-background/50 border border-border/30 rounded-xl shadow-lg p-6 h-[400px] backdrop-blur-sm">
-          <div className="relative h-full">
-            {/* Input Files */}
-            <div className="absolute left-0 top-0 animate-fade-in">
-              <div className="space-y-3">
-                <FileThumbnail icon={<FileText className="h-6 w-6 text-blue-500" />} label="Project Notes" color="bg-blue-100" />
-                <FileThumbnail icon={<FileImage className="h-6 w-6 text-green-500" />} label="Images" color="bg-green-100" />
-                <FileThumbnail icon={<File className="h-6 w-6 text-amber-500" />} label="Documents" color="bg-amber-100" />
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight mb-4">
+          Bra<span className="text-primary">3</span>n
+        </h1>
+        <p className="text-2xl sm:text-3xl font-medium text-foreground mb-4">Your AI Project Assistant.</p>
+        <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto mb-8">Turn any documents into actionable insights instantly with AI-powered summaries and search.</p>
+        <Button onClick={() => navigate('/auth?tab=register')} size="lg" className="rounded-full px-8 text-base shadow-sm">
+          Try Bra3n
+          <ArrowRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
+      
+      {/* Platform Interface Representation - Responsive */}
+      {isMobile ?
+    // Mobile version - Simplified cards
+    <div className="space-y-4 mb-16">
+          <div className="bg-background rounded-xl shadow-md p-4 border border-border/30">
+            <div className="flex items-center space-x-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <Brain className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <div className="font-medium">Ask Anything</div>
+                <div className="text-sm text-muted-foreground">Get instant answers from your data</div>
               </div>
             </div>
-            
-            {/* Arrows pointing to Brain */}
-            <div className="absolute left-[30%] top-[50%] transform -translate-y-1/2">
-              <ArrowRight className="h-8 w-8 text-primary/70 animate-pulse" />
-            </div>
-            
-            {/* Brain Processing Center */}
-            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-              <div className="rounded-full bg-primary/20 p-6">
-                <Brain className="h-12 w-12 text-primary animate-pulse" />
+            <div className="bg-muted/50 rounded-lg p-3">
+              <div className="flex items-center bg-background rounded-full pl-4 pr-2 py-2 mb-2">
+                <input type="text" placeholder="Ask a question..." className="bg-transparent border-none flex-1 text-sm focus:outline-none" readOnly />
+                <div className="bg-primary h-8 w-8 rounded-full flex items-center justify-center">
+                  <MessageSquare className="h-4 w-4 text-primary-foreground" />
+                </div>
               </div>
-              <span className="text-sm font-medium mt-2">AI Processing</span>
+              <div className="mt-2 bg-background p-3 rounded-lg text-sm">
+                <p className="font-medium text-primary">Bra3n AI</p>
+                <p>I found these key insights in your documents...</p>
+              </div>
             </div>
-            
-            {/* Arrow pointing from Brain to Output */}
-            <div className="absolute right-[30%] top-[50%] transform -translate-y-1/2">
-              <ArrowRight className="h-8 w-8 text-primary/70 animate-pulse" />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-background rounded-xl shadow-md p-4 border border-border/30">
+              <div className="text-sm font-medium mb-2">Documents</div>
+              <div className="text-xl font-semibold">36</div>
+              <div className="h-2 w-full bg-muted rounded-full overflow-hidden mt-2">
+                <div className="h-full bg-primary" style={{
+              width: "65%"
+            }}></div>
+              </div>
             </div>
-            
-            {/* Output - Transformed Content */}
-            <div className="absolute right-0 top-0 animate-fade-in">
-              <div className="space-y-4">
-                {/* AI Summary Card */}
-                <div className="bg-white rounded-lg shadow p-3 w-64 border border-border/30">
-                  <div className="flex items-center mb-2">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center mr-2">
+            <div className="bg-background rounded-xl shadow-md p-4 border border-border/30">
+              <div className="text-sm font-medium mb-2">Projects</div>
+              <div className="text-xl font-semibold">8</div>
+              <div className="h-2 w-full bg-muted rounded-full overflow-hidden mt-2">
+                <div className="h-full bg-accent-foreground" style={{
+              width: "40%"
+            }}></div>
+              </div>
+            </div>
+          </div>
+        </div> :
+    // Desktop version - Original complex UI
+    <div className="flex justify-center mb-16">
+          <div className="relative w-full max-w-5xl">
+            <div className="apple-glass rounded-xl shadow-xl overflow-hidden">
+              {/* Platform Interface Mockup */}
+              <div className="bg-background p-4 rounded-t-lg border-b border-border/40">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="h-3 w-3 rounded-full bg-red-500"></div>
+                    <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
+                    <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                  </div>
+                  <div className="w-64 h-6 bg-muted rounded-full"></div>
+                  <div className="flex space-x-2">
+                    <div className="w-6 h-6 bg-muted rounded-full"></div>
+                    <div className="w-6 h-6 bg-muted rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Platform Content */}
+              <div className="grid grid-cols-12 gap-4 p-6 bg-background/80">
+                {/* Sidebar */}
+                <div className="col-span-3 bg-muted/50 rounded-lg p-4 h-[400px]">
+                  <div className="flex items-center space-x-2 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                       <Brain className="h-4 w-4 text-primary" />
                     </div>
-                    <span className="font-medium">AI Summary</span>
+                    <div className="font-medium">Bra3n</div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    Here are the key findings from your documents...
+                  
+                  <div className="space-y-2">
+                    <div className="h-8 rounded-md bg-primary/10 flex items-center px-3">
+                      <span className="text-sm font-medium">Dashboard</span>
+                    </div>
+                    {['Projects', 'Documents', 'Images', 'Settings'].map((item, i) => <div key={i} className="h-8 rounded-md bg-muted/70 flex items-center px-3">
+                        <span className="text-sm text-muted-foreground">{item}</span>
+                      </div>)}
+                  </div>
+                  
+                  <div className="mt-6">
+                    <div className="text-xs font-medium mb-2 text-muted-foreground">RECENT PROJECTS</div>
+                    {['Marketing Strategy', 'Product Research', 'Client Presentations'].map((project, i) => <div key={i} className="h-8 flex items-center text-sm text-muted-foreground">
+                        {project}
+                      </div>)}
                   </div>
                 </div>
                 
-                {/* Chat Interaction Card */}
-                <div className="bg-white rounded-lg shadow p-3 w-64 border border-border/30">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">Chat</span>
-                    <MessageSquare className="h-4 w-4 text-primary" />
+                {/* Main Content */}
+                <div className="col-span-9 space-y-4">
+                  {/* Top Stats */}
+                  <div className="grid grid-cols-3 gap-4">
+                    {['Documents', 'Images', 'Notes'].map((stat, i) => <div key={i} className="bg-background rounded-lg p-3 border border-border/30">
+                        <div className="text-sm text-muted-foreground">{stat}</div>
+                        <div className="text-2xl font-semibold">{Math.floor(Math.random() * 50) + 10}</div>
+                      </div>)}
                   </div>
-                  <div className="bg-muted/30 rounded-lg p-2 mb-2 text-xs">
-                    What were the main conclusions?
+                  
+                  {/* Search and Chat */}
+                  <div className="bg-background border border-border/30 rounded-lg p-4">
+                    <div className="flex items-center bg-muted/50 rounded-full pl-4 pr-2 py-2 mb-4">
+                      <input type="text" placeholder="Ask anything about your projects..." className="bg-transparent border-none flex-1 text-sm focus:outline-none" />
+                      <div className="bg-primary h-8 w-8 rounded-full flex items-center justify-center">
+                        <MessageSquare className="h-4 w-4 text-primary-foreground" />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-start">
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex-shrink-0 flex items-center justify-center">
+                          <Brain className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="ml-3 bg-muted/30 py-2 px-3 rounded-lg rounded-tl-none">
+                          <p className="text-sm">Here's a summary of your latest project updates:</p>
+                          <p className="text-sm mt-2">- 3 new documents added to Marketing Strategy</p>
+                          <p className="text-sm">- Product Research updated yesterday</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start justify-end">
+                        <div className="mr-3 bg-primary/10 py-2 px-3 rounded-lg rounded-tr-none">
+                          <p className="text-sm">Show me the key insights from the Product Research project</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-foreground/10 flex-shrink-0 flex items-center justify-center">
+                          <div className="text-sm font-medium">U</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-primary/10 rounded-lg p-2 text-xs">
-                    The team identified three key areas for improvement...
+                  
+                  {/* Project Cards */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {['Marketing Strategy', 'Product Research'].map((project, i) => <div key={i} className="bg-background border border-border/30 rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="font-medium">{project}</div>
+                          <div className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">Active</div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                            <div className="h-full bg-primary" style={{
+                        width: `${Math.floor(Math.random() * 60) + 30}%`
+                      }}></div>
+                          </div>
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Updated 2 days ago</span>
+                            <span>{Math.floor(Math.random() * 5) + 3} contributors</span>
+                          </div>
+                        </div>
+                      </div>)}
                   </div>
                 </div>
               </div>
             </div>
-            
-            {/* Dropping File Animation */}
-            <div className="absolute left-[15%] top-[-10%] animate-[slide-in_1s_ease-out]">
-              <div className="relative animate-[fade-in_1s_ease-out]">
-                <FileText className="h-10 w-10 text-violet-500 animate-[slide-in_1s_ease-out]" />
-                <ArrowDown className="h-5 w-5 text-violet-500 absolute bottom-[-20px] left-1/2 transform -translate-x-1/2 animate-bounce" />
-              </div>
-            </div>
+            <div className="absolute -bottom-6 -right-6 -z-10 w-64 h-64 bg-primary/20 rounded-full blur-3xl"></div>
+            <div className="absolute -top-6 -left-6 -z-10 w-64 h-64 bg-accent/30 rounded-full blur-3xl"></div>
           </div>
-        </div>
-      </div>
-    </section>
-  );
+        </div>}
+    </section>;
 };
-
-// File thumbnail component for the input files
-interface FileThumbnailProps {
-  icon: React.ReactNode;
-  label: string;
-  color: string;
-}
-
-const FileThumbnail: React.FC<FileThumbnailProps> = ({ icon, label, color }) => {
-  return (
-    <div className="flex items-center space-x-2 p-3 rounded-lg shadow-sm bg-white border border-border/30">
-      <div className={`${color} p-2 rounded-md`}>
-        {icon}
-      </div>
-      <span className="text-sm font-medium">{label}</span>
-    </div>
-  );
-};
-
 export default HeroSection;
