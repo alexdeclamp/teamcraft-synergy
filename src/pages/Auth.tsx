@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Card,
@@ -11,7 +11,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import LoginForm from '@/components/auth/LoginForm';
 import RegisterForm from '@/components/auth/RegisterForm';
 
@@ -44,7 +45,20 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+      {/* Back to homepage button */}
+      <div className="absolute top-4 left-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="flex items-center gap-1" 
+          onClick={() => navigate('/')}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Home</span>
+        </Button>
+      </div>
+      
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">Bra3n</CardTitle>
@@ -68,8 +82,20 @@ const Auth = () => {
             </TabsContent>
           </Tabs>
         </CardContent>
-        <CardFooter className="text-center text-sm text-muted-foreground">
-          By continuing, you agree to our Terms of Service and Privacy Policy.
+        <CardFooter className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground text-center">
+            By continuing, you agree to our Terms of Service and Privacy Policy.
+          </p>
+          
+          {/* Highlighted waitlist button */}
+          <Button 
+            variant="outline" 
+            className="w-full border-primary/20 bg-white shadow-[0_0_15px_rgba(155,135,245,0.2)] hover:bg-white/90"
+            onClick={() => navigate('/waitlist')}
+          >
+            <Sparkles className="mr-2 h-4 w-4 text-primary" />
+            Join Our Waitlist
+          </Button>
         </CardFooter>
       </Card>
     </div>
