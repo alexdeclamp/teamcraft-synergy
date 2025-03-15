@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import QuestionAnswerSection from './QuestionAnswerSection';
 import TextExtractionBanner from './TextExtractionBanner';
 
 interface ExtractedTextDisplayProps {
@@ -22,8 +21,6 @@ const ExtractedTextDisplay: React.FC<ExtractedTextDisplayProps> = ({
         extractionError={extractionError}
         extractedText={extractedText}
       />
-      
-      <QuestionAnswerSection extractedText={extractedText} />
       
       <div className="bg-muted/40 rounded-md p-4 mt-4 whitespace-pre-wrap text-sm font-mono">
         {extractedText}

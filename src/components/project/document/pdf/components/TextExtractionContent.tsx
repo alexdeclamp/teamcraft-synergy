@@ -4,6 +4,8 @@ import TextExtractionLoading from './TextExtractionLoading';
 import TextExtractionError from './TextExtractionError';
 import TextExtractionEmpty from './TextExtractionEmpty';
 import ExtractedTextDisplay from './ExtractedTextDisplay';
+import QuestionAnswerForm from './QuestionAnswerForm';
+import QuestionAnswerResult from './QuestionAnswerResult';
 
 interface TextExtractionContentProps {
   isExtracting: boolean;
@@ -14,6 +16,10 @@ interface TextExtractionContentProps {
   showSummary: boolean;
   onRetryExtraction: () => void;
   handleOpenPdfDirectly: () => void;
+  currentQuestion: string;
+  answer: string;
+  isAnswering: boolean;
+  onAskQuestion: (question: string) => void;
 }
 
 const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
@@ -24,7 +30,11 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
   summary,
   showSummary,
   onRetryExtraction,
-  handleOpenPdfDirectly
+  handleOpenPdfDirectly,
+  currentQuestion,
+  answer,
+  isAnswering,
+  onAskQuestion
 }) => {
   if (isExtracting) {
     return (
@@ -67,11 +77,26 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
   return (
     <div className="py-4 px-1">
       {extractedText ? (
-        <ExtractedTextDisplay 
-          extractedText={extractedText}
-          isExtracting={isExtracting}
-          extractionError={extractionError}
-        />
+        <div className="space-y-4">
+          {!showSummary && (
+            <>
+              <QuestionAnswerForm 
+                isLoading={isAnswering} 
+                onAskQuestion={onAskQuestion} 
+              />
+              <QuestionAnswerResult 
+                question={currentQuestion} 
+                answer={answer} 
+                isLoading={isAnswering} 
+              />
+            </>
+          )}
+          <ExtractedTextDisplay 
+            extractedText={extractedText}
+            isExtracting={isExtracting}
+            extractionError={extractionError}
+          />
+        </div>
       ) : (
         <TextExtractionEmpty />
       )}

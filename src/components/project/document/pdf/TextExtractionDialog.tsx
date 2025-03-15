@@ -8,6 +8,7 @@ import TextExtractionHeader from './components/TextExtractionHeader';
 import TextExtractionContent from './components/TextExtractionContent';
 import TextExtractionFooter from './components/TextExtractionFooter';
 import { useNoteCreationFromText } from '@/hooks/useNoteCreationFromText';
+import { useDocumentQuestionAnswer } from './hooks/useDocumentQuestionAnswer';
 
 interface TextExtractionDialogProps {
   showTextModal: boolean;
@@ -51,6 +52,12 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
 }) => {
   const { user } = useAuth();
   const noteCreation = useNoteCreationFromText({ projectId, fileName, pdfUrl });
+  const questionAnswering = useDocumentQuestionAnswer({
+    pdfUrl,
+    fileName,
+    extractedText,
+    projectId
+  });
   
   const handleOpenPdfDirectly = () => {
     try {
@@ -157,6 +164,10 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
             showSummary={showSummary}
             onRetryExtraction={onRetryExtraction}
             handleOpenPdfDirectly={handleOpenPdfDirectly}
+            currentQuestion={questionAnswering.currentQuestion}
+            answer={questionAnswering.answer}
+            isAnswering={questionAnswering.isAnswering}
+            onAskQuestion={questionAnswering.askQuestion}
           />
           
           <TextExtractionFooter
