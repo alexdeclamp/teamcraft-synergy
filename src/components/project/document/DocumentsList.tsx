@@ -52,14 +52,15 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
         )}
       </div>
       
-      <div className="space-y-2">
-        {documents.map((document) => (
+      <div className="space-y-0">
+        {documents.map((document, index) => (
           <DocumentItem 
             key={document.id}
             document={document} 
             onDelete={onRefresh} 
             onRefresh={onRefresh}
             projectId={projectId}
+            isLast={index === documents.length - 1}
           />
         ))}
       </div>

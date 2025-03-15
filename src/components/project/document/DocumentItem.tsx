@@ -6,6 +6,7 @@ import DocumentActions from './DocumentActions';
 import DocumentPdfActions from './DocumentPdfActions';
 import DocumentItemHeader from './DocumentItemHeader';
 import useDocumentSummary from './DocumentSummaryHandler';
+import { Separator } from '@/components/ui/separator';
 
 interface DocumentItemProps {
   document: {
@@ -23,13 +24,15 @@ interface DocumentItemProps {
   onDelete?: (id: string) => void;
   onRefresh?: () => void;
   projectId: string;
+  isLast?: boolean;
 }
 
 const DocumentItem: React.FC<DocumentItemProps> = ({ 
   document, 
   onDelete, 
   onRefresh,
-  projectId
+  projectId,
+  isLast = false
 }) => {
   const fileExtension = document.file_name.split('.').pop()?.toLowerCase();
   const isPdf = fileExtension === 'pdf';
@@ -72,27 +75,30 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg mb-2 bg-card w-full gap-3">
-        <DocumentItemHeader
-          fileName={document.file_name}
-          createdAt={document.created_at}
-        />
-        
-        <div className="flex items-center justify-end gap-2 ml-auto mt-2 sm:mt-0">
-          {isPdf && (
-            <DocumentPdfActions
-              pdfUrl={pdfUrl}
-              fileName={document.file_name}
-              projectId={projectId}
-            />
-          )}
-          
-          <DocumentActions
+      <div className="group">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-md hover:bg-muted/40 transition-colors cursor-pointer w-full gap-3">
+          <DocumentItemHeader
             fileName={document.file_name}
-            fileUrl={document.file_url}
-            onDelete={handleDelete}
+            createdAt={document.created_at}
           />
+          
+          <div className="flex items-center justify-end gap-2 ml-auto mt-2 sm:mt-0">
+            {isPdf && (
+              <DocumentPdfActions
+                pdfUrl={pdfUrl}
+                fileName={document.file_name}
+                projectId={projectId}
+              />
+            )}
+            
+            <DocumentActions
+              fileName={document.file_name}
+              fileUrl={document.file_url}
+              onDelete={handleDelete}
+            />
+          </div>
         </div>
+        {!isLast && <Separator className="my-1 opacity-40" />}
       </div>
       
       <SummaryDialogComponent />
