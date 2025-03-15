@@ -3,7 +3,8 @@ import React from 'react';
 import { SearchBar } from '@/components/ui/search-bar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Tag } from 'lucide-react';
+import { X, Tag, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface ImageFiltersProps {
   searchQuery: string;
@@ -26,11 +27,16 @@ const ImageFilters: React.FC<ImageFiltersProps> = ({
   
   return (
     <div className="space-y-3 mb-4">
-      <SearchBar 
-        placeholder="Search images by name..." 
-        value={searchQuery}
-        onChange={onSearchChange}
-      />
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search images by name..."
+          className="pl-9"
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+      </div>
       
       {allTags.length > 0 && (
         <div>
