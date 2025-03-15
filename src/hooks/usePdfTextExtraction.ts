@@ -31,7 +31,8 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
     summary,
     showSummary,
     handleSummarizeText,
-    toggleTextView
+    toggleTextView,
+    setShowSummary
   } = usePdfSummarization({ extractedText, fileName, projectId });
 
   // Reset state when the modal is closed

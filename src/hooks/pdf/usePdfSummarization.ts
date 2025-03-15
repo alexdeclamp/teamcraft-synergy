@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { summarizeText, SummaryModel } from '@/utils/summaryUtils';
@@ -98,6 +97,7 @@ export const usePdfSummarization = ({
     isSummarizing,
     summary,
     showSummary,
+    setShowSummary,
     handleSummarizeText,
     toggleTextView
   };
