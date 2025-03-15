@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import FooterSection from '@/components/landing/FooterSection';
@@ -9,6 +8,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
+import { Sparkles } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Brand = () => {
   const [copied, setCopied] = useState<string | null>(null);
@@ -17,6 +18,72 @@ const Brand = () => {
     navigator.clipboard.writeText(text);
     setCopied(id);
     setTimeout(() => setCopied(null), 2000);
+  };
+
+  const generateLogoSvg = () => {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="48" viewBox="0 0 120 48">
+      <g fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M24 6l2.4 4.8L31.2 12l-4.8 2.4L24 18l-2.4-4.8L16.8 12l4.8-2.4z" />
+        <path d="M38 18l1.6 3.2L42.8 22l-3.2 1.6L38 28l-1.6-3.2L33.2 22l3.2-1.6z" />
+        <path d="M10 18l1.6 3.2L14.8 22l-3.2 1.6L10 28l-1.6-3.2L5.2 22l3.2-1.6z" />
+        <path d="M24 30l2.4 4.8 4.8 2.4-4.8 2.4L24 42l-2.4-4.8-4.8-2.4 4.8-2.4z" />
+      </g>
+      <text x="48" y="27" font-family="Inter, sans-serif" font-size="16" font-weight="600" fill="#1F2937">
+        Bra<tspan fill="#3B82F6">3</tspan>n
+      </text>
+    </svg>`;
+  };
+
+  const downloadLogo = (format: 'png' | 'svg') => {
+    if (format === 'svg') {
+      const svgBlob = new Blob([generateLogoSvg()], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(svgBlob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'bra3n-logo.svg';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('SVG logo downloaded successfully');
+    } else if (format === 'png') {
+      const svgString = generateLogoSvg();
+      const img = new Image();
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(svgBlob);
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 240;
+        canvas.height = 96;
+        const ctx = canvas.getContext('2d');
+        
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, 240, 96);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const pngUrl = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = pngUrl;
+              link.download = 'bra3n-logo.png';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              URL.revokeObjectURL(pngUrl);
+              
+              toast.success('PNG logo downloaded successfully');
+            }
+          }, 'image/png');
+        }
+        
+        URL.revokeObjectURL(url);
+      };
+      
+      img.src = url;
+    }
   };
 
   return (
@@ -40,7 +107,6 @@ const Brand = () => {
               <TabsTrigger value="usage">Usage Rules</TabsTrigger>
             </TabsList>
 
-            {/* Logo Section */}
             <TabsContent value="logo" className="space-y-8">
               <Card>
                 <CardContent className="pt-6">
@@ -51,11 +117,19 @@ const Brand = () => {
                         Our logo combines the Sparkles icon with the wordmark "Bra3n" where the "3" is highlighted in our primary color.
                       </p>
                       <div className="flex flex-col gap-3 mt-6">
-                        <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-2 w-full sm:w-auto"
+                          onClick={() => downloadLogo('png')}
+                        >
                           <Download className="h-4 w-4" />
                           Download PNG
                         </Button>
-                        <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
+                        <Button 
+                          variant="outline" 
+                          className="flex items-center gap-2 w-full sm:w-auto"
+                          onClick={() => downloadLogo('svg')}
+                        >
                           <Download className="h-4 w-4" />
                           Download SVG
                         </Button>
@@ -63,14 +137,7 @@ const Brand = () => {
                     </div>
                     <div className="flex items-center justify-center border rounded-lg p-12 bg-white">
                       <div className="flex items-center space-x-3">
-                        <div className="h-16 w-16 flex items-center justify-center">
-                          <svg className="h-12 w-12 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 3l1.2 2.4 2.4 1.2-2.4 1.2L12 9l-1.2-2.4L8.4 5.4l2.4-1.2z" />
-                            <path d="M19 9l.8 1.6 1.6.8-1.6.8-.8 1.6-.8-1.6-1.6-.8 1.6-.8z" />
-                            <path d="M5 9l.8 1.6 1.6.8-1.6.8L5 14l-.8-1.6-1.6-.8 1.6-.8z" />
-                            <path d="M12 15l1.2 2.4 2.4 1.2-2.4 1.2L12 21l-1.2-2.4-2.4-1.2 2.4-1.2z" />
-                          </svg>
-                        </div>
+                        <Sparkles className="h-12 w-12 text-primary" />
                         <span className="font-semibold text-3xl tracking-tight whitespace-nowrap">
                           Bra<span className="text-primary">3</span>n
                         </span>
@@ -111,7 +178,6 @@ const Brand = () => {
               </Card>
             </TabsContent>
 
-            {/* Colors Section */}
             <TabsContent value="colors" className="space-y-8">
               <Card>
                 <CardContent className="pt-6">
@@ -277,7 +343,6 @@ const Brand = () => {
               </Card>
             </TabsContent>
 
-            {/* Typography Section */}
             <TabsContent value="typography" className="space-y-8">
               <Card>
                 <CardContent className="pt-6">
@@ -368,7 +433,6 @@ const Brand = () => {
               </Card>
             </TabsContent>
 
-            {/* Usage Rules Section */}
             <TabsContent value="usage" className="space-y-8">
               <Card>
                 <CardContent className="pt-6">
