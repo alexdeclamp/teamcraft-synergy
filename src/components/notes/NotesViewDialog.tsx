@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Note } from './types';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, FileText, Image, ExternalLink } from 'lucide-react';
+import { Pencil, Trash2, FileText, Image, ExternalLink, PenSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import NotesFormatter from './NotesFormatter';
 import { formatDistanceToNow } from 'date-fns';
@@ -70,11 +70,13 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
     return (
       <Sheet open={isOpen} onOpenChange={finalSetIsOpen}>
         <SheetContent side="bottom" className="h-[90vh] p-4 overflow-y-auto overflow-x-hidden">
-          <SheetHeader className="mb-3">
-            <SheetTitle className="text-lg sm:text-xl break-words hyphens-auto pr-8">
-              {note.title || "Untitled Note"}
-            </SheetTitle>
-          </SheetHeader>
+          <div className="pt-6 mb-6">
+            <SheetHeader className="mb-3">
+              <SheetTitle className="text-lg sm:text-xl break-words hyphens-auto pr-8 text-left">
+                {note.title || "Untitled Note"}
+              </SheetTitle>
+            </SheetHeader>
+          </div>
           
           {/* Metadata section - tags and date */}
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
@@ -117,7 +119,21 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
               {isConfirmingDelete ? "Confirm" : "Delete"}
             </Button>
             
-            <div className="col-span-2 flex justify-center mt-1">
+            <Button 
+              variant="default"
+              size="sm"
+              className="col-span-2 h-9 mt-1 text-sm"
+              onClick={() => {
+                const summaryBtn = document.querySelector('[title*="Generate AI Summary"], [title*="View Saved AI Summary"]') as HTMLButtonElement;
+                if (summaryBtn) summaryBtn.click();
+              }}
+            >
+              <PenSquare className="h-4 w-4 mr-1.5" />
+              Generate AI Summary
+            </Button>
+            
+            {/* Hidden button for functionality */}
+            <div className="hidden">
               <NoteSummaryButton 
                 noteId={note.id}
                 noteContent={note.content}
