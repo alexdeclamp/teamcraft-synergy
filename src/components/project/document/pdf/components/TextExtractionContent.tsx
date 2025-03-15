@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import TextExtractionBanner from './TextExtractionBanner';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface TextExtractionContentProps {
   isExtracting: boolean;
@@ -156,7 +157,7 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
       />
       
       {extractedText ? (
-        <>
+        <ScrollArea className="h-[500px] pr-4">
           <div className="mb-4">
             <h3 className="text-sm font-medium mb-2">Ask a question about this document</h3>
             <div className="flex flex-col space-y-2">
@@ -188,17 +189,17 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
             {showAnswer && answer && (
               <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
                 <h4 className="font-medium text-green-800 mb-2">Answer:</h4>
-                <div className="text-sm text-green-900 whitespace-pre-wrap">
+                <div className="text-sm text-green-900 whitespace-pre-wrap max-h-[200px] overflow-y-auto">
                   {answer}
                 </div>
               </div>
             )}
           </div>
           
-          <div className="bg-muted/40 rounded-md p-4 max-h-[400px] overflow-y-auto whitespace-pre-wrap text-sm font-mono relative">
+          <div className="bg-muted/40 rounded-md p-4 mt-4 whitespace-pre-wrap text-sm font-mono">
             {extractedText}
           </div>
-        </>
+        </ScrollArea>
       ) : (
         <div className="py-8 flex flex-col items-center justify-center">
           <FileText className="h-10 w-10 text-muted-foreground mb-4" />
