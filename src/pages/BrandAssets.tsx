@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -20,16 +19,14 @@ const BrandAssets = () => {
     </svg>`;
   };
 
-  // Function to generate favicon
+  // Function to generate favicon (updated to match the provided image)
   const generateFavicon = () => {
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
-      <rect width="64" height="64" rx="12" fill="#3B82F6" />
-      <g transform="translate(16, 16)" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M16 4l1.6 3.2L21.2 8l-3.2 1.6L16 12l-1.6-3.2L10.8 8l3.2-1.6z" />
-        <path d="M25.3 12l1.1 2.1L28.5 15l-2.1 1.1L25.3 18l-1.1-2.1L22.1 15l2.1-1.1z" />
-        <path d="M6.7 12l1.1 2.1L9.9 15l-2.1 1.1L6.7 18l-1.1-2.1L3.5 15l2.1-1.1z" />
-        <path d="M16 20l1.6 3.2 3.6 1.6-3.6 1.6L16 28l-1.6-3.2-3.6-1.6 3.6-1.6z" />
-      </g>
+      <rect width="64" height="64" rx="12" fill="#2563EB" />
+      <path d="M32 19L38 25L32 31L26 25L32 19Z" fill="white" />
+      <path d="M45 32L39 38L33 32L39 26L45 32Z" fill="white" />
+      <path d="M32 45L26 39L32 33L38 39L32 45Z" fill="white" />
+      <path d="M19 32L25 26L31 32L25 38L19 32Z" fill="white" />
     </svg>`;
 
     return svgContent;
@@ -38,13 +35,11 @@ const BrandAssets = () => {
   // Function to generate Apple Touch Icon
   const generateAppleTouchIcon = () => {
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180" fill="none">
-      <rect width="180" height="180" rx="45" fill="#3B82F6" />
-      <g transform="translate(45, 45)" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M45 11.25l4.5 9L58.5 22.5l-9 4.5L45 36l-4.5-9-9-4.5 9-4.5z" />
-        <path d="M71.25 33.75l3 6 7.5 3-7.5 3-3 6-3-6-7.5-3 7.5-3z" />
-        <path d="M18.75 33.75l3 6 7.5 3-7.5 3-3 6-3-6-7.5-3 7.5-3z" />
-        <path d="M45 56.25l4.5 9 9 4.5-9 4.5-4.5 9-4.5-9-9-4.5 9-4.5z" />
-      </g>
+      <rect width="180" height="180" rx="45" fill="#2563EB" />
+      <path d="M90 53L107 70L90 87L73 70L90 53Z" fill="white" />
+      <path d="M127 90L110 107L93 90L110 73L127 90Z" fill="white" />
+      <path d="M90 127L73 110L90 93L107 110L90 127Z" fill="white" />
+      <path d="M53 90L70 73L87 90L70 107L53 90Z" fill="white" />
     </svg>`;
 
     return svgContent;
@@ -55,14 +50,13 @@ const BrandAssets = () => {
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
       <rect width="1200" height="630" fill="#F8FAFC" />
       <g transform="translate(400, 215)">
-        <g fill="none" stroke="#3B82F6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M60 15l6 12L78 30l-12 6L60 45l-6-12L42 30l12-6z" />
-          <path d="M95 45l4 8L107 55l-8 4L95 70l-4-8L83 55l8-4z" />
-          <path d="M25 45l4 8L37 55l-8 4L25 70l-4-8L13 55l8-4z" />
-          <path d="M60 75l6 12 12 6-12 6L60 105l-6-12-12-6 12-6z" />
-        </g>
-        <text x="120" y="68" font-family="Inter, sans-serif" font-size="40" font-weight="600" fill="#1F2937">
-          Bra<tspan fill="#3B82F6">3</tspan>n
+        <rect x="0" y="0" width="120" height="120" rx="24" fill="#2563EB" />
+        <path d="M60 30L78 48L60 66L42 48L60 30Z" fill="white" />
+        <path d="M90 60L72 78L54 60L72 42L90 60Z" fill="white" />
+        <path d="M60 90L42 72L60 54L78 72L60 90Z" fill="white" />
+        <path d="M30 60L48 42L66 60L48 78L30 60Z" fill="white" />
+        <text x="140" y="68" font-family="Inter, sans-serif" font-size="40" font-weight="600" fill="#1F2937">
+          Bra<tspan fill="#2563EB">3</tspan>n
         </text>
       </g>
       <text x="600" y="430" font-family="Inter, sans-serif" font-size="24" font-weight="400" fill="#64748b" text-anchor="middle">
