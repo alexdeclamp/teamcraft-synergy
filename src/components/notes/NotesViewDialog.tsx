@@ -13,23 +13,31 @@ import { Badge } from '@/components/ui/badge';
 import NotesFormatter from './NotesFormatter';
 import { formatDistanceToNow } from 'date-fns';
 import NoteSummaryButton from '@/components/NoteSummaryButton';
+import { Dispatch, SetStateAction } from 'react';
 
 interface NotesViewDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  onOpenChange?: Dispatch<SetStateAction<boolean>>;
   note: Note | null;
   onEdit: (note: Note) => void;
   onDelete: (id: string) => void;
+  formatDate?: (dateString: string) => string;
+  userId?: string;
 }
 
 const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
   isOpen,
   setIsOpen,
+  onOpenChange,
   note,
   onEdit,
-  onDelete
+  onDelete,
+  formatDate: propFormatDate,
+  userId
 }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const finalSetIsOpen = onOpenChange || setIsOpen;
 
   if (!note) return null;
   
@@ -43,7 +51,9 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
     }
   };
   
-  const formatDate = (dateString: string) => {
+  const formatDateFn = (dateString: string) => {
+    if (propFormatDate) return propFormatDate(dateString);
+    
     try {
       return formatDistanceToNow(new Date(dateString), { addSuffix: true });
     } catch (error) {
@@ -53,7 +63,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={finalSetIsOpen}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="space-y-0">
           {/* Mobile-optimized title with proper wrapping */}
@@ -62,7 +72,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
           </DialogTitle>
           
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-2">
-            <span>{formatDate(note.updated_at || note.created_at)}</span>
+            <span>{formatDateFn(note.updated_at || note.created_at)}</span>
             
             {note.tags && note.tags.length > 0 && (
               <div className="flex items-center flex-wrap gap-1 mt-1 sm:mt-0">

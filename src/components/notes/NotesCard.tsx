@@ -8,16 +8,31 @@ import { CalendarClock, FileText, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import NoteSummaryButton from '@/components/NoteSummaryButton';
 import NotesFormatter from './NotesFormatter';
+import { Dispatch, SetStateAction } from 'react';
 
 interface NotesCardProps {
   note: Note;
   onEdit: (note: Note) => void;
   onView: (note: Note) => void;
   onDelete: (id: string) => void;
+  userId?: string;
+  activeTag?: string;
+  setActiveTag?: Dispatch<SetStateAction<string>>;
+  formatDate?: (dateString: string) => string;
 }
 
-const NotesCard: React.FC<NotesCardProps> = ({ note, onEdit, onView, onDelete }) => {
-  const { formatDate } = useNoteDateFormat();
+const NotesCard: React.FC<NotesCardProps> = ({ 
+  note, 
+  onEdit, 
+  onView, 
+  onDelete,
+  userId,
+  activeTag,
+  setActiveTag,
+  formatDate: propFormatDate
+}) => {
+  const { formatDate: hookFormatDate } = useNoteDateFormat();
+  const formatDateFn = propFormatDate || hookFormatDate;
   
   const getPreviewText = () => {
     const plainText = note.content.replace(/<[^>]*>/g, '');

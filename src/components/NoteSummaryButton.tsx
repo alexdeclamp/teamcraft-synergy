@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,17 +9,21 @@ import ImageSummaryButtonUI from './summary/ImageSummaryButtonUI';
 
 interface NoteSummaryButtonProps {
   noteId: string;
-  noteTitle: string;
   noteContent: string | null;
+  noteName?: string;
+  projectId?: string;
 }
 
 const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
   noteId,
-  noteTitle,
-  noteContent
+  noteContent,
+  noteName,
+  projectId
 }) => {
-  const { id: projectId } = useParams<{ id: string }>();
+  const { id: paramProjectId } = useParams<{ id: string }>();
   const location = useLocation();
+  
+  const finalProjectId = projectId || paramProjectId;
   
   const {
     isGenerating,
@@ -30,7 +35,8 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
   } = useNoteSummary({
     noteId,
     noteContent,
-    projectId
+    noteName,
+    projectId: finalProjectId
   });
   
   useEffect(() => {
@@ -69,11 +75,11 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
       <SummaryDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        title={`Summary of "${noteTitle}"`}
+        title={`Summary of "${noteName || 'Note'}"`}
         summary={summary}
         isLoading={isGenerating && !hasSummary}
         hasSavedVersion={hasSummary}
-        projectId={projectId}
+        projectId={finalProjectId}
       />
     </>
   );
