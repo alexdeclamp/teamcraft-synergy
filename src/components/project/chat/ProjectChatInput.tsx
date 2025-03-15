@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { SendHorizontal, Loader2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ProjectChatInputProps {
   onSendMessage: (message: string) => void;
@@ -11,6 +12,7 @@ interface ProjectChatInputProps {
 
 const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLoading }) => {
   const [input, setInput] = useState('');
+  const isMobile = useIsMobile();
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -32,8 +34,11 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLo
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message here..."
-          className="min-h-[80px] focus-visible:ring-primary/30 bg-background resize-none p-4 rounded-xl"
+          className={`min-h-[80px] focus-visible:ring-primary/30 bg-background resize-none p-4 rounded-xl ${
+            isMobile ? 'text-base' : ''
+          }`}
           onKeyDown={handleKeyDown}
+          style={isMobile ? { fontSize: '16px' } : undefined}
         />
         <div className="flex flex-col gap-2">
           <Button

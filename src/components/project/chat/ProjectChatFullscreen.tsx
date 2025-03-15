@@ -32,6 +32,21 @@ const ProjectChatFullscreen: React.FC<ProjectChatFullscreenProps> = ({
     }
   }, [messages]);
 
+  // Prevent zoom on mobile
+  useEffect(() => {
+    if (isMobile && isOpen) {
+      // Add viewport meta tag to prevent zooming
+      const metaViewport = document.querySelector('meta[name=viewport]');
+      const originalContent = metaViewport?.getAttribute('content') || '';
+      metaViewport?.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1');
+      
+      return () => {
+        // Restore original viewport settings when chat closes
+        metaViewport?.setAttribute('content', originalContent);
+      };
+    }
+  }, [isMobile, isOpen]);
+
   // Handler for predefined questions
   const handlePredefinedQuestion = (question: string) => {
     sendMessage(question);
