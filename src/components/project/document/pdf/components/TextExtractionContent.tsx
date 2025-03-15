@@ -1,9 +1,8 @@
 
-import React, { useRef } from 'react';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { AlertCircle, ExternalLink, Loader2 } from 'lucide-react';
+import React from 'react';
+import { Loader2, FileText, AlertCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ReactMarkdown from 'react-markdown';
+import TextExtractionBanner from './TextExtractionBanner';
 
 interface TextExtractionContentProps {
   isExtracting: boolean;
@@ -26,110 +25,80 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
   onRetryExtraction,
   handleOpenPdfDirectly
 }) => {
-  const textContainerRef = useRef<HTMLPreElement>(null);
-
-  const formatExtractedText = (text: string) => {
-    if (!text) return '';
-    
-    // Convert "Heading:" and "Subheading:" patterns to markdown
-    let formatted = text
-      // Convert "Heading:" to markdown heading
-      .replace(/^Heading:\s*(.*?)$/gm, '# $1')
-      .replace(/^Subheading:\s*(.*?)$/gm, '## $1')
-      // Ensure double line breaks between sections
-      .replace(/\n(#+ )/g, '\n\n$1')
-      // Fix bullet points
-      .replace(/^[-*•]\s*/gm, '• ')
-      // Ensure proper spacing between paragraphs
-      .replace(/([^\n])\n([^\s#•-])/g, '$1\n\n$2')
-      // Remove extra spaces
-      .replace(/\s{3,}/g, '\n\n')
-      // Ensure proper heading spacing
-      .replace(/^(#+ .*)\n([^\n])/gm, '$1\n\n$2');
-    
-    return formatted.trim();
-  };
-
-  const getSelectedText = () => {
-    if (textContainerRef.current) {
-      const selection = window.getSelection();
-      if (selection && selection.toString().length > 0) {
-        let selectedText = selection.toString();
-        // Format as a blockquote for note creation
-        return `> ${selectedText.replace(/\n/g, '\n> ')}`;
-      }
-    }
-    return '';
-  };
-
   if (isExtracting) {
     return (
-      <div className="flex flex-col items-center justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-2" />
-        <span className="text-muted-foreground">Extracting text from PDF...</span>
-        <span className="text-xs text-muted-foreground mt-1">This may take a moment for large files</span>
-      </div>
-    );
-  }
-
-  if (isSummarizing) {
-    return (
-      <div className="flex flex-col items-center justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mb-2" />
-        <span className="text-muted-foreground">Summarizing text...</span>
-        <span className="text-xs text-muted-foreground mt-1">This may take a moment for large documents</span>
+      <div className="py-12 flex flex-col items-center justify-center">
+        <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+        <p className="text-lg font-medium">Extracting text from PDF...</p>
+        <p className="text-sm text-muted-foreground mt-2">This may take a moment depending on the file size.</p>
       </div>
     );
   }
 
   if (extractionError) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-center">
-        <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-        <div className="text-destructive mb-4 font-medium">{extractionError}</div>
-        <div className="text-sm text-muted-foreground mb-6 max-w-md">
-          <p className="mb-2">This could be due to:</p>
-          <ul className="list-disc text-left pl-8 space-y-1">
-            <li>Network connectivity issues</li>
-            <li>Invalid or corrupted PDF format</li>
-            <li>Password-protected or encrypted PDF</li>
-            <li>Temporary service unavailability</li>
-          </ul>
+      <div className="py-8 px-4">
+        <div className="p-4 bg-destructive/10 rounded-lg flex items-start space-x-3">
+          <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-1" />
+          <div>
+            <p className="font-medium text-destructive">{extractionError}</p>
+            <p className="text-muted-foreground mt-2 text-sm">
+              This could be due to an inaccessible PDF, incompatible format, or server limitations.
+            </p>
+            <div className="mt-4 flex gap-3">
+              <Button variant="outline" size="sm" onClick={onRetryExtraction}>
+                Try Again
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleOpenPdfDirectly}>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open PDF Directly
+              </Button>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button onClick={onRetryExtraction}>Retry Extraction</Button>
-          <Button variant="outline" onClick={handleOpenPdfDirectly} className="flex items-center gap-1">
-            <ExternalLink className="h-4 w-4" />
-            Open PDF Directly
-          </Button>
+      </div>
+    );
+  }
+
+  if (isSummarizing) {
+    return (
+      <div className="py-12 flex flex-col items-center justify-center">
+        <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+        <p className="text-lg font-medium">Generating summary...</p>
+        <p className="text-sm text-muted-foreground mt-2">Our AI is analyzing your document and creating a concise summary.</p>
+      </div>
+    );
+  }
+
+  if (showSummary && summary) {
+    return (
+      <div className="py-4 px-1">
+        <div className="bg-muted/40 rounded-md p-4 max-h-[400px] overflow-y-auto whitespace-pre-wrap text-sm relative">
+          {summary}
         </div>
       </div>
     );
   }
 
   return (
-    <ScrollArea className="flex-1 p-4 mt-4 max-h-[500px] overflow-auto">
-      {showSummary && summary ? (
-        <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:mt-6 prose-headings:mb-4">
-          <ReactMarkdown>
-            {formatExtractedText(summary)}
-          </ReactMarkdown>
+    <div className="py-4 px-1">
+      <TextExtractionBanner 
+        isExtracting={isExtracting}
+        extractionError={extractionError}
+        extractedText={extractedText}
+      />
+      
+      {extractedText ? (
+        <div className="bg-muted/40 rounded-md p-4 max-h-[400px] overflow-y-auto whitespace-pre-wrap text-sm font-mono relative">
+          {extractedText}
         </div>
-      ) : extractedText ? (
-        <pre 
-          ref={textContainerRef}
-          className="whitespace-pre-wrap font-sans text-sm w-full overflow-visible leading-relaxed p-2"
-        >
-          {formatExtractedText(extractedText)}
-        </pre>
       ) : (
-        <div className="text-center text-muted-foreground py-8 flex flex-col items-center">
-          <AlertCircle className="h-6 w-6 mb-3 text-amber-500" />
-          <p className="mb-2">No text content was extracted from this PDF.</p>
-          <p className="text-sm max-w-md">This is usually because the PDF contains only images or scanned content without embedded text. Try using a different PDF or one with selectable text.</p>
+        <div className="py-8 flex flex-col items-center justify-center">
+          <FileText className="h-10 w-10 text-muted-foreground mb-4" />
+          <p className="text-center text-muted-foreground">No text could be extracted from this PDF. It may be an image-based PDF.</p>
         </div>
       )}
-    </ScrollArea>
+    </div>
   );
 };
 
