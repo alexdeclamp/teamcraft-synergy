@@ -10,13 +10,27 @@ import KeyFeaturesSection from '@/components/landing/KeyFeaturesSection';
 import CtaSection from '@/components/landing/CtaSection';
 import FooterSection from '@/components/landing/FooterSection';
 import { InvitationBanner } from '@/components/ui/invitation-banner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Landing = () => {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="min-h-screen bg-background overflow-hidden">
       <div className="flex flex-col">
-        <InvitationBanner />
-        <LandingNavbar />
+        {isMobile ? (
+          <>
+            <InvitationBanner />
+            <LandingNavbar />
+          </>
+        ) : (
+          <>
+            <div className="pt-10">
+              <LandingNavbar />
+            </div>
+            <InvitationBanner />
+          </>
+        )}
       </div>
       <HeroSection />
       <TimelineSection />

@@ -14,8 +14,8 @@ export function InvitationBanner({ className }: InvitationBannerProps) {
   
   return (
     <div className={cn(
-      "w-full bg-primary/10 py-2 px-4 text-center text-sm flex items-center justify-center gap-1.5 font-medium",
-      isMobile ? "mt-14" : "", // Position below navbar on mobile
+      "w-full bg-primary/10 py-2 px-4 text-sm flex items-center justify-center gap-1.5 font-medium",
+      isMobile ? "mt-14 text-center" : "fixed top-0 left-0 right-0 z-40", // Position differently based on device
       className
     )}>
       <Lock className="h-3.5 w-3.5 text-primary" />
