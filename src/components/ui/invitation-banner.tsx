@@ -3,15 +3,19 @@ import React from 'react';
 import { Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface InvitationBannerProps {
   className?: string;
 }
 
 export function InvitationBanner({ className }: InvitationBannerProps) {
+  const isMobile = useIsMobile();
+  
   return (
     <div className={cn(
       "w-full bg-primary/10 py-2 px-4 text-center text-sm flex items-center justify-center gap-1.5 font-medium",
+      isMobile && "pt-16 pb-2", // Add padding top on mobile to account for navbar
       className
     )}>
       <Lock className="h-3.5 w-3.5 text-primary" />

@@ -4,14 +4,19 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sparkles, ArrowRight, MessageSquare, Users, Map } from 'lucide-react';
 import { InvitationBanner } from '@/components/ui/invitation-banner';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 const Index = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <InvitationBanner />
-      <div className="flex items-center justify-center pt-20 flex-1">
+      <div className={cn("flex items-center justify-center flex-1", 
+        isMobile ? "pt-6" : "pt-20"
+      )}>
         <div className="max-w-4xl mx-auto px-6 text-center">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight mb-4">
             Let's build something new.
