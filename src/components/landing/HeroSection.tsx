@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -20,8 +21,8 @@ const HeroSection: React.FC = () => {
         </h1>
         <p className="text-2xl sm:text-3xl font-medium text-foreground mb-4">Your AI Project Assistant.</p>
         <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto mb-8">Turn any documents into actionable insights instantly with AI-powered summaries and search.</p>
-        <Button onClick={() => navigate('/auth?tab=register')} size="lg" className="rounded-full px-8 text-base shadow-sm">
-          Try Bra3n
+        <Button onClick={() => navigate('/waitlist')} size="lg" className="rounded-full px-8 text-base shadow-sm">
+          Get in the private beta
           <ArrowRight className="ml-1 h-4 w-4" />
         </Button>
       </div>
