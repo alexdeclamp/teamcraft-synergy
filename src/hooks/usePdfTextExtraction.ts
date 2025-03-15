@@ -10,6 +10,7 @@ interface UsePdfTextExtractionProps {
 }
 
 export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfTextExtractionProps) => {
+  // Explicitly create the modal visibility state
   const [showTextModal, setShowTextModal] = useState(false);
   
   // Import extraction functionality from the smaller hooks
@@ -35,6 +36,14 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
     setShowSummary
   } = usePdfSummarization({ extractedText, fileName, projectId });
 
+  // Custom function to handle extraction and show modal
+  const handleExtractAndShowModal = async () => {
+    // Open the modal first
+    setShowTextModal(true);
+    // Then start extraction
+    await handleExtractText();
+  };
+
   // Reset state when the modal is closed
   useEffect(() => {
     if (!showTextModal) {
@@ -56,7 +65,7 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
     isSummarizing,
     summary,
     showSummary,
-    handleExtractText,
+    handleExtractText: handleExtractAndShowModal, // Override with our version that shows the modal
     handleSummarizeText,
     toggleTextView,
     handleRetryExtraction,

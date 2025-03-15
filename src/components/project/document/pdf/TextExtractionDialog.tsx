@@ -48,6 +48,7 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
   summary,
   showSummary,
   toggleTextView,
+  handleSummarizeText,
   projectId
 }) => {
   const { user } = useAuth();
@@ -141,7 +142,13 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
 
   return (
     <>
-      <Dialog open={showTextModal} onOpenChange={setShowTextModal}>
+      <Dialog 
+        open={showTextModal} 
+        onOpenChange={(open) => {
+          console.log("Dialog open state changing to:", open);
+          setShowTextModal(open);
+        }}
+      >
         <DialogContent className="sm:max-w-[750px] max-h-[85vh] flex flex-col">
           <TextExtractionHeader
             fileName={fileName}
