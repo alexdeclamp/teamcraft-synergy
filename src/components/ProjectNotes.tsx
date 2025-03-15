@@ -9,7 +9,6 @@ import TagFilter from './notes/TagFilter';
 import EmptyNotesList from './notes/EmptyNotesList';
 import NotesLoading from './notes/NotesLoading';
 import NotesViewDialog from './notes/NotesViewDialog';
-import { ContentAlert } from "@/components/ui/content-alert";
 import { useProjectNotes } from '@/hooks/useProjectNotes';
 import { useNoteForm } from '@/hooks/useNoteForm';
 import { SearchBar } from '@/components/ui/search-bar';
@@ -114,7 +113,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
             <p className="text-muted-foreground">No notes match your search</p>
           </div>
         ) : (
-          <div className="flex flex-col">
+          <div className="flex flex-col bg-white rounded-md shadow-sm">
             {filteredNotes.map((note, index) => (
               <NotesCard
                 key={note.id}
@@ -136,9 +135,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
   };
 
   return (
-    <div className="space-y-4">
-      <ContentAlert />
-      
+    <div className="space-y-4">      
       {renderNotesList()}
 
       <NotesViewDialog

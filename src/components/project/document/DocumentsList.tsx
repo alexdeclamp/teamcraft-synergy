@@ -77,7 +77,7 @@ export const DocumentsList: React.FC<DocumentsListProps> = ({
           <p className="text-muted-foreground">No documents match your search</p>
         </div>
       ) : (
-        <div className="space-y-0">
+        <div className="bg-white rounded-md shadow-sm">
           {filteredDocuments.map((document, index) => (
             <DocumentItem 
               key={document.id}

@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Note } from './types';
 import { formatDistanceToNow } from 'date-fns';
 import { useNoteDateFormat } from '@/hooks/notes/useNoteDateFormat';
-import { CalendarClock, MoreVertical, Pencil, Trash2, Copy } from 'lucide-react';
+import { CalendarClock, MoreVertical, Pencil, Trash2, Copy, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Dispatch, SetStateAction } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -70,13 +70,22 @@ const NotesCard: React.FC<NotesCardProps> = ({
   return (
     <div className="group">
       <div 
-        className="px-4 py-5 hover:bg-muted/40 transition-colors cursor-pointer rounded-md"
+        className="px-4 py-6 hover:bg-slate-50/80 transition-colors cursor-pointer rounded-md"
         onClick={handleCardClick}
       >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <h3 className="font-medium text-base break-words line-clamp-2">
-            {note.title || "Untitled Note"}
-          </h3>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+          <div className="flex-1">
+            <h3 className="font-medium text-base break-words line-clamp-2">
+              {note.title || "Untitled Note"}
+            </h3>
+            
+            {note.creator_name && (
+              <div className="flex items-center text-xs text-muted-foreground mt-1">
+                <User className="h-3 w-3 mr-1 flex-shrink-0" />
+                <span>{note.creator_name}</span>
+              </div>
+            )}
+          </div>
           
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <div className="flex items-center text-xs text-muted-foreground">
