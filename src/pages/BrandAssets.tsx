@@ -126,22 +126,46 @@ const BrandAssets = () => {
     toast.success(`${filename} exported successfully`);
   };
 
+  // Function to add files directly to public folder for production
+  const saveToPublicFolder = async (svgString, filename) => {
+    try {
+      // In a production environment, we would use a server-side solution to save files
+      // For now, we'll simulate success and instruct the user
+      console.log(`Simulating saving ${filename} to public folder`);
+      toast.info(`To use ${filename} in production, please manually add the exported file to your project's public folder.`);
+      return true;
+    } catch (error) {
+      console.error(`Error saving ${filename}:`, error);
+      toast.error(`Failed to save ${filename} to public folder`);
+      return false;
+    }
+  };
+
   const exportFavicon = () => {
     const svgString = generateFavicon();
     exportSvgAsPng(svgString, 64, 64, 'favicon-new.png');
     exportSvg(svgString, 'favicon-new.svg');
+    
+    // Save to public folder (simulation)
+    saveToPublicFolder(svgString, 'favicon-new.svg');
   };
 
   const exportOgImage = () => {
     const svgString = generateOgImage();
     exportSvgAsPng(svgString, 1200, 630, 'og-image-new.png');
     exportSvg(svgString, 'og-image-new.svg');
+    
+    // Save to public folder (simulation)
+    saveToPublicFolder(svgString, 'og-image-new.png');
   };
 
   const exportAppleTouchIcon = () => {
     const svgString = generateAppleTouchIcon();
     exportSvgAsPng(svgString, 180, 180, 'apple-touch-icon-new.png');
     exportSvg(svgString, 'apple-touch-icon-new.svg');
+    
+    // Save to public folder (simulation)
+    saveToPublicFolder(svgString, 'apple-touch-icon-new.png');
   };
 
   const exportAllAssets = () => {
@@ -149,6 +173,13 @@ const BrandAssets = () => {
     exportOgImage();
     exportAppleTouchIcon();
   };
+
+  // Automatically generate assets for the public folder on page load
+  useEffect(() => {
+    // This doesn't actually save to the filesystem in a client-side app,
+    // but would be useful in a full-stack environment
+    console.log("Page loaded, favicon assets would be generated for public folder in a server environment");
+  }, []);
 
   return (
     <div className="container mx-auto py-12 px-4">
@@ -195,6 +226,19 @@ const BrandAssets = () => {
             <Download className="mr-2 h-4 w-4" />
             Export All Assets
           </Button>
+        </div>
+        
+        <div className="bg-muted p-6 rounded-lg mt-4">
+          <h3 className="font-medium mb-2">Production Setup Instructions</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            To properly display these assets in production:
+          </p>
+          <ol className="text-sm text-muted-foreground list-decimal pl-4 space-y-2">
+            <li>Download all assets using the buttons above</li>
+            <li>Place the downloaded files in your project's <code>public</code> folder</li>
+            <li>Ensure the HTML references match the exact filenames (favicon-new.svg, favicon-new.png, etc.)</li>
+            <li>Deploy your updated application</li>
+          </ol>
         </div>
       </div>
     </div>
