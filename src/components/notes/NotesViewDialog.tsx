@@ -117,13 +117,14 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
               {isConfirmingDelete ? "Confirm" : "Delete"}
             </Button>
             
-            <NoteSummaryButton 
-              noteId={note.id}
-              noteContent={note.content}
-              noteName={note.title}
-              projectId={note.project_id}
-              className="col-span-2 justify-center h-8 mt-1"
-            />
+            <div className="col-span-2 flex justify-center mt-1">
+              <NoteSummaryButton 
+                noteId={note.id}
+                noteContent={note.content}
+                noteName={note.title}
+                projectId={note.project_id}
+              />
+            </div>
           </div>
           
           {/* Source document info if exists */}
