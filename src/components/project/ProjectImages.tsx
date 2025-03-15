@@ -11,7 +11,6 @@ import { supabase } from '@/integrations/supabase/client';
 import ProjectImageUpload from '@/components/ProjectImageUpload';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { Image } from 'lucide-react';
 
 interface UploadedImage {
   url: string;
@@ -65,21 +64,13 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({ projectId, onImagesUpdate
               .eq('project_id', projectId)
               .single();
 
-            // Fetch tags if they exist
-            const { data: tagsData } = await supabase
-              .from('image_tags')
-              .select('id, tag')
-              .eq('image_url', urlData.publicUrl)
-              .eq('project_id', projectId);
-
             return {
               url: urlData.publicUrl,
               path: `${projectId}/${item.name}`,
               size: item.metadata?.size || 0,
               name: item.name,
               createdAt: new Date(item.created_at || Date.now()),
-              summary: summaryData?.summary || undefined,
-              tags: tagsData || []
+              summary: summaryData?.summary || undefined
             };
           })
         );
@@ -104,18 +95,20 @@ const ProjectImages: React.FC<ProjectImagesProps> = ({ projectId, onImagesUpdate
   };
 
   return (
-    <div className="border rounded-lg shadow-sm">
-      <div className="flex items-center gap-2 p-4 border-b bg-muted/40">
-        <Image className="h-5 w-5" />
-        <h3 className="font-medium text-lg">Project Images</h3>
-      </div>
-      <div className="p-4 space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>Project Images</CardTitle>
+        <CardDescription>
+          Upload and manage images for this project
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
         <ProjectImageUpload 
           projectId={projectId} 
           onUploadComplete={handleImageUploadComplete}
         />
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
