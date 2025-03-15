@@ -124,7 +124,6 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
                 if (summaryBtn) summaryBtn.click();
               }}
             >
-              <PenSquare className="h-4 w-4 mr-1.5" />
               Generate AI Summary
             </Button>
             
