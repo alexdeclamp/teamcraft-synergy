@@ -76,7 +76,7 @@ const DocumentItem: React.FC<DocumentItemProps> = ({
   return (
     <>
       <div className="group">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-md hover:bg-muted/40 transition-colors cursor-pointer w-full gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between py-5 px-4 rounded-md hover:bg-muted/40 transition-colors cursor-pointer w-full gap-3">
           <DocumentItemHeader
             fileName={document.file_name}
             createdAt={document.created_at}

@@ -70,7 +70,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
   return (
     <div className="group">
       <div 
-        className="px-4 py-3 hover:bg-muted/40 transition-colors cursor-pointer rounded-md"
+        className="px-4 py-5 hover:bg-muted/40 transition-colors cursor-pointer rounded-md"
         onClick={handleCardClick}
       >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

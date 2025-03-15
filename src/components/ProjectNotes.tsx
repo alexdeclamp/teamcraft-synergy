@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,12 +12,15 @@ import NotesViewDialog from './notes/NotesViewDialog';
 import { ContentAlert } from "@/components/ui/content-alert";
 import { useProjectNotes } from '@/hooks/useProjectNotes';
 import { useNoteForm } from '@/hooks/useNoteForm';
+import { SearchBar } from '@/components/ui/search-bar';
 
 interface ProjectNotesProps {
   projectId: string;
 }
 
 const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const {
     notes,
     setNotes,
@@ -62,6 +65,18 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     handleOpenCreateDialog
   } = useNoteForm(projectId, notes, setNotes, allTags, setAllTags);
 
+  // Filter notes based on search query
+  const filteredNotes = useMemo(() => {
+    if (!searchQuery.trim()) return notes;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return notes.filter(note => 
+      note.title.toLowerCase().includes(query) || 
+      note.content.toLowerCase().includes(query) ||
+      (note.tags && note.tags.some(tag => tag.toLowerCase().includes(query)))
+    );
+  }, [notes, searchQuery]);
+
   const renderNotesList = () => {
     if (loading) {
       return <NotesLoading />;
@@ -73,34 +88,49 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     
     return (
       <>
-        <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <SearchBar
+              placeholder="Search notes..."
+              value={searchQuery}
+              onChange={setSearchQuery}
+              className="flex-1"
+            />
+            <Button onClick={handleOpenCreateDialog} className="flex items-center gap-1 shrink-0">
+              <PlusCircle className="h-4 w-4" />
+              New Note
+            </Button>
+          </div>
+          
           <TagFilter 
             allTags={allTags} 
             activeTag={activeTag} 
             setActiveTag={setActiveTag} 
           />
-          <Button onClick={handleOpenCreateDialog} className="flex items-center gap-1 shrink-0">
-            <PlusCircle className="h-4 w-4" />
-            New Note
-          </Button>
         </div>
 
-        <div className="flex flex-col">
-          {notes.map((note, index) => (
-            <NotesCard
-              key={note.id}
-              note={note}
-              userId={user?.id}
-              activeTag={activeTag}
-              setActiveTag={setActiveTag}
-              onView={openViewDialog}
-              onEdit={openEditDialog}
-              onDelete={handleDeleteNote}
-              formatDate={formatDate}
-              isLast={index === notes.length - 1}
-            />
-          ))}
-        </div>
+        {filteredNotes.length === 0 ? (
+          <div className="py-6 text-center">
+            <p className="text-muted-foreground">No notes match your search</p>
+          </div>
+        ) : (
+          <div className="flex flex-col">
+            {filteredNotes.map((note, index) => (
+              <NotesCard
+                key={note.id}
+                note={note}
+                userId={user?.id}
+                activeTag={activeTag}
+                setActiveTag={setActiveTag}
+                onView={openViewDialog}
+                onEdit={openEditDialog}
+                onDelete={handleDeleteNote}
+                formatDate={formatDate}
+                isLast={index === filteredNotes.length - 1}
+              />
+            ))}
+          </div>
+        )}
       </>
     );
   };
