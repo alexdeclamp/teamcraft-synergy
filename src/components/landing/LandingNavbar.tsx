@@ -1,12 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn } from "@/lib/utils";
 import { Menu, X, Sparkles } from "lucide-react";
 import { Button } from '@/components/ui/button';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerClose
+} from "@/components/ui/drawer";
 
 const LandingNavbar = () => {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -73,63 +79,62 @@ const LandingNavbar = () => {
           </div>
         </nav>
 
-        {/* Mobile menu button */}
-        <button 
-          className="md:hidden p-2 rounded-md hover:bg-accent"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle menu"
-          aria-expanded={mobileMenuOpen}
-        >
-          {mobileMenuOpen ? 
-            <X className="h-5 w-5" /> : 
-            <Menu className="h-5 w-5" />
-          }
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      <div 
-        className={cn(
-          "fixed inset-x-0 top-[65px] bg-white shadow-lg border-t transform transition-transform duration-300 ease-in-out md:hidden z-40",
-          mobileMenuOpen ? "translate-y-0" : "-translate-y-full"
-        )}
-      >
-        <div className="px-4 py-5 space-y-5">
-          <div className="flex flex-col space-y-3">
-            {navLinks.map((link) => (
-              <a 
-                key={link.name}
-                href={link.href}
-                className="text-sm font-medium py-2 px-3 rounded-md hover:bg-accent"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {link.name}
-              </a>
-            ))}
-          </div>
-          
-          <div className="flex flex-col space-y-3 pt-3 border-t">
-            <Button 
-              variant="outline" 
-              className="w-full justify-center"
-              onClick={() => { 
-                navigate('/auth');
-                setMobileMenuOpen(false);
-              }}
+        {/* Mobile burger menu */}
+        <Drawer direction="right">
+          <DrawerTrigger asChild>
+            <button
+              className="md:hidden p-2 rounded-md hover:bg-accent"
+              aria-label="Open menu"
             >
-              Log in
-            </Button>
-            <Button 
-              className="w-full justify-center"
-              onClick={() => { 
-                navigate('/auth');
-                setMobileMenuOpen(false);
-              }}
-            >
-              Sign up
-            </Button>
-          </div>
-        </div>
+              <Menu className="h-5 w-5" />
+            </button>
+          </DrawerTrigger>
+          <DrawerContent className="w-[80vw] max-w-sm h-screen rounded-none">
+            <div className="px-4 py-8 h-full flex flex-col">
+              <div className="flex justify-end mb-6">
+                <DrawerClose asChild>
+                  <button
+                    className="p-2 rounded-md hover:bg-accent"
+                    aria-label="Close menu"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </DrawerClose>
+              </div>
+              
+              <div className="flex flex-col space-y-6 flex-1">
+                <div className="flex flex-col space-y-4">
+                  {navLinks.map((link) => (
+                    <DrawerClose key={link.name} asChild>
+                      <a 
+                        href={link.href}
+                        className="text-base font-medium py-2 hover:text-primary transition-colors"
+                      >
+                        {link.name}
+                      </a>
+                    </DrawerClose>
+                  ))}
+                </div>
+                
+                <div className="mt-auto flex flex-col space-y-4">
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-center"
+                    onClick={() => navigate('/auth')}
+                  >
+                    Log in
+                  </Button>
+                  <Button 
+                    className="w-full justify-center"
+                    onClick={() => navigate('/auth')}
+                  >
+                    Sign up
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
       </div>
     </header>
   );
