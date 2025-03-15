@@ -35,6 +35,21 @@ const BrandAssets = () => {
     return svgContent;
   };
 
+  // Function to generate Apple Touch Icon
+  const generateAppleTouchIcon = () => {
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180" fill="none">
+      <rect width="180" height="180" rx="45" fill="#3B82F6" />
+      <g transform="translate(45, 45)" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M45 11.25l4.5 9L58.5 22.5l-9 4.5L45 36l-4.5-9-9-4.5 9-4.5z" />
+        <path d="M71.25 33.75l3 6 7.5 3-7.5 3-3 6-3-6-7.5-3 7.5-3z" />
+        <path d="M18.75 33.75l3 6 7.5 3-7.5 3-3 6-3-6-7.5-3 7.5-3z" />
+        <path d="M45 56.25l4.5 9 9 4.5-9 4.5-4.5 9-4.5-9-9-4.5 9-4.5z" />
+      </g>
+    </svg>`;
+
+    return svgContent;
+  };
+
   // Function to generate OG image
   const generateOgImage = () => {
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
@@ -124,8 +139,9 @@ const BrandAssets = () => {
   };
 
   const exportAppleTouchIcon = () => {
-    const svgString = generateFavicon();
+    const svgString = generateAppleTouchIcon();
     exportSvgAsPng(svgString, 180, 180, 'apple-touch-icon-new.png');
+    exportSvg(svgString, 'apple-touch-icon-new.svg');
   };
 
   const exportAllAssets = () => {
@@ -165,13 +181,12 @@ const BrandAssets = () => {
           <h2 className="text-xl font-semibold mb-4">Apple Touch Icon</h2>
           <div className="flex items-center justify-center bg-slate-100 p-8 rounded-md mb-4">
             <div 
-              dangerouslySetInnerHTML={{ __html: generateFavicon() }} 
-              style={{ transform: 'scale(2.8)' }}
+              dangerouslySetInnerHTML={{ __html: generateAppleTouchIcon() }}
             />
           </div>
           <Button onClick={exportAppleTouchIcon} className="w-full">
             <Download className="mr-2 h-4 w-4" />
-            Export Apple Touch Icon (PNG)
+            Export Apple Touch Icon (PNG & SVG)
           </Button>
         </div>
 
