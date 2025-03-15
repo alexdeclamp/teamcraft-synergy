@@ -7,7 +7,6 @@ import { useNoteDateFormat } from '@/hooks/notes/useNoteDateFormat';
 import { CalendarClock, FileText, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import NoteSummaryButton from '@/components/NoteSummaryButton';
-import NotesFormatter from './NotesFormatter';
 import { Dispatch, SetStateAction } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -35,11 +34,6 @@ const NotesCard: React.FC<NotesCardProps> = ({
   const { formatDate: hookFormatDate } = useNoteDateFormat();
   const formatDateFn = propFormatDate || hookFormatDate;
   const isMobile = useIsMobile();
-  
-  const getPreviewText = () => {
-    const plainText = note.content.replace(/<[^>]*>/g, '');
-    return plainText.length > 120 ? plainText.substring(0, 120) + '...' : plainText;
-  };
   
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't trigger card click if clicking on the button
@@ -83,13 +77,6 @@ const NotesCard: React.FC<NotesCardProps> = ({
               )}
             </div>
           </div>
-          
-          {/* Preview area - hidden on mobile */}
-          {!isMobile && (
-            <div className="text-sm text-muted-foreground line-clamp-3">
-              <NotesFormatter content={getPreviewText()} />
-            </div>
-          )}
           
           {/* Actions and tags area */}
           <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 pt-2">

@@ -66,9 +66,8 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={finalSetIsOpen}>
-      <DialogContent className={`${isMobile ? 'w-[95vw] max-w-full p-4 h-[90vh]' : 'max-w-3xl'} max-h-[90vh] overflow-y-auto`}>
+      <DialogContent className={`${isMobile ? 'w-[100vw] max-w-[100vw] p-4 h-[90vh] mx-0 rounded-none' : 'max-w-3xl'} max-h-[90vh] overflow-y-auto overflow-x-hidden`}>
         <DialogHeader className="space-y-0">
-          {/* Mobile-optimized title with proper wrapping */}
           <DialogTitle className="text-lg sm:text-xl break-words hyphens-auto pr-8">
             {note.title || "Untitled Note"}
           </DialogTitle>
