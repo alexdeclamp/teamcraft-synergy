@@ -6,6 +6,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import SummaryDialog from './summary/SummaryDialog';
 import { useNoteSummary } from '@/hooks/useNoteSummary';
 import ImageSummaryButtonUI from './summary/ImageSummaryButtonUI';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface NoteSummaryButtonProps {
   noteId: string;
@@ -22,6 +23,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
 }) => {
   const { id: paramProjectId } = useParams<{ id: string }>();
   const location = useLocation();
+  const isMobile = useIsMobile();
   
   const finalProjectId = projectId || paramProjectId;
   
@@ -46,6 +48,11 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
       }
     };
   }, [location.pathname, isDialogOpen, setIsDialogOpen]);
+
+  // Don't render the button on mobile devices
+  if (isMobile) {
+    return null;
+  }
 
   return (
     <>
