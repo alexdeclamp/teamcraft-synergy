@@ -4,10 +4,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Note } from './types';
 import { formatDistanceToNow } from 'date-fns';
 import { useNoteDateFormat } from '@/hooks/notes/useNoteDateFormat';
-import { CalendarClock } from 'lucide-react';
+import { CalendarClock, MoreVertical, Pencil, Trash2, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Dispatch, SetStateAction } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from '@/components/ui/button';
 
 interface NotesCardProps {
   note: Note;
@@ -40,6 +47,18 @@ const NotesCard: React.FC<NotesCardProps> = ({
     }
     onView(note);
   };
+
+  const handleDuplicate = () => {
+    // Clone the note without its id
+    const duplicatedNote = {
+      ...note,
+      id: '', // This will be generated when saved
+      title: `${note.title} (Copy)`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    onEdit(duplicatedNote);
+  };
   
   const formattedDate = note.updated_at 
     ? formatDistanceToNow(new Date(note.updated_at), { addSuffix: true })
@@ -52,7 +71,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
     >
       <CardContent className="p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <h3 className="font-medium text-base break-words line-clamp-2">
+          <h3 className="font-medium text-base break-words line-clamp-2 pr-6">
             {note.title || "Untitled Note"}
           </h3>
           
@@ -84,6 +103,41 @@ const NotesCard: React.FC<NotesCardProps> = ({
                 )}
               </div>
             )}
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 absolute top-3 right-3"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(note);
+                }}>
+                  <Pencil className="h-4 w-4 mr-2" /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  handleDuplicate();
+                }}>
+                  <Copy className="h-4 w-4 mr-2" /> Duplicate
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-destructive focus:text-destructive" 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(note.id);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </CardContent>
