@@ -29,6 +29,7 @@ export const useImageUpload = ({
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [isGalleryDialogOpen, setIsGalleryDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const maxSizeInBytes = maxSizeInMB * 1024 * 1024;
 
@@ -97,6 +98,7 @@ export const useImageUpload = ({
     setSelectedFile(null);
     setPreview(null);
     setUploadProgress(0);
+    setErrorMessage(null);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,6 +131,7 @@ export const useImageUpload = ({
     if (!selectedFile || !projectId || !userId) return;
     
     try {
+      setErrorMessage(null);
       setIsUploading(true);
       setUploadProgress(10);
       
@@ -169,6 +172,7 @@ export const useImageUpload = ({
       resetUpload();
     } catch (error: any) {
       console.error('Error uploading image:', error);
+      setErrorMessage(error.message || 'Failed to upload image');
       toast.error('Failed to upload image: ' + (error.message || 'Unknown error'));
     } finally {
       setIsUploading(false);
@@ -208,6 +212,7 @@ export const useImageUpload = ({
     setIsDialogOpen,
     isGalleryDialogOpen,
     setIsGalleryDialogOpen,
+    errorMessage,
     resetUpload,
     handleFileSelect,
     handleUpload,
