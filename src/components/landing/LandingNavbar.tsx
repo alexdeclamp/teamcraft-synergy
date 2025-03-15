@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn } from "@/lib/utils";
@@ -29,7 +28,7 @@ const LandingNavbar = () => {
   return (
     <header 
       className={cn(
-        "sticky top-0 left-0 right-0 z-50 transition-all duration-300 px-4 sm:px-6 py-4",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4 sm:px-6 py-4",
         scrolled ? "bg-white/80 backdrop-blur-sm border-b shadow-sm" : "bg-transparent"
       )}
     >
@@ -91,7 +90,7 @@ const LandingNavbar = () => {
       {/* Mobile Menu */}
       <div 
         className={cn(
-          "fixed inset-x-0 top-[65px] bg-white shadow-lg border-t transform transition-transform duration-300 ease-in-out md:hidden z-50",
+          "fixed inset-x-0 top-[65px] bg-white shadow-lg border-t transform transition-transform duration-300 ease-in-out md:hidden z-40",
           mobileMenuOpen ? "translate-y-0" : "-translate-y-full"
         )}
       >
