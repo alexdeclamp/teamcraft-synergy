@@ -5,11 +5,11 @@ import { cn } from "@/lib/utils";
 import { Menu, X, Sparkles } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-  DrawerClose
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose
+} from "@/components/ui/sheet";
 
 const LandingNavbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -79,62 +79,65 @@ const LandingNavbar = () => {
           </div>
         </nav>
 
-        {/* Mobile burger menu */}
-        <Drawer direction="right">
-          <DrawerTrigger asChild>
+        {/* Mobile burger menu - using Sheet for fullscreen */}
+        <Sheet>
+          <SheetTrigger asChild>
             <button
               className="md:hidden p-2 rounded-md hover:bg-accent"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" />
             </button>
-          </DrawerTrigger>
-          <DrawerContent className="w-[80vw] max-w-sm h-screen rounded-none">
-            <div className="px-4 py-8 h-full flex flex-col">
-              <div className="flex justify-end mb-6">
-                <DrawerClose asChild>
-                  <button
-                    className="p-2 rounded-md hover:bg-accent"
-                    aria-label="Close menu"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </DrawerClose>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-full p-0 border-none">
+            <div className="flex flex-col h-full bg-background">
+              <div className="flex items-center justify-between p-4 border-b">
+                <Link to="/" className="flex items-center space-x-2">
+                  <Sparkles className="h-7 w-7 text-primary" />
+                  <span className="font-semibold text-lg tracking-tight">
+                    Bra<span className="text-primary">3</span>n
+                  </span>
+                </Link>
+                <SheetClose className="rounded-full p-2 hover:bg-accent">
+                  <X className="h-5 w-5" />
+                </SheetClose>
               </div>
               
-              <div className="flex flex-col space-y-6 flex-1">
-                <div className="flex flex-col space-y-4">
-                  {navLinks.map((link) => (
-                    <DrawerClose key={link.name} asChild>
-                      <a 
-                        href={link.href}
-                        className="text-base font-medium py-2 hover:text-primary transition-colors"
-                      >
-                        {link.name}
-                      </a>
-                    </DrawerClose>
-                  ))}
-                </div>
-                
-                <div className="mt-auto flex flex-col space-y-4">
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-center"
-                    onClick={() => navigate('/auth')}
-                  >
-                    Log in
-                  </Button>
-                  <Button 
-                    className="w-full justify-center"
-                    onClick={() => navigate('/auth')}
-                  >
-                    Sign up
-                  </Button>
-                </div>
+              <div className="flex-1 overflow-auto py-6 px-6">
+                <nav className="space-y-6">
+                  <div className="space-y-5">
+                    {navLinks.map((link) => (
+                      <SheetClose key={link.name} asChild>
+                        <a 
+                          href={link.href}
+                          className="block text-lg font-medium hover:text-primary py-2 transition-colors"
+                        >
+                          {link.name}
+                        </a>
+                      </SheetClose>
+                    ))}
+                  </div>
+                </nav>
+              </div>
+              
+              <div className="p-6 border-t space-y-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-center"
+                  onClick={() => navigate('/auth')}
+                >
+                  Log in
+                </Button>
+                <Button 
+                  className="w-full justify-center"
+                  onClick={() => navigate('/auth')}
+                >
+                  Sign up
+                </Button>
               </div>
             </div>
-          </DrawerContent>
-        </Drawer>
+          </SheetContent>
+        </Sheet>
       </div>
     </header>
   );
