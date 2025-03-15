@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -142,12 +141,11 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
         </div>
       )}
 
-      {!isMobile && (
-        <FloatingChatButton 
-          onClick={() => setIsChatOpen(true)} 
-          className="shadow-xl" 
-        />
-      )}
+      <FloatingChatButton 
+        onClick={() => setIsChatOpen(true)} 
+        className="shadow-xl" 
+        isMobile={isMobile}
+      />
 
       <ProjectChatFullscreen 
         projectId={project.id}
