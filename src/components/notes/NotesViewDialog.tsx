@@ -70,66 +70,66 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
     return (
       <Sheet open={isOpen} onOpenChange={finalSetIsOpen}>
         <SheetContent side="bottom" className="h-[90vh] p-4 overflow-y-auto overflow-x-hidden">
-          <SheetHeader className="space-y-0">
-            <SheetTitle className="text-lg break-words hyphens-auto pr-8">
+          <SheetHeader className="mb-3">
+            <SheetTitle className="text-lg sm:text-xl break-words hyphens-auto pr-8">
               {note.title || "Untitled Note"}
             </SheetTitle>
-            
-            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-2">
-              <span>{formatDateFn(note.updated_at || note.created_at)}</span>
-              
-              {note.tags && note.tags.length > 0 && (
-                <div className="flex items-center flex-wrap gap-1 mt-1">
-                  {note.tags.map(tag => (
-                    <Badge 
-                      key={tag} 
-                      variant="secondary" 
-                      className="text-xs"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
           </SheetHeader>
           
-          <div className="flex flex-col gap-3 mb-4 mt-4">
-            <div className="flex w-full justify-between">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => onEdit(note)}
-                className="h-8 text-xs"
-              >
-                <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                Edit
-              </Button>
-              
-              <Button 
-                variant={isConfirmingDelete ? "destructive" : "outline"} 
-                size="sm" 
-                onClick={handleDeleteClick}
-                className="h-8 text-xs"
-              >
-                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                {isConfirmingDelete ? "Confirm" : "Delete"}
-              </Button>
-            </div>
+          {/* Metadata section - tags and date */}
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
+            <span>{formatDateFn(note.updated_at || note.created_at)}</span>
             
-            <div className="flex justify-center mt-1">
-              <NoteSummaryButton 
-                noteId={note.id}
-                noteContent={note.content}
-                noteName={note.title}
-                projectId={note.project_id}
-              />
-            </div>
+            {note.tags && note.tags.length > 0 && (
+              <div className="flex items-center flex-wrap gap-1 mt-1">
+                {note.tags.map(tag => (
+                  <Badge 
+                    key={tag} 
+                    variant="secondary" 
+                    className="text-xs"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
           
+          {/* Action buttons organized in two rows */}
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onEdit(note)}
+              className="h-8 text-xs flex justify-center items-center"
+            >
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />
+              Edit
+            </Button>
+            
+            <Button 
+              variant={isConfirmingDelete ? "destructive" : "outline"} 
+              size="sm" 
+              onClick={handleDeleteClick}
+              className="h-8 text-xs flex justify-center items-center"
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+              {isConfirmingDelete ? "Confirm" : "Delete"}
+            </Button>
+            
+            <NoteSummaryButton 
+              noteId={note.id}
+              noteContent={note.content}
+              noteName={note.title}
+              projectId={note.project_id}
+              className="col-span-2 justify-center h-8 mt-1"
+            />
+          </div>
+          
+          {/* Source document info if exists */}
           {note.source_document && (
-            <div className="mb-4 flex flex-col gap-2 p-2 bg-muted/40 rounded-md text-sm border border-muted-foreground/20">
-              <div className="flex items-center overflow-hidden">
+            <div className="mb-4 p-3 bg-muted/40 rounded-md text-sm border border-muted-foreground/20">
+              <div className="flex items-center overflow-hidden mb-1">
                 {note.source_document.type === 'pdf' ? (
                   <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
                 ) : (
@@ -150,7 +150,8 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
             </div>
           )}
           
-          <div className="prose prose-sm max-w-none mt-4 text-sm overflow-hidden overflow-wrap-anywhere break-words hyphens-auto pb-10" style={{wordBreak: 'break-word'}}>
+          {/* Content */}
+          <div className="prose prose-sm max-w-none mt-2 text-sm overflow-hidden overflow-wrap-anywhere break-words hyphens-auto pb-10" style={{wordBreak: 'break-word'}}>
             <NotesFormatter content={note.content} />
           </div>
         </SheetContent>
@@ -162,16 +163,17 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={finalSetIsOpen}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
-        <DialogHeader className="space-y-0">
+        <DialogHeader className="mb-2">
           <DialogTitle className="text-lg sm:text-xl break-words hyphens-auto pr-8">
             {note.title || "Untitled Note"}
           </DialogTitle>
           
+          {/* Metadata section - date and tags */}
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-2">
             <span>{formatDateFn(note.updated_at || note.created_at)}</span>
             
             {note.tags && note.tags.length > 0 && (
-              <div className="flex items-center flex-wrap gap-1 mt-1 sm:mt-0">
+              <div className="flex items-center flex-wrap gap-1 mt-1 sm:mt-0 sm:ml-2">
                 {note.tags.map(tag => (
                   <Badge 
                     key={tag} 
@@ -186,39 +188,41 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
           </div>
         </DialogHeader>
         
-        <div className="flex flex-col-reverse sm:flex-row justify-between items-start sm:items-center mb-4 mt-2 gap-2">
-          <div className="flex flex-wrap gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => onEdit(note)}
-              className="h-8 text-xs"
-            >
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              Edit
-            </Button>
-            
-            <Button 
-              variant={isConfirmingDelete ? "destructive" : "outline"} 
-              size="sm" 
-              onClick={handleDeleteClick}
-              className="h-8 text-xs"
-            >
-              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-              {isConfirmingDelete ? "Confirm" : "Delete"}
-            </Button>
-          </div>
+        {/* Action buttons in a single organized row for desktop */}
+        <div className="flex items-center gap-2 mb-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => onEdit(note)}
+            className="h-8 text-xs"
+          >
+            <Pencil className="h-3.5 w-3.5 mr-1.5" />
+            Edit
+          </Button>
           
-          <NoteSummaryButton 
-            noteId={note.id}
-            noteContent={note.content}
-            noteName={note.title}
-            projectId={note.project_id}
-          />
+          <Button 
+            variant={isConfirmingDelete ? "destructive" : "outline"} 
+            size="sm" 
+            onClick={handleDeleteClick}
+            className="h-8 text-xs"
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+            {isConfirmingDelete ? "Confirm" : "Delete"}
+          </Button>
+          
+          <div className="ml-auto">
+            <NoteSummaryButton 
+              noteId={note.id}
+              noteContent={note.content}
+              noteName={note.title}
+              projectId={note.project_id}
+            />
+          </div>
         </div>
         
+        {/* Source document info if exists */}
         {note.source_document && (
-          <div className="mb-4 flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-muted/40 rounded-md text-sm border border-muted-foreground/20">
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center gap-2 p-3 bg-muted/40 rounded-md text-sm border border-muted-foreground/20">
             <div className="flex items-center flex-grow overflow-hidden">
               {note.source_document.type === 'pdf' ? (
                 <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
@@ -240,7 +244,8 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
           </div>
         )}
         
-        <div className="prose prose-sm sm:prose prose-slate max-w-none mt-4 text-sm sm:text-base overflow-x-hidden break-words hyphens-auto">
+        {/* Content */}
+        <div className="prose prose-sm sm:prose prose-slate max-w-none mt-2 text-sm sm:text-base overflow-x-hidden break-words hyphens-auto">
           <NotesFormatter content={note.content} />
         </div>
       </DialogContent>
