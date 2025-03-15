@@ -71,7 +71,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
     >
       <CardContent className="p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <h3 className="font-medium text-base break-words line-clamp-2 pr-6">
+          <h3 className="font-medium text-base break-words line-clamp-2">
             {note.title || "Untitled Note"}
           </h3>
           
@@ -109,7 +109,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-8 w-8 absolute top-3 right-3"
+                  className="h-6 w-6 ml-1"
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
