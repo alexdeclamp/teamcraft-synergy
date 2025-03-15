@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Loader2, Download, FileText, RefreshCw } from 'lucide-react';
+import { Loader2, FileText, RefreshCw } from 'lucide-react';
 
 interface SummaryFooterProps {
   isLoading: boolean;
@@ -29,8 +29,6 @@ const SummaryFooter: React.FC<SummaryFooterProps> = ({
   hasSummary,
   buttonText,
   error,
-  onDownload,
-  onCreateNote,
   onRetry
 }) => {
   return (
@@ -63,17 +61,6 @@ const SummaryFooter: React.FC<SummaryFooterProps> = ({
             {buttonText}
           </Button>
         )}
-
-        {!isLoading && summary && !error && (
-          <Button onClick={onDownload} size="sm" variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Download
-          </Button>
-        )}
-
-        <Button variant="outline" size="sm" onClick={() => document.getElementById('close-summary-dialog')?.click()}>
-          Close
-        </Button>
       </div>
     </div>
   );
