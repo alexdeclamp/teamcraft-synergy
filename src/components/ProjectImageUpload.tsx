@@ -175,32 +175,30 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
             )}
           </div>
           
-          {/* Gallery button */}
+          {/* Gallery button - Changed to toggle button */}
           <div className="flex justify-end">
             <Button 
-              variant="outline" 
-              onClick={() => setIsGalleryDialogOpen(true)}
+              variant={isGalleryDialogOpen ? "default" : "outline"}
+              onClick={() => setIsGalleryDialogOpen(!isGalleryDialogOpen)}
               className="mt-4"
             >
-              View Image Gallery
+              {isGalleryDialogOpen ? "Hide Image Gallery" : "View Image Gallery"}
             </Button>
           </div>
         </div>
       </div>
       
-      {/* Gallery Dialog */}
-      {isGalleryDialogOpen && (
-        <div className="mt-6">
-          <ImageGrid
-            uploadedImages={uploadedImages}
-            isLoading={isLoading}
-            onDeleteImage={handleDeleteImage}
-            projectId={projectId}
-            onImageRenamed={fetchUploadedImages}
-            inGalleryDialog={false}
-          />
-        </div>
-      )}
+      {/* Image Gallery - Always render, but conditionally show based on isGalleryDialogOpen */}
+      <div className={`mt-6 ${isGalleryDialogOpen ? 'block' : 'hidden'}`}>
+        <ImageGrid
+          uploadedImages={uploadedImages}
+          isLoading={isLoading}
+          onDeleteImage={handleDeleteImage}
+          projectId={projectId}
+          onImageRenamed={fetchUploadedImages}
+          inGalleryDialog={false}
+        />
+      </div>
     </div>
   );
 };
