@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, Github, Twitter, Linkedin, Map } from 'lucide-react';
+import { Sparkles, Github, Twitter, Linkedin, Map, Palette } from 'lucide-react';
 
 const FooterSection = () => {
   // Get the current year for the copyright notice
@@ -55,7 +55,10 @@ const FooterSection = () => {
             <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Terms</a></li>
             <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy</a></li>
             <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Cookies</a></li>
-            <li><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Licenses</a></li>
+            <li><Link to="/brand" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center">
+              Brand
+              <Palette className="ml-1 h-3.5 w-3.5" />
+            </Link></li>
           </ul>
         </div>
       </div>

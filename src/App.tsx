@@ -15,6 +15,7 @@ import Project from "./pages/Project";
 import NotFound from "./pages/NotFound";
 import WaitlistPage from "./pages/Waitlist";
 import Sitemap from "./pages/Sitemap";
+import Brand from "./pages/Brand";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingSidebar from "./components/onboarding/OnboardingSidebar";
 import WelcomeDialog from "./components/onboarding/WelcomeDialog";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/waitlist" element={<WaitlistPage />} />
             <Route path="/sitemap" element={<Sitemap />} />
+            <Route path="/brand" element={<Brand />} />
 
             {/* Protected routes with onboarding */}
             <Route path="/dashboard" element={
