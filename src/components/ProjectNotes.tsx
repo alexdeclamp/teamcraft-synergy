@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -62,7 +61,6 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     handleOpenCreateDialog
   } = useNoteForm(projectId, notes, setNotes, allTags, setAllTags);
 
-  // Render notes list or empty/loading states
   const renderNotesList = () => {
     if (loading) {
       return <NotesLoading />;
@@ -115,6 +113,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 
       <NotesViewDialog
         isOpen={isViewOpen}
+        setIsOpen={setIsViewOpen}
         onOpenChange={setIsViewOpen}
         note={currentNote}
         onEdit={openEditDialog}

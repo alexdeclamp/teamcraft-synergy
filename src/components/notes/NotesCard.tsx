@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import NoteSummaryButton from '@/components/NoteSummaryButton';
 import NotesFormatter from './NotesFormatter';
 import { Dispatch, SetStateAction } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface NotesCardProps {
   note: Note;
@@ -33,6 +34,7 @@ const NotesCard: React.FC<NotesCardProps> = ({
 }) => {
   const { formatDate: hookFormatDate } = useNoteDateFormat();
   const formatDateFn = propFormatDate || hookFormatDate;
+  const isMobile = useIsMobile();
   
   const getPreviewText = () => {
     const plainText = note.content.replace(/<[^>]*>/g, '');
@@ -82,10 +84,12 @@ const NotesCard: React.FC<NotesCardProps> = ({
             </div>
           </div>
           
-          {/* Preview area */}
-          <div className="text-sm text-muted-foreground line-clamp-3">
-            <NotesFormatter content={getPreviewText()} />
-          </div>
+          {/* Preview area - hidden on mobile */}
+          {!isMobile && (
+            <div className="text-sm text-muted-foreground line-clamp-3">
+              <NotesFormatter content={getPreviewText()} />
+            </div>
+          )}
           
           {/* Actions and tags area */}
           <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 pt-2">

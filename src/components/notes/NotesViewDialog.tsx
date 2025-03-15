@@ -14,6 +14,7 @@ import NotesFormatter from './NotesFormatter';
 import { formatDistanceToNow } from 'date-fns';
 import NoteSummaryButton from '@/components/NoteSummaryButton';
 import { Dispatch, SetStateAction } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface NotesViewDialogProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
 }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const finalSetIsOpen = onOpenChange || setIsOpen;
+  const isMobile = useIsMobile();
 
   if (!note) return null;
   
@@ -64,10 +66,10 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={finalSetIsOpen}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className={`${isMobile ? 'w-[95vw] max-w-full p-4 h-[90vh]' : 'max-w-3xl'} max-h-[90vh] overflow-y-auto`}>
         <DialogHeader className="space-y-0">
           {/* Mobile-optimized title with proper wrapping */}
-          <DialogTitle className="text-xl break-words hyphens-auto pr-8">
+          <DialogTitle className="text-lg sm:text-xl break-words hyphens-auto pr-8">
             {note.title || "Untitled Note"}
           </DialogTitle>
           
@@ -90,26 +92,26 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
           </div>
         </DialogHeader>
         
-        <div className="flex flex-col-reverse sm:flex-row justify-between items-start sm:items-center mb-4 mt-2 gap-2">
-          <div className="flex flex-wrap gap-2">
+        <div className={`flex ${isMobile ? 'flex-col gap-3' : 'flex-col-reverse sm:flex-row justify-between items-start sm:items-center'} mb-4 mt-2 gap-2`}>
+          <div className={`flex ${isMobile ? 'w-full justify-between' : 'flex-wrap'} gap-2`}>
             <Button 
               variant="outline" 
-              size="sm" 
+              size={isMobile ? "sm" : "sm"} 
               onClick={() => onEdit(note)}
               className="h-8 text-xs"
             >
               <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              Edit Note
+              Edit
             </Button>
             
             <Button 
               variant={isConfirmingDelete ? "destructive" : "outline"} 
-              size="sm" 
+              size={isMobile ? "sm" : "sm"} 
               onClick={handleDeleteClick}
               className="h-8 text-xs"
             >
               <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-              {isConfirmingDelete ? "Confirm Delete" : "Delete"}
+              {isConfirmingDelete ? "Confirm" : "Delete"}
             </Button>
           </div>
           
@@ -123,7 +125,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
         
         {note.source_document && (
           <div className="mb-4 flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-muted/40 rounded-md text-sm border border-muted-foreground/20">
-            <div className="flex items-center">
+            <div className="flex items-center flex-grow overflow-hidden">
               {note.source_document.type === 'pdf' ? (
                 <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
               ) : (
@@ -139,12 +141,12 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
               className="flex items-center text-primary hover:underline flex-shrink-0 mt-1 sm:mt-0 sm:ml-auto"
             >
               <ExternalLink className="h-4 w-4 mr-1" />
-              <span>View Original</span>
+              <span>View</span>
             </a>
           </div>
         )}
         
-        <div className="prose prose-sm sm:prose prose-slate max-w-none mt-4">
+        <div className="prose prose-sm sm:prose prose-slate max-w-none mt-4 text-sm sm:text-base">
           <NotesFormatter content={note.content} />
         </div>
       </DialogContent>
