@@ -18,13 +18,6 @@ serve(async (req) => {
   try {
     const { pdfUrl, fileName, userQuestion, documentContext } = await req.json();
     
-    if (!pdfUrl) {
-      return new Response(
-        JSON.stringify({ error: 'PDF URL is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
     if (!userQuestion) {
       return new Response(
         JSON.stringify({ error: 'Question is required' }),
@@ -39,12 +32,10 @@ serve(async (req) => {
       );
     }
     
-    console.log(`Ask Question for PDF: ${fileName}`);
-    console.log(`PDF URL: ${pdfUrl}`);
-    console.log(`User Question: ${userQuestion}`);
+    console.log(`Ask Question: ${userQuestion}`);
+    console.log(`Document: ${fileName || 'Unnamed document'}`);
     
-    // Use the fallback approach directly as the primary method
-    // since we know the file_url approach doesn't work with Claude's API
+    // Use the provided document context to answer the question
     if (documentContext && documentContext.trim() !== '') {
       console.log('Using document context to answer the question...');
       
@@ -60,7 +51,7 @@ serve(async (req) => {
             model: "claude-3-7-sonnet-20250219",
             max_tokens: 1500,
             system: `You are an AI assistant that helps users answer questions about PDF documents. 
-                The current document is: "${fileName}".
+                The current document is: "${fileName || 'Document'}".
                 Use the following content from the document to answer the user's questions. 
                 If you don't know the answer based on the provided document content, admit that you don't know rather than making up information.
                 
