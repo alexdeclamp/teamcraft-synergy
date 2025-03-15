@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn } from "@/lib/utils";
@@ -89,7 +88,7 @@ const LandingNavbar = () => {
               <Menu className="h-5 w-5" />
             </button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-full p-0 border-none">
+          <SheetContent side="right" className="w-full p-0 border-none">
             <div className="flex flex-col h-full bg-background">
               <div className="flex items-center justify-between p-4 border-b">
                 <Link to="/" className="flex items-center space-x-2">
