@@ -17,21 +17,17 @@ const Landing = () => {
   
   return (
     <div className="min-h-screen bg-background overflow-hidden">
+      {/* Banner always at the top */}
+      <InvitationBanner />
+      
       <div className="flex flex-col">
         {isMobile ? (
-          <>
-            <InvitationBanner />
-            <LandingNavbar />
-          </>
+          <LandingNavbar />
         ) : (
-          <>
-            <InvitationBanner />
-            <div className="pt-10">
-              <LandingNavbar />
-            </div>
-          </>
+          <LandingNavbar />
         )}
       </div>
+      
       <HeroSection />
       <TimelineSection />
       <KeyFeaturesSection />
