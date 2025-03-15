@@ -30,7 +30,7 @@ const DocumentPdfActions: React.FC<DocumentPdfActionsProps> = ({
     isSummarizing,
     summary,
     showSummary,
-    handleExtractText, // This now automatically shows the modal
+    handleExtractText,
     handleSummarizeText,
     toggleTextView,
     handleRetryExtraction
