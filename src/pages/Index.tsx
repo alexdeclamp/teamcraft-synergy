@@ -14,15 +14,17 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Navigation with logo */}
-      <header className="w-full py-4 px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Logo />
-        </div>
-      </header>
-      
-      {/* Banner below the nav */}
-      <InvitationBanner />
+      <div className="flex flex-col">
+        {/* Navigation with logo */}
+        <header className="w-full py-4 px-6">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <Logo />
+          </div>
+        </header>
+        
+        {/* Banner below the logo/header */}
+        <InvitationBanner />
+      </div>
       
       <div className={cn("flex items-center justify-center flex-1", 
         isMobile ? "pt-4" : "pt-8"

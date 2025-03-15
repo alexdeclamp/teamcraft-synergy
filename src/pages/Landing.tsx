@@ -17,11 +17,13 @@ const Landing = () => {
   
   return (
     <div className="min-h-screen bg-background overflow-hidden">
-      {/* Navbar at the very top */}
-      <LandingNavbar />
-      
-      {/* Banner below the navbar */}
-      <InvitationBanner />
+      <div className="flex flex-col">
+        {/* Navigation bar first */}
+        <LandingNavbar />
+        
+        {/* Banner directly under the navbar */}
+        <InvitationBanner />
+      </div>
       
       <HeroSection />
       <TimelineSection />
