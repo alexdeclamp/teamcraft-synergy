@@ -38,7 +38,8 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
     resetUpload,
     handleFileSelect,
     handleUpload,
-    handleDeleteImage
+    handleDeleteImage,
+    fetchUploadedImages
   } = useImageUpload({
     projectId,
     userId: user?.id,
@@ -75,6 +76,8 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
           uploadedImages={uploadedImages}
           isLoading={isLoading}
           onDeleteImage={handleDeleteImage}
+          projectId={projectId}
+          onImageRenamed={fetchUploadedImages}
         />
       </div>
       
@@ -82,6 +85,8 @@ const ProjectImageUpload: React.FC<ProjectImageUploadProps> = ({
         uploadedImages={uploadedImages}
         isLoading={isLoading}
         onDeleteImage={handleDeleteImage}
+        projectId={projectId}
+        onImageRenamed={fetchUploadedImages}
       />
     </div>
   );
