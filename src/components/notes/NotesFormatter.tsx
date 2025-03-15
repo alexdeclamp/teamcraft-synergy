@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const formatNoteContent = (text: string) => {
@@ -28,7 +29,7 @@ export const formatNoteContent = (text: string) => {
     if (line.match(/^#{1,6}\s/)) {
       const level = line.match(/^#+/)[0].length;
       let fontSize;
-      let className = "font-bold mb-3 mt-5 text-slate-800";
+      let className = "font-bold mb-3 mt-5 text-slate-800 break-words";
       
       switch(level) {
         case 1: fontSize = "1.5rem"; break;
@@ -70,14 +71,14 @@ export const formatNoteContent = (text: string) => {
       return (
         <div key={`bullet-${index}`} className="flex ml-4 my-2">
           <span className="mr-2 text-primary">•</span>
-          <span dangerouslySetInnerHTML={{__html: listContent}} />
+          <span className="break-words overflow-hidden" dangerouslySetInnerHTML={{__html: listContent}} />
         </div>
       );
     }
     
     // Regular paragraph with improved spacing
     return (
-      <div key={`para-${index}`} className="my-2 text-slate-700 leading-relaxed" dangerouslySetInnerHTML={{__html: formattedLine}} />
+      <div key={`para-${index}`} className="my-2 text-slate-700 leading-relaxed break-words overflow-hidden" dangerouslySetInnerHTML={{__html: formattedLine}} />
     );
   });
 };
@@ -102,7 +103,7 @@ const NoteContentDisplay: React.FC<NoteContentDisplayProps> = ({ content, isPrev
   }
   
   return (
-    <div className={`whitespace-pre-wrap prose-sm max-w-none leading-relaxed ${isPreview ? 'line-clamp-2 text-[6px]' : ''}`}>
+    <div className={`whitespace-pre-wrap prose-sm max-w-none leading-relaxed break-words ${isPreview ? 'line-clamp-2 text-[6px]' : ''}`}>
       {formatNoteContent(displayContent)}
     </div>
   );

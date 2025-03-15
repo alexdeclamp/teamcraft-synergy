@@ -145,7 +145,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
           </div>
         )}
         
-        <div className="prose prose-sm sm:prose prose-slate max-w-none mt-4 text-sm sm:text-base">
+        <div className="prose prose-sm sm:prose prose-slate max-w-none mt-4 text-sm sm:text-base overflow-x-hidden break-words">
           <NotesFormatter content={note.content} />
         </div>
       </DialogContent>
