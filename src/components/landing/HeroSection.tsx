@@ -1,16 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Brain, MessageSquare } from 'lucide-react';
+import { Sparkles, ArrowRight, Brain, MessageSquare, FileImage, FilePdf, FileText, ChevronDown, Zap } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+
 const HeroSection: React.FC = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  
   return <section className="relative pt-20 md:pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
       
       {/* Hero Text - Centered */}
-      <div className="text-center max-w-3xl mx-auto mb-16">
+      <div className="text-center max-w-3xl mx-auto mb-10">
         <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
           <Sparkles className="h-4 w-4 mr-2" />
           AI-Powered Knowledge Hub
@@ -26,10 +28,89 @@ const HeroSection: React.FC = () => {
         </Button>
       </div>
       
+      {/* File Transformation Visual */}
+      <div className="flex justify-center mb-10">
+        <div className="relative max-w-4xl w-full">
+          {/* Files being dropped section */}
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
+            {/* PDF File */}
+            <div className="animate-bounce-slow delay-100 bg-background rounded-lg p-4 shadow-md border border-border/30 flex items-center gap-2">
+              <FilePdf className="h-8 w-8 text-red-500" />
+              <span className="font-medium">Report.pdf</span>
+            </div>
+            
+            {/* Image File */}
+            <div className="animate-bounce-slow delay-300 bg-background rounded-lg p-4 shadow-md border border-border/30 flex items-center gap-2">
+              <FileImage className="h-8 w-8 text-blue-500" />
+              <span className="font-medium">Diagram.png</span>
+            </div>
+            
+            {/* Text File */}
+            <div className="animate-bounce-slow delay-500 bg-background rounded-lg p-4 shadow-md border border-border/30 flex items-center gap-2">
+              <FileText className="h-8 w-8 text-green-500" />
+              <span className="font-medium">Notes.txt</span>
+            </div>
+          </div>
+          
+          {/* Arrow down */}
+          <div className="flex justify-center mb-6">
+            <div className="bg-primary/10 rounded-full p-2">
+              <ChevronDown className="h-8 w-8 text-primary animate-pulse" />
+            </div>
+          </div>
+          
+          {/* Transformation process */}
+          <div className="bg-background/80 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-primary/20 mb-6 max-w-2xl mx-auto">
+            <div className="flex items-center justify-center mb-3">
+              <Brain className="h-10 w-10 text-primary mr-2" />
+              <div className="h-2 bg-primary/20 rounded-full w-24 animate-pulse"></div>
+              <div className="h-2 bg-primary/30 rounded-full w-32 ml-2 animate-pulse delay-100"></div>
+              <div className="h-2 bg-primary/20 rounded-full w-20 ml-2 animate-pulse delay-200"></div>
+              <Zap className="h-6 w-6 text-primary ml-2 animate-pulse" />
+            </div>
+            <div className="h-2 bg-primary/10 rounded-full w-full animate-pulse"></div>
+            <div className="h-2 bg-primary/10 rounded-full w-5/6 mx-auto mt-2 animate-pulse delay-100"></div>
+            <div className="h-2 bg-primary/10 rounded-full w-4/6 mx-auto mt-2 animate-pulse delay-200"></div>
+          </div>
+          
+          {/* Resulting notes */}
+          <div className="flex flex-wrap justify-center gap-4">
+            <div className="bg-background rounded-lg p-4 shadow-md border border-border/30 max-w-xs">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="h-5 w-5 text-primary" />
+                <span className="font-medium">AI Summary</span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="h-2 bg-muted rounded-full w-full"></div>
+                <div className="h-2 bg-muted rounded-full w-5/6"></div>
+                <div className="h-2 bg-muted rounded-full w-4/6"></div>
+              </div>
+              <div className="mt-3 flex justify-end">
+                <div className="bg-primary/10 rounded-full px-2 py-1 text-xs text-primary font-medium">Key Insights</div>
+              </div>
+            </div>
+            
+            <div className="bg-background rounded-lg p-4 shadow-md border border-border/30 max-w-xs">
+              <div className="flex items-center gap-2 mb-2">
+                <MessageSquare className="h-5 w-5 text-primary" />
+                <span className="font-medium">Notes Analysis</span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="h-2 bg-muted rounded-full w-full"></div>
+                <div className="h-2 bg-muted rounded-full w-5/6"></div>
+                <div className="h-2 bg-muted rounded-full w-4/6"></div>
+              </div>
+              <div className="mt-3 flex justify-end">
+                <div className="bg-primary/10 rounded-full px-2 py-1 text-xs text-primary font-medium">Action Items</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {/* Platform Interface Representation - Responsive */}
       {isMobile ?
-    // Mobile version - Simplified cards
-    <div className="space-y-4 mb-16">
+        <div className="space-y-4 mb-16">
           <div className="bg-background rounded-xl shadow-md p-4 border border-border/30">
             <div className="flex items-center space-x-3 mb-3">
               <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
@@ -75,8 +156,7 @@ const HeroSection: React.FC = () => {
             </div>
           </div>
         </div> :
-    // Desktop version - Original complex UI
-    <div className="flex justify-center mb-16">
+        <div className="flex justify-center mb-16">
           <div className="relative w-full max-w-5xl">
             <div className="apple-glass rounded-xl shadow-xl overflow-hidden">
               {/* Platform Interface Mockup */}
