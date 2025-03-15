@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, Brain, MessageSquare, FileImage, FilePdf, FileText, ChevronDown, Zap } from 'lucide-react';
+import { Sparkles, ArrowRight, Brain, MessageSquare, FileImage, FileText, ChevronDown, Zap, File } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const HeroSection: React.FC = () => {
@@ -35,7 +36,7 @@ const HeroSection: React.FC = () => {
           <div className="flex flex-wrap justify-center gap-4 mb-6">
             {/* PDF File */}
             <div className="animate-bounce-slow delay-100 bg-background rounded-lg p-4 shadow-md border border-border/30 flex items-center gap-2">
-              <FilePdf className="h-8 w-8 text-red-500" />
+              <File className="h-8 w-8 text-red-500" />
               <span className="font-medium">Report.pdf</span>
             </div>
             
