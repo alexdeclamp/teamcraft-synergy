@@ -33,7 +33,8 @@ const App = () => (
         <AuthProvider>
           <Routes>
             {/* Public routes without onboarding */}
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/home" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/waitlist" element={<WaitlistPage />} />
             <Route path="/sitemap" element={<Sitemap />} />
