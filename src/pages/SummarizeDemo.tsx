@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Brain, PaperclipIcon, Code, Sparkles, Edit, Share } from 'lucide-react';
+import { Brain, PaperclipIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import SummaryResult from '@/components/summarize-demo/SummaryResult';
 import FourStepsSection from '@/components/summarize-demo/FourStepsSection';
+import FeaturesSection from '@/components/summarize-demo/FeaturesSection';
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { Separator } from '@/components/ui/separator';
-import { Card, CardContent } from '@/components/ui/card';
 import Logo from '@/components/navbar/Logo';
 
 const SummarizeDemo = () => {
@@ -154,74 +154,7 @@ const SummarizeDemo = () => {
         
         <Separator className="max-w-3xl w-full my-16 opacity-50" />
         
-        <div className="w-full max-w-5xl mx-auto mb-20">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Powerful Features for Everyone
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Discover how Bra3n transforms your workflow with these key capabilities
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden feature-card">
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
-                  <div className="bg-primary/10 p-3 rounded-full mr-4 feature-icon-container">
-                    <Code className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold">Code Generation</h3>
-                </div>
-                <p className="text-muted-foreground">
-                  Generate high-quality, production-ready code in seconds with advanced AI technology.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden feature-card">
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
-                  <div className="bg-primary/10 p-3 rounded-full mr-4 feature-icon-container">
-                    <Sparkles className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold">Responsive Design</h3>
-                </div>
-                <p className="text-muted-foreground">
-                  Automatically create beautiful, responsive interfaces that work across all devices.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden feature-card">
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
-                  <div className="bg-primary/10 p-3 rounded-full mr-4 feature-icon-container">
-                    <Edit className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold">Natural Language Editing</h3>
-                </div>
-                <p className="text-muted-foreground">
-                  Request changes and updates using simple, conversational language - no coding required.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden feature-card">
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
-                  <div className="bg-primary/10 p-3 rounded-full mr-4 feature-icon-container">
-                    <Share className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold">Export & Integration</h3>
-                </div>
-                <p className="text-muted-foreground">
-                  Easily export your projects or integrate with existing codebases and development workflows.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        <FeaturesSection />
         
         <Separator className="max-w-3xl w-full my-16 opacity-50" />
         
@@ -281,26 +214,28 @@ const SummarizeDemo = () => {
           </div>
           
         </div>
+        
+        <Separator className="max-w-3xl w-full my-16 opacity-50" />
+        
+        <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Sign in required</DialogTitle>
+              <DialogDescription>
+                You need to be signed in to use the summarization feature.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
+              <Button variant="outline" className="w-full sm:w-auto" onClick={handleSignIn}>
+                Sign In
+              </Button>
+              <Button className="w-full sm:w-auto" onClick={handleSignUp}>
+                Create Account
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Sign in required</DialogTitle>
-            <DialogDescription>
-              You need to be signed in to use the summarization feature.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-between">
-            <Button variant="outline" className="w-full sm:w-auto" onClick={handleSignIn}>
-              Sign In
-            </Button>
-            <Button className="w-full sm:w-auto" onClick={handleSignUp}>
-              Create Account
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
