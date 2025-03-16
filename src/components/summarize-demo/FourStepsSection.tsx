@@ -3,7 +3,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, FileText, MessageSquare, Share2, Upload } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 
 const FourStepsSection = () => {
   const navigate = useNavigate();
@@ -44,29 +43,30 @@ const FourStepsSection = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-12">
         {steps.map((step, index) => (
-          <Card key={index} className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden feature-card">
-            <CardContent className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="bg-primary/10 p-3 rounded-full mr-4 feature-icon-container flex items-center justify-center">
-                  <div className="font-bold text-lg text-primary">{step.number}</div>
-                </div>
-                <h3 className="text-xl font-semibold">{step.title}</h3>
+          <div key={index} className="flex flex-col items-center text-center w-full md:w-1/4">
+            <div className="relative">
+              <div className="bg-primary/10 w-14 h-14 rounded-lg mb-4 flex items-center justify-center feature-icon-container">
+                <div className="font-bold text-lg text-primary">{step.number}</div>
               </div>
-              <div className="flex justify-start mb-3">
-                {step.icon}
-              </div>
-              <p className="text-muted-foreground">
-                {step.description}
-              </p>
-            </CardContent>
-          </Card>
+              
+              {/* Connector line */}
+              {index < steps.length - 1 && (
+                <div className="hidden md:block absolute top-7 left-full w-full h-0.5 bg-primary/20" style={{ width: 'calc(100% - 3.5rem)' }}></div>
+              )}
+            </div>
+            
+            <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
+            <p className="text-muted-foreground text-sm">
+              {step.description}
+            </p>
+          </div>
         ))}
       </div>
 
       {/* CTA Button */}
-      <div className="text-center mt-12">
+      <div className="text-center mt-6">
         <Button 
           onClick={() => navigate('/waitlist')} 
           size="lg" 
