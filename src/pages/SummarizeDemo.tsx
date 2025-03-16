@@ -124,13 +124,13 @@ The path forward involves thoughtful implementation, continued learning, and ada
             AI-Powered Knowledge Hub
           </div>
           
-          {/* Title on a single line */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-2 sm:mb-3 whitespace-nowrap">
+          {/* Title can wrap on mobile */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-2 sm:mb-3">
             Summarize any document in seconds
           </h1>
           
-          {/* Subtitle on a single line */}
-          <p className="text-lg sm:text-xl text-muted-foreground whitespace-nowrap mx-auto mb-6 sm:mb-8">
+          {/* Subtitle can wrap on mobile */}
+          <p className="text-lg sm:text-xl text-muted-foreground mx-auto mb-6 sm:mb-8">
             Bra<span className="text-primary">3</span>n is a next-gen collaborative knowledge management system
           </p>
         </div>
