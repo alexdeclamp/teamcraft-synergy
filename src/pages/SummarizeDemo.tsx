@@ -9,9 +9,11 @@ import { toast } from 'sonner';
 import { summarizeText } from '@/utils/summaryUtils';
 import SummaryResult from '@/components/summarize-demo/SummaryResult';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const SummarizeDemo = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [text, setText] = useState('');
   const [summary, setSummary] = useState('');
   const [title, setTitle] = useState('');
@@ -105,43 +107,43 @@ The path forward involves thoughtful implementation, continued learning, and ada
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <section className="relative pt-12 sm:pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
         
         {/* Logo and Hero Text - Centered */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16">
           {/* Logo */}
-          <div className="flex justify-center mb-6">
-            <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
-              <Brain className="h-10 w-10 text-primary" />
+          <div className="flex justify-center mb-4 sm:mb-6">
+            <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-primary/10 flex items-center justify-center">
+              <Brain className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
             </div>
           </div>
           
-          <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
-            <Sparkles className="h-4 w-4 mr-2" />
+          <div className="inline-flex items-center justify-center px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-3 sm:mb-4">
+            <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
             AI-Powered Knowledge Hub
           </div>
           
           {/* Title on a single line */}
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-3 whitespace-nowrap">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-2 sm:mb-3 whitespace-nowrap">
             Summarize any document in seconds
           </h1>
           
           {/* Subtitle on a single line */}
-          <p className="text-xl text-muted-foreground whitespace-nowrap mx-auto mb-8">
+          <p className="text-lg sm:text-xl text-muted-foreground whitespace-nowrap mx-auto mb-6 sm:mb-8">
             Bra<span className="text-primary">3</span>n is a next-gen collaborative knowledge management system
           </p>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-10 mb-10 sm:mb-16">
           {/* Input Form */}
-          <div className="bg-background rounded-xl shadow-md p-6 border border-border/30">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <FileText className="h-5 w-5 mr-2 text-primary" />
+          <div className="bg-background rounded-xl shadow-md p-4 sm:p-6 border border-border/30">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center">
+              <FileText className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
               Try Our Summarization Tool
             </h2>
             
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
                 <label htmlFor="title" className="block text-sm font-medium mb-1">
                   Document Title (Optional)
@@ -164,12 +166,17 @@ The path forward involves thoughtful implementation, continued learning, and ada
                   placeholder="Paste your document text here (min. 50 characters)"
                   value={text}
                   onChange={handleTextChange}
-                  className="min-h-[300px] font-mono text-sm"
+                  className="min-h-[200px] sm:min-h-[300px] font-mono text-sm"
                 />
               </div>
               
-              <div className="flex justify-between items-center">
-                <Button variant="outline" onClick={addSampleText} type="button">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={addSampleText} 
+                  type="button"
+                  className="w-full sm:w-auto"
+                >
                   Use Sample Text
                 </Button>
                 
@@ -177,7 +184,7 @@ The path forward involves thoughtful implementation, continued learning, and ada
                   onClick={handleSummarize} 
                   disabled={isGenerating || text.trim().length < 50}
                   className={cn(
-                    "relative",
+                    "relative w-full sm:w-auto",
                     isComplete && "bg-green-600 hover:bg-green-700"
                   )}
                 >
@@ -203,9 +210,9 @@ The path forward involves thoughtful implementation, continued learning, and ada
           </div>
           
           {/* Summary Output */}
-          <div className="bg-background rounded-xl shadow-md p-6 border border-border/30">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <Brain className="h-5 w-5 mr-2 text-primary" />
+          <div className="bg-background rounded-xl shadow-md p-4 sm:p-6 border border-border/30">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center">
+              <Brain className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-primary" />
               AI Summary
             </h2>
             
@@ -214,8 +221,8 @@ The path forward involves thoughtful implementation, continued learning, and ada
               isGenerating={isGenerating}
             />
             
-            <div className="mt-6 pt-4 border-t border-border/30">
-              <p className="text-sm text-muted-foreground mb-4">
+            <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-border/30">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
                 Ready to unlock the full power of Bra3n for your team?
               </p>
               <Button onClick={handleSignUp} className="w-full">
@@ -227,12 +234,12 @@ The path forward involves thoughtful implementation, continued learning, and ada
         </div>
         
         {/* Features Grid */}
-        <div className="mb-16">
-          <h2 className="text-2xl font-semibold text-center mb-8">
+        <div className="mb-10 sm:mb-16">
+          <h2 className="text-xl sm:text-2xl font-semibold text-center mb-6 sm:mb-8">
             Everything your team needs to manage knowledge
           </h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             {[
               {
                 title: "AI-Powered Summaries",
@@ -250,27 +257,27 @@ The path forward involves thoughtful implementation, continued learning, and ada
                 icon: <Sparkles className="h-5 w-5 text-primary" />
               }
             ].map((feature, index) => (
-              <div key={index} className="bg-background rounded-lg p-5 border border-border/30">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+              <div key={index} className="bg-background rounded-lg p-4 sm:p-5 border border-border/30">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center mb-3">
                   {feature.icon}
                 </div>
-                <h3 className="text-lg font-medium mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <h3 className="text-base sm:text-lg font-medium mb-2">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground">{feature.description}</p>
               </div>
             ))}
           </div>
         </div>
         
         {/* CTA Section */}
-        <div className="bg-primary/5 rounded-2xl p-8 text-center mb-16">
-          <h2 className="text-2xl font-semibold mb-4">
+        <div className="bg-primary/5 rounded-2xl p-6 sm:p-8 text-center mb-10 sm:mb-16">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">
             Ready to transform how your team manages information?
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto mb-4 sm:mb-6">
             Join thousands of teams already using Bra3n to summarize documents,
             extract insights, and make knowledge accessible to everyone.
           </p>
-          <Button onClick={handleSignUp} size="lg" className="bg-primary hover:bg-primary/90">
+          <Button onClick={handleSignUp} size={isMobile ? "default" : "lg"} className="bg-primary hover:bg-primary/90">
             Get Started Free
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
