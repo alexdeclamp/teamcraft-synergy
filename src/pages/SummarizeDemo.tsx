@@ -36,10 +36,8 @@ const SummarizeDemo = () => {
       return;
     }
 
-    // Process the summarization
     setIsGenerating(true);
     
-    // Simulate summary generation (in actual implementation, this would call an API)
     setTimeout(() => {
       const demoSummary = `# Summary of Document
 
@@ -69,7 +67,6 @@ const SummarizeDemo = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Navigation Bar */}
       <header className="border-b border-border/30 py-4 px-6 bg-background/95 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Logo />
@@ -112,14 +109,12 @@ const SummarizeDemo = () => {
 
       <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
         <div className="w-full max-w-3xl mx-auto mb-8">
-          {/* Logo */}
           <div className="flex justify-center mb-6">
             <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
               <Brain className="h-8 w-8 text-primary" />
             </div>
           </div>
 
-          {/* Headings */}
           <div className="text-center mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold mb-2">Summarize any document in seconds</h1>
             <p className="text-xl text-muted-foreground">
@@ -127,7 +122,6 @@ const SummarizeDemo = () => {
             </p>
           </div>
 
-          {/* Input Card */}
           <div className="bg-muted/20 rounded-xl border border-border/30 shadow-sm overflow-hidden mb-8">
             <Textarea
               placeholder="Ask Bra3n to summarize any text or document..."
@@ -151,71 +145,87 @@ const SummarizeDemo = () => {
             </div>
           </div>
 
-          {/* Summary Result */}
           <SummaryResult summary={summary} isGenerating={isGenerating} />
         </div>
 
-        {/* Separator Line */}
         <Separator className="max-w-3xl w-full my-16 opacity-50" />
 
-        {/* Four Steps Section */}
         <FourStepsSection />
         
-        {/* Separator Line */}
         <Separator className="max-w-3xl w-full my-16 opacity-50" />
         
-        {/* New Era Section */}
         <div className="w-full max-w-5xl mx-auto mb-20">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-3">
-              A new era for product<br />builders and developers.
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Powerful Features for Everyone
             </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Discover how Bra3n transforms your workflow with these key capabilities
+            </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-[#111111]/80 border-gray-800 shadow-xl overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden feature-card">
               <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-3 text-white">Product teams</h3>
-                <p className="text-gray-300">
-                  Empower non-technical team members to code. Align on abstract ideas by building real prototypes.
+                <div className="flex items-center mb-4">
+                  <div className="bg-primary/10 p-3 rounded-full mr-4 feature-icon-container">
+                    <Code className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold">Code Generation</h3>
+                </div>
+                <p className="text-muted-foreground">
+                  Generate high-quality, production-ready code in seconds with advanced AI technology.
                 </p>
               </CardContent>
             </Card>
             
-            <Card className="bg-[#111111]/80 border-gray-800 shadow-xl overflow-hidden">
+            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden feature-card">
               <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-3 text-white">Founders, solopreneurs & indie-hackers</h3>
-                <p className="text-gray-300">
-                  Iterate and validate in minutes. Launch a full product in less than a day.
+                <div className="flex items-center mb-4">
+                  <div className="bg-primary/10 p-3 rounded-full mr-4 feature-icon-container">
+                    <Sparkles className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold">Responsive Design</h3>
+                </div>
+                <p className="text-muted-foreground">
+                  Automatically create beautiful, responsive interfaces that work across all devices.
                 </p>
               </CardContent>
             </Card>
             
-            <Card className="bg-[#111111]/80 border-gray-800 shadow-xl overflow-hidden">
+            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden feature-card">
               <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-3 text-white">Product designers</h3>
-                <p className="text-gray-300">
-                  Bring your design idea to life without tedious prototyping work in tools like Figma.
+                <div className="flex items-center mb-4">
+                  <div className="bg-primary/10 p-3 rounded-full mr-4 feature-icon-container">
+                    <Edit className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold">Natural Language Editing</h3>
+                </div>
+                <p className="text-muted-foreground">
+                  Request changes and updates using simple, conversational language - no coding required.
                 </p>
               </CardContent>
             </Card>
             
-            <Card className="bg-[#111111]/80 border-gray-800 shadow-xl overflow-hidden">
+            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden feature-card">
               <CardContent className="p-6">
-                <h3 className="text-xl font-semibold mb-3 text-white">Human software engineers</h3>
-                <p className="text-gray-300">
-                  Ship an entire frontend in one prompt. Let Bra3n fix bugs and do your UI edits.
+                <div className="flex items-center mb-4">
+                  <div className="bg-primary/10 p-3 rounded-full mr-4 feature-icon-container">
+                    <Share className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold">Export & Integration</h3>
+                </div>
+                <p className="text-muted-foreground">
+                  Easily export your projects or integrate with existing codebases and development workflows.
                 </p>
               </CardContent>
             </Card>
           </div>
         </div>
-
-        {/* Separator Line */}
+        
         <Separator className="max-w-3xl w-full my-16 opacity-50" />
         
-        {/* Build high quality software section */}
-        <div className="w-full max-w-5xl mx-auto mb-20 bg-[#111111]/95 py-16 px-8 rounded-xl">
+        <div className="w-full max-w-5xl mx-auto mb-20 bg-[#111111]/95 py-16 px-8 rounded-xl dark-bg-section">
           <div className="text-center mb-12">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-white">
               Build high quality software<br />without writing code.
@@ -231,7 +241,7 @@ const SummarizeDemo = () => {
             <div className="space-y-8">
               <div className="mb-12">
                 <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-white">20× faster than coding.</h3>
-                <div className="w-16 h-0.5 bg-primary mb-6"></div>
+                <div className="w-16 h-0.5 bg-primary mb-6 accent-divider"></div>
                 <p className="text-gray-300">
                   Use your native language to describe your idea, then watch
                   Bra3n do the rest. Creating for the web is faster and easier than
@@ -241,7 +251,7 @@ const SummarizeDemo = () => {
               
               <div className="mb-12">
                 <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-white">Prompt to edit.</h3>
-                <div className="w-16 h-0.5 bg-primary mb-6"></div>
+                <div className="w-16 h-0.5 bg-primary mb-6 accent-divider"></div>
                 <p className="text-gray-300">
                   Forget about the overhead of frontend engineers or freelancers to
                   maintain your website. Ask in text to change anything.
@@ -250,7 +260,7 @@ const SummarizeDemo = () => {
               
               <div>
                 <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-white">You own the code.</h3>
-                <div className="w-16 h-0.5 bg-primary mb-6"></div>
+                <div className="w-16 h-0.5 bg-primary mb-6 accent-divider"></div>
                 <p className="text-gray-300">
                   Everything that Bra3n builds is yours. Sync your codebase to
                   Github and edit in any code editor, export or publish your app
@@ -280,79 +290,8 @@ const SummarizeDemo = () => {
             </Button>
           </div>
         </div>
-        
-        {/* Product Features Section */}
-        <div className="w-full max-w-5xl mx-auto mb-20">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Powerful Features for Everyone
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Discover how Bra3n transforms your workflow with these key capabilities
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
-                  <div className="bg-primary/10 p-3 rounded-full mr-4">
-                    <Code className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold">Code Generation</h3>
-                </div>
-                <p className="text-muted-foreground">
-                  Generate high-quality, production-ready code in seconds with advanced AI technology.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
-                  <div className="bg-primary/10 p-3 rounded-full mr-4">
-                    <Sparkles className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold">Responsive Design</h3>
-                </div>
-                <p className="text-muted-foreground">
-                  Automatically create beautiful, responsive interfaces that work across all devices.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
-                  <div className="bg-primary/10 p-3 rounded-full mr-4">
-                    <Edit className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold">Natural Language Editing</h3>
-                </div>
-                <p className="text-muted-foreground">
-                  Request changes and updates using simple, conversational language - no coding required.
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex items-center mb-4">
-                  <div className="bg-primary/10 p-3 rounded-full mr-4">
-                    <Share className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold">Export & Integration</h3>
-                </div>
-                <p className="text-muted-foreground">
-                  Easily export your projects or integrate with existing codebases and development workflows.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
       </div>
 
-      {/* Auth Dialog */}
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
