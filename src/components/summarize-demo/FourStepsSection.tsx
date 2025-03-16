@@ -1,30 +1,34 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, MessageSquare, Share2, Upload } from 'lucide-react';
+import { ArrowRight, FileText, Brain, UserPlus, MessageSquare } from 'lucide-react';
+
 const FourStepsSection = () => {
   const navigate = useNavigate();
+  
   const steps = [{
     number: 1,
-    title: "Describe what you want to build in natural language.",
+    title: "Add notes, PDFs, images, and more to build your knowledge base.",
     icon: <FileText className="h-6 w-6 text-primary" />,
-    description: "Start by telling Bra3n what you want to create in simple, conversational language."
+    description: "Upload diverse content types to create a comprehensive knowledge repository."
   }, {
     number: 2,
-    title: "Bra3n builds your first version instantly.",
-    icon: <Upload className="h-6 w-6 text-primary" />,
-    description: "Our AI will generate your project and deliver the first version in seconds."
+    title: "AI automatically organizes and summarizes your content.",
+    icon: <Brain className="h-6 w-6 text-primary" />,
+    description: "Our AI processes and structures your information for easy access and understanding."
   }, {
     number: 3,
-    title: "Talk to the editor to design and extend your project.",
-    icon: <MessageSquare className="h-6 w-6 text-primary" />,
-    description: "Refine your project through natural conversation with our AI editor."
+    title: "Share your Brain with team members and collaborators.",
+    icon: <UserPlus className="h-6 w-6 text-primary" />,
+    description: "Invite others to access and contribute to your knowledge base seamlessly."
   }, {
     number: 4,
-    title: "Share your project via link or sync your code to GitHub.",
-    icon: <Share2 className="h-6 w-6 text-primary" />,
-    description: "Distribute your creation or integrate it with your development workflow."
+    title: "Ask questions and get instant answers from your knowledge base.",
+    icon: <MessageSquare className="h-6 w-6 text-primary" />,
+    description: "Query your data in natural language to retrieve relevant information immediately."
   }];
+  
   return <div className="w-full max-w-5xl mx-auto py-12">
       <div className="text-center mb-12">
         <h2 className="text-3xl sm:text-4xl font-bold mb-4">How It Works</h2>
@@ -42,12 +46,14 @@ const FourStepsSection = () => {
               
               {/* Connector line */}
               {index < steps.length - 1 && <div className="hidden md:block absolute top-7 left-full w-full h-0.5 bg-primary/20" style={{
-            width: 'calc(100% - 3.5rem)'
-          }}></div>}
+                width: 'calc(100% - 3.5rem)'
+              }}></div>}
             </div>
             
             <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
-            
+            <p className="text-muted-foreground text-sm">
+              {step.description}
+            </p>
           </div>)}
       </div>
 
@@ -60,4 +66,5 @@ const FourStepsSection = () => {
       </div>
     </div>;
 };
+
 export default FourStepsSection;
