@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -109,21 +110,21 @@ const SummarizeDemo = () => {
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
-        <div className="w-full max-w-3xl mx-auto mb-8">
-          <div className="flex justify-center mb-6">
+        <div className="w-full max-w-3xl mx-auto pt-16 md:pt-20 pb-8">
+          <div className="flex justify-center mb-8">
             <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
               <Brain className="h-8 w-8 text-primary" />
             </div>
           </div>
 
-          <div className="text-center mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2">Summarize any document in seconds</h1>
+          <div className="text-center mb-10">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-4">Summarize any document in seconds</h1>
             <p className="text-xl text-muted-foreground">
               Bra3n is a next-gen collaborative knowledge management system
             </p>
           </div>
 
-          <div className="bg-muted/20 rounded-xl border border-border/30 shadow-sm overflow-hidden mb-8">
+          <div className="bg-muted/20 rounded-xl border border-border/30 shadow-sm overflow-hidden mb-10">
             <Textarea
               placeholder="Ask Bra3n to summarize any text or document..."
               value={text}
