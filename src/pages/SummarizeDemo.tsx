@@ -110,50 +110,44 @@ const SummarizeDemo = () => {
       </header>
 
       <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
-        <div className="w-full max-w-3xl mx-auto pt-24 md:pt-32 pb-16">
-          {/* Brain icon in light blue circle */}
-          <div className="flex justify-center mb-10">
-            <div className="h-24 w-24 rounded-full bg-blue-100 flex items-center justify-center">
-              <Brain className="h-10 w-10 text-blue-500" />
+        <div className="w-full max-w-3xl mx-auto pt-16 md:pt-20 pb-8">
+          <div className="flex justify-center mb-8">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <Brain className="h-8 w-8 text-primary" />
             </div>
           </div>
 
-          {/* Title and subtitle */}
-          <div className="text-center mb-14">
-            <h1 className="text-4xl md:text-5xl font-bold mb-5">Summarize any document in seconds</h1>
+          <div className="text-center mb-10">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-4">Summarize any document in seconds</h1>
             <p className="text-xl text-muted-foreground">
               Bra3n is a next-gen collaborative knowledge management system
             </p>
           </div>
 
-          {/* Input area with placeholder */}
-          <div className="bg-white rounded-xl border border-border/30 shadow-sm overflow-hidden mb-12">
-            <div className="p-4 text-muted-foreground">
-              Ask Bra3n to summarize any text or document...
+          <div className="bg-muted/20 rounded-xl border border-border/30 shadow-sm overflow-hidden mb-10">
+            <Textarea
+              placeholder="Ask Bra3n to summarize any text or document..."
+              value={text}
+              onChange={handleTextChange}
+              className="min-h-[120px] border-0 bg-transparent focus-visible:ring-0 resize-none p-4 text-base"
+            />
+            
+            <div className="flex items-center justify-between p-3 border-t border-border/30 bg-background/50">
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" className="text-muted-foreground">
+                  <PaperclipIcon className="h-4 w-4 mr-1" />
+                  Attach
+                </Button>
+              </div>
+              
+              <Button onClick={handleSummarize} className="gap-1.5">
+                <Brain className="h-4 w-4" />
+                Summarize
+              </Button>
             </div>
           </div>
 
-          {/* Attach and Summarize buttons */}
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" className="text-muted-foreground">
-              <PaperclipIcon className="h-4 w-4 mr-2" />
-              Attach
-            </Button>
-            
-            <Button className="bg-blue-500 hover:bg-blue-600">
-              <Brain className="h-4 w-4 mr-2" />
-              Summarize
-            </Button>
-          </div>
-
-          {/* Summary result placeholder */}
-          <div className="mt-16 flex flex-col items-center justify-center">
-            <Brain className="h-16 w-16 text-gray-300 mb-4" />
-            <p className="text-center text-muted-foreground">
-              Your AI-generated summary will appear here<br />
-              Try our summarization tool to see it in action!
-            </p>
-          </div>
+          <SummaryResult summary={summary} isGenerating={isGenerating} />
         </div>
 
         <Separator className="max-w-3xl w-full my-16 opacity-50" />
