@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, MessageSquare, Users, Map } from 'lucide-react';
+import { Sparkles, ArrowRight, MessageSquare, Users, Map, FileText } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import Logo from '@/components/navbar/Logo';
@@ -42,23 +42,23 @@ const Index = () => {
             </Button>
             
             <Button 
-              onClick={() => navigate('/auth?tab=register')}
+              onClick={() => navigate('/summarize')}
               variant="outline" 
               size="lg"
               className="rounded-md px-8 text-base w-full sm:w-auto border-primary/20 bg-white shadow-[0_0_15px_rgba(155,135,245,0.2)] hover:bg-white/90"
             >
-              <Users className="mr-2 h-4 w-4" />
-              Collaborate on a Pro Trial
+              <FileText className="mr-2 h-4 w-4" />
+              Try Summarization Demo
             </Button>
             
             <Button 
-              onClick={() => window.open('https://docs.example.com', '_blank')} 
+              onClick={() => navigate('/auth?tab=register')}
               variant="ghost" 
               size="lg"
               className="rounded-md px-8 text-base w-full sm:w-auto"
             >
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Chat with AI
+              <Users className="mr-2 h-4 w-4" />
+              Sign Up
             </Button>
           </div>
         </div>

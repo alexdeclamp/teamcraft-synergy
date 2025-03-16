@@ -17,6 +17,7 @@ import WaitlistPage from "./pages/Waitlist";
 import Sitemap from "./pages/Sitemap";
 import Brand from "./pages/Brand";
 import BrandAssets from "./pages/BrandAssets";
+import SummarizeDemo from "./pages/SummarizeDemo";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingSidebar from "./components/onboarding/OnboardingSidebar";
 import WelcomeDialog from "./components/onboarding/WelcomeDialog";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/sitemap" element={<Sitemap />} />
             <Route path="/brand" element={<Brand />} />
             <Route path="/brand-assets" element={<BrandAssets />} />
+            <Route path="/summarize" element={<SummarizeDemo />} />
 
             {/* Protected routes with onboarding */}
             <Route path="/dashboard" element={
