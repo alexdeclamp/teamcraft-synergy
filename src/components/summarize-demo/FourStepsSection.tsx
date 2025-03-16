@@ -12,31 +12,31 @@ const FourStepsSection = () => {
   const steps = [
     {
       number: 1,
-      title: "Upload Your Knowledge",
-      description: "Add notes, PDFs, images, and more to build your knowledge base.",
+      title: "Drag & Drop Files",
+      description: "Seamlessly add files using our drag & drop interface.",
       icon: <Upload className="h-6 w-6 text-white" />,
       iconBgColor: "bg-blue-500"
     },
     {
       number: 2,
-      title: "Generate Notes",
-      description: "AI automatically organizes and summarizes your content.",
+      title: "Generates Summary",
+      description: "AI automatically creates summaries of your content.",
       icon: <Brain className="h-6 w-6 text-white" />,
-      iconBgColor: "bg-blue-500"
-    },
-    {
-      number: 3,
-      title: "Invite People",
-      description: "Share your Brain with team members and collaborators.",
-      icon: <UserPlus className="h-6 w-6 text-white" />,
       iconBgColor: "bg-purple-500"
     },
     {
-      number: 4,
-      title: "Chat With Your Project",
-      description: "Ask questions and get instant answers from your knowledge base.",
-      icon: <MessageSquare className="h-6 w-6 text-white" />,
+      number: 3,
+      title: "Take Notes",
+      description: "Add your own insights and comments to the summaries.",
+      icon: <UserPlus className="h-6 w-6 text-white" />,
       iconBgColor: "bg-blue-500"
+    },
+    {
+      number: 4,
+      title: "Chat With It",
+      description: "Engage in conversations with your summarized content.",
+      icon: <MessageSquare className="h-6 w-6 text-white" />,
+      iconBgColor: "bg-purple-500"
     }
   ];
 
@@ -73,7 +73,7 @@ const FourStepsSection = () => {
                 </div>
                 
                 {/* Progress Bar */}
-                <div className={`absolute top-1/2 ${index % 2 === 0 ? 'right-full' : 'left-full'} w-full max-w-[220px] h-1 ${index < steps.length - 1 ? 'bg-blue-500' : 'bg-transparent'} transform -translate-y-1/2 ${index % 2 === 0 ? '-translate-x-2' : 'translate-x-2'}`}></div>
+                <div className={`absolute top-1/2 ${index % 2 === 0 ? 'right-full' : 'left-full'} w-full max-w-[220px] h-1 ${index < steps.length - 1 ? step.iconBgColor : 'bg-transparent'} transform -translate-y-1/2 ${index % 2 === 0 ? '-translate-x-2' : 'translate-x-2'}`}></div>
               </div>
               
               {/* Empty Space */}
