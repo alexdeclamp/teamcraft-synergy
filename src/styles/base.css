@@ -1,3 +1,17 @@
 
 @import './variables.css';
 @import './reset.css';
+
+/* Dark mode card styles */
+.dark-card {
+  background-color: rgba(17, 17, 17, 0.8);
+  border-color: #333;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.dark-card:hover {
+  background-color: rgba(25, 25, 25, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}

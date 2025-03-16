@@ -9,6 +9,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import SummaryResult from '@/components/summarize-demo/SummaryResult';
 import FourStepsSection from '@/components/summarize-demo/FourStepsSection';
+import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent } from '@/components/ui/card';
+import Logo from '@/components/navbar/Logo';
 
 const SummarizeDemo = () => {
   const navigate = useNavigate();
@@ -66,6 +70,47 @@ const SummarizeDemo = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Navigation Bar */}
+      <header className="border-b border-border/30 py-4 px-6 bg-background/95 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <Logo />
+          
+          <NavigationMenu>
+            <NavigationMenuList className="gap-1">
+              <NavigationMenuItem>
+                <NavigationMenuLink 
+                  className="px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors"
+                  href="#features"
+                >
+                  Features
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink 
+                  className="px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors"
+                  href="#pricing"
+                >
+                  Pricing
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink 
+                  className="px-3 py-2 text-sm hover:bg-accent rounded-md transition-colors"
+                  href="#about"
+                >
+                  About
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+          
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={handleSignIn}>Sign In</Button>
+            <Button onClick={handleSignUp}>Sign Up</Button>
+          </div>
+        </div>
+      </header>
+
       <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
         <div className="w-full max-w-3xl mx-auto mb-8">
           {/* Logo */}
@@ -111,8 +156,61 @@ const SummarizeDemo = () => {
           <SummaryResult summary={summary} isGenerating={isGenerating} />
         </div>
 
+        {/* Separator Line */}
+        <Separator className="max-w-3xl w-full my-16 opacity-50" />
+
         {/* Four Steps Section */}
         <FourStepsSection />
+        
+        {/* Separator Line */}
+        <Separator className="max-w-3xl w-full my-16 opacity-50" />
+        
+        {/* New Era Section */}
+        <div className="w-full max-w-5xl mx-auto mb-20">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-3">
+              A new era for product<br />builders and developers.
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="bg-[#111111]/80 border-gray-800 shadow-xl overflow-hidden">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold mb-3 text-white">Product teams</h3>
+                <p className="text-gray-300">
+                  Empower non-technical team members to code. Align on abstract ideas by building real prototypes.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-[#111111]/80 border-gray-800 shadow-xl overflow-hidden">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold mb-3 text-white">Founders, solopreneurs & indie-hackers</h3>
+                <p className="text-gray-300">
+                  Iterate and validate in minutes. Launch a full product in less than a day.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-[#111111]/80 border-gray-800 shadow-xl overflow-hidden">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold mb-3 text-white">Product designers</h3>
+                <p className="text-gray-300">
+                  Bring your design idea to life without tedious prototyping work in tools like Figma.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-[#111111]/80 border-gray-800 shadow-xl overflow-hidden">
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold mb-3 text-white">Human software engineers</h3>
+                <p className="text-gray-300">
+                  Ship an entire frontend in one prompt. Let Bra3n fix bugs and do your UI edits.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
 
       {/* Auth Dialog */}
