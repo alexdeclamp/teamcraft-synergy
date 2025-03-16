@@ -6,7 +6,7 @@ const HighlightSection = () => {
     <div className="w-full max-w-5xl mx-auto mb-20 bg-primary/5 py-16 px-8 rounded-xl border border-primary/20">
       <div className="text-center mb-12">
         <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-foreground">
-          Build high quality software<br />without writing code.
+          Powerful AI Assistance
         </h2>
         <p className="text-muted-foreground max-w-3xl mx-auto">
           Creating software has never been more accessible. With Bra3n, simply describe
