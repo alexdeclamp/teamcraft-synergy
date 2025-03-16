@@ -108,18 +108,28 @@ The path forward involves thoughtful implementation, continued learning, and ada
       <section className="relative pt-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="absolute top-0 inset-x-0 h-96 bg-gradient-to-b from-primary/5 to-transparent -z-10" />
         
-        {/* Hero Text - Centered */}
+        {/* Logo and Hero Text - Centered */}
         <div className="text-center max-w-3xl mx-auto mb-16">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+              <Brain className="h-10 w-10 text-primary" />
+            </div>
+          </div>
+          
           <div className="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
             <Sparkles className="h-4 w-4 mr-2" />
             AI-Powered Knowledge Hub
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
+          
+          {/* Title on a single line */}
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-3 whitespace-nowrap">
             Summarize any document in seconds
           </h1>
-          <p className="text-xl text-muted-foreground max-w-xl mx-auto mb-8">
-            Bra<span className="text-primary">3</span>n is a next-gen collaborative 
-            knowledge management system
+          
+          {/* Subtitle on a single line */}
+          <p className="text-xl text-muted-foreground whitespace-nowrap mx-auto mb-8">
+            Bra<span className="text-primary">3</span>n is a next-gen collaborative knowledge management system
           </p>
         </div>
         
