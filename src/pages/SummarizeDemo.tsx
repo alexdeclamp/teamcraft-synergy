@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Brain, PaperclipIcon } from 'lucide-react';
+import { Brain, PaperclipIcon, Code, Sparkles, Edit, Share } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -206,6 +205,146 @@ const SummarizeDemo = () => {
                 <h3 className="text-xl font-semibold mb-3 text-white">Human software engineers</h3>
                 <p className="text-gray-300">
                   Ship an entire frontend in one prompt. Let Bra3n fix bugs and do your UI edits.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Separator Line */}
+        <Separator className="max-w-3xl w-full my-16 opacity-50" />
+        
+        {/* Build high quality software section */}
+        <div className="w-full max-w-5xl mx-auto mb-20 bg-[#111111]/95 py-16 px-8 rounded-xl">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-white">
+              Build high quality software<br />without writing code.
+            </h2>
+            <p className="text-gray-300 max-w-3xl mx-auto">
+              Creating software has never been more accessible. With Bra3n, simply describe
+              your idea in your own words, and watch it transform into a fully functional application
+              with beautiful aesthetics.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 mt-20">
+            <div className="space-y-8">
+              <div className="mb-12">
+                <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-white">20× faster than coding.</h3>
+                <div className="w-16 h-0.5 bg-primary mb-6"></div>
+                <p className="text-gray-300">
+                  Use your native language to describe your idea, then watch
+                  Bra3n do the rest. Creating for the web is faster and easier than
+                  ever before.
+                </p>
+              </div>
+              
+              <div className="mb-12">
+                <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-white">Prompt to edit.</h3>
+                <div className="w-16 h-0.5 bg-primary mb-6"></div>
+                <p className="text-gray-300">
+                  Forget about the overhead of frontend engineers or freelancers to
+                  maintain your website. Ask in text to change anything.
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-bold mb-4 text-white">You own the code.</h3>
+                <div className="w-16 h-0.5 bg-primary mb-6"></div>
+                <p className="text-gray-300">
+                  Everything that Bra3n builds is yours. Sync your codebase to
+                  Github and edit in any code editor, export or publish your app
+                  instantly with one click.
+                </p>
+              </div>
+            </div>
+            
+            <div className="relative">
+              <div className="bg-gradient-to-r from-primary/20 to-primary/5 rounded-xl overflow-hidden shadow-lg">
+                <img 
+                  src="/lovable-uploads/8d69913a-49e9-46f0-bea0-efdc9a28fc72.png" 
+                  alt="AI editing interface" 
+                  className="w-full h-auto rounded-xl border border-gray-700/50"
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-16 text-center">
+            <Button 
+              onClick={() => navigate('/waitlist')} 
+              size="lg" 
+              className="bg-primary hover:bg-primary/90 text-white px-8 py-6 text-lg h-auto"
+            >
+              Join the Waitlist
+            </Button>
+          </div>
+        </div>
+        
+        {/* Product Features Section */}
+        <div className="w-full max-w-5xl mx-auto mb-20">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              Powerful Features for Everyone
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Discover how Bra3n transforms your workflow with these key capabilities
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="bg-primary/10 p-3 rounded-full mr-4">
+                    <Code className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold">Code Generation</h3>
+                </div>
+                <p className="text-muted-foreground">
+                  Generate high-quality, production-ready code in seconds with advanced AI technology.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="bg-primary/10 p-3 rounded-full mr-4">
+                    <Sparkles className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold">Responsive Design</h3>
+                </div>
+                <p className="text-muted-foreground">
+                  Automatically create beautiful, responsive interfaces that work across all devices.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="bg-primary/10 p-3 rounded-full mr-4">
+                    <Edit className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold">Natural Language Editing</h3>
+                </div>
+                <p className="text-muted-foreground">
+                  Request changes and updates using simple, conversational language - no coding required.
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-primary/5 border border-primary/20 shadow-lg overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="bg-primary/10 p-3 rounded-full mr-4">
+                    <Share className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold">Export & Integration</h3>
+                </div>
+                <p className="text-muted-foreground">
+                  Easily export your projects or integrate with existing codebases and development workflows.
                 </p>
               </CardContent>
             </Card>
