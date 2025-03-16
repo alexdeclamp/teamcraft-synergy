@@ -1,42 +1,27 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, Brain, UserPlus, MessageSquare } from 'lucide-react';
+import { FileText, Brain, UserPlus, MessageSquare } from 'lucide-react';
 
 const FourStepsSection = () => {
-  const navigate = useNavigate();
-  
   const steps = [{
     number: 1,
     title: "Add notes, PDFs, images, and more to build your knowledge base.",
     icon: <FileText className="h-6 w-6 text-primary" />,
-    description: "Upload diverse content types to create a comprehensive knowledge repository."
   }, {
     number: 2,
     title: "AI automatically organizes and summarizes your content.",
     icon: <Brain className="h-6 w-6 text-primary" />,
-    description: "Our AI processes and structures your information for easy access and understanding."
   }, {
     number: 3,
     title: "Share your Brain with team members and collaborators.",
     icon: <UserPlus className="h-6 w-6 text-primary" />,
-    description: "Invite others to access and contribute to your knowledge base seamlessly."
   }, {
     number: 4,
     title: "Ask questions and get instant answers from your knowledge base.",
     icon: <MessageSquare className="h-6 w-6 text-primary" />,
-    description: "Query your data in natural language to retrieve relevant information immediately."
   }];
   
   return <div className="w-full max-w-5xl mx-auto py-12">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl sm:text-4xl font-bold mb-4">How It Works</h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Build and share your knowledge base in just four simple steps
-        </p>
-      </div>
-
       <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-12">
         {steps.map((step, index) => <div key={index} className="flex flex-col items-center text-center w-full md:w-1/4">
             <div className="relative">
@@ -51,18 +36,7 @@ const FourStepsSection = () => {
             </div>
             
             <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
-            <p className="text-muted-foreground text-sm">
-              {step.description}
-            </p>
           </div>)}
-      </div>
-
-      {/* CTA Button */}
-      <div className="text-center mt-6">
-        <Button onClick={() => navigate('/waitlist')} size="lg" className="bg-primary hover:bg-primary/90 text-white shadow-sm">
-          Join the Waitlist
-          <ArrowRight className="ml-2 h-4 w-4" />
-        </Button>
       </div>
     </div>;
 };
