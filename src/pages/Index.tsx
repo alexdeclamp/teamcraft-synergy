@@ -28,33 +28,6 @@ const Index = () => {
     setShowAuthDialog(true);
   };
 
-  const handleDemoSummarize = () => {
-    if (text.trim().length < 50) {
-      toast.error('Please enter at least 50 characters to generate a meaningful summary');
-      return;
-    }
-
-    setIsGenerating(true);
-    
-    setTimeout(() => {
-      const demoSummary = `# Summary of Document
-
-## Key Points
-• The document discusses advanced knowledge management techniques
-• It highlights the importance of AI in document processing
-• Several case studies demonstrate successful implementation
-
-## Recommendations
-• Implement a centralized knowledge repository
-• Use AI tools for automatic document classification
-• Regularly update and maintain the knowledge base`;
-      
-      setSummary(demoSummary);
-      setIsGenerating(false);
-      toast.success('Summary generated successfully!');
-    }, 2000);
-  };
-
   const handleSignIn = () => {
     navigate('/auth?tab=login');
   };
