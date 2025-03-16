@@ -9,16 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import SummaryResult from '@/components/summarize-demo/SummaryResult';
 import FourStepsSection from '@/components/summarize-demo/FourStepsSection';
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import { Link } from 'react-router-dom';
 
 const SummarizeDemo = () => {
   const navigate = useNavigate();
@@ -76,47 +66,6 @@ const SummarizeDemo = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Navigation Bar */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container flex h-14 items-center">
-          <div className="mr-4 flex">
-            <Link to="/" className="flex items-center space-x-2">
-              <Brain className="h-6 w-6 text-primary" />
-              <span className="font-bold text-lg">Bra<span className="text-primary">3</span>n</span>
-            </Link>
-          </div>
-          <NavigationMenu className="hidden md:flex">
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <Link to="/features">
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Features
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/pricing">
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Pricing
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link to="/about">
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    About
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-          <div className="ml-auto flex items-center space-x-4">
-            <Button variant="ghost" onClick={() => navigate('/auth?tab=login')}>Sign In</Button>
-            <Button onClick={() => navigate('/auth?tab=register')}>Sign Up</Button>
-          </div>
-        </div>
-      </header>
-
       <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6">
         <div className="w-full max-w-3xl mx-auto mb-8">
           {/* Logo */}

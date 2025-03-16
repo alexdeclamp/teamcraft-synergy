@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Upload, Brain, UserPlus, MessageSquare } from 'lucide-react';
+import { ArrowRight, FileText, MessageSquare, Share2, Upload } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const FourStepsSection = () => {
@@ -12,31 +12,23 @@ const FourStepsSection = () => {
   const steps = [
     {
       number: 1,
-      title: "Drag & Drop Files",
-      description: "Seamlessly add files using our drag & drop interface.",
-      icon: <Upload className="h-6 w-6 text-white" />,
-      iconBgColor: "bg-blue-500"
+      title: "Describe what you want to build in natural language.",
+      icon: <FileText className="h-6 w-6 text-primary" />
     },
     {
       number: 2,
-      title: "Generates Summary",
-      description: "AI automatically creates summaries of your content.",
-      icon: <Brain className="h-6 w-6 text-white" />,
-      iconBgColor: "bg-purple-500"
+      title: "Bra3n builds your first version instantly.",
+      icon: <Upload className="h-6 w-6 text-primary" />
     },
     {
       number: 3,
-      title: "Take Notes",
-      description: "Add your own insights and comments to the summaries.",
-      icon: <UserPlus className="h-6 w-6 text-white" />,
-      iconBgColor: "bg-blue-500"
+      title: "Talk to the editor to design and extend your project.",
+      icon: <MessageSquare className="h-6 w-6 text-primary" />
     },
     {
       number: 4,
-      title: "Chat With It",
-      description: "Engage in conversations with your summarized content.",
-      icon: <MessageSquare className="h-6 w-6 text-white" />,
-      iconBgColor: "bg-purple-500"
+      title: "Share your project via link or sync your code to GitHub.",
+      icon: <Share2 className="h-6 w-6 text-primary" />
     }
   ];
 
@@ -45,39 +37,37 @@ const FourStepsSection = () => {
       <div className="text-center mb-10">
         <h2 className="text-2xl sm:text-3xl font-bold mb-4">How It Works</h2>
         <p className="text-muted-foreground">
-          Four simple steps to transform how you manage information
+          Build and share your knowledge base in just four simple steps
         </p>
       </div>
 
       <div className="relative">
-        {/* Vertical Line */}
-        <div className="absolute top-0 left-1/2 h-full w-0.5 bg-gray-200 -translate-x-1/2 z-0" />
+        {/* Horizontal Line for Desktop */}
+        {!isMobile && (
+          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-border -translate-y-1/2 z-0" />
+        )}
+        
+        {/* Vertical Line for Mobile */}
+        {isMobile && (
+          <div className="absolute top-0 left-1/2 h-full w-0.5 bg-border -translate-x-1/2 z-0" />
+        )}
 
         {/* Steps */}
-        <div className="space-y-16 relative z-10">
+        <div className={`grid ${isMobile ? 'grid-cols-1 gap-12' : 'grid-cols-4 gap-4'} relative z-10`}>
           {steps.map((step, index) => (
-            <div key={index} className={`flex ${index % 2 === 0 ? 'flex-row' : 'flex-row-reverse'} items-center`}>
-              {/* Content */}
-              <div className={`w-1/2 ${index % 2 === 0 ? 'pr-8 text-right' : 'pl-8 text-left'}`}>
-                <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                <p className="text-muted-foreground">{step.description}</p>
+            <div key={index} className="flex flex-col items-center text-center">
+              {/* Step Number */}
+              <div className="bg-background border-2 border-primary text-primary rounded-full h-12 w-12 flex items-center justify-center font-bold text-lg mb-4">
+                {step.number}
               </div>
               
-              {/* Icon with Number */}
-              <div className="relative">
-                <div className={`h-16 w-16 rounded-full ${step.iconBgColor} flex items-center justify-center z-10`}>
+              {/* Step Content */}
+              <div className="bg-background p-4 rounded-lg">
+                <div className="flex justify-center mb-3">
                   {step.icon}
                 </div>
-                <div className="absolute -top-2 -right-2 h-6 w-6 bg-white rounded-full border-2 border-primary flex items-center justify-center text-xs font-bold text-primary">
-                  {step.number}
-                </div>
-                
-                {/* Progress Bar */}
-                <div className={`absolute top-1/2 ${index % 2 === 0 ? 'right-full' : 'left-full'} w-full max-w-[220px] h-1 ${index < steps.length - 1 ? step.iconBgColor : 'bg-transparent'} transform -translate-y-1/2 ${index % 2 === 0 ? '-translate-x-2' : 'translate-x-2'}`}></div>
+                <p className="text-sm sm:text-base">{step.title}</p>
               </div>
-              
-              {/* Empty Space */}
-              <div className={`w-1/2 ${index % 2 === 0 ? 'pl-8' : 'pr-8'}`}></div>
             </div>
           ))}
         </div>
