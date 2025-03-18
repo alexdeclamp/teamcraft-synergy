@@ -17,8 +17,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "whsec_6pLFrgqvmKjAk8u67GHzJZr1FJzGinFm";
 
 // Map Stripe product IDs to membership tier IDs in your database
-// You will need to update these with the actual product IDs from Stripe 
-// and the corresponding tier IDs from your database
 const PRODUCT_TO_TIER_MAP: Record<string, string> = {
   "prod_Rxy6Y9WaxBQYC7": "pro", // Pro tier
   "prod_Rxy7KmZSQH2riU": "team", // Team tier
@@ -86,16 +84,39 @@ serve(async (req) => {
         return new Response("No customer email", { status: 400 });
       }
 
+      // Log information about the subscription for debugging
+      console.log("Processing subscription for:", customerEmail);
+      console.log("Product ID:", productId);
+      console.log("Tier mapping:", PRODUCT_TO_TIER_MAP[productId as string]);
+
       // Find the user by email
       const { data: userData, error: userError } = await supabase
         .rpc('get_user_by_email', { lookup_email: customerEmail });
 
-      if (userError || !userData || userData.length === 0) {
-        console.error("Error finding user by email:", userError || "No user found");
-        return new Response("User not found", { status: 404 });
+      if (userError) {
+        console.error("Error finding user by email:", userError);
+        return new Response(`Error finding user: ${userError.message}`, { status: 500 });
       }
 
-      const userId = userData[0].id;
+      if (!userData || userData.length === 0) {
+        console.error("No user found with email:", customerEmail);
+        
+        // Try alternative lookup by email directly in auth.users
+        const { data: authUserData, error: authUserError } = await supabase
+          .from('auth')
+          .select('users(id)')
+          .eq('users.email', customerEmail)
+          .single();
+          
+        if (authUserError || !authUserData) {
+          console.error("Failed to find user in auth.users:", authUserError);
+          return new Response("User not found", { status: 404 });
+        }
+        
+        userId = authUserData.users.id;
+      } else {
+        userId = userData[0].id;
+      }
 
       // Find the membership tier ID that corresponds to the product
       const tierId = PRODUCT_TO_TIER_MAP[productId as string];
