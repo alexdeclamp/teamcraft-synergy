@@ -7,8 +7,9 @@ import { toast } from 'sonner';
 import MembershipCard from '@/components/membership/MembershipCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Info } from 'lucide-react';
 import { Json } from '@/integrations/supabase/types';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type MembershipTier = {
   id: string;
@@ -138,6 +139,13 @@ const Membership = () => {
             Choose the plan that's right for you and upgrade your Bra3n experience.
           </p>
         </div>
+        
+        <Alert className="mb-4">
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            After completing payment, your account will be automatically upgraded. If you don't see changes immediately, please refresh the page.
+          </AlertDescription>
+        </Alert>
         
         <div className="flex justify-center pb-8">
           <Tabs
