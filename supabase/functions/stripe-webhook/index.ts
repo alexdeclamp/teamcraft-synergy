@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12.18.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
@@ -50,6 +49,9 @@ serve(async (req) => {
     // Get the raw body as text
     const body = await req.text();
     
+    // Log the received webhook data (careful with sensitive data in production)
+    console.log("Received webhook payload:", body.substring(0, 500) + "...");
+    
     // Verify the webhook signature
     let event;
     try {
@@ -74,11 +76,17 @@ serve(async (req) => {
       const customerId = session.customer;
       const subscriptionId = session.subscription;
 
+      console.log("Customer ID:", customerId);
+      console.log("Subscription ID:", subscriptionId);
+
       // Retrieve the subscription details to get the product information
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       const priceId = subscription.items.data[0].price.id;
       const productId = subscription.items.data[0].price.product;
 
+      console.log("Price ID:", priceId);
+      console.log("Product ID:", productId);
+      
       // Get the user ID from customer metadata or find the user by Stripe customer ID
       // Retrieve the user's email from the session
       const customerEmail = session.customer_details.email;
@@ -107,20 +115,36 @@ serve(async (req) => {
         console.error("No user found with email:", customerEmail);
         
         // Try alternative lookup by email directly in auth.users
-        const { data: authUserData, error: authUserError } = await supabase
+        const { data: authData, error: authError } = await supabase
           .from('auth')
-          .select('users(id)')
+          .select('users.id')
           .eq('users.email', customerEmail)
           .single();
           
-        if (authUserError || !authUserData) {
-          console.error("Failed to find user in auth.users:", authUserError);
-          return new Response("User not found", { status: 404 });
+        if (authError) {
+          console.error("Failed to find user in auth.users:", authError);
+          
+          // Try another approach - look directly in profiles
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('id')
+            .ilike('email', customerEmail)
+            .single();
+            
+          if (profileError || !profileData) {
+            console.error("Failed to find user in profiles:", profileError);
+            return new Response("User not found", { status: 404 });
+          }
+          
+          userId = profileData.id;
+          console.log("Found user in profiles:", userId);
+        } else {
+          userId = authData.users.id;
+          console.log("Found user in auth.users:", userId);
         }
-        
-        userId = authUserData.users.id;
       } else {
         userId = userData[0].id;
+        console.log("Found user via RPC:", userId);
       }
 
       // Find the membership tier ID that corresponds to the product
@@ -129,6 +153,35 @@ serve(async (req) => {
       if (!tierId) {
         console.error(`No tier mapping found for product ID: ${productId}`);
         return new Response("Product not mapped to tier", { status: 400 });
+      }
+      
+      console.log("Mapping product to tier:", productId, "->", tierId);
+
+      // Find the actual tier ID from the database
+      const { data: tierData, error: tierError } = await supabase
+        .from('membership_tiers')
+        .select('id')
+        .eq('id', tierId)
+        .single();
+        
+      if (tierError) {
+        // If we can't find it by ID, try looking up by name
+        const { data: tierByNameData, error: tierByNameError } = await supabase
+          .from('membership_tiers')
+          .select('id')
+          .ilike('name', '%pro%')
+          .single();
+          
+        if (tierByNameError || !tierByNameData) {
+          console.error("Error finding tier:", tierError);
+          console.error("Also failed by name:", tierByNameError);
+          return new Response("Tier not found", { status: 404 });
+        }
+        
+        console.log("Found tier by name:", tierByNameData.id);
+        tierId = tierByNameData.id;
+      } else {
+        console.log("Found tier by ID:", tierData.id);
       }
 
       // Update user's profile with the membership tier ID
@@ -141,6 +194,8 @@ serve(async (req) => {
         console.error("Error updating profile:", profileUpdateError);
         return new Response("Error updating profile", { status: 500 });
       }
+      
+      console.log(`Successfully updated profile for user ${userId} to tier ${tierId}`);
 
       // Create or update a user membership record
       const { error: membershipError } = await supabase
@@ -161,6 +216,16 @@ serve(async (req) => {
       }
 
       console.log(`Successfully updated membership for user ${userId} to tier ${tierId}`);
+      console.log("Webhook processing completed successfully");
+      
+      return new Response(JSON.stringify({ 
+        status: "success", 
+        user_id: userId,
+        tier_id: tierId
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     } 
     else if (event.type === 'customer.subscription.updated') {
       // Handle subscription updates

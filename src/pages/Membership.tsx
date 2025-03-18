@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import MembershipCard from '@/components/membership/MembershipCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Info } from 'lucide-react';
+import { Loader2, Info, AlertTriangle } from 'lucide-react';
 import { Json } from '@/integrations/supabase/types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -38,12 +38,13 @@ const PAYMENT_LINKS = {
 const USE_TEST_MODE = true;
 
 const Membership = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, fetchProfile } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [membershipTiers, setMembershipTiers] = useState<MembershipTier[]>([]);
   const [currentTierId, setCurrentTierId] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const fetchMembershipData = async () => {
@@ -76,6 +77,8 @@ const Membership = () => {
           throw userError;
         }
         
+        console.log("Current membership tier:", userData?.membership_tier_id);
+        
         // Transform the data to ensure features is properly typed and add payment links
         const formattedTiers: MembershipTier[] = tiers.map(tier => {
           const formattedTier: MembershipTier = {
@@ -104,7 +107,7 @@ const Membership = () => {
     };
     
     fetchMembershipData();
-  }, [user, navigate]);
+  }, [user, navigate, refreshing]);
   
   // Helper function to parse the features from JSON
   const parseFeatures = (features: Json): { name: string; description: string }[] => {
@@ -127,6 +130,15 @@ const Membership = () => {
   const handleSelectTier = (tierId: string) => {
     toast.info('Please use the Subscribe button to access our Stripe checkout page');
     console.log('Selected tier:', tierId);
+  };
+  
+  const refreshMembership = async () => {
+    setRefreshing(true);
+    await fetchProfile();
+    toast.success('Membership status refreshed');
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 500);
   };
   
   if (loading) {
@@ -153,6 +165,32 @@ const Membership = () => {
             {USE_TEST_MODE 
               ? 'This is running in TEST MODE. Use Stripe test cards for payments.' 
               : 'After completing payment, your account will be automatically upgraded. If you don\'t see changes immediately, please refresh the page.'}
+          </AlertDescription>
+        </Alert>
+        
+        <div className="text-center">
+          <Button 
+            variant="outline" 
+            onClick={refreshMembership}
+            disabled={refreshing}
+            className="mb-4"
+          >
+            {refreshing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Refreshing...
+              </>
+            ) : (
+              <>Refresh Membership Status</>
+            )}
+          </Button>
+        </div>
+        
+        <Alert variant="destructive" className="mb-4">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Having trouble with payments? After checkout, click the "Refresh Membership Status" button above.
+            Current plan: {profile?.membership_tier_id || "Free"}
           </AlertDescription>
         </Alert>
         
