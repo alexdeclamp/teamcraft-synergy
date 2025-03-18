@@ -8,14 +8,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { SubscriptionPlan } from '@/types/subscription';
 import DatabaseSetup from '@/components/admin/DatabaseSetup';
 
+type SubscriptionData = {
+  plan_type: SubscriptionPlan;
+  is_active: boolean;
+  trial_ends_at: string | null;
+}
+
 const SubscriptionDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  const [subscription, setSubscription] = useState<{
-    plan_type: SubscriptionPlan;
-    is_active: boolean;
-    trial_ends_at: string | null;
-  } | null>(null);
+  const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   
   useEffect(() => {
     const fetchUserAndSubscription = async () => {
@@ -31,19 +33,23 @@ const SubscriptionDashboard = () => {
         
         setUserId(user.id);
         
-        // Get the user's subscription
+        // Get the user's subscription using raw SQL query instead of the typed client
+        // This avoids type issues because user_subscriptions is not in the base type definition
         const { data: subsData, error: subsError } = await supabase
-          .from('user_subscriptions')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
+          .rpc('get_user_subscription', { user_id: user.id })
           .maybeSingle();
           
-        if (subsError && subsError.code !== 'PGRST116') { // PGRST116 is not found
+        if (subsError) {
           console.error('Error fetching subscription:', subsError);
         }
         
-        setSubscription(subsData);
+        if (subsData) {
+          setSubscription({
+            plan_type: subsData.plan_type as SubscriptionPlan,
+            is_active: subsData.is_active,
+            trial_ends_at: subsData.trial_ends_at
+          });
+        }
       } catch (error) {
         console.error('Error in subscription dashboard:', error);
       } finally {

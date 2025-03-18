@@ -73,7 +73,41 @@ serve(async (req) => {
     }
     
     // Verify the table exists after attempted creation
-    const { data: finalCheck, error: finalCheckError } = await adminClient.from('user_subscriptions').select('*', { count: 'exact', head: true });
+    const { data: finalCheck, error: finalCheckError } = await adminClient.rpc(
+      'check_table_exists',
+      { table_name: 'user_subscriptions' }
+    );
+    
+    // Create a helper RPC function to get user subscription
+    const createGetUserSubscriptionSQL = `
+      CREATE OR REPLACE FUNCTION get_user_subscription(user_id UUID)
+      RETURNS TABLE (
+        id UUID,
+        user_id UUID,
+        plan_type TEXT,
+        is_active BOOLEAN,
+        trial_ends_at TIMESTAMPTZ,
+        current_period_starts_at TIMESTAMPTZ,
+        current_period_ends_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ,
+        updated_at TIMESTAMPTZ
+      ) AS $$
+      BEGIN
+        RETURN QUERY
+        SELECT s.id, s.user_id, s.plan_type, s.is_active, s.trial_ends_at,
+               s.current_period_starts_at, s.current_period_ends_at, s.created_at, s.updated_at
+        FROM public.user_subscriptions s
+        WHERE s.user_id = get_user_subscription.user_id AND s.is_active = true
+        LIMIT 1;
+      END;
+      $$ LANGUAGE plpgsql SECURITY DEFINER;
+    `;
+    
+    // Create the RPC function for fetching user subscription
+    const { error: createRpcError } = await adminClient.sql(createGetUserSubscriptionSQL);
+    if (createRpcError) {
+      console.error(`Unable to create get_user_subscription function: ${createRpcError.message}`);
+    }
     
     if (finalCheckError) {
       throw new Error(`Table verification failed: ${finalCheckError.message}`);
@@ -83,7 +117,7 @@ serve(async (req) => {
       JSON.stringify({ 
         status: "success", 
         message: "Subscriptions table exists and is ready to use",
-        tableExists: true
+        tableExists: !!finalCheck
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

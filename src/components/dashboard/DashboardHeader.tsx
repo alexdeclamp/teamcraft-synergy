@@ -15,7 +15,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface DashboardHeaderProps {
+export interface DashboardHeaderProps {
   className?: string;
 }
 
