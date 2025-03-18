@@ -4,6 +4,7 @@ import { SubscriptionPlan, SubscriptionTier, UserSubscription } from '@/types/su
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { Json } from '@/integrations/supabase/types';
 
 type SubscriptionData = {
   userSubscription: UserSubscription | null;
@@ -106,7 +107,7 @@ export const useSubscription = (): SubscriptionData => {
               max_api_calls: planData.max_api_calls,
               max_brains: planData.max_brains,
               max_documents: planData.max_documents,
-              features: Array.isArray(planData.features) ? planData.features : [],
+              features: convertJsonToStringArray(planData.features),
               is_default: planData.is_default
             };
             
@@ -138,7 +139,7 @@ export const useSubscription = (): SubscriptionData => {
               max_api_calls: defaultPlanData.max_api_calls,
               max_brains: defaultPlanData.max_brains,
               max_documents: defaultPlanData.max_documents,
-              features: Array.isArray(defaultPlanData.features) ? defaultPlanData.features : [],
+              features: convertJsonToStringArray(defaultPlanData.features),
               is_default: true
             };
             
@@ -184,48 +185,73 @@ export const useSubscription = (): SubscriptionData => {
           }
         }
       } else if (subscriptionData) {
-        // We got data from the RPC
-        // The RPC returns a single object, not an array
-        const userSub: UserSubscription = {
-          id: subscriptionData.id,
-          user_id: user.id,
-          plan_type: subscriptionData.plan_type as SubscriptionPlan,
-          is_active: subscriptionData.is_active,
-          trial_ends_at: subscriptionData.trial_ends_at,
-          created_at: subscriptionData.created_at
-        };
+        // The RPC function is expected to return an array with one item
+        // We need to handle both cases: when it returns an array and when it's already the item
+        const subData = Array.isArray(subscriptionData) ? subscriptionData[0] : subscriptionData;
         
-        setUserSubscription(userSub);
-        
-        // Get plan details
-        const { data: planData, error: planError } = await supabase
-          .from('subscription_tiers')
-          .select('*')
-          .eq('plan_type', userSub.plan_type)
-          .maybeSingle();
-          
-        if (planError) {
-          console.error('Error fetching plan details:', planError);
-          setError('Failed to load plan details');
-          toast.error('Could not load subscription details');
-          setIsLoading(false);
-          return;
-        }
-        
-        if (planData) {
-          const plan: SubscriptionTier = {
-            id: planData.id,
-            name: planData.name,
-            plan_type: planData.plan_type as SubscriptionPlan,
-            price: planData.price,
-            max_api_calls: planData.max_api_calls,
-            max_brains: planData.max_brains,
-            max_documents: planData.max_documents,
-            features: Array.isArray(planData.features) ? planData.features : [],
-            is_default: planData.is_default
+        if (!subData) {
+          console.log('No subscription data found, will create one');
+          // Handle the case where user has no subscription yet - find starter plan
+          const { data: starterPlan } = await supabase
+            .from('subscription_tiers')
+            .select('*')
+            .eq('plan_type', 'starter')
+            .maybeSingle();
+            
+          if (starterPlan) {
+            // Create starter subscription automatically
+            await supabase.rpc('create_user_subscription', {
+              p_user_id: user.id,
+              p_plan_type: 'starter'
+            });
+            
+            // Restart the fetch process
+            fetchSubscriptionData();
+            return;
+          }
+        } else {
+          // We have subscription data
+          const userSub: UserSubscription = {
+            id: subData.id,
+            user_id: user.id,
+            plan_type: subData.plan_type as SubscriptionPlan,
+            is_active: subData.is_active,
+            trial_ends_at: subData.trial_ends_at,
+            created_at: subData.created_at
           };
           
-          setPlanDetails(plan);
+          setUserSubscription(userSub);
+          
+          // Get plan details
+          const { data: planData, error: planError } = await supabase
+            .from('subscription_tiers')
+            .select('*')
+            .eq('plan_type', userSub.plan_type)
+            .maybeSingle();
+            
+          if (planError) {
+            console.error('Error fetching plan details:', planError);
+            setError('Failed to load plan details');
+            toast.error('Could not load subscription details');
+            setIsLoading(false);
+            return;
+          }
+          
+          if (planData) {
+            const plan: SubscriptionTier = {
+              id: planData.id,
+              name: planData.name,
+              plan_type: planData.plan_type as SubscriptionPlan,
+              price: planData.price,
+              max_api_calls: planData.max_api_calls,
+              max_brains: planData.max_brains,
+              max_documents: planData.max_documents,
+              features: convertJsonToStringArray(planData.features),
+              is_default: planData.is_default
+            };
+            
+            setPlanDetails(plan);
+          }
         }
       }
     } catch (err) {
@@ -235,6 +261,18 @@ export const useSubscription = (): SubscriptionData => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper function to safely convert Json[] to string[]
+  const convertJsonToStringArray = (jsonValue: Json | null): string[] => {
+    if (!jsonValue) return [];
+    
+    if (Array.isArray(jsonValue)) {
+      // Convert each item to string to ensure type safety
+      return jsonValue.map(item => String(item));
+    }
+    
+    return [];
   };
 
   useEffect(() => {

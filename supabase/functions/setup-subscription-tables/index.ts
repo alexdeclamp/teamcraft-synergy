@@ -66,6 +66,50 @@ serve(async (req) => {
       console.error('Error testing RPC function:', err);
     }
     
+    // Ensure we have both default plan tiers in the database
+    const { data: plans, error: plansError } = await adminClient
+      .from('subscription_tiers')
+      .select('*');
+      
+    if (plansError) {
+      console.error('Error fetching subscription tiers:', plansError);
+    } else {
+      const hasPro = plans?.some(p => p.plan_type === 'pro');
+      const hasStarter = plans?.some(p => p.plan_type === 'starter');
+      
+      if (!hasStarter) {
+        console.log('Creating starter plan');
+        await adminClient
+          .from('subscription_tiers')
+          .insert({
+            name: 'Starter',
+            plan_type: 'starter',
+            price: 0,
+            max_api_calls: 50,
+            max_brains: 3,
+            max_documents: 20,
+            features: ['Basic AI assistance', 'Document uploads', 'Image analysis'],
+            is_default: true
+          });
+      }
+      
+      if (!hasPro) {
+        console.log('Creating pro plan');
+        await adminClient
+          .from('subscription_tiers')
+          .insert({
+            name: 'Pro',
+            plan_type: 'pro',
+            price: 19.99,
+            max_api_calls: 500,
+            max_brains: 20,
+            max_documents: 100,
+            features: ['Advanced AI assistance', 'Unlimited document uploads', 'Image analysis', 'Priority support', 'Batch processing', 'Custom domain'],
+            is_default: false
+          });
+      }
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: true,
