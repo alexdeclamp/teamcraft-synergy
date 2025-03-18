@@ -54,8 +54,13 @@ const SubscriptionInfo = ({
   }
 
   // Calculate percentages for progress bars
-  const brainPercentage = Math.min(Math.round((userBrainCount / planDetails.max_brains) * 100), 100);
-  const apiCallsPercentage = Math.min(Math.round((apiCallsUsed / planDetails.max_api_calls) * 100), 100);
+  const brainPercentage = planDetails.plan_type === 'pro' 
+    ? 0 // Pro has unlimited brains, so we don't show a percentage
+    : Math.min(Math.round((userBrainCount / planDetails.max_brains) * 100), 100);
+    
+  const apiCallsPercentage = planDetails.plan_type === 'pro' 
+    ? 0 // Pro has unlimited API calls, so we don't show a percentage
+    : Math.min(Math.round((apiCallsUsed / planDetails.max_api_calls) * 100), 100);
 
   return (
     <div>
@@ -89,10 +94,14 @@ const SubscriptionInfo = ({
               AI API Calls
             </div>
             <span className="font-medium">
-              {apiCallsUsed} / {planDetails.max_api_calls}
+              {planDetails.plan_type === 'pro' 
+                ? `${apiCallsUsed} / Unlimited` 
+                : `${apiCallsUsed} / ${planDetails.max_api_calls}`}
             </span>
           </div>
-          <Progress value={apiCallsPercentage} className="h-2 mb-2" />
+          {planDetails.plan_type !== 'pro' && (
+            <Progress value={apiCallsPercentage} className="h-2 mb-2" />
+          )}
           <span className="text-xs text-muted-foreground">Resets monthly</span>
         </div>
           
@@ -103,10 +112,19 @@ const SubscriptionInfo = ({
               Brains
             </div>
             <span className="font-medium">
-              {userBrainCount} / {planDetails.max_brains}
+              {planDetails.plan_type === 'pro' 
+                ? `${userBrainCount} / Unlimited` 
+                : `${userBrainCount} / ${planDetails.max_brains}`}
             </span>
           </div>
-          <Progress value={brainPercentage} className="h-2" />
+          {planDetails.plan_type !== 'pro' && (
+            <Progress value={brainPercentage} className="h-2" />
+          )}
+          {planDetails.plan_type === 'starter' && (
+            <span className="text-xs text-amber-500 mt-1">
+              Starter plan doesn't allow sharing brains
+            </span>
+          )}
         </div>
       </div>
       

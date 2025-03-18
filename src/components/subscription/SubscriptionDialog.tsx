@@ -56,11 +56,15 @@ const SubscriptionDialog = ({
             <ul className="space-y-2">
               <li className="flex items-start">
                 <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5">✓</span>
-                <span>Access to advanced AI features and more API calls</span>
+                <span>Upgrade to unlimited API calls per month</span>
               </li>
               <li className="flex items-start">
                 <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5">✓</span>
-                <span>Create and manage more brains</span>
+                <span>Create and manage unlimited brains</span>
+              </li>
+              <li className="flex items-start">
+                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5">✓</span>
+                <span>Share your brains with team members</span>
               </li>
               <li className="flex items-start">
                 <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5">✓</span>
