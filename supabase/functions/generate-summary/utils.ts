@@ -6,6 +6,14 @@ export const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 export const supabaseUrl = Deno.env.get('SUPABASE_URL');
 export const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+// Define subscription type without importing from read-only file
+type UserSubscription = {
+  id: string;
+  user_id: string;
+  plan_type: 'free' | 'pro';
+  is_active: boolean;
+};
+
 // CORS headers for cross-origin requests
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

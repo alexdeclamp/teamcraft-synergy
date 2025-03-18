@@ -7,6 +7,19 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Define a type for subscription without importing from the read-only file
+type UserSubscription = {
+  id: string;
+  user_id: string;
+  plan_type: 'free' | 'pro';
+  is_active: boolean;
+  trial_ends_at: string | null;
+  current_period_starts_at: string;
+  current_period_ends_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -62,7 +75,7 @@ serve(async (req) => {
     const { action } = await req.json();
     
     // Function to get the current subscription
-    const getCurrentSubscription = async () => {
+    const getCurrentSubscription = async (): Promise<UserSubscription | null> => {
       const { data, error } = await adminClient
         .from('user_subscriptions')
         .select('*')
@@ -74,7 +87,7 @@ serve(async (req) => {
         throw new Error(`Error fetching subscription: ${error.message}`);
       }
       
-      return data;
+      return data as UserSubscription | null;
     };
     
     // Handle different actions

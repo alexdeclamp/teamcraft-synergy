@@ -7,6 +7,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Define subscription type to avoid importing from read-only file
+type UserSubscription = {
+  id: string;
+  user_id: string;
+  plan_type: 'free' | 'pro';
+  is_active: boolean;
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {

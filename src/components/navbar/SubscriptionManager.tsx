@@ -1,17 +1,10 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Loader2, Check, X, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader, DialogFooter } from '@/components/ui/dialog';
-
-type Subscription = {
-  id: string;
-  user_id: string;
-  plan_type: 'free' | 'pro';
-  is_active: boolean;
-};
+import { SubscriptionPlan } from '@/types/subscription';
 
 type SubscriptionManagerProps = {
   userId: string;
