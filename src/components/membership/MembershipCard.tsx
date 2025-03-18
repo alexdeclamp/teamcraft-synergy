@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type MembershipFeature = {
@@ -18,6 +18,8 @@ type MembershipCardProps = {
   features: MembershipFeature[];
   isCurrentPlan: boolean;
   onSelect: () => void;
+  isLoading?: boolean;
+  billingCycle?: 'monthly' | 'yearly';
 };
 
 const MembershipCard = ({
@@ -27,8 +29,16 @@ const MembershipCard = ({
   yearlyPrice,
   features,
   isCurrentPlan,
-  onSelect
+  onSelect,
+  isLoading = false,
+  billingCycle = 'monthly'
 }: MembershipCardProps) => {
+  // Calculate the price to display based on the selected billing cycle
+  const displayPrice = billingCycle === 'monthly' ? monthlyPrice : yearlyPrice;
+  
+  // Calculate the billing interval label
+  const intervalLabel = billingCycle === 'monthly' ? '/month' : '/year';
+  
   return (
     <Card className={cn(
       "flex flex-col h-full transition-all", 
@@ -40,8 +50,10 @@ const MembershipCard = ({
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="mb-4">
-          <p className="text-3xl font-bold">${monthlyPrice}<span className="text-sm font-normal">/month</span></p>
-          <p className="text-sm text-muted-foreground">or ${yearlyPrice}/year (save {Math.round((1 - (yearlyPrice / (monthlyPrice * 12))) * 100)}%)</p>
+          <p className="text-3xl font-bold">${displayPrice}<span className="text-sm font-normal">{intervalLabel}</span></p>
+          {billingCycle === 'monthly' && (
+            <p className="text-sm text-muted-foreground">or ${yearlyPrice}/year (save {Math.round((1 - (yearlyPrice / (monthlyPrice * 12))) * 100)}%)</p>
+          )}
         </div>
         
         <div className="space-y-2">
@@ -63,8 +75,20 @@ const MembershipCard = ({
         {isCurrentPlan ? (
           <Button className="w-full" disabled>Current Plan</Button>
         ) : (
-          <Button variant="outline" className="w-full" onClick={onSelect}>
-            {monthlyPrice === 0 ? 'Downgrade' : 'Upgrade'}
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            onClick={onSelect}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              monthlyPrice === 0 ? 'Downgrade' : 'Upgrade'
+            )}
           </Button>
         )}
       </CardFooter>
