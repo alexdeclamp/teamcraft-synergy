@@ -29,6 +29,7 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
   const [sharedBrainCount, setSharedBrainCount] = useState(0);
   const [documentCount, setDocumentCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [accountType, setAccountType] = useState<'Free' | 'Pro'>('Free');
 
   // Get user initials for avatar fallback
   const getInitials = () => {
@@ -84,6 +85,13 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
         setOwnedBrainCount(data.ownedBrains ?? 0);
         setSharedBrainCount(data.sharedBrains ?? 0);
         setDocumentCount(data.documents ?? 0);
+        
+        // Check for subscription data and set account type
+        if (data.hasProSubscription) {
+          setAccountType('Pro');
+        } else {
+          setAccountType('Free');
+        }
       } catch (error) {
         console.error('Error fetching user stats:', error);
         setError('An unexpected error occurred');
@@ -120,7 +128,7 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
           <div className="w-full space-y-2">
             <div className="flex justify-between p-3 bg-muted rounded-md">
               <span className="text-sm font-medium">Account Type</span>
-              <span className="text-sm">Free</span>
+              <span className="text-sm">{accountType}</span>
             </div>
             <div className="flex justify-between p-3 bg-muted rounded-md">
               <span className="text-sm font-medium">Member Since</span>
