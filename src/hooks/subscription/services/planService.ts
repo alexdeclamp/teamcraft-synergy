@@ -1,5 +1,5 @@
 
-import { SubscriptionTier } from '@/types/subscription';
+import { SubscriptionTier, SubscriptionPlan } from '@/types/subscription';
 import { supabase } from '@/integrations/supabase/client';
 import { createPlanFromData, getDefaultPlan } from '../utils/planUtils';
 
@@ -20,7 +20,7 @@ export const fetchStarterPlan = async (): Promise<SubscriptionTier | null> => {
 };
 
 // Get plan details by plan type
-export const fetchPlanByType = async (planType: string): Promise<SubscriptionTier> => {
+export const fetchPlanByType = async (planType: SubscriptionPlan): Promise<SubscriptionTier> => {
   const { data: planData, error: planError } = await supabase
     .from('subscription_tiers')
     .select('*')

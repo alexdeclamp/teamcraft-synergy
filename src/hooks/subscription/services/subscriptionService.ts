@@ -1,5 +1,5 @@
 
-import { SubscriptionTier, UserSubscription } from '@/types/subscription';
+import { SubscriptionTier, UserSubscription, SubscriptionPlan } from '@/types/subscription';
 import { supabase } from '@/integrations/supabase/client';
 import { createDefaultSubscription, createDefaultUserSubscription } from '../utils/subscriptionUtils';
 import { fetchPlanByType, fetchStarterPlan } from './planService';
@@ -81,10 +81,13 @@ const processSubscriptionData = async (
   }
   
   // We have subscription data, convert to our type
+  // Ensure plan_type is cast to SubscriptionPlan type
+  const planType = subData.plan_type as SubscriptionPlan;
+  
   const userSub: UserSubscription = {
     id: subData.id,
     user_id: userId,
-    plan_type: subData.plan_type,
+    plan_type: planType,
     is_active: subData.is_active,
     trial_ends_at: subData.trial_ends_at,
     created_at: subData.created_at
@@ -137,10 +140,13 @@ const handleDirectFallbackQuery = async (userId: string): Promise<{
   
   // Process the fallback data
   if (fallbackData) {
+    // Fix: Cast plan_type to SubscriptionPlan type to satisfy TypeScript
+    const planType = fallbackData.plan_type as SubscriptionPlan;
+    
     const userSub: UserSubscription = {
       id: fallbackData.id,
       user_id: userId,
-      plan_type: fallbackData.plan_type,
+      plan_type: planType,
       is_active: fallbackData.is_active,
       trial_ends_at: fallbackData.trial_ends_at,
       created_at: fallbackData.created_at
