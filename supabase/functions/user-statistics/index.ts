@@ -119,7 +119,6 @@ serve(async (req) => {
         console.error('Error fetching owned projects:', ownedError);
       } else {
         ownedProjectsCount = ownedProjects?.length || 0;
-        console.log('Owned projects count:', ownedProjectsCount);
       }
       
       // Count projects where user is a member (excluding owned projects)
@@ -141,8 +140,6 @@ serve(async (req) => {
         } else {
           sharedProjectsCount = memberIds.length;
         }
-        
-        console.log('Shared projects count:', sharedProjectsCount);
       }
       
     } catch (error) {
@@ -168,8 +165,27 @@ serve(async (req) => {
     
     // Check for pro subscription and determine account type and limits
     let hasProSubscription = false;
-    // Here you would query your subscriptions table or Stripe API
-    // For now, we'll just assume everyone is on the free plan
+    
+    try {
+      // Check if user has an active Pro subscription
+      const { data: subscriptionData, error: subscriptionError } = await adminClient
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .eq('plan_type', 'pro')
+        .single();
+      
+      if (subscriptionError && subscriptionError.code !== 'PGRST116') { // PGRST116 is not found
+        console.error('Error checking subscription:', subscriptionError);
+      }
+      
+      if (subscriptionData) {
+        hasProSubscription = true;
+      }
+    } catch (error) {
+      console.error('Error in subscription check:', error);
+    }
     
     // Define account limits based on subscription status
     const accountLimits = {

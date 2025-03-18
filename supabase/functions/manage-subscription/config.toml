@@ -1,0 +1,3 @@
+
+# Allow the function to be invoked from browser
+fetch_external_urls = ["https://"]

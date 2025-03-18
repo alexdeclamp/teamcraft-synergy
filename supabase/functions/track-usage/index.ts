@@ -111,11 +111,30 @@ serve(async (req) => {
     }
     
     // Check for pro subscription to determine limits
-    // For now, we'll just assume everyone is on the free plan
     let hasProSubscription = false;
-    // Here is where you would check a subscription table or make an API call to determine subscription status
+    let maxApiCalls = 50; // Default for free plan
     
-    const maxApiCalls = hasProSubscription ? Infinity : 50;
+    try {
+      // Check if user has an active Pro subscription
+      const { data: subscriptionData, error: subscriptionError } = await adminClient
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', userIdToUse)
+        .eq('is_active', true)
+        .eq('plan_type', 'pro')
+        .single();
+      
+      if (subscriptionError && subscriptionError.code !== 'PGRST116') { // PGRST116 is not found
+        console.error('Error checking subscription:', subscriptionError);
+      }
+      
+      if (subscriptionData) {
+        hasProSubscription = true;
+        maxApiCalls = Infinity;
+      }
+    } catch (error) {
+      console.error('Error in subscription check:', error);
+    }
     
     // If logging API call and user has reached their limit, return an error
     if (action === 'log_api_call') {

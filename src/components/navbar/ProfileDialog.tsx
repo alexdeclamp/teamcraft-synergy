@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProfileStats from './ProfileStats';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import SubscriptionManager from './SubscriptionManager';
 
 type ProfileDialogProps = {
   open: boolean;
@@ -53,68 +54,68 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
     return user?.email?.substring(0, 2).toUpperCase() || 'U';
   };
 
-  useEffect(() => {
-    const fetchUserStats = async () => {
-      if (!user || !open) return;
+  const fetchUserStats = async () => {
+    if (!user || !open) return;
+    
+    setStatsLoading(true);
+    setError(null);
+    
+    try {
+      console.log('Fetching user statistics...');
       
-      setStatsLoading(true);
-      setError(null);
+      // Call the user-statistics edge function
+      const { data, error: functionError } = await supabase.functions.invoke('user-statistics', {
+        body: { 
+          userId: user.id
+        },
+      });
       
-      try {
-        console.log('Fetching user statistics...');
-        
-        // Call the user-statistics edge function
-        const { data, error: functionError } = await supabase.functions.invoke('user-statistics', {
-          body: { 
-            userId: user.id
-          },
-        });
-        
-        if (functionError) {
-          console.error('Error invoking user-statistics function:', functionError);
-          setError('Failed to fetch statistics');
-          toast.error('Could not load usage statistics');
-          return;
-        }
-        
-        console.log('User statistics response:', data);
-        
-        if (!data) {
-          setError('No data returned from server');
-          return;
-        }
-        
-        if (data.status === 'error') {
-          setError(data.error || 'An error occurred');
-          return;
-        }
-        
-        // Set the statistics
-        setApiCalls(data.apiCalls ?? 0);
-        setOwnedBrainCount(data.ownedBrains ?? 0);
-        setSharedBrainCount(data.sharedBrains ?? 0);
-        setDocumentCount(data.documents ?? 0);
-        
-        // Check for subscription data and set account type
-        if (data.hasProSubscription) {
-          setAccountType('Pro');
-        } else {
-          setAccountType('Free');
-        }
-        
-        // Set account limits
-        if (data.accountLimits) {
-          setAccountLimits(data.accountLimits);
-        }
-      } catch (error) {
-        console.error('Error fetching user stats:', error);
-        setError('An unexpected error occurred');
-        toast.error('Failed to load user statistics');
-      } finally {
-        setStatsLoading(false);
+      if (functionError) {
+        console.error('Error invoking user-statistics function:', functionError);
+        setError('Failed to fetch statistics');
+        toast.error('Could not load usage statistics');
+        return;
       }
-    };
+      
+      console.log('User statistics response:', data);
+      
+      if (!data) {
+        setError('No data returned from server');
+        return;
+      }
+      
+      if (data.status === 'error') {
+        setError(data.error || 'An error occurred');
+        return;
+      }
+      
+      // Set the statistics
+      setApiCalls(data.apiCalls ?? 0);
+      setOwnedBrainCount(data.ownedBrains ?? 0);
+      setSharedBrainCount(data.sharedBrains ?? 0);
+      setDocumentCount(data.documents ?? 0);
+      
+      // Check for subscription data and set account type
+      if (data.hasProSubscription) {
+        setAccountType('Pro');
+      } else {
+        setAccountType('Free');
+      }
+      
+      // Set account limits
+      if (data.accountLimits) {
+        setAccountLimits(data.accountLimits);
+      }
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+      setError('An unexpected error occurred');
+      toast.error('Failed to load user statistics');
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchUserStats();
   }, [user, open]);
 
@@ -170,6 +171,14 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
               </>
             )}
           </div>
+          
+          {user && (
+            <SubscriptionManager 
+              userId={user.id} 
+              accountType={accountType}
+              onSubscriptionUpdated={fetchUserStats}
+            />
+          )}
           
           <ProfileStats 
             isLoading={statsLoading}
