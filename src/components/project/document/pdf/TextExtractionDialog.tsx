@@ -1,13 +1,15 @@
 
-import React from 'react';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
-import NotesDialog from '@/components/notes/NotesDialog';
+import React, { useState } from 'react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TextExtractionHeader from './components/TextExtractionHeader';
 import TextExtractionContent from './components/TextExtractionContent';
+import TextExtractionBanner from './components/TextExtractionBanner';
 import TextExtractionFooter from './components/TextExtractionFooter';
-import { useNoteCreationFromText } from '@/hooks/useNoteCreationFromText';
+import { Loader2, FileQuestion } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useBig4Summary } from '@/hooks/useBig4Summary';
+import Big4SummaryView from './components/Big4SummaryView';
 
 interface TextExtractionDialogProps {
   showTextModal: boolean;
@@ -16,13 +18,13 @@ interface TextExtractionDialogProps {
   extractedText: string;
   extractionError: string | null;
   diagnosisInfo: string | null;
-  pdfInfo: { pageCount: number; isEncrypted: boolean; fingerprint: string } | null;
+  pdfInfo: {pageCount: number; isEncrypted: boolean; fingerprint: string} | null;
   textLength: number;
   pageCount: number;
   fileName: string;
   pdfUrl: string;
   onRetryExtraction: () => void;
-  handleSummarizeText: (model: 'claude' | 'openai') => void;
+  handleSummarizeText: (model?: 'claude' | 'openai') => void;
   isSummarizing: boolean;
   summary: string;
   showSummary: boolean;
@@ -43,163 +45,146 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
   fileName,
   pdfUrl,
   onRetryExtraction,
+  handleSummarizeText,
   isSummarizing,
   summary,
   showSummary,
   toggleTextView,
   projectId
 }) => {
-  const { user } = useAuth();
-  const noteCreation = useNoteCreationFromText({ projectId, fileName, pdfUrl });
+  const [activeTab, setActiveTab] = useState<string>("text");
   
-  const handleOpenPdfDirectly = () => {
-    try {
-      window.open(pdfUrl, '_blank');
-      // Fallback if window.open is blocked
-      if (!window.open) {
-        toast.info("Opening PDF in a new tab was blocked by your browser", {
-          description: "You may need to allow popups for this site.",
-          duration: 5000
-        });
-        
-        // Create a clickable link as an alternative
-        const link = document.createElement('a');
-        link.href = pdfUrl;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.click();
-      }
-    } catch (error) {
-      console.error('Error opening PDF directly:', error);
-      toast.error("Could not open the PDF directly", {
-        description: "Try downloading the PDF first, then opening it with your PDF viewer.",
-        action: {
-          label: "Copy URL",
-          onClick: () => {
-            navigator.clipboard.writeText(pdfUrl);
-            toast.success("PDF URL copied to clipboard");
-          }
-        }
-      });
-    }
-  };
-  
-  const handleDownloadText = () => {
-    if (!extractedText && !summary) {
-      toast.error("No content available to download");
-      return;
-    }
-    
-    try {
-      const content = showSummary && summary ? summary : extractedText;
-      const fileNameSuffix = showSummary && summary ? '-summary' : '-extracted-text';
-      
-      const blob = new Blob([content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${fileName.replace('.pdf', '')}${fileNameSuffix}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      // Show a success toast
-      const successMessage = `${showSummary ? 'Summary' : 'Text'} downloaded successfully`;
-      toast.success(successMessage);
-    } catch (error) {
-      console.error('Error downloading text:', error);
-      toast.error("Failed to download text", {
-        description: "There was an error creating the download. Please try again."
-      });
-    }
-  };
+  const {
+    isGenerating: isGeneratingBig4,
+    big4Summary,
+    generateBig4Summary
+  } = useBig4Summary({
+    pdfContent: extractedText,
+    pdfSummary: summary,
+    fileName,
+    model: 'claude'
+  });
 
-  const handleCreateNote = () => {
-    try {
-      if (!extractedText && !summary) {
-        toast.error("Cannot create a note without content");
-        return;
-      }
-      
-      const textToUse = showSummary && summary ? summary : extractedText;
-      noteCreation.handleCreateNote(textToUse, showSummary);
-    } catch (error) {
-      console.error('Error creating note:', error);
-      toast.error("Failed to create note", {
-        description: "An unexpected error occurred. Please try again."
-      });
-    }
+  const handleGenerateBig4Summary = async () => {
+    await generateBig4Summary();
+    setActiveTab("big4");
   };
 
   return (
-    <>
-      <Dialog open={showTextModal} onOpenChange={setShowTextModal}>
-        <DialogContent className="sm:max-w-[750px] max-h-[85vh] flex flex-col p-0 gap-0">
-          <div className="p-6 pb-0 flex-shrink-0">
-            <TextExtractionHeader
-              fileName={fileName}
-              pageCount={pageCount}
-              textLength={textLength}
-              showSummary={showSummary}
-              summary={summary}
-              toggleTextView={toggleTextView}
-              isSummarizing={isSummarizing}
-              diagnosisInfo={diagnosisInfo}
-              pdfInfo={pdfInfo}
-            />
-          </div>
-          
-          <div className="flex-grow overflow-hidden p-6 pt-4">
-            <TextExtractionContent
-              isExtracting={isExtracting}
-              isSummarizing={isSummarizing}
-              extractionError={extractionError}
-              extractedText={extractedText}
-              summary={summary}
-              showSummary={showSummary}
-              onRetryExtraction={onRetryExtraction}
-              handleOpenPdfDirectly={handleOpenPdfDirectly}
-            />
-          </div>
-          
-          <div className="p-6 pt-0 flex-shrink-0 border-t">
-            <TextExtractionFooter
-              isExtracting={isExtracting}
-              isSummarizing={isSummarizing}
-              extractedText={extractedText}
-              showSummary={showSummary}
-              handleDownloadText={handleDownloadText}
-              handleCreateNote={projectId ? handleCreateNote : undefined}
-              projectId={projectId}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
+    <Dialog open={showTextModal} onOpenChange={setShowTextModal}>
+      <DialogContent className="sm:max-w-[800px] md:max-w-[900px] lg:max-w-[1000px] w-[calc(100vw-32px)] max-h-[calc(100vh-64px)] flex flex-col overflow-hidden">
+        <TextExtractionHeader 
+          pdfInfo={pdfInfo}
+          textLength={textLength}
+          pageCount={pageCount}
+          fileName={fileName}
+          setShowTextModal={setShowTextModal}
+        />
 
-      <NotesDialog
-        isOpen={noteCreation.isNoteDialogOpen}
-        onOpenChange={noteCreation.setIsNoteDialogOpen}
-        type="create"
-        title={noteCreation.noteTitle}
-        content={noteCreation.noteContent}
-        tagInput={noteCreation.tagInput}
-        tags={noteCreation.noteTags}
-        saving={noteCreation.saving}
-        aiModel={noteCreation.aiModel}
-        onTitleChange={noteCreation.setNoteTitle}
-        onContentChange={noteCreation.setNoteContent}
-        onTagInputChange={noteCreation.setTagInput}
-        onTagInputKeyDown={noteCreation.handleTagInputKeyDown}
-        addTag={noteCreation.addTag}
-        removeTag={noteCreation.removeTag}
-        handleSubmit={() => user && noteCreation.handleSubmitNote(user.id)}
-        handleRegenerateTitle={noteCreation.handleRegenerateTitle}
-        handleRegenerateTags={noteCreation.handleRegenerateTags}
-        handleRegenerateBoth={noteCreation.handleRegenerateBoth}
-        onModelChange={noteCreation.setAiModel}
-      />
-    </>
+        {(isExtracting || extractionError) ? (
+          <TextExtractionBanner 
+            isExtracting={isExtracting}
+            extractionError={extractionError}
+            diagnosisInfo={diagnosisInfo}
+            onRetryExtraction={onRetryExtraction}
+          />
+        ) : (
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex justify-between items-center px-1">
+              <TabsList>
+                <TabsTrigger value="text">
+                  {showSummary ? "Summary" : "Full Text"}
+                </TabsTrigger>
+                <TabsTrigger value="big4" disabled={!big4Summary && !isGeneratingBig4}>
+                  Big 4 Summary
+                </TabsTrigger>
+              </TabsList>
+              
+              <div className="flex items-center gap-2">
+                {!summary && !showSummary && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    disabled={isSummarizing || !extractedText || extractedText.length === 0}
+                    onClick={() => handleSummarizeText()}
+                    className="flex items-center gap-1"
+                  >
+                    {isSummarizing ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span>Summarizing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FileQuestion className="h-3 w-3" />
+                        <span>Summarize</span>
+                      </>
+                    )}
+                  </Button>
+                )}
+                
+                {summary && !big4Summary && !isGeneratingBig4 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    disabled={isGeneratingBig4}
+                    onClick={handleGenerateBig4Summary}
+                    className="flex items-center gap-1"
+                  >
+                    {isGeneratingBig4 ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <span>Create Big 4 Summary</span>
+                    )}
+                  </Button>
+                )}
+                
+                {summary && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={toggleTextView}
+                  >
+                    Switch to {showSummary ? "Full Text" : "Summary"}
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <TabsContent value="text" className="flex-1 overflow-auto mt-0 p-0 border-0">
+              <TextExtractionContent 
+                isExtracting={isExtracting}
+                extractedText={extractedText}
+                summary={summary}
+                showSummary={showSummary}
+              />
+            </TabsContent>
+            
+            <TabsContent value="big4" className="flex-1 overflow-auto mt-0 p-4 border-0">
+              <Big4SummaryView 
+                summary={big4Summary!}
+                fileName={fileName}
+                pdfUrl={pdfUrl}
+                projectId={projectId}
+                isGenerating={isGeneratingBig4}
+              />
+            </TabsContent>
+          </Tabs>
+        )}
+        
+        <TextExtractionFooter 
+          extractedText={extractedText}
+          summary={summary}
+          showSummary={showSummary}
+          fileName={fileName}
+          pdfUrl={pdfUrl}
+          projectId={projectId}
+        />
+      </DialogContent>
+    </Dialog>
   );
 };
 

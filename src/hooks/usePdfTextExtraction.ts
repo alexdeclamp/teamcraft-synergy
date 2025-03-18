@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { extractPdfText, getPdfInfo } from '@/utils/pdfUtils';
@@ -29,14 +28,12 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
     try {
       console.log('Verifying PDF URL:', url);
       
-      // Validate URL format
       try {
         new URL(url);
       } catch (e: any) {
         throw new Error(`Invalid URL format: ${e.message}`);
       }
       
-      // Check if the URL is accessible with a HEAD request
       try {
         const headResponse = await fetch(url, { 
           method: 'HEAD',
@@ -90,7 +87,6 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
         throw new Error('PDF URL is not accessible. Please check the file exists and try again.');
       }
       
-      // Get PDF info
       try {
         const info = await getPdfInfo(pdfUrl);
         setPdfInfo(info);
@@ -104,7 +100,6 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
         setDiagnosisInfo(`Info retrieval issue: ${infoError.message}`);
       }
       
-      // Extract text from PDF
       try {
         const result = await extractPdfText(pdfUrl);
         if (result.text && result.text.trim().length > 0) {
@@ -185,7 +180,6 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
     } catch (error: any) {
       console.error('Error summarizing text:', error);
       
-      // Provide more specific error messages based on common issues
       let errorMessage = 'Failed to summarize text';
       let description = '';
       
@@ -229,10 +223,8 @@ export const usePdfTextExtraction = ({ pdfUrl, fileName, projectId }: UsePdfText
     handleExtractText();
   };
 
-  // Reset state when the modal is closed
   useEffect(() => {
     if (!showTextModal) {
-      // We don't reset everything to allow viewing the results again without re-extraction
       setShowSummary(false);
     }
   }, [showTextModal]);
