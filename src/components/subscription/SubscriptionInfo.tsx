@@ -26,30 +26,26 @@ const SubscriptionInfo = ({
 }: SubscriptionInfoProps) => {
   if (isLoading) {
     return (
-      <Card className="mb-6">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xl flex items-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Loading subscription details...</span>
-          </CardTitle>
-        </CardHeader>
-      </Card>
+      <div className="py-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Loading subscription details...</span>
+        </div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Card className="mb-6 border-amber-200">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xl flex items-center gap-2 text-amber-600">
-            <AlertCircle className="h-5 w-5" />
-            <span>Subscription Error</span>
-          </CardTitle>
-          <CardDescription className="text-amber-600">
-            Could not load subscription information. Please try again later.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="py-4 text-amber-600">
+        <div className="flex items-center gap-2 mb-2">
+          <AlertCircle className="h-5 w-5" />
+          <span className="font-medium">Subscription Error</span>
+        </div>
+        <p className="text-sm">
+          Could not load subscription information. Please try again later.
+        </p>
+      </div>
     );
   }
 
@@ -63,76 +59,92 @@ const SubscriptionInfo = ({
   const apiCallsPercentage = Math.min(Math.round((apiCallsUsed / planDetails.max_api_calls) * 100), 100);
 
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-xl">
-            Your Subscription
-          </CardTitle>
-          <Badge 
-            variant={planDetails.plan_type === 'pro' ? "default" : "secondary"}
-            className={`${planDetails.plan_type === 'pro' ? 'bg-primary' : ''} text-sm px-3 py-1`}
-          >
-            {planDetails.name}
-          </Badge>
-        </div>
-        <CardDescription>
-          {planDetails.plan_type === 'starter' 
-            ? "You're on our free starter plan. Upgrade for more features!" 
-            : "Thanks for being a Pro subscriber!"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 gap-4">
-          <div className="flex flex-col bg-muted rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Zap className="h-4 w-4 text-primary" />
-                AI API Calls
-              </div>
-              <span className="text-sm font-medium">
-                {apiCallsUsed} / {planDetails.max_api_calls}
-              </span>
-            </div>
-            <Progress value={apiCallsPercentage} className="h-2 mb-1" />
-            <span className="text-xs text-muted-foreground">Resets monthly</span>
-          </div>
-          
-          <div className="flex flex-col bg-muted rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Brain className="h-4 w-4 text-primary" />
-                Brains
-              </div>
-              <span className="text-sm font-medium">
-                {userBrainCount} / {planDetails.max_brains}
-              </span>
-            </div>
-            <Progress value={brainPercentage} className="h-2" />
-          </div>
-          
-          <div className="flex flex-col bg-muted rounded-lg p-3">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <FileText className="h-4 w-4 text-primary" />
-                Documents
-              </div>
-              <span className="text-sm font-medium">
-                {userDocumentCount} / {planDetails.max_documents}
-              </span>
-            </div>
-            <Progress value={documentPercentage} className="h-2 mb-1" />
-            <span className="text-xs text-muted-foreground">Per brain limit</span>
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <p className="text-sm text-muted-foreground mb-1">Current Plan</p>
+          <div className="flex items-center">
+            <h3 className="text-lg font-medium mr-2">{planDetails.name}</h3>
+            <Badge 
+              variant={planDetails.plan_type === 'pro' ? "default" : "secondary"}
+              className={`${planDetails.plan_type === 'pro' ? 'bg-primary' : ''} text-xs px-2 py-0.5`}
+            >
+              <Zap className="h-3 w-3 mr-1" />
+              {planDetails.plan_type}
+            </Badge>
           </div>
         </div>
-        
-        {planDetails.plan_type === 'starter' && (
-          <Button className="w-full mt-4" variant="default">
-            Upgrade to Pro
-          </Button>
+        {planDetails.plan_type === 'pro' && (
+          <div className="text-right">
+            <p className="text-sm text-muted-foreground mb-1">Subscription Price</p>
+            <p className="font-medium">${planDetails.price}/month</p>
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+        
+      <div className="space-y-6 mt-6">
+        <div className="flex flex-col bg-muted rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 font-medium">
+              <Zap className="h-4 w-4 text-primary" />
+              AI API Calls
+            </div>
+            <span className="font-medium">
+              {apiCallsUsed} / {planDetails.max_api_calls}
+            </span>
+          </div>
+          <Progress value={apiCallsPercentage} className="h-2 mb-2" />
+          <span className="text-xs text-muted-foreground">Resets monthly</span>
+        </div>
+          
+        <div className="flex flex-col bg-muted rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 font-medium">
+              <Brain className="h-4 w-4 text-primary" />
+              Brains
+            </div>
+            <span className="font-medium">
+              {userBrainCount} / {planDetails.max_brains}
+            </span>
+          </div>
+          <Progress value={brainPercentage} className="h-2" />
+        </div>
+          
+        <div className="flex flex-col bg-muted rounded-lg p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 font-medium">
+              <FileText className="h-4 w-4 text-primary" />
+              Documents
+            </div>
+            <span className="font-medium">
+              {userDocumentCount} / {planDetails.max_documents}
+            </span>
+          </div>
+          <Progress value={documentPercentage} className="h-2 mb-2" />
+          <span className="text-xs text-muted-foreground">Per brain limit</span>
+        </div>
+      </div>
+      
+      {planDetails.plan_type === 'starter' && (
+        <Button className="w-full mt-6" variant="default">
+          Upgrade to Pro
+        </Button>
+      )}
+      
+      {planDetails.features && planDetails.features.length > 0 && (
+        <div className="mt-6">
+          <h4 className="font-medium mb-2">Plan Features</h4>
+          <ul className="space-y-1">
+            {planDetails.features.map((feature, index) => (
+              <li key={index} className="flex items-start text-sm">
+                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5">✓</span>
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 };
 

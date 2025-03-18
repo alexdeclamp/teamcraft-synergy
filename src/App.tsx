@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,7 @@ import Sitemap from "./pages/Sitemap";
 import Brand from "./pages/Brand";
 import BrandAssets from "./pages/BrandAssets";
 import SummarizeDemo from "./pages/SummarizeDemo";
+import Subscription from "./pages/Subscription";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingSidebar from "./components/onboarding/OnboardingSidebar";
 import WelcomeDialog from "./components/onboarding/WelcomeDialog";
@@ -49,6 +49,15 @@ const App = () => (
                   <OnboardingSidebar />
                   <WelcomeDialog />
                   <Dashboard />
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+            <Route path="/subscription" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
+                  <Subscription />
                 </OnboardingProvider>
               </ProtectedRoute>
             } />

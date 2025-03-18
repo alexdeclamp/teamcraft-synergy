@@ -1,13 +1,14 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Navbar from '@/components/Navbar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardToolbar from '@/components/dashboard/DashboardToolbar';
 import ProjectGrid from '@/components/dashboard/ProjectGrid';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import SubscriptionInfo from '@/components/subscription/SubscriptionInfo';
-import { useSubscription } from '@/hooks/useSubscription';
-import { getUserStats } from '@/components/navbar/ProfileDialog';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, CreditCard } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const {
@@ -21,26 +22,6 @@ const Dashboard = () => {
     setSortOrder,
     refreshProjects
   } = useDashboardData();
-  
-  const { planDetails, isLoading: subscriptionLoading, error: subscriptionError } = useSubscription();
-  const [userStats, setUserStats] = useState({
-    apiCalls: 0,
-    ownedBrains: 0,
-    sharedBrains: 0,
-    documents: 0
-  });
-
-  // Update stats whenever the component renders or projects refresh
-  useEffect(() => {
-    // Get the latest user stats from the global state
-    const stats = getUserStats();
-    setUserStats(stats);
-  }, [filteredProjects]);
-
-  // Calculate totals for dashboard display
-  const totalBrains = userStats.ownedBrains + userStats.sharedBrains;
-  const totalDocuments = userStats.documents;
-  const apiCallsUsed = userStats.apiCalls;
 
   return (
     <div className="min-h-screen bg-background pb-12 animate-fade-in">
@@ -49,14 +30,25 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
         <DashboardHeader />
         
-        <SubscriptionInfo 
-          planDetails={planDetails} 
-          isLoading={subscriptionLoading} 
-          error={subscriptionError}
-          userBrainCount={totalBrains}
-          userDocumentCount={totalDocuments}
-          apiCallsUsed={apiCallsUsed}
-        />
+        <Card className="mb-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl">Subscription</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-between items-center">
+              <p className="text-muted-foreground">
+                View your subscription details and usage limits
+              </p>
+              <Link to="/subscription">
+                <Button variant="outline" size="sm" className="gap-1">
+                  <CreditCard className="h-4 w-4" />
+                  View Subscription
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
         
         <DashboardToolbar
           searchTerm={searchTerm}
