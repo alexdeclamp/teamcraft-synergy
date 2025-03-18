@@ -104,8 +104,9 @@ serve(async (req) => {
       console.error('Error in API call count query:', error);
     }
     
-    // 2. Get projects count (brains)
-    let projectsCount = 0;
+    // 2. Get projects count (brains) - split between owned and shared
+    let ownedProjectsCount = 0;
+    let sharedProjectsCount = 0;
     try {
       // Count owned projects
       const { data: ownedProjects, error: ownedError } = await adminClient
@@ -116,9 +117,12 @@ serve(async (req) => {
       
       if (ownedError) {
         console.error('Error fetching owned projects:', ownedError);
+      } else {
+        ownedProjectsCount = ownedProjects?.length || 0;
+        console.log('Owned projects count:', ownedProjectsCount);
       }
       
-      // Count projects where user is a member
+      // Count projects where user is a member (excluding owned projects)
       const { data: memberProjects, error: memberError } = await adminClient
         .from('project_members')
         .select('project_id')
@@ -126,18 +130,21 @@ serve(async (req) => {
       
       if (memberError) {
         console.error('Error fetching member projects:', memberError);
+      } else {
+        const memberIds = memberProjects?.map(p => p.project_id) || [];
+        
+        // Filter out projects that the user already owns to avoid double counting
+        if (memberIds.length > 0 && ownedProjects) {
+          const ownedIds = ownedProjects.map(p => p.id);
+          const uniqueSharedIds = memberIds.filter(id => !ownedIds.includes(id));
+          sharedProjectsCount = uniqueSharedIds.length;
+        } else {
+          sharedProjectsCount = memberIds.length;
+        }
+        
+        console.log('Shared projects count:', sharedProjectsCount);
       }
       
-      // Calculate the total (unique) projects
-      const ownedIds = ownedProjects?.map(p => p.id) || [];
-      const memberIds = memberProjects?.map(p => p.project_id) || [];
-      
-      // Combine arrays and remove duplicates
-      const allProjectIds = [...new Set([...ownedIds, ...memberIds])];
-      projectsCount = allProjectIds.length;
-      
-      console.log('Project IDs found:', { ownedIds, memberIds, combined: allProjectIds });
-      console.log('Total unique projects:', projectsCount);
     } catch (error) {
       console.error('Error calculating projects count:', error);
     }
@@ -162,7 +169,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         apiCalls: apiCallCount,
-        brains: projectsCount,
+        ownedBrains: ownedProjectsCount,
+        sharedBrains: sharedProjectsCount,
         documents: documentsCount,
         status: "success"
       }),

@@ -1,22 +1,31 @@
 
 import React from 'react';
-import { Loader2, AlertCircle, Brain, FileText, Zap } from 'lucide-react';
+import { Loader2, AlertCircle, Brain, FileText, Zap, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type ProfileStatsProps = {
   isLoading: boolean;
   error: string | null;
   apiCalls: number;
-  brains?: number;
+  ownedBrains?: number;
+  sharedBrains?: number;
   documents?: number;
 };
 
-const ProfileStats = ({ isLoading, error, apiCalls, brains = 0, documents = 0 }: ProfileStatsProps) => {
+const ProfileStats = ({ 
+  isLoading, 
+  error, 
+  apiCalls, 
+  ownedBrains = 0, 
+  sharedBrains = 0, 
+  documents = 0 
+}: ProfileStatsProps) => {
   if (isLoading) {
     return (
       <div className="w-full space-y-2 mt-4">
         <div className="text-sm font-medium mb-1">Usage Statistics</div>
         <div className="flex flex-col gap-2">
+          <Skeleton className="w-full h-12" />
           <Skeleton className="w-full h-12" />
           <Skeleton className="w-full h-12" />
           <Skeleton className="w-full h-12" />
@@ -42,9 +51,17 @@ const ProfileStats = ({ isLoading, error, apiCalls, brains = 0, documents = 0 }:
         <div className="flex justify-between p-3 bg-muted rounded-md">
           <div className="flex items-center gap-2">
             <Brain className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">Total Brains</span>
+            <span className="text-sm font-medium">Your Brains</span>
           </div>
-          <span className="text-sm">{brains}</span>
+          <span className="text-sm">{ownedBrains}</span>
+        </div>
+        
+        <div className="flex justify-between p-3 bg-muted rounded-md">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">Shared Brains</span>
+          </div>
+          <span className="text-sm">{sharedBrains}</span>
         </div>
         
         <div className="flex justify-between p-3 bg-muted rounded-md">

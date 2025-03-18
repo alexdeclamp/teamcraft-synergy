@@ -25,7 +25,8 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
   const { user, profile, signOut } = useAuth();
   const [statsLoading, setStatsLoading] = useState(true);
   const [apiCalls, setApiCalls] = useState(0);
-  const [brainCount, setBrainCount] = useState(0);
+  const [ownedBrainCount, setOwnedBrainCount] = useState(0);
+  const [sharedBrainCount, setSharedBrainCount] = useState(0);
   const [documentCount, setDocumentCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,7 +81,8 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
         
         // Set the statistics
         setApiCalls(data.apiCalls ?? 0);
-        setBrainCount(data.brains ?? 0);
+        setOwnedBrainCount(data.ownedBrains ?? 0);
+        setSharedBrainCount(data.sharedBrains ?? 0);
         setDocumentCount(data.documents ?? 0);
       } catch (error) {
         console.error('Error fetching user stats:', error);
@@ -130,7 +132,8 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
             isLoading={statsLoading}
             error={error}
             apiCalls={apiCalls}
-            brains={brainCount}
+            ownedBrains={ownedBrainCount}
+            sharedBrains={sharedBrainCount}
             documents={documentCount}
           />
         </div>
