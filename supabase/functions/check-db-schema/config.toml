@@ -1,0 +1,3 @@
+
+# This is the configuration for the check-db-schema Edge Function
+allowed_http_methods = ["GET", "POST", "OPTIONS"]

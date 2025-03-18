@@ -1,48 +1,38 @@
 
-import React from 'react';
-import Navbar from '@/components/Navbar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardToolbar from '@/components/dashboard/DashboardToolbar';
 import ProjectGrid from '@/components/dashboard/ProjectGrid';
-import { useDashboardData } from '@/hooks/useDashboardData';
+import SubscriptionDashboard from '@/components/dashboard/SubscriptionDashboard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Dashboard = () => {
-  const {
-    filteredProjects,
-    loading,
-    searchTerm,
-    filter,
-    sortOrder,
-    setSearchTerm,
-    setFilter,
-    setSortOrder,
-    refreshProjects
-  } = useDashboardData();
-
+  const queryClient = useQueryClient();
+  
+  const handleProjectCreated = () => {
+    // Invalidate projects cache to refetch the projects list
+    queryClient.invalidateQueries({ queryKey: ['projects'] });
+  };
+  
   return (
-    <div className="min-h-screen bg-background pb-12 animate-fade-in">
-      <Navbar />
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      <DashboardHeader onProjectCreated={handleProjectCreated} />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-        <DashboardHeader />
+      <Tabs defaultValue="projects" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="projects">Projects</TabsTrigger>
+          <TabsTrigger value="subscription">Subscription</TabsTrigger>
+        </TabsList>
         
-        <DashboardToolbar
-          searchTerm={searchTerm}
-          onSearchChange={(e) => setSearchTerm(e.target.value)}
-          filter={filter}
-          onFilterChange={setFilter}
-          sortOrder={sortOrder}
-          onSortChange={setSortOrder}
-        />
+        <TabsContent value="projects" className="space-y-6">
+          <DashboardToolbar />
+          <ProjectGrid />
+        </TabsContent>
         
-        <ProjectGrid
-          projects={filteredProjects}
-          loading={loading}
-          searchTerm={searchTerm}
-          filter={filter}
-          refreshProjects={refreshProjects}
-        />
-      </main>
+        <TabsContent value="subscription">
+          <SubscriptionDashboard />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
