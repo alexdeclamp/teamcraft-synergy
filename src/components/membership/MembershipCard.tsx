@@ -20,6 +20,8 @@ type MembershipCardProps = {
   onSelect: () => void;
   isLoading?: boolean;
   billingCycle?: 'monthly' | 'yearly';
+  selectedTierId?: string | null;
+  tierId?: string;
 };
 
 const MembershipCard = ({
@@ -31,7 +33,9 @@ const MembershipCard = ({
   isCurrentPlan,
   onSelect,
   isLoading = false,
-  billingCycle = 'monthly'
+  billingCycle = 'monthly',
+  selectedTierId = null,
+  tierId
 }: MembershipCardProps) => {
   // Calculate the price to display based on the selected billing cycle
   const displayPrice = billingCycle === 'monthly' ? monthlyPrice : yearlyPrice;
@@ -41,6 +45,9 @@ const MembershipCard = ({
 
   // Calculate yearly savings percentage (if applicable)
   const yearlySavingsPercentage = Math.round((1 - (yearlyPrice / (monthlyPrice * 12))) * 100);
+  
+  // Determine if this specific card is in loading state
+  const isThisCardLoading = isLoading && selectedTierId === tierId;
   
   return (
     <Card className={cn(
@@ -92,9 +99,9 @@ const MembershipCard = ({
           <Button 
             className="w-full" 
             onClick={onSelect}
-            disabled={isLoading}
+            disabled={isThisCardLoading || isLoading}
           >
-            {isLoading ? (
+            {isThisCardLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Processing...

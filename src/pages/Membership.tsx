@@ -11,6 +11,7 @@ import { Loader2 } from 'lucide-react';
 import { Json } from '@/integrations/supabase/types';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle2, XCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 type MembershipTier = {
   id: string;
@@ -34,6 +35,9 @@ const Membership = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [checkoutStatus, setCheckoutStatus] = useState<'success' | 'canceled' | null>(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
+  const [checkoutProgress, setCheckoutProgress] = useState(0);
+  const [checkoutTimerId, setCheckoutTimerId] = useState<number | null>(null);
 
   useEffect(() => {
     // Check for checkout status in URL
@@ -114,6 +118,15 @@ const Membership = () => {
       return [];
     }
   };
+
+  useEffect(() => {
+    // Clean up timer on unmount
+    return () => {
+      if (checkoutTimerId) {
+        clearInterval(checkoutTimerId);
+      }
+    };
+  }, [checkoutTimerId]);
   
   const handleSelectTier = async (tierId: string) => {
     if (!user) {
@@ -128,6 +141,18 @@ const Membership = () => {
     }
 
     setCheckoutLoading(true);
+    setSelectedTierId(tierId);
+    setCheckoutProgress(0);
+    
+    // Set up a fake progress timer to give visual feedback
+    const timerId = window.setInterval(() => {
+      setCheckoutProgress(prev => {
+        // Max out at 90% until actual completion
+        return prev < 90 ? prev + 5 : prev;
+      });
+    }, 300);
+
+    setCheckoutTimerId(timerId);
     
     try {
       // Call our edge function to create a checkout session
@@ -143,14 +168,23 @@ const Membership = () => {
       }
 
       if (data.url) {
-        // Redirect to Stripe Checkout
-        window.location.href = data.url;
+        setCheckoutProgress(100);
+        // Small delay before redirecting to show 100% progress
+        setTimeout(() => {
+          // Redirect to Stripe Checkout
+          window.location.href = data.url;
+        }, 500);
       }
     } catch (error) {
       console.error('Error creating checkout session:', error);
       toast.error('Failed to create checkout session');
-    } finally {
       setCheckoutLoading(false);
+      setSelectedTierId(null);
+      
+      if (checkoutTimerId) {
+        clearInterval(checkoutTimerId);
+        setCheckoutTimerId(null);
+      }
     }
   };
   
@@ -194,6 +228,15 @@ const Membership = () => {
           </div>
         )}
         
+        {checkoutLoading && (
+          <div className="mb-6">
+            <div className="text-center mb-2 text-sm font-medium">
+              Preparing your checkout...
+            </div>
+            <Progress value={checkoutProgress} className="h-2 w-full" />
+          </div>
+        )}
+        
         <div className="flex justify-center pb-8">
           <Tabs
             defaultValue="monthly"
@@ -212,6 +255,7 @@ const Membership = () => {
           {membershipTiers.map((tier) => (
             <MembershipCard
               key={tier.id}
+              tierId={tier.id}
               name={tier.name}
               description={tier.description || ''}
               monthlyPrice={tier.monthly_price}
@@ -220,6 +264,7 @@ const Membership = () => {
               isCurrentPlan={tier.id === currentTierId}
               onSelect={() => handleSelectTier(tier.id)}
               isLoading={checkoutLoading}
+              selectedTierId={selectedTierId}
               billingCycle={billingCycle}
             />
           ))}
