@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2, AlertCircle, Brain, FileText, Zap, Users } from 'lucide-react';
+import { Loader2, AlertCircle, Brain, FileText, Zap, Users, Crown } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type ProfileStatsProps = {
@@ -10,6 +10,7 @@ type ProfileStatsProps = {
   ownedBrains?: number;
   sharedBrains?: number;
   documents?: number;
+  membershipTier?: string;
 };
 
 const ProfileStats = ({ 
@@ -18,13 +19,15 @@ const ProfileStats = ({
   apiCalls, 
   ownedBrains = 0, 
   sharedBrains = 0, 
-  documents = 0 
+  documents = 0,
+  membershipTier = 'Free'
 }: ProfileStatsProps) => {
   if (isLoading) {
     return (
       <div className="w-full space-y-2 mt-4">
         <div className="text-sm font-medium mb-1">Usage Statistics</div>
         <div className="flex flex-col gap-2">
+          <Skeleton className="w-full h-12" />
           <Skeleton className="w-full h-12" />
           <Skeleton className="w-full h-12" />
           <Skeleton className="w-full h-12" />
@@ -48,6 +51,14 @@ const ProfileStats = ({
     <div className="w-full space-y-2 mt-4">
       <div className="text-sm font-medium mb-1">Usage Statistics</div>
       <div className="grid grid-cols-1 gap-2">
+        <div className="flex justify-between p-3 bg-muted rounded-md">
+          <div className="flex items-center gap-2">
+            <Crown className="h-4 w-4 text-amber-500" />
+            <span className="text-sm font-medium">Membership Tier</span>
+          </div>
+          <span className="text-sm">{membershipTier}</span>
+        </div>
+        
         <div className="flex justify-between p-3 bg-muted rounded-md">
           <div className="flex items-center gap-2">
             <Brain className="h-4 w-4 text-primary" />
