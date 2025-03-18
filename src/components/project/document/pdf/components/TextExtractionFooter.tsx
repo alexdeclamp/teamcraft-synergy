@@ -25,14 +25,14 @@ const TextExtractionFooter: React.FC<TextExtractionFooterProps> = ({
 }) => {
   if (!isExtracting && !isSummarizing && extractedText) {
     return (
-      <DialogFooter className="mt-4 flex-shrink-0">
-        <div className="flex flex-col-reverse sm:flex-row sm:justify-between w-full gap-2">
-          <div className="flex-shrink-0">
+      <DialogFooter className="flex-shrink-0 mt-4 border-t pt-4 w-full">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end w-full gap-2">
+          <div className="flex-shrink-0 sm:mr-auto">
             {projectId && handleCreateNote && (
               <Button 
                 onClick={handleCreateNote}
                 variant="outline"
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 w-full sm:w-auto"
               >
                 <Pencil className="h-4 w-4" />
                 Create Note
@@ -42,7 +42,7 @@ const TextExtractionFooter: React.FC<TextExtractionFooterProps> = ({
           <Button 
             onClick={handleDownloadText}
             variant="outline"
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 w-full sm:w-auto"
           >
             <Download className="h-4 w-4" />
             Download {showSummary ? 'Summary' : 'Text'}

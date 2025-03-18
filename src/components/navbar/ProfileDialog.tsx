@@ -51,7 +51,7 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
   const [documentCount, setDocumentCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
-  const { planDetails, isLoading: subscriptionLoading } = useSubscription();
+  const { planDetails, isLoading: subscriptionLoading, error: subscriptionError } = useSubscription();
 
   const getInitials = () => {
     if (profile?.full_name) {
@@ -164,7 +164,13 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
             <div className="w-full space-y-2 mt-4">
               <div className="flex justify-between p-3 bg-muted rounded-md">
                 <span className="text-sm font-medium">Account Type</span>
-                <span className="text-sm">{!subscriptionLoading && planDetails ? planDetails.name : 'Loading...'}</span>
+                <span className="text-sm">
+                  {subscriptionLoading 
+                    ? 'Loading...' 
+                    : subscriptionError 
+                      ? 'Error loading plan' 
+                      : planDetails?.name || 'Starter'}
+                </span>
               </div>
               <div className="flex justify-between p-3 bg-muted rounded-md">
                 <span className="text-sm font-medium">Member Since</span>

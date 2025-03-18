@@ -57,8 +57,32 @@ export const useSubscription = (): SubscriptionData => {
         if (fallbackError) {
           console.error('Error fetching subscription directly:', fallbackError);
           setError('Failed to load subscription information');
-          toast.error('Could not load subscription data');
           setIsLoading(false);
+          
+          // Even if we have an error, let's attempt to get the starter plan as fallback
+          const { data: fallbackPlanData } = await supabase
+            .from('subscription_tiers')
+            .select('*')
+            .eq('plan_type', 'starter')
+            .eq('is_default', true)
+            .maybeSingle();
+            
+          if (fallbackPlanData) {
+            const defaultPlan: SubscriptionTier = {
+              id: fallbackPlanData.id,
+              name: fallbackPlanData.name,
+              plan_type: fallbackPlanData.plan_type as SubscriptionPlan,
+              price: fallbackPlanData.price,
+              max_api_calls: fallbackPlanData.max_api_calls,
+              max_brains: fallbackPlanData.max_brains,
+              max_documents: fallbackPlanData.max_documents,
+              features: convertJsonToStringArray(fallbackPlanData.features),
+              is_default: true
+            };
+            
+            setPlanDetails(defaultPlan);
+          }
+          
           return;
         }
         
@@ -85,7 +109,6 @@ export const useSubscription = (): SubscriptionData => {
           if (planError) {
             console.error('Error fetching plan details:', planError);
             setError('Failed to load plan details');
-            toast.error('Could not load subscription details');
             setIsLoading(false);
             return;
           }
@@ -116,7 +139,6 @@ export const useSubscription = (): SubscriptionData => {
           if (defaultPlanError) {
             console.error('Error fetching default plan:', defaultPlanError);
             setError('Failed to load plan details');
-            toast.error('Could not load subscription details');
             setIsLoading(false);
             return;
           }
@@ -189,6 +211,7 @@ export const useSubscription = (): SubscriptionData => {
             .from('subscription_tiers')
             .select('*')
             .eq('plan_type', 'starter')
+            .eq('is_default', true)
             .maybeSingle();
             
           if (starterPlan) {
@@ -201,6 +224,28 @@ export const useSubscription = (): SubscriptionData => {
             // Restart the fetch process
             fetchSubscriptionData();
             return;
+          } else {
+            // If no starter plan found, just set a default in the UI
+            setUserSubscription({
+              id: 'default',
+              user_id: user.id,
+              plan_type: 'starter',
+              is_active: true,
+              trial_ends_at: null,
+              created_at: new Date().toISOString()
+            });
+            
+            setPlanDetails({
+              id: 'default',
+              name: 'Starter',
+              plan_type: 'starter',
+              price: 0,
+              max_api_calls: 25,
+              max_brains: 3,
+              max_documents: 9999,
+              features: ['Create up to 3 brains', '25 AI API calls per month', 'Document uploads', 'Image analysis'],
+              is_default: true
+            });
           }
         } else {
           // We have subscription data
@@ -225,7 +270,6 @@ export const useSubscription = (): SubscriptionData => {
           if (planError) {
             console.error('Error fetching plan details:', planError);
             setError('Failed to load plan details');
-            toast.error('Could not load subscription details');
             setIsLoading(false);
             return;
           }
@@ -250,7 +294,19 @@ export const useSubscription = (): SubscriptionData => {
     } catch (err) {
       console.error('Unexpected error fetching subscription:', err);
       setError('An unexpected error occurred');
-      toast.error('Failed to load subscription information');
+      
+      // Set default subscription info as fallback
+      setPlanDetails({
+        id: 'default',
+        name: 'Starter',
+        plan_type: 'starter',
+        price: 0,
+        max_api_calls: 25,
+        max_brains: 3,
+        max_documents: 9999,
+        features: ['Create up to 3 brains', '25 AI API calls per month', 'Document uploads', 'Image analysis'],
+        is_default: true
+      });
     } finally {
       setIsLoading(false);
     }
