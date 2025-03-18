@@ -25,7 +25,6 @@ const Subscription = () => {
 
   // Calculate totals for display
   const totalBrains = userStats.ownedBrains + userStats.sharedBrains;
-  const totalDocuments = userStats.documents;
   const apiCallsUsed = userStats.apiCalls;
 
   return (
@@ -51,7 +50,6 @@ const Subscription = () => {
             isLoading={subscriptionLoading} 
             error={subscriptionError}
             userBrainCount={totalBrains}
-            userDocumentCount={totalDocuments}
             apiCallsUsed={apiCallsUsed}
           />
           
@@ -64,7 +62,7 @@ const Subscription = () => {
               </li>
               <li className="flex items-start">
                 <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5">✓</span>
-                <span>Create and manage more brain documents</span>
+                <span>Create and manage more brains</span>
               </li>
               <li className="flex items-start">
                 <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5">✓</span>

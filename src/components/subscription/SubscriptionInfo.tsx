@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Zap, Brain, FileText, AlertCircle } from 'lucide-react';
+import { Loader2, Zap, Brain, AlertCircle } from 'lucide-react';
 import { SubscriptionTier } from '@/types/subscription';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -55,7 +55,6 @@ const SubscriptionInfo = ({
 
   // Calculate percentages for progress bars
   const brainPercentage = Math.min(Math.round((userBrainCount / planDetails.max_brains) * 100), 100);
-  const documentPercentage = Math.min(Math.round((userDocumentCount / planDetails.max_documents) * 100), 100);
   const apiCallsPercentage = Math.min(Math.round((apiCallsUsed / planDetails.max_api_calls) * 100), 100);
 
   return (
@@ -108,20 +107,6 @@ const SubscriptionInfo = ({
             </span>
           </div>
           <Progress value={brainPercentage} className="h-2" />
-        </div>
-          
-        <div className="flex flex-col bg-muted rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 font-medium">
-              <FileText className="h-4 w-4 text-primary" />
-              Documents
-            </div>
-            <span className="font-medium">
-              {userDocumentCount} / {planDetails.max_documents}
-            </span>
-          </div>
-          <Progress value={documentPercentage} className="h-2 mb-2" />
-          <span className="text-xs text-muted-foreground">Per brain limit</span>
         </div>
       </div>
       
