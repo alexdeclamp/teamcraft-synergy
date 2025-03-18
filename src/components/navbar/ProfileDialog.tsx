@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -8,12 +9,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Settings, LogOut, CreditCard } from "lucide-react";
+import { Settings, LogOut } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 import ProfileStats from './ProfileStats';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 type ProfileDialogProps = {
   open: boolean;
@@ -23,15 +23,14 @@ type ProfileDialogProps = {
 
 const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProps) => {
   const { user, profile, signOut } = useAuth();
-  const navigate = useNavigate();
   const [statsLoading, setStatsLoading] = useState(true);
   const [apiCalls, setApiCalls] = useState(0);
   const [ownedBrainCount, setOwnedBrainCount] = useState(0);
   const [sharedBrainCount, setSharedBrainCount] = useState(0);
   const [documentCount, setDocumentCount] = useState(0);
-  const [membershipTier, setMembershipTier] = useState('Free');
   const [error, setError] = useState<string | null>(null);
 
+  // Get user initials for avatar fallback
   const getInitials = () => {
     if (profile?.full_name) {
       return profile.full_name
@@ -54,6 +53,7 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
       try {
         console.log('Fetching user statistics...');
         
+        // Call the user-statistics edge function
         const { data, error: functionError } = await supabase.functions.invoke('user-statistics', {
           body: { 
             userId: user.id
@@ -79,11 +79,11 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
           return;
         }
         
+        // Set the statistics
         setApiCalls(data.apiCalls ?? 0);
         setOwnedBrainCount(data.ownedBrains ?? 0);
         setSharedBrainCount(data.sharedBrains ?? 0);
         setDocumentCount(data.documents ?? 0);
-        setMembershipTier(data.membershipTier ?? 'Free');
       } catch (error) {
         console.error('Error fetching user stats:', error);
         setError('An unexpected error occurred');
@@ -99,11 +99,6 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
   const handleSignOut = async () => {
     await signOut();
     onOpenChange(false);
-  };
-
-  const handleViewMemberships = () => {
-    onOpenChange(false);
-    navigate('/membership');
   };
 
   return (
@@ -125,7 +120,7 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
           <div className="w-full space-y-2">
             <div className="flex justify-between p-3 bg-muted rounded-md">
               <span className="text-sm font-medium">Account Type</span>
-              <span className="text-sm">{membershipTier}</span>
+              <span className="text-sm">Free</span>
             </div>
             <div className="flex justify-between p-3 bg-muted rounded-md">
               <span className="text-sm font-medium">Member Since</span>
@@ -140,7 +135,6 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
             ownedBrains={ownedBrainCount}
             sharedBrains={sharedBrainCount}
             documents={documentCount}
-            membershipTier={membershipTier}
           />
         </div>
         <div className="flex justify-between">
@@ -148,16 +142,10 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
             <LogOut className="h-4 w-4" />
             Sign Out
           </Button>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="gap-1" onClick={handleViewMemberships}>
-              <CreditCard className="h-4 w-4" />
-              Memberships
-            </Button>
-            <Button size="sm" variant="outline" className="gap-1" onClick={onOpenSettings}>
-              <Settings className="h-4 w-4" />
-              Settings
-            </Button>
-          </div>
+          <Button size="sm" variant="outline" className="gap-1" onClick={onOpenSettings}>
+            <Settings className="h-4 w-4" />
+            Settings
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -1,7 +1,7 @@
-
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { findUserByEmail } from '@/utils/memberUtils';
 
 interface UseMemberInviteProps {
   projectId: string;
@@ -26,22 +26,7 @@ export const useMemberInvite = ({ projectId, onSuccess, onClose }: UseMemberInvi
     
     try {
       // Find the user by email
-      // Look up in profiles table first
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .ilike('email', email.toLowerCase());
-
-      if (profilesError) {
-        throw profilesError;
-      }
-      
-      // Find the first matching profile
-      const matchingProfile = profiles?.find(profile => 
-        profile.email?.toLowerCase() === email.toLowerCase()
-      );
-      
-      let userId = matchingProfile?.id;
+      const userId = await findUserByEmail(email);
       
       // If we still couldn't find the user, they don't exist in our system
       if (!userId) {

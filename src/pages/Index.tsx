@@ -37,11 +37,8 @@ const Index = () => {
   };
 
   const handleTrySummarizeDemo = () => {
-    navigate('/summarize-demo');
+    navigate('/summarize');
   };
-
-  // Add console log for debugging
-  console.log('Index page rendering');
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

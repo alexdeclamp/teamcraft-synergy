@@ -1,83 +1,83 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/toaster';
-import { ThemeProvider } from '@/components/theme-provider';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { OnboardingProvider } from '@/contexts/OnboardingContext';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { OnboardingProvider } from "./contexts/OnboardingContext";
+import Landing from "./pages/Landing";
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
+import NewProject from "./pages/NewProject";
+import Project from "./pages/Project";
+import NotFound from "./pages/NotFound";
+import WaitlistPage from "./pages/Waitlist";
+import Sitemap from "./pages/Sitemap";
+import Brand from "./pages/Brand";
+import BrandAssets from "./pages/BrandAssets";
+import SummarizeDemo from "./pages/SummarizeDemo";
+import ProtectedRoute from "./components/ProtectedRoute";
+import OnboardingSidebar from "./components/onboarding/OnboardingSidebar";
+import WelcomeDialog from "./components/onboarding/WelcomeDialog";
 
-// Pages
-import Landing from '@/pages/Landing';
-import Auth from '@/pages/Auth';
-import Dashboard from '@/pages/Dashboard';
-import Project from '@/pages/Project';
-import NewProject from '@/pages/NewProject';
-import NotFound from '@/pages/NotFound';
-import SummarizeDemo from '@/pages/SummarizeDemo';
-import Brand from '@/pages/Brand';
-import BrandAssets from '@/pages/BrandAssets';
-import Waitlist from '@/pages/Waitlist';
-import Sitemap from '@/pages/Sitemap';
-
-// Components
-import ProtectedRoute from '@/components/ProtectedRoute';
-
-// Create a client
 const queryClient = new QueryClient();
 
-const App = () => {
-  return (
-    <Router>
-      <ThemeProvider defaultTheme="light">
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <OnboardingProvider>
-              <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/waitlist" element={<Waitlist />} />
-                <Route path="/summarize-demo" element={<SummarizeDemo />} />
-                <Route path="/brand" element={<Brand />} />
-                <Route path="/brand/assets" element={<BrandAssets />} />
-                <Route path="/sitemap" element={<Sitemap />} />
-                
-                {/* Protected Routes */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route 
-                  path="/project/:id" 
-                  element={
-                    <ProtectedRoute>
-                      <Project />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route
-                  path="/new-project"
-                  element={
-                    <ProtectedRoute>
-                      <NewProject />
-                    </ProtectedRoute>
-                  }
-                />
-                
-                {/* Not Found */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Toaster />
-            </OnboardingProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
-    </Router>
-  );
-};
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes without onboarding */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/home" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/waitlist" element={<WaitlistPage />} />
+            <Route path="/sitemap" element={<Sitemap />} />
+            <Route path="/brand" element={<Brand />} />
+            <Route path="/brand-assets" element={<BrandAssets />} />
+            <Route path="/summarize" element={<SummarizeDemo />} />
+
+            {/* Protected routes with onboarding */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
+                  <Dashboard />
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+            <Route path="/new-project" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
+                  <NewProject />
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+            <Route path="/project/:id" element={
+              <ProtectedRoute>
+                <OnboardingProvider>
+                  <OnboardingSidebar />
+                  <WelcomeDialog />
+                  <Project />
+                </OnboardingProvider>
+              </ProtectedRoute>
+            } />
+            
+            {/* Catch-all route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

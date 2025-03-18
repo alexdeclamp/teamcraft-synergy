@@ -91,39 +91,6 @@ export type Database = {
           },
         ]
       }
-      membership_tiers: {
-        Row: {
-          created_at: string
-          description: string | null
-          features: Json
-          id: string
-          monthly_price: number
-          name: string
-          updated_at: string
-          yearly_price: number
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          features?: Json
-          id?: string
-          monthly_price: number
-          name: string
-          updated_at?: string
-          yearly_price: number
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          features?: Json
-          id?: string
-          monthly_price?: number
-          name?: string
-          updated_at?: string
-          yearly_price?: number
-        }
-        Relationships: []
-      }
       note_summaries: {
         Row: {
           created_at: string
@@ -176,7 +143,6 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
-          membership_tier_id: string | null
           updated_at: string
         }
         Insert: {
@@ -185,7 +151,6 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
-          membership_tier_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -194,18 +159,9 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
-          membership_tier_id?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_membership_tier_id_fkey"
-            columns: ["membership_tier_id"]
-            isOneToOne: false
-            referencedRelation: "membership_tiers"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       project_documents: {
         Row: {
@@ -430,53 +386,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      user_memberships: {
-        Row: {
-          created_at: string
-          current_period_end: string | null
-          current_period_start: string | null
-          id: string
-          is_active: boolean
-          stripe_customer_id: string | null
-          stripe_subscription_id: string | null
-          tier_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          current_period_end?: string | null
-          current_period_start?: string | null
-          id?: string
-          is_active?: boolean
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          tier_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          current_period_end?: string | null
-          current_period_start?: string | null
-          id?: string
-          is_active?: boolean
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          tier_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_memberships_tier_id_fkey"
-            columns: ["tier_id"]
-            isOneToOne: false
-            referencedRelation: "membership_tiers"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_usage_stats: {
         Row: {
