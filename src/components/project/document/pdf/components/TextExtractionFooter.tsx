@@ -9,9 +9,12 @@ interface TextExtractionFooterProps {
   isSummarizing: boolean;
   extractedText: string;
   showSummary: boolean;
+  summary: string;
   handleDownloadText: () => void;
   handleCreateNote?: () => void;
   projectId?: string;
+  fileName: string;
+  pdfUrl: string;
 }
 
 const TextExtractionFooter: React.FC<TextExtractionFooterProps> = ({
@@ -19,6 +22,7 @@ const TextExtractionFooter: React.FC<TextExtractionFooterProps> = ({
   isSummarizing,
   extractedText,
   showSummary,
+  summary,
   handleDownloadText,
   handleCreateNote,
   projectId
