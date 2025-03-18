@@ -29,7 +29,7 @@ const SubscriptionDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="flex flex-row items-center justify-between">
           <div>
             <DialogTitle>Subscription Details</DialogTitle>
@@ -42,7 +42,7 @@ const SubscriptionDialog = ({
           </Button>
         </DialogHeader>
         
-        <div className="mt-4">
+        <div className="mt-4 px-1">
           <SubscriptionInfo 
             planDetails={planDetails} 
             isLoading={isLoading} 
@@ -53,21 +53,21 @@ const SubscriptionDialog = ({
           
           <div className="mt-8">
             <h3 className="text-lg font-medium mb-4">Subscription Benefits</h3>
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5">✓</span>
+                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5 flex-shrink-0">✓</span>
                 <span>Upgrade to unlimited API calls per month</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5">✓</span>
+                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5 flex-shrink-0">✓</span>
                 <span>Create and manage unlimited brains</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5">✓</span>
+                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5 flex-shrink-0">✓</span>
                 <span>Share your brains with team members</span>
               </li>
               <li className="flex items-start">
-                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5">✓</span>
+                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5 flex-shrink-0">✓</span>
                 <span>Priority support and early access to new features</span>
               </li>
             </ul>

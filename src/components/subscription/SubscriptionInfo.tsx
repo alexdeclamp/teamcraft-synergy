@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Zap, Brain, AlertCircle } from 'lucide-react';
 import { SubscriptionTier } from '@/types/subscription';
@@ -63,8 +63,8 @@ const SubscriptionInfo = ({
     : Math.min(Math.round((apiCallsUsed / planDetails.max_api_calls) * 100), 100);
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
+    <div className="w-full max-w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div>
           <p className="text-sm text-muted-foreground mb-1">Current Plan</p>
           <div className="flex items-center">
@@ -86,14 +86,14 @@ const SubscriptionInfo = ({
         )}
       </div>
         
-      <div className="space-y-6 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
         <div className="flex flex-col bg-muted rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 font-medium">
               <Zap className="h-4 w-4 text-primary" />
               AI API Calls
             </div>
-            <span className="font-medium">
+            <span className="font-medium break-normal">
               {planDetails.plan_type === 'pro' 
                 ? `${apiCallsUsed} / Unlimited` 
                 : `${apiCallsUsed} / ${planDetails.max_api_calls}`}
@@ -111,7 +111,7 @@ const SubscriptionInfo = ({
               <Brain className="h-4 w-4 text-primary" />
               Brains
             </div>
-            <span className="font-medium">
+            <span className="font-medium break-normal">
               {planDetails.plan_type === 'pro' 
                 ? `${userBrainCount} / Unlimited` 
                 : `${userBrainCount} / ${planDetails.max_brains}`}
@@ -137,11 +137,11 @@ const SubscriptionInfo = ({
       {planDetails.features && planDetails.features.length > 0 && (
         <div className="mt-6">
           <h4 className="font-medium mb-2">Plan Features</h4>
-          <ul className="space-y-1">
+          <ul className="space-y-1 overflow-wrap-anywhere">
             {planDetails.features.map((feature, index) => (
               <li key={index} className="flex items-start text-sm">
-                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5">✓</span>
-                {feature}
+                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5 flex-shrink-0">✓</span>
+                <span className="break-words">{feature}</span>
               </li>
             ))}
           </ul>
