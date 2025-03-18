@@ -21,7 +21,7 @@ const PRODUCT_TO_TIER_MAP = {
   "prod_Rxy6Y9WaxBQYC7": "pro", // Pro tier
   "prod_Rxy7KmZSQH2riU": "team", // Team tier
   
-  // Test products
+  // Test products - Updated with the correct test product ID
   "prod_RxylNpQGg7B0W2": "pro", // Test Pro tier
 };
 
