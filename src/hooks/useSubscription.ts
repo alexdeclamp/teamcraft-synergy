@@ -106,18 +106,18 @@ export const useSubscription = (): SubscriptionData => {
               max_api_calls: planData.max_api_calls,
               max_brains: planData.max_brains,
               max_documents: planData.max_documents,
-              features: planData.features || [],
+              features: Array.isArray(planData.features) ? planData.features : [],
               is_default: planData.is_default
             };
             
             setPlanDetails(plan);
           }
         } else {
-          // No subscription found, look for default plan
+          // No subscription found, look for default plan (should be starter)
           const { data: defaultPlanData, error: defaultPlanError } = await supabase
             .from('subscription_tiers')
             .select('*')
-            .eq('is_default', true)
+            .eq('plan_type', 'starter')
             .maybeSingle();
             
           if (defaultPlanError) {
@@ -129,7 +129,7 @@ export const useSubscription = (): SubscriptionData => {
           }
           
           if (defaultPlanData) {
-            // Create virtual subscription with default plan
+            // Create virtual subscription with starter plan
             const defaultPlan: SubscriptionTier = {
               id: defaultPlanData.id,
               name: defaultPlanData.name,
@@ -138,7 +138,7 @@ export const useSubscription = (): SubscriptionData => {
               max_api_calls: defaultPlanData.max_api_calls,
               max_brains: defaultPlanData.max_brains,
               max_documents: defaultPlanData.max_documents,
-              features: defaultPlanData.features || [],
+              features: Array.isArray(defaultPlanData.features) ? defaultPlanData.features : [],
               is_default: true
             };
             
@@ -154,11 +154,11 @@ export const useSubscription = (): SubscriptionData => {
             setUserSubscription(userSub);
             setPlanDetails(defaultPlan);
             
-            // Create a record in the database for this user with the default plan
+            // Create a record in the database for this user with the starter plan
             try {
               const { error: createSubError } = await supabase.rpc('create_user_subscription', {
                 p_user_id: user.id,
-                p_plan_type: defaultPlan.plan_type
+                p_plan_type: 'starter'
               });
                 
               if (createSubError) {
@@ -169,7 +169,7 @@ export const useSubscription = (): SubscriptionData => {
                   .from('user_subscriptions')
                   .insert({
                     user_id: user.id,
-                    plan_type: defaultPlan.plan_type,
+                    plan_type: 'starter',
                     is_active: true
                   });
                   
@@ -185,6 +185,7 @@ export const useSubscription = (): SubscriptionData => {
         }
       } else if (subscriptionData) {
         // We got data from the RPC
+        // The RPC returns a single object, not an array
         const userSub: UserSubscription = {
           id: subscriptionData.id,
           user_id: user.id,
@@ -220,7 +221,7 @@ export const useSubscription = (): SubscriptionData => {
             max_api_calls: planData.max_api_calls,
             max_brains: planData.max_brains,
             max_documents: planData.max_documents,
-            features: planData.features || [],
+            features: Array.isArray(planData.features) ? planData.features : [],
             is_default: planData.is_default
           };
           
