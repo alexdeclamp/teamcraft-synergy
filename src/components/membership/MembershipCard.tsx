@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check } from 'lucide-react';
+import { Check, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type MembershipFeature = {
@@ -18,6 +18,7 @@ type MembershipCardProps = {
   features: MembershipFeature[];
   isCurrentPlan: boolean;
   onSelect: () => void;
+  paymentLink?: string;
 };
 
 const MembershipCard = ({
@@ -27,7 +28,8 @@ const MembershipCard = ({
   yearlyPrice,
   features,
   isCurrentPlan,
-  onSelect
+  onSelect,
+  paymentLink
 }: MembershipCardProps) => {
   return (
     <Card className={cn(
@@ -63,9 +65,19 @@ const MembershipCard = ({
         {isCurrentPlan ? (
           <Button className="w-full" disabled>Current Plan</Button>
         ) : (
-          <Button variant="outline" className="w-full" onClick={onSelect}>
-            {monthlyPrice === 0 ? 'Downgrade' : 'Upgrade'}
-          </Button>
+          paymentLink ? (
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={() => window.open(paymentLink, '_blank')}
+            >
+              {monthlyPrice === 0 ? 'Downgrade' : 'Subscribe'} <ExternalLink className="ml-1 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button variant="outline" className="w-full" onClick={onSelect}>
+              {monthlyPrice === 0 ? 'Downgrade' : 'Upgrade'}
+            </Button>
+          )
         )}
       </CardFooter>
     </Card>

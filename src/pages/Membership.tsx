@@ -20,6 +20,13 @@ type MembershipTier = {
     name: string;
     description: string;
   }[];
+  payment_link?: string;
+};
+
+// Stripe payment links
+const PAYMENT_LINKS = {
+  pro: "https://buy.stripe.com/cN29CZgrl7aHebu4gg",
+  team: "https://buy.stripe.com/fZe2ax8YT9iP4AU9AB"
 };
 
 const Membership = () => {
@@ -61,11 +68,22 @@ const Membership = () => {
           throw userError;
         }
         
-        // Transform the data to ensure features is properly typed
-        const formattedTiers = tiers.map(tier => ({
-          ...tier,
-          features: parseFeatures(tier.features)
-        }));
+        // Transform the data to ensure features is properly typed and add payment links
+        const formattedTiers = tiers.map(tier => {
+          const formattedTier = {
+            ...tier,
+            features: parseFeatures(tier.features)
+          };
+          
+          // Add payment links based on tier name
+          if (tier.name.toLowerCase().includes('pro')) {
+            formattedTier.payment_link = PAYMENT_LINKS.pro;
+          } else if (tier.name.toLowerCase().includes('team')) {
+            formattedTier.payment_link = PAYMENT_LINKS.team;
+          }
+          
+          return formattedTier;
+        });
         
         setMembershipTiers(formattedTiers);
         setCurrentTierId(userData?.membership_tier_id || null);
@@ -99,8 +117,7 @@ const Membership = () => {
   };
   
   const handleSelectTier = (tierId: string) => {
-    toast.info('Stripe integration coming soon!');
-    // For now, just show a notification that this will be implemented in the future
+    toast.info('Please use the Subscribe button to access our Stripe checkout page');
     console.log('Selected tier:', tierId);
   };
   
@@ -147,6 +164,7 @@ const Membership = () => {
               features={tier.features}
               isCurrentPlan={tier.id === currentTierId}
               onSelect={() => handleSelectTier(tier.id)}
+              paymentLink={tier.payment_link}
             />
           ))}
         </div>
