@@ -82,12 +82,13 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
     }
     
     // Only proceed if we're not at the limit
-    const result = await sendMessage(message);
+    await sendMessage(message);
     
     // After sending, check if this call pushed us to the limit
-    if (result && !hasProAccount) {
-      setCurrentApiCalls(prev => prev + 1);
-      if (currentApiCalls + 1 >= maxApiCalls) {
+    if (!hasProAccount) {
+      const newApiCallCount = currentApiCalls + 1;
+      setCurrentApiCalls(newApiCallCount);
+      if (newApiCallCount >= maxApiCalls) {
         setApiLimitReached(true);
       }
     }
