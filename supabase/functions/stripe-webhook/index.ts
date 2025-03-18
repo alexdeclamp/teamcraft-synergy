@@ -14,7 +14,7 @@ const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Get the webhook secret from environment variables
-const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
+const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "whsec_6pLFrgqvmKjAk8u67GHzJZr1FJzGinFm";
 
 // Map Stripe product IDs to membership tier IDs in your database
 // You will need to update these with the actual product IDs from Stripe 
