@@ -88,30 +88,10 @@ serve(async (req) => {
       );
     }
 
-    // Log the OpenAI API call if requested - using admin client
-    if (action === 'log_api_call') {
-      try {
-        const { error: logError } = await adminClient.from('user_usage_stats').insert({
-          user_id: userIdToUse,
-          action_type: 'openai_api_call',
-        });
-
-        if (logError) {
-          console.error('Error logging API call:', logError);
-          // Continue execution to still return statistics even if logging fails
-        }
-      } catch (error) {
-        console.error('Error inserting API call record:', error);
-        // Continue execution to still return statistics
-      }
-    }
-
-    // Get user usage statistics - using admin client
-    // Only count rows where action_type is 'openai_api_call'
+    // Get OpenAI API call count for the current month
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
-    // Get OpenAI API call count for the current month
     let apiCallCount = 0;
     try {
       const { count, error: apiError } = await adminClient
@@ -130,9 +110,47 @@ serve(async (req) => {
       console.error('Error in API call count query:', error);
     }
     
+    // Check for pro subscription to determine limits
+    // For now, we'll just assume everyone is on the free plan
+    let hasProSubscription = false;
+    // Here is where you would check a subscription table or make an API call to determine subscription status
+    
+    const maxApiCalls = hasProSubscription ? Infinity : 50;
+    
+    // If logging API call and user has reached their limit, return an error
+    if (action === 'log_api_call') {
+      if (apiCallCount >= maxApiCalls && maxApiCalls !== Infinity) {
+        return new Response(
+          JSON.stringify({ 
+            apiCalls: apiCallCount,
+            status: "error",
+            limitReached: true,
+            message: "Monthly API call limit reached. Upgrade to Pro for unlimited calls."
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
+        );
+      }
+      
+      // Log the OpenAI API call if user has not reached their limit
+      try {
+        const { error: logError } = await adminClient.from('user_usage_stats').insert({
+          user_id: userIdToUse,
+          action_type: 'openai_api_call',
+        });
+
+        if (logError) {
+          console.error('Error logging API call:', logError);
+        }
+      } catch (error) {
+        console.error('Error inserting API call record:', error);
+      }
+    }
+    
     return new Response(
       JSON.stringify({ 
         apiCalls: apiCallCount,
+        hasProSubscription: hasProSubscription,
+        maxApiCalls: maxApiCalls,
         status: "success"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
