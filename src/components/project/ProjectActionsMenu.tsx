@@ -33,7 +33,7 @@ const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({
   const { user } = useAuth();
   const isOwnerOrAdmin = userRole === 'owner' || userRole === 'admin';
   const isOwner = userRole === 'owner';
-  const isMember = userRole === 'admin' || userRole === 'editor' || userRole === 'viewer';
+  const isMember = userRole === 'member' || userRole === 'admin' || userRole === 'editor' || userRole === 'viewer';
   
   const handleArchiveToggle = async () => {
     try {
@@ -93,13 +93,18 @@ const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({
     if (!confirmed) return;
 
     try {
+      console.log('Attempting to leave brain:', projectId, 'User ID:', user.id);
+      
       const { error } = await supabase
         .from('project_members')
         .delete()
         .eq('project_id', projectId)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error details:', error);
+        throw error;
+      }
 
       toast.success('You have left the brain');
       navigate('/dashboard');

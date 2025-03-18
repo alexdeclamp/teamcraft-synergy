@@ -38,7 +38,7 @@ const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isMember = userRole === 'admin' || userRole === 'editor' || userRole === 'viewer';
+  const isMember = userRole === 'member' || userRole === 'admin' || userRole === 'editor' || userRole === 'viewer';
 
   const handleEditBrain = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -122,13 +122,18 @@ const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
     if (!confirmed) return;
 
     try {
+      console.log('Attempting to leave brain:', id, 'User ID:', user.id);
+      
       const { error } = await supabase
         .from('project_members')
         .delete()
         .eq('project_id', id)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error details:', error);
+        throw error;
+      }
 
       toast.success('You have left the brain');
       
