@@ -37,7 +37,7 @@ const Index = () => {
   };
 
   const handleTrySummarizeDemo = () => {
-    navigate('/summarize');
+    navigate('/summarize-demo');
   };
 
   return (
