@@ -13,6 +13,27 @@ type SubscriptionData = {
   refetch: () => Promise<void>;
 };
 
+type UserSubscriptionResponse = {
+  id: string;
+  user_id: string;
+  plan_type: string;
+  is_active: boolean;
+  trial_ends_at: string | null;
+  created_at: string;
+}
+
+type SubscriptionTierResponse = {
+  id: string;
+  name: string;
+  plan_type: string;
+  price: number;
+  max_api_calls: number;
+  max_brains: number;
+  max_documents: number;
+  features: string[];
+  is_default: boolean;
+}
+
 export const useSubscription = (): SubscriptionData => {
   const { user } = useAuth();
   const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
@@ -32,7 +53,10 @@ export const useSubscription = (): SubscriptionData => {
     try {
       // Use RPC function to get user subscription data
       const { data: subscriptionData, error: subscriptionError } = await supabase
-        .rpc('get_user_subscription', { user_id_param: user.id });
+        .rpc('get_user_subscription', { user_id_param: user.id }) as { 
+          data: UserSubscriptionResponse | null, 
+          error: any 
+        };
 
       if (subscriptionError) {
         console.error('Error fetching subscription:', subscriptionError);
@@ -43,19 +67,22 @@ export const useSubscription = (): SubscriptionData => {
 
       if (subscriptionData) {
         const userSub: UserSubscription = {
-          id: subscriptionData.id || 'default',
+          id: subscriptionData.id,
           user_id: user.id,
           plan_type: subscriptionData.plan_type as SubscriptionPlan,
-          is_active: subscriptionData.is_active || true,
+          is_active: subscriptionData.is_active,
           trial_ends_at: subscriptionData.trial_ends_at,
-          created_at: subscriptionData.created_at || new Date().toISOString()
+          created_at: subscriptionData.created_at
         };
         
         setUserSubscription(userSub);
         
         // Get plan details
         const { data: planData, error: planError } = await supabase
-          .rpc('get_subscription_tier', { plan_type_param: userSub.plan_type });
+          .rpc('get_subscription_tier', { plan_type_param: userSub.plan_type }) as {
+            data: SubscriptionTierResponse | null,
+            error: any
+          };
           
         if (planError) {
           console.error('Error fetching plan details:', planError);
@@ -73,7 +100,7 @@ export const useSubscription = (): SubscriptionData => {
             max_api_calls: planData.max_api_calls,
             max_brains: planData.max_brains,
             max_documents: planData.max_documents,
-            features: planData.features || [],
+            features: planData.features,
             is_default: planData.is_default
           };
           
@@ -82,7 +109,10 @@ export const useSubscription = (): SubscriptionData => {
       } else {
         // No subscription found, create a default plan
         const { data: defaultPlanData, error: defaultPlanError } = await supabase
-          .rpc('get_default_subscription_tier');
+          .rpc('get_default_subscription_tier') as {
+            data: SubscriptionTierResponse | null,
+            error: any
+          };
           
         if (defaultPlanError) {
           console.error('Error fetching default plan:', defaultPlanError);
@@ -101,7 +131,7 @@ export const useSubscription = (): SubscriptionData => {
             max_api_calls: defaultPlanData.max_api_calls,
             max_brains: defaultPlanData.max_brains,
             max_documents: defaultPlanData.max_documents,
-            features: defaultPlanData.features || [],
+            features: defaultPlanData.features,
             is_default: true
           };
           
@@ -122,7 +152,7 @@ export const useSubscription = (): SubscriptionData => {
             .rpc('create_user_subscription', { 
               user_id_param: user.id, 
               plan_type_param: defaultPlan.plan_type 
-            });
+            }) as { data: null, error: any };
             
           if (createSubError) {
             console.error('Error creating default subscription:', createSubError);
