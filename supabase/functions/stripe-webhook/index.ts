@@ -13,13 +13,17 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// Get the webhook secret from environment variables
-const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "whsec_6pLFrgqvmKjAk8u67GHzJZr1FJzGinFm";
+// Get the webhook secret from environment variables, fallback to the provided test webhook secret
+const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "whsec_2Au2bLfMry4948i1wH6UhFN97ADIW1d0";
 
 // Map Stripe product IDs to membership tier IDs in your database
 const PRODUCT_TO_TIER_MAP: Record<string, string> = {
+  // Production products
   "prod_Rxy6Y9WaxBQYC7": "pro", // Pro tier
   "prod_Rxy7KmZSQH2riU": "team", // Team tier
+  
+  // Test products
+  "prod_RxylNpQGg7B0W2": "pro", // Test Pro tier
 };
 
 // CORS headers for the function
@@ -98,6 +102,7 @@ serve(async (req) => {
         return new Response(`Error finding user: ${userError.message}`, { status: 500 });
       }
 
+      let userId;
       if (!userData || userData.length === 0) {
         console.error("No user found with email:", customerEmail);
         

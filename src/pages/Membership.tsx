@@ -26,9 +26,16 @@ type MembershipTier = {
 
 // Stripe payment links
 const PAYMENT_LINKS = {
-  pro: "https://buy.stripe.com/cN29CZgrl7aHebu4gg",
-  team: "https://buy.stripe.com/fZe2ax8YT9iP4AU9AB"
+  // Production links
+  pro_prod: "https://buy.stripe.com/cN29CZgrl7aHebu4gg",
+  team_prod: "https://buy.stripe.com/fZe2ax8YT9iP4AU9AB",
+  
+  // Test links
+  pro_test: "https://buy.stripe.com/test_14k7sLg803UpbuwdQQ"
 };
+
+// Use test mode flag - set to true for testing, false for production
+const USE_TEST_MODE = true;
 
 const Membership = () => {
   const { user, profile } = useAuth();
@@ -76,11 +83,11 @@ const Membership = () => {
             features: parseFeatures(tier.features)
           };
           
-          // Add payment links based on tier name
+          // Add payment links based on tier name and test mode flag
           if (tier.name.toLowerCase().includes('pro')) {
-            formattedTier.payment_link = PAYMENT_LINKS.pro;
+            formattedTier.payment_link = USE_TEST_MODE ? PAYMENT_LINKS.pro_test : PAYMENT_LINKS.pro_prod;
           } else if (tier.name.toLowerCase().includes('team')) {
-            formattedTier.payment_link = PAYMENT_LINKS.team;
+            formattedTier.payment_link = USE_TEST_MODE ? PAYMENT_LINKS.pro_test : PAYMENT_LINKS.team_prod;
           }
           
           return formattedTier;
@@ -134,7 +141,7 @@ const Membership = () => {
     <div className="container max-w-6xl py-10">
       <div className="space-y-8">
         <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">Membership Plans</h1>
+          <h1 className="text-3xl font-bold">Membership Plans {USE_TEST_MODE ? '(Test Mode)' : ''}</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Choose the plan that's right for you and upgrade your Bra3n experience.
           </p>
@@ -143,7 +150,9 @@ const Membership = () => {
         <Alert className="mb-4">
           <Info className="h-4 w-4" />
           <AlertDescription>
-            After completing payment, your account will be automatically upgraded. If you don't see changes immediately, please refresh the page.
+            {USE_TEST_MODE 
+              ? 'This is running in TEST MODE. Use Stripe test cards for payments.' 
+              : 'After completing payment, your account will be automatically upgraded. If you don\'t see changes immediately, please refresh the page.'}
           </AlertDescription>
         </Alert>
         
