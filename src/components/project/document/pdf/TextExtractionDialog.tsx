@@ -43,6 +43,7 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
   fileName,
   pdfUrl,
   onRetryExtraction,
+  handleSummarizeText,
   isSummarizing,
   summary,
   showSummary,
@@ -169,9 +170,12 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
               isSummarizing={isSummarizing}
               extractedText={extractedText}
               showSummary={showSummary}
+              summary={summary}
               handleDownloadText={handleDownloadText}
               handleCreateNote={projectId ? handleCreateNote : undefined}
               projectId={projectId}
+              fileName={fileName}
+              pdfUrl={pdfUrl}
             />
           </div>
         </DialogContent>

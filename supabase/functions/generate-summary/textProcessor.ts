@@ -6,11 +6,20 @@ export async function processText(content: string): Promise<string> {
   try {
     console.log('Content length:', content.length);
     
-    // Set up messages for OpenAI for text summarization
+    // Set up messages for OpenAI for text summarization with structured format
     const messages = [
       {
         role: 'system',
-        content: 'You are an AI assistant that summarizes text notes. Create a concise 2-3 sentence summary that captures the key points.'
+        content: `You are an AI assistant that summarizes text notes in a structured format. 
+Create summaries with these specific sections:
+
+1. Executive Summary: A brief 2-3 sentence overview of the key points
+2. Description: A more detailed explanation of the content and context
+3. Key Learnings: The main takeaways from the document, presented as bullet points
+4. Blockers: Any challenges, obstacles, or issues mentioned (if relevant, otherwise omit this section)
+5. Next Steps: Recommendations or future actions based on the content
+
+FORMAT YOUR SUMMARY AS CLEAN MARKDOWN with these exact section headings.`
       },
       {
         role: 'user',
@@ -29,7 +38,7 @@ export async function processText(content: string): Promise<string> {
         model: 'gpt-4o-mini',
         messages: messages,
         temperature: 0.7,
-        max_tokens: 300,
+        max_tokens: 500,
       }),
     });
     

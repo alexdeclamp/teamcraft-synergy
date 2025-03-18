@@ -1,5 +1,6 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const claudeApiKey = Deno.env.get('CLAUDE_API_KEY');
@@ -67,11 +68,14 @@ function formatSummaryText(text) {
   
   // Replace "Heading:" and "Subheading:" with proper markdown headings
   let formatted = text
-    // Convert "Heading:" to markdown heading
-    .replace(/^Heading:\s*(.*?)$/gm, '# $1')
-    .replace(/^Subheading:\s*(.*?)$/gm, '## $1')
+    // Convert headings to markdown
+    .replace(/^Executive Summary:/gmi, '## Executive Summary')
+    .replace(/^Description:/gmi, '## Description')
+    .replace(/^Key Learnings:/gmi, '## Key Learnings')
+    .replace(/^Blockers:/gmi, '## Blockers')
+    .replace(/^Next Steps:/gmi, '## Next Steps')
     // Ensure double line breaks between sections
-    .replace(/\n(#+ )/g, '\n\n$1')
+    .replace(/\n(## )/g, '\n\n$1')
     // Fix bullet points
     .replace(/^[-*•]\s*/gm, '• ')
     // Ensure proper spacing between paragraphs
@@ -79,7 +83,7 @@ function formatSummaryText(text) {
     // Remove extra spaces
     .replace(/\s{3,}/g, '\n\n')
     // Ensure proper heading spacing
-    .replace(/^(#+ .*)\n([^\n])/gm, '$1\n\n$2');
+    .replace(/^(## .*)\n([^\n])/gm, '$1\n\n$2');
   
   return formatted.trim();
 }
@@ -100,15 +104,15 @@ async function summarizeWithClaude(text: string, maxLength: number, title?: stri
         messages: [
           {
             role: 'user',
-            content: `Please summarize the following ${title ? 'document titled "' + title + '"' : 'text'}. 
+            content: `Please summarize the following ${title ? 'document titled "' + title + '"' : 'text'} in a structured format with these sections:
 
-Use proper markdown formatting:
-1. For headings, use "Heading" and "Subheading" instead of # symbols
-2. Use bullet points (•) for lists
-3. Use proper paragraphs with double line breaks
-4. Make the summary easy to read with clear sections
+1. Executive Summary: A brief 2-3 sentence overview of the key points
+2. Description: A more detailed explanation of the content and context
+3. Key Learnings: The main takeaways from the document, presented as bullet points
+4. Blockers: Any challenges, obstacles, or issues mentioned (if relevant, otherwise omit this section)
+5. Next Steps: Recommendations or future actions based on the content
 
-Here's the text to summarize:
+Use proper markdown formatting with each section clearly labeled. Here's the text to summarize:
 
 ${text.slice(0, 100000)}`
           }
@@ -145,17 +149,15 @@ async function summarizeWithOpenAI(text: string, maxLength: number, title?: stri
         messages: [
           {
             role: 'system',
-            content: `You are an AI assistant that summarizes documents. Create a concise but comprehensive summary that captures the key points and main ideas.
+            content: `You are an AI assistant that summarizes documents in a structured format. Create summaries with these specific sections:
 
-FORMAT YOUR SUMMARY AS CLEAN MARKDOWN WITH STRICT ADHERENCE TO THESE FORMATTING RULES:
-1. Use clear markdown headings with hash symbols (# for main headings, ## for subheadings)
-2. Always add TWO line breaks after each heading
-3. Use bullet points (•) for lists with proper indentation
-4. Ensure paragraphs have double line breaks between them
-5. Make sure there are no spacing issues in the final output
-6. Don't use excessive line breaks or irregular spacing
-7. Format all section titles consistently
-8. Don't run section headings into the content underneath them`
+1. Executive Summary: A brief 2-3 sentence overview of the key points
+2. Description: A more detailed explanation of the content and context
+3. Key Learnings: The main takeaways from the document, presented as bullet points
+4. Blockers: Any challenges, obstacles, or issues mentioned (if relevant, otherwise omit this section)
+5. Next Steps: Recommendations or future actions based on the content
+
+FORMAT YOUR SUMMARY AS CLEAN MARKDOWN with these exact section headings.`
           },
           {
             role: 'user',

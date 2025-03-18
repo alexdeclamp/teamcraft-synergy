@@ -51,7 +51,7 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
             <span>Summary is saved and will be available instantly next time</span>
           </div>
         )}
-        <div className="p-4 bg-accent/20 rounded-md whitespace-pre-wrap max-h-[55vh] overflow-y-auto">
+        <div className="p-4 bg-accent/20 rounded-md whitespace-pre-wrap max-h-[55vh] overflow-y-auto prose prose-sm dark:prose-invert">
           {summary}
         </div>
       </>
