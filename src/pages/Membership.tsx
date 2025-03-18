@@ -69,8 +69,8 @@ const Membership = () => {
         }
         
         // Transform the data to ensure features is properly typed and add payment links
-        const formattedTiers = tiers.map(tier => {
-          const formattedTier = {
+        const formattedTiers: MembershipTier[] = tiers.map(tier => {
+          const formattedTier: MembershipTier = {
             ...tier,
             features: parseFeatures(tier.features)
           };
