@@ -130,10 +130,132 @@ serve(async (req) => {
       await adminClient.rpc('execute_sql', { query: createUserSubscriptionsQuery });
     }
     
+    // 3. Create RPC functions for subscription operations
+    const createRpcFunctionsQuery = `
+      -- Function to get a user's subscription
+      CREATE OR REPLACE FUNCTION get_user_subscription(user_id_param UUID)
+      RETURNS TABLE (
+        id UUID,
+        user_id UUID,
+        plan_type TEXT,
+        is_active BOOLEAN,
+        trial_ends_at TIMESTAMP WITH TIME ZONE,
+        created_at TIMESTAMP WITH TIME ZONE
+      )
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      AS $$
+      BEGIN
+        RETURN QUERY
+        SELECT 
+          us.id,
+          us.user_id,
+          us.plan_type,
+          us.is_active,
+          us.trial_ends_at,
+          us.created_at
+        FROM 
+          public.user_subscriptions us
+        WHERE 
+          us.user_id = user_id_param;
+      END;
+      $$;
+
+      -- Function to get a subscription tier by plan type
+      CREATE OR REPLACE FUNCTION get_subscription_tier(plan_type_param TEXT)
+      RETURNS TABLE (
+        id UUID,
+        name TEXT,
+        plan_type TEXT,
+        price DECIMAL,
+        max_api_calls INTEGER,
+        max_brains INTEGER,
+        max_documents INTEGER,
+        features JSONB,
+        is_default BOOLEAN
+      )
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      AS $$
+      BEGIN
+        RETURN QUERY
+        SELECT 
+          st.id,
+          st.name,
+          st.plan_type,
+          st.price,
+          st.max_api_calls,
+          st.max_brains,
+          st.max_documents,
+          st.features,
+          st.is_default
+        FROM 
+          public.subscription_tiers st
+        WHERE 
+          st.plan_type = plan_type_param;
+      END;
+      $$;
+
+      -- Function to get the default subscription tier
+      CREATE OR REPLACE FUNCTION get_default_subscription_tier()
+      RETURNS TABLE (
+        id UUID,
+        name TEXT,
+        plan_type TEXT,
+        price DECIMAL,
+        max_api_calls INTEGER,
+        max_brains INTEGER,
+        max_documents INTEGER,
+        features JSONB,
+        is_default BOOLEAN
+      )
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      AS $$
+      BEGIN
+        RETURN QUERY
+        SELECT 
+          st.id,
+          st.name,
+          st.plan_type,
+          st.price,
+          st.max_api_calls,
+          st.max_brains,
+          st.max_documents,
+          st.features,
+          st.is_default
+        FROM 
+          public.subscription_tiers st
+        WHERE 
+          st.is_default = true
+        LIMIT 1;
+      END;
+      $$;
+
+      -- Function to create a user subscription
+      CREATE OR REPLACE FUNCTION create_user_subscription(user_id_param UUID, plan_type_param TEXT)
+      RETURNS VOID
+      LANGUAGE plpgsql
+      SECURITY DEFINER
+      AS $$
+      BEGIN
+        INSERT INTO public.user_subscriptions (user_id, plan_type, is_active)
+        VALUES (user_id_param, plan_type_param, true)
+        ON CONFLICT (user_id)
+        DO UPDATE SET 
+          plan_type = plan_type_param,
+          is_active = true,
+          updated_at = now();
+      END;
+      $$;
+    `;
+    
+    await adminClient.rpc('execute_sql', { query: createRpcFunctionsQuery });
+    
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: "Subscription tables created successfully"
+        message: "Subscription tables and functions created successfully"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

@@ -30,34 +30,32 @@ export const useSubscription = (): SubscriptionData => {
     setError(null);
     
     try {
-      // Get user's subscription
+      // Use RPC function to get user subscription data
       const { data: subscriptionData, error: subscriptionError } = await supabase
-        .from('user_subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+        .rpc('get_user_subscription', { user_id_param: user.id });
 
-      if (subscriptionError && subscriptionError.code !== 'PGRST116') {
-        // PGRST116 is "No rows returned" - not an error in our case
+      if (subscriptionError) {
         console.error('Error fetching subscription:', subscriptionError);
         setError('Failed to load subscription information');
         toast.error('Could not load subscription data');
         return;
       }
 
-      let userSub: UserSubscription | null = null;
-      
-      // If user has a subscription, use it; otherwise check for default plan
       if (subscriptionData) {
-        userSub = subscriptionData as UserSubscription;
+        const userSub: UserSubscription = {
+          id: subscriptionData.id || 'default',
+          user_id: user.id,
+          plan_type: subscriptionData.plan_type as SubscriptionPlan,
+          is_active: subscriptionData.is_active || true,
+          trial_ends_at: subscriptionData.trial_ends_at,
+          created_at: subscriptionData.created_at || new Date().toISOString()
+        };
+        
         setUserSubscription(userSub);
         
         // Get plan details
         const { data: planData, error: planError } = await supabase
-          .from('subscription_tiers')
-          .select('*')
-          .eq('plan_type', userSub.plan_type)
-          .single();
+          .rpc('get_subscription_tier', { plan_type_param: userSub.plan_type });
           
         if (planError) {
           console.error('Error fetching plan details:', planError);
@@ -66,14 +64,25 @@ export const useSubscription = (): SubscriptionData => {
           return;
         }
         
-        setPlanDetails(planData as SubscriptionTier);
+        if (planData) {
+          const planDetails: SubscriptionTier = {
+            id: planData.id,
+            name: planData.name,
+            plan_type: planData.plan_type as SubscriptionPlan,
+            price: planData.price,
+            max_api_calls: planData.max_api_calls,
+            max_brains: planData.max_brains,
+            max_documents: planData.max_documents,
+            features: planData.features || [],
+            is_default: planData.is_default
+          };
+          
+          setPlanDetails(planDetails);
+        }
       } else {
-        // No subscription found, use default plan (starter)
+        // No subscription found, create a default plan
         const { data: defaultPlanData, error: defaultPlanError } = await supabase
-          .from('subscription_tiers')
-          .select('*')
-          .eq('is_default', true)
-          .single();
+          .rpc('get_default_subscription_tier');
           
         if (defaultPlanError) {
           console.error('Error fetching default plan:', defaultPlanError);
@@ -82,33 +91,43 @@ export const useSubscription = (): SubscriptionData => {
           return;
         }
         
-        // Create virtual subscription with default plan
-        const defaultPlan = defaultPlanData as SubscriptionTier;
-        
-        userSub = {
-          id: 'default',
-          user_id: user.id,
-          plan_type: defaultPlan.plan_type,
-          is_active: true,
-          trial_ends_at: null,
-          created_at: new Date().toISOString()
-        };
-        
-        setUserSubscription(userSub);
-        setPlanDetails(defaultPlan);
-        
-        // Optionally create a record in the database for this user with the default plan
-        const { error: createSubError } = await supabase
-          .from('user_subscriptions')
-          .insert({
+        if (defaultPlanData) {
+          // Create virtual subscription with default plan
+          const defaultPlan: SubscriptionTier = {
+            id: defaultPlanData.id,
+            name: defaultPlanData.name,
+            plan_type: defaultPlanData.plan_type as SubscriptionPlan,
+            price: defaultPlanData.price,
+            max_api_calls: defaultPlanData.max_api_calls,
+            max_brains: defaultPlanData.max_brains,
+            max_documents: defaultPlanData.max_documents,
+            features: defaultPlanData.features || [],
+            is_default: true
+          };
+          
+          const userSub: UserSubscription = {
+            id: 'default',
             user_id: user.id,
             plan_type: defaultPlan.plan_type,
             is_active: true,
-          });
+            trial_ends_at: null,
+            created_at: new Date().toISOString()
+          };
           
-        if (createSubError) {
-          console.error('Error creating default subscription:', createSubError);
-          // Don't set error or toast here as we already have the default plan
+          setUserSubscription(userSub);
+          setPlanDetails(defaultPlan);
+          
+          // Create a record in the database for this user with the default plan
+          const { error: createSubError } = await supabase
+            .rpc('create_user_subscription', { 
+              user_id_param: user.id, 
+              plan_type_param: defaultPlan.plan_type 
+            });
+            
+          if (createSubError) {
+            console.error('Error creating default subscription:', createSubError);
+            // Don't set error or toast here as we already have the default plan
+          }
         }
       }
     } catch (err) {
