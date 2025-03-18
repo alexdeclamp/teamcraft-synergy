@@ -80,6 +80,8 @@ export const handler = async (req: Request) => {
               tier_id: tierId,
               stripe_subscription_id: subscriptionId,
               is_active: true,
+              current_period_start: new Date(session.current_period_start * 1000).toISOString(),
+              current_period_end: new Date(session.current_period_end * 1000).toISOString(),
             }, {
               onConflict: 'user_id',
             })
@@ -95,46 +97,59 @@ export const handler = async (req: Request) => {
       case 'customer.subscription.updated': {
         const subscription = event.data.object
         
-        // Get the subscription from Stripe
-        const stripeSubscription = await stripe.subscriptions.retrieve(
-          subscription.id,
-          { expand: ['customer'] }
-        )
-        
         // Update the subscription status
-        if (stripeSubscription.customer && typeof stripeSubscription.customer !== 'string') {
-          const customerId = stripeSubscription.customer.id
-          
-          // Find the user with this customer ID
-          const { data: profiles } = await supabaseAdmin
-            .from('profiles')
-            .select('id, stripe_customer_id')
-            .eq('stripe_customer_id', customerId)
-          
-          if (profiles && profiles.length > 0) {
-            const userId = profiles[0].id
-            
-            // Update the subscription status
-            await supabaseAdmin
-              .from('user_memberships')
-              .update({
-                is_active: subscription.status === 'active',
-                current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-                current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-              })
-              .eq('stripe_subscription_id', subscription.id)
-          }
-        }
+        await supabaseAdmin
+          .from('user_memberships')
+          .update({
+            is_active: subscription.status === 'active',
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          })
+          .eq('stripe_subscription_id', subscription.id)
+        
         break
       }
       case 'customer.subscription.deleted': {
         const subscription = event.data.object
         
-        // Mark the subscription as inactive
-        await supabaseAdmin
+        // Find the user membership with this subscription
+        const { data: memberships } = await supabaseAdmin
           .from('user_memberships')
-          .update({ is_active: false })
+          .select('user_id')
           .eq('stripe_subscription_id', subscription.id)
+          .single()
+        
+        if (memberships) {
+          // Get the free tier ID
+          const { data: freeTier } = await supabaseAdmin
+            .from('membership_tiers')
+            .select('id')
+            .eq('monthly_price', 0)
+            .single()
+            
+          if (freeTier) {
+            // Mark the subscription as inactive
+            await supabaseAdmin
+              .from('user_memberships')
+              .update({ 
+                is_active: false,
+                tier_id: freeTier.id
+              })
+              .eq('stripe_subscription_id', subscription.id)
+            
+            // Update the user's profile to free tier
+            await supabaseAdmin
+              .from('profiles')
+              .update({ membership_tier_id: freeTier.id })
+              .eq('id', memberships.user_id)
+          } else {
+            // Just mark as inactive if no free tier found
+            await supabaseAdmin
+              .from('user_memberships')
+              .update({ is_active: false })
+              .eq('stripe_subscription_id', subscription.id)
+          }
+        }
         
         break
       }

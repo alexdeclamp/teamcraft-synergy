@@ -47,7 +47,7 @@ export const handler = async (req: Request) => {
     }
 
     // Parse the request body
-    const { tierId, priceId, billingCycle } = await req.json()
+    const { tierId, billingCycle } = await req.json()
 
     if (!tierId || !billingCycle) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
