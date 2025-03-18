@@ -3,13 +3,17 @@ import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { useSubscription } from '@/hooks/useSubscription';
 import SubscriptionInfo from '@/components/subscription/SubscriptionInfo';
-import { getUserStats } from '@/components/navbar/ProfileDialog';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const Subscription = () => {
+  const { user } = useAuth();
   const { planDetails, isLoading: subscriptionLoading, error: subscriptionError } = useSubscription();
+  const [statsLoading, setStatsLoading] = useState(true);
   const [userStats, setUserStats] = useState({
     apiCalls: 0,
     ownedBrains: 0,
@@ -17,11 +21,57 @@ const Subscription = () => {
     documents: 0
   });
 
-  // Get the latest user stats from the global state
+  // Fetch user statistics directly
   useEffect(() => {
-    const stats = getUserStats();
-    setUserStats(stats);
-  }, []);
+    const fetchUserStats = async () => {
+      if (!user) return;
+      
+      setStatsLoading(true);
+      
+      try {
+        console.log('Fetching user statistics from Subscription page...');
+        
+        const { data, error } = await supabase.functions.invoke('user-statistics', {
+          body: { 
+            userId: user.id
+          },
+        });
+        
+        if (error) {
+          console.error('Error invoking user-statistics function:', error);
+          toast.error('Could not load usage statistics');
+          return;
+        }
+        
+        console.log('User statistics response:', data);
+        
+        if (!data) {
+          toast.error('No statistics data returned');
+          return;
+        }
+        
+        if (data.status === 'error') {
+          toast.error(data.error || 'An error occurred fetching statistics');
+          return;
+        }
+        
+        setUserStats({
+          apiCalls: data.apiCalls ?? 0,
+          ownedBrains: data.ownedBrains ?? 0,
+          sharedBrains: data.sharedBrains ?? 0,
+          documents: data.documents ?? 0
+        });
+        
+      } catch (error) {
+        console.error('Error fetching user stats:', error);
+        toast.error('Failed to load user statistics');
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchUserStats();
+  }, [user]);
 
   // Calculate totals for display
   const totalBrains = userStats.ownedBrains + userStats.sharedBrains;
@@ -47,7 +97,7 @@ const Subscription = () => {
           
           <SubscriptionInfo 
             planDetails={planDetails} 
-            isLoading={subscriptionLoading} 
+            isLoading={subscriptionLoading || statsLoading} 
             error={subscriptionError}
             userBrainCount={totalBrains}
             apiCallsUsed={apiCallsUsed}
