@@ -46,6 +46,7 @@ const Membership = () => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [refreshing, setRefreshing] = useState(false);
   const [autoRefreshCount, setAutoRefreshCount] = useState(0);
+  const [debugInfo, setDebugInfo] = useState<any>({});
 
   useEffect(() => {
     const fetchMembershipData = async () => {
@@ -70,6 +71,15 @@ const Membership = () => {
         // Get user's current membership tier directly from auth context
         console.log("Current membership tier from profile:", profile?.membership_tier_id);
         
+        // Debug: Get more info about the tiers
+        if (tiers) {
+          console.log("Available membership tiers:", tiers.map(t => `${t.id}: ${t.name}`));
+          setDebugInfo(prev => ({
+            ...prev,
+            tiers: tiers.map(t => ({ id: t.id, name: t.name }))
+          }));
+        }
+        
         // Transform the data to ensure features is properly typed and add payment links
         const formattedTiers: MembershipTier[] = tiers.map(tier => {
           const formattedTier: MembershipTier = {
@@ -89,6 +99,12 @@ const Membership = () => {
         
         setMembershipTiers(formattedTiers);
         setCurrentTierId(profile?.membership_tier_id || null);
+        
+        // Debug: Show current tier
+        setDebugInfo(prev => ({
+          ...prev,
+          currentTierId: profile?.membership_tier_id
+        }));
       } catch (error) {
         console.error('Error fetching membership data:', error);
         toast.error('Failed to load membership information');
@@ -126,6 +142,15 @@ const Membership = () => {
   const refreshMembership = async () => {
     setRefreshing(true);
     await fetchProfile();
+    
+    // After fetching, update the current tier ID from the fresh profile
+    setCurrentTierId(profile?.membership_tier_id || null);
+    setDebugInfo(prev => ({
+      ...prev,
+      refreshedTierId: profile?.membership_tier_id,
+      refreshTime: new Date().toISOString()
+    }));
+    
     toast.success('Membership status refreshed');
     setTimeout(() => {
       setRefreshing(false);
@@ -134,7 +159,7 @@ const Membership = () => {
   
   // Handle subscription completion redirect from Stripe with automatic refresh
   useEffect(() => {
-    const checkUrlParams = () => {
+    const checkUrlParams = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const success = urlParams.get('success');
       const canceled = urlParams.get('canceled');
@@ -147,8 +172,16 @@ const Membership = () => {
           // Immediately refresh once
           await fetchProfile();
           
-          // Set up periodic refresh to check for updates (3 attempts, 3 seconds apart)
-          const maxAttempts = 3;
+          // Update after first refresh
+          setCurrentTierId(profile?.membership_tier_id || null);
+          setDebugInfo(prev => ({
+            ...prev,
+            initialRefreshTierId: profile?.membership_tier_id,
+            initialRefreshTime: new Date().toISOString()
+          }));
+          
+          // Set up periodic refresh to check for updates (5 attempts, 3 seconds apart)
+          const maxAttempts = 5;
           let currentAttempt = 0;
           
           const refreshInterval = setInterval(async () => {
@@ -158,9 +191,42 @@ const Membership = () => {
             await fetchProfile();
             setAutoRefreshCount(prev => prev + 1);
             
+            // Update the current tier ID after each refresh
+            setCurrentTierId(profile?.membership_tier_id || null);
+            
+            // Update debug info
+            setDebugInfo(prev => ({
+              ...prev,
+              [`refreshAttempt${currentAttempt}`]: {
+                tierId: profile?.membership_tier_id,
+                time: new Date().toISOString()
+              }
+            }));
+            
             if (currentAttempt >= maxAttempts) {
               clearInterval(refreshInterval);
               console.log('Automatic refresh complete.');
+              
+              // Final check - direct query to the database
+              if (user) {
+                const { data, error } = await supabase
+                  .from('profiles')
+                  .select('membership_tier_id')
+                  .eq('id', user.id)
+                  .single();
+                
+                if (!error && data) {
+                  console.log("Final direct DB check:", data.membership_tier_id);
+                  setCurrentTierId(data.membership_tier_id);
+                  setDebugInfo(prev => ({
+                    ...prev,
+                    finalDbCheck: {
+                      tierId: data.membership_tier_id,
+                      time: new Date().toISOString()
+                    }
+                  }));
+                }
+              }
             }
           }, 3000);
           
@@ -184,12 +250,13 @@ const Membership = () => {
     checkUrlParams();
   }, []);
   
-  // When autoRefreshCount changes, update the currentTierId
+  // When profile changes, update the currentTierId
   useEffect(() => {
-    if (autoRefreshCount > 0) {
-      setCurrentTierId(profile?.membership_tier_id || null);
+    if (profile) {
+      console.log("Profile updated, new tier ID:", profile.membership_tier_id);
+      setCurrentTierId(profile.membership_tier_id || null);
     }
-  }, [autoRefreshCount, profile]);
+  }, [profile]);
 
   if (loading) {
     return (
@@ -241,7 +308,7 @@ const Membership = () => {
             <Info className="h-4 w-4 text-green-500" />
             <AlertDescription>
               Your membership status is being automatically refreshed after payment.
-              {autoRefreshCount === 3 && " If you still don't see your membership updated, please try refreshing the page."}
+              {autoRefreshCount === 5 && " If you still don't see your membership updated, please try refreshing the page."}
             </AlertDescription>
           </Alert>
         )}
@@ -251,6 +318,25 @@ const Membership = () => {
           <AlertDescription>
             Having trouble with payments? Your membership should update automatically after checkout.
             Current tier ID: {profile?.membership_tier_id || "None"}
+          </AlertDescription>
+        </Alert>
+        
+        {/* Debug info panel - this helps troubleshoot membership issues */}
+        <Alert className="mb-4 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+          <Info className="h-4 w-4 text-blue-500" />
+          <AlertDescription>
+            <details>
+              <summary>Debug information (click to expand)</summary>
+              <pre className="text-xs mt-2 p-2 bg-slate-100 dark:bg-slate-800 rounded">
+                {JSON.stringify({
+                  userId: user?.id,
+                  profileId: profile?.id,
+                  currentTierId,
+                  profileTierId: profile?.membership_tier_id,
+                  debugInfo
+                }, null, 2)}
+              </pre>
+            </details>
           </AlertDescription>
         </Alert>
         
@@ -298,4 +384,3 @@ const Membership = () => {
 };
 
 export default Membership;
-
