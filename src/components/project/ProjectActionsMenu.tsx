@@ -9,9 +9,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Edit, Archive, ArchiveRestore } from "lucide-react";
+import { MoreHorizontal, Edit, Archive, ArchiveRestore, Trash, LogOut } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProjectActionsMenuProps {
   projectId: string;
@@ -29,7 +30,10 @@ const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({
   onArchiveStatusChange
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const isOwnerOrAdmin = userRole === 'owner' || userRole === 'admin';
+  const isOwner = userRole === 'owner';
+  const isMember = userRole === 'admin' || userRole === 'editor' || userRole === 'viewer';
   
   const handleArchiveToggle = async () => {
     try {
@@ -45,13 +49,63 @@ const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({
 
       toast.success(isArchived ? 'Brain restored successfully' : 'Brain archived successfully');
       
-      // Call the callback to refresh the project list
       if (onArchiveStatusChange) {
         onArchiveStatusChange();
       }
     } catch (error) {
       console.error('Error toggling archive status:', error);
       toast.error('Failed to update brain');
+    }
+  };
+
+  const handleDeleteBrain = async () => {
+    if (!isOwner) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to permanently delete this brain? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      toast.success('Brain deleted successfully');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error deleting brain:', error);
+      toast.error('Failed to delete brain');
+    }
+  };
+
+  const handleQuitBrain = async () => {
+    if (!isMember || !user) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to leave this brain? You'll need to be invited again to rejoin."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('project_members')
+        .delete()
+        .eq('project_id', projectId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast.success('You have left the brain');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error leaving brain:', error);
+      toast.error('Failed to leave brain');
     }
   };
 
@@ -89,6 +143,25 @@ const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({
                 Archive Brain
               </>
             )}
+          </DropdownMenuItem>
+        )}
+
+        {isOwner && (
+          <DropdownMenuItem 
+            className="text-destructive focus:text-destructive"
+            onClick={handleDeleteBrain}
+          >
+            <Trash className="h-4 w-4 mr-2" />
+            Delete Brain
+          </DropdownMenuItem>
+        )}
+
+        {isMember && !isOwner && (
+          <DropdownMenuItem 
+            onClick={handleQuitBrain}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Leave Brain
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

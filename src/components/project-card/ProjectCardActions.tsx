@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pencil, UserPlus, Archive, Star, ArchiveRestore } from 'lucide-react';
+import { Pencil, UserPlus, Archive, Star, ArchiveRestore, Trash, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -9,11 +9,13 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProjectCardActionsProps {
   id: string;
@@ -22,6 +24,7 @@ interface ProjectCardActionsProps {
   setFavorite: (state: boolean) => void;
   isArchived?: boolean;
   onArchiveStatusChange?: () => void;
+  userRole?: string;
 }
 
 const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
@@ -30,9 +33,12 @@ const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
   isFavorite,
   setFavorite,
   isArchived = false,
-  onArchiveStatusChange
+  onArchiveStatusChange,
+  userRole = isOwner ? 'owner' : 'member'
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isMember = userRole === 'admin' || userRole === 'editor' || userRole === 'viewer';
 
   const handleEditBrain = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -69,6 +75,69 @@ const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
     } catch (error) {
       console.error('Error toggling archive status:', error);
       toast.error('Failed to update brain');
+    }
+  };
+
+  const handleDeleteBrain = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isOwner) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to permanently delete this brain? This action cannot be undone."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Brain deleted successfully');
+      
+      if (onArchiveStatusChange) {
+        onArchiveStatusChange();
+      }
+    } catch (error) {
+      console.error('Error deleting brain:', error);
+      toast.error('Failed to delete brain');
+    }
+  };
+
+  const handleQuitBrain = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isMember || !user) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to leave this brain? You'll need to be invited again to rejoin."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('project_members')
+        .delete()
+        .eq('project_id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast.success('You have left the brain');
+      
+      if (onArchiveStatusChange) {
+        onArchiveStatusChange();
+      }
+    } catch (error) {
+      console.error('Error leaving brain:', error);
+      toast.error('Failed to leave brain');
     }
   };
 
@@ -131,22 +200,40 @@ const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
               </DropdownMenuItem>
             </>
           )}
+          
           {isOwner && (
-            <DropdownMenuItem 
-              onClick={handleArchiveToggle}
-              className={isArchived ? "text-green-600" : "text-destructive"}
-            >
-              {isArchived ? (
-                <>
-                  <ArchiveRestore className="h-4 w-4 mr-2" />
-                  Restore brain
-                </>
-              ) : (
-                <>
-                  <Archive className="h-4 w-4 mr-2" />
-                  Archive brain
-                </>
-              )}
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={handleArchiveToggle}
+                className={isArchived ? "text-green-600" : "text-destructive"}
+              >
+                {isArchived ? (
+                  <>
+                    <ArchiveRestore className="h-4 w-4 mr-2" />
+                    Restore brain
+                  </>
+                ) : (
+                  <>
+                    <Archive className="h-4 w-4 mr-2" />
+                    Archive brain
+                  </>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={handleDeleteBrain}
+                className="text-destructive"
+              >
+                <Trash className="h-4 w-4 mr-2" />
+                Delete brain
+              </DropdownMenuItem>
+            </>
+          )}
+          
+          {isMember && !isOwner && (
+            <DropdownMenuItem onClick={handleQuitBrain}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Leave brain
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

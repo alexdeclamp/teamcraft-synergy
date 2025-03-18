@@ -25,6 +25,7 @@ export interface ProjectCardProps {
   status: 'active' | 'archived' | 'completed';
   memberCount: number;
   isOwner?: boolean;
+  role?: string;
   tags?: string[];
   className?: string;
   isFavorite?: boolean;
@@ -41,6 +42,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   status,
   memberCount,
   isOwner,
+  role,
   tags = [],
   className,
   isFavorite = false,
@@ -73,6 +75,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             setFavorite={setFavorite}
             isArchived={isArchived}
             onArchiveStatusChange={onArchiveStatusChange}
+            userRole={role}
           />
         </div>
       </CardHeader>

@@ -77,6 +77,7 @@ export const useDashboardData = (): UseDashboardDataResult => {
         status: 'active' as const,
         memberCount: 1,
         isOwner: true,
+        role: 'owner' as const,
         isFavorite: project.is_favorite,
         isArchived: project.is_archived
       }));
