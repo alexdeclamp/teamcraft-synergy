@@ -20,8 +20,8 @@ const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "whsec_6pLFrgqvmK
 // You will need to update these with the actual product IDs from Stripe 
 // and the corresponding tier IDs from your database
 const PRODUCT_TO_TIER_MAP: Record<string, string> = {
-  // Map your Stripe product/price IDs to your membership tier IDs
-  // Example: "prod_1234": "pro-tier-id",
+  "prod_Rxy6Y9WaxBQYC7": "pro", // Pro tier
+  "prod_Rxy7KmZSQH2riU": "team", // Team tier
 };
 
 // CORS headers for the function
