@@ -45,6 +45,7 @@ const Membership = () => {
   const [currentTierId, setCurrentTierId] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [refreshing, setRefreshing] = useState(false);
+  const [autoRefreshCount, setAutoRefreshCount] = useState(0);
 
   useEffect(() => {
     const fetchMembershipData = async () => {
@@ -131,7 +132,7 @@ const Membership = () => {
     }, 500);
   };
   
-  // Handle subscription completion redirect from Stripe
+  // Handle subscription completion redirect from Stripe with automatic refresh
   useEffect(() => {
     const checkUrlParams = () => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -140,7 +141,35 @@ const Membership = () => {
       
       if (success === 'true') {
         toast.success('Payment successful! Your membership is being updated.');
-        refreshMembership();
+        
+        // Set up automatic refresh attempts
+        const startAutoRefresh = async () => {
+          // Immediately refresh once
+          await fetchProfile();
+          
+          // Set up periodic refresh to check for updates (3 attempts, 3 seconds apart)
+          const maxAttempts = 3;
+          let currentAttempt = 0;
+          
+          const refreshInterval = setInterval(async () => {
+            currentAttempt++;
+            console.log(`Auto-refreshing membership status (attempt ${currentAttempt}/${maxAttempts})...`);
+            
+            await fetchProfile();
+            setAutoRefreshCount(prev => prev + 1);
+            
+            if (currentAttempt >= maxAttempts) {
+              clearInterval(refreshInterval);
+              console.log('Automatic refresh complete.');
+            }
+          }, 3000);
+          
+          // Clean up the interval if component unmounts
+          return () => clearInterval(refreshInterval);
+        };
+        
+        startAutoRefresh();
+        
         // Clean up the URL
         const newUrl = window.location.pathname;
         window.history.replaceState({}, document.title, newUrl);
@@ -155,6 +184,13 @@ const Membership = () => {
     checkUrlParams();
   }, []);
   
+  // When autoRefreshCount changes, update the currentTierId
+  useEffect(() => {
+    if (autoRefreshCount > 0) {
+      setCurrentTierId(profile?.membership_tier_id || null);
+    }
+  }, [autoRefreshCount, profile]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -200,10 +236,20 @@ const Membership = () => {
           </Button>
         </div>
         
+        {autoRefreshCount > 0 && (
+          <Alert className="mb-4 bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+            <Info className="h-4 w-4 text-green-500" />
+            <AlertDescription>
+              Your membership status is being automatically refreshed after payment.
+              {autoRefreshCount === 3 && " If you still don't see your membership updated, please try refreshing the page."}
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <Alert variant="destructive" className="mb-4">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            Having trouble with payments? After checkout, click the "Refresh Membership Status" button above.
+            Having trouble with payments? Your membership should update automatically after checkout.
             Current tier ID: {profile?.membership_tier_id || "None"}
           </AlertDescription>
         </Alert>
@@ -252,3 +298,4 @@ const Membership = () => {
 };
 
 export default Membership;
+
