@@ -47,9 +47,9 @@ export const useSubscription = (): SubscriptionData => {
         // Continue anyway as tables might already be set up
       }
       
-      // Use a custom query to check if user has a subscription (avoids TypeScript issues)
+      // Use the RPC function to get the user's subscription
       const { data: subscriptionData, error: subscriptionError } = await supabase
-        .rpc('get_user_subscription', { user_id: user.id });
+        .rpc('get_user_subscription', { p_user_id: user.id });
 
       if (subscriptionError) {
         console.error('Error fetching subscription with RPC:', subscriptionError);
@@ -61,7 +61,7 @@ export const useSubscription = (): SubscriptionData => {
           .eq('user_id', user.id)
           .maybeSingle();
           
-        if (fallbackError && fallbackError.code !== 'PGRST116') { // PGRST116 is "not found"
+        if (fallbackError) {
           console.error('Error fetching subscription directly:', fallbackError);
           setError('Failed to load subscription information');
           toast.error('Could not load subscription data');
@@ -171,8 +171,7 @@ export const useSubscription = (): SubscriptionData => {
                     user_id: user.id,
                     plan_type: defaultPlan.plan_type,
                     is_active: true
-                  })
-                  .single();
+                  });
                   
                 if (insertError) {
                   console.error('Error creating default subscription:', insertError);

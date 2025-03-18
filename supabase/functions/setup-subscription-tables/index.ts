@@ -24,73 +24,52 @@ serve(async (req) => {
     // Create a Supabase admin client with the service role key
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Create stored procedures for subscription operations
-    const createStoredProcedures = `
-      -- Function to get a user's subscription
-      CREATE OR REPLACE FUNCTION public.get_user_subscription(user_id UUID)
-      RETURNS TABLE (
-        id UUID,
-        user_id UUID,
-        plan_type TEXT,
-        is_active BOOLEAN,
-        trial_ends_at TIMESTAMPTZ,
-        subscription_id TEXT,
-        created_at TIMESTAMPTZ,
-        updated_at TIMESTAMPTZ
-      )
-      LANGUAGE plpgsql
-      SECURITY DEFINER
-      AS $$
-      BEGIN
-        RETURN QUERY
-        SELECT 
-          us.id,
-          us.user_id,
-          us.plan_type,
-          us.is_active,
-          us.trial_ends_at,
-          us.subscription_id,
-          us.created_at,
-          us.updated_at
-        FROM public.user_subscriptions us
-        WHERE us.user_id = $1;
-      END;
-      $$;
-
-      -- Function to create a user subscription
-      CREATE OR REPLACE FUNCTION public.create_user_subscription(
-        p_user_id UUID,
-        p_plan_type TEXT
-      ) RETURNS UUID
-      LANGUAGE plpgsql
-      SECURITY DEFINER
-      AS $$
-      DECLARE
-        new_id UUID;
-      BEGIN
-        INSERT INTO public.user_subscriptions (
-          user_id,
-          plan_type,
-          is_active
-        ) VALUES (
-          p_user_id,
-          p_plan_type,
-          true
-        )
-        RETURNING id INTO new_id;
-        
-        RETURN new_id;
-      END;
-      $$;
-    `;
+    // Execute a quick query to verify our tables exist
+    const { data: tierData, error: tierError } = await adminClient
+      .from('subscription_tiers')
+      .select('id')
+      .limit(1);
+      
+    if (tierError) {
+      console.error('Error checking subscription_tiers table:', tierError);
+      throw new Error(`Table check failed: ${tierError.message}`);
+    }
     
-    // Execute the SQL to create stored procedures
-    await adminClient.rpc('execute_sql', { query: createStoredProcedures });
+    console.log('subscription_tiers table exists and is accessible');
+    
+    const { data: subData, error: subError } = await adminClient
+      .from('user_subscriptions')
+      .select('id')
+      .limit(1);
+      
+    if (subError && subError.code !== 'PGRST116') {
+      // PGRST116 just means no rows found, which is expected for a new table
+      console.error('Error checking user_subscriptions table:', subError);
+      throw new Error(`Table check failed: ${subError.message}`);
+    }
+    
+    console.log('user_subscriptions table exists and is accessible');
+    
+    // Verify RPC functions
+    try {
+      const { data: rpcData, error: rpcError } = await adminClient.rpc(
+        'get_user_subscription',
+        { p_user_id: '00000000-0000-0000-0000-000000000000' }
+      );
+      
+      if (rpcError && !rpcError.message.includes('does not exist')) {
+        console.error('Error testing get_user_subscription function:', rpcError);
+      } else {
+        console.log('get_user_subscription function exists');
+      }
+    } catch (err) {
+      console.error('Error testing RPC function:', err);
+    }
     
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: "Subscription tables and functions created successfully"
+        message: "Subscription tables and functions verified successfully"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

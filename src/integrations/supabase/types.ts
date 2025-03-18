@@ -390,6 +390,81 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_tiers: {
+        Row: {
+          created_at: string
+          features: Json | null
+          id: string
+          is_default: boolean | null
+          max_api_calls: number
+          max_brains: number
+          max_documents: number
+          name: string
+          plan_type: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          features?: Json | null
+          id?: string
+          is_default?: boolean | null
+          max_api_calls?: number
+          max_brains?: number
+          max_documents?: number
+          name: string
+          plan_type: string
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          features?: Json | null
+          id?: string
+          is_default?: boolean | null
+          max_api_calls?: number
+          max_brains?: number
+          max_documents?: number
+          name?: string
+          plan_type?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          plan_type: string
+          subscription_id: string | null
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          plan_type: string
+          subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          plan_type?: string
+          subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_usage_stats: {
         Row: {
           action_type: string
@@ -455,6 +530,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_user_subscription: {
+        Args: {
+          p_user_id: string
+          p_plan_type: string
+        }
+        Returns: string
+      }
       get_user_by_email: {
         Args: {
           lookup_email: string
@@ -462,6 +544,21 @@ export type Database = {
         Returns: {
           id: string
           email: string
+        }[]
+      }
+      get_user_subscription: {
+        Args: {
+          p_user_id: string
+        }
+        Returns: {
+          id: string
+          user_id: string
+          plan_type: string
+          is_active: boolean
+          trial_ends_at: string
+          subscription_id: string
+          created_at: string
+          updated_at: string
         }[]
       }
       is_project_member: {
