@@ -1,17 +1,20 @@
 
 import React from 'react';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 interface UserAvatarProps {
   fullName?: string | null;
   email?: string | null;
   size?: 'sm' | 'md' | 'lg';
+  className?: string;
 }
 
 const UserAvatar: React.FC<UserAvatarProps> = ({ 
   fullName, 
   email, 
-  size = 'md' 
+  size = 'md',
+  className
 }) => {
   const getInitials = () => {
     if (fullName) {
@@ -32,7 +35,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   }[size];
 
   return (
-    <Avatar className={sizeClass}>
+    <Avatar className={cn(sizeClass, className)}>
       <AvatarFallback className={size === 'lg' ? 'text-xl' : 'text-base'}>
         {getInitials()}
       </AvatarFallback>
