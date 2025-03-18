@@ -21,6 +21,11 @@ type ProfileDialogProps = {
   onOpenSettings: () => void;
 };
 
+type AccountLimits = {
+  maxBrains: number;
+  maxApiCalls: number;
+};
+
 const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProps) => {
   const { user, profile, signOut } = useAuth();
   const [statsLoading, setStatsLoading] = useState(true);
@@ -30,6 +35,10 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
   const [documentCount, setDocumentCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [accountType, setAccountType] = useState<'Free' | 'Pro'>('Free');
+  const [accountLimits, setAccountLimits] = useState<AccountLimits>({
+    maxBrains: 5,
+    maxApiCalls: 50
+  });
 
   // Get user initials for avatar fallback
   const getInitials = () => {
@@ -92,6 +101,11 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
         } else {
           setAccountType('Free');
         }
+        
+        // Set account limits
+        if (data.accountLimits) {
+          setAccountLimits(data.accountLimits);
+        }
       } catch (error) {
         console.error('Error fetching user stats:', error);
         setError('An unexpected error occurred');
@@ -107,6 +121,11 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
   const handleSignOut = async () => {
     await signOut();
     onOpenChange(false);
+  };
+
+  // Format Infinity to display as "Unlimited"
+  const formatLimit = (limit: number): string => {
+    return limit === Infinity ? "Unlimited" : limit.toString();
   };
 
   return (
@@ -134,6 +153,22 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
               <span className="text-sm font-medium">Member Since</span>
               <span className="text-sm">{new Date(user?.created_at || Date.now()).toLocaleDateString()}</span>
             </div>
+            {accountType === 'Free' && (
+              <>
+                <div className="flex justify-between p-3 bg-muted rounded-md">
+                  <span className="text-sm font-medium">Brain Limit</span>
+                  <span className="text-sm">
+                    {ownedBrainCount + sharedBrainCount} / {formatLimit(accountLimits.maxBrains)}
+                  </span>
+                </div>
+                <div className="flex justify-between p-3 bg-muted rounded-md">
+                  <span className="text-sm font-medium">Monthly API Calls</span>
+                  <span className="text-sm">
+                    {apiCalls} / {formatLimit(accountLimits.maxApiCalls)}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
           
           <ProfileStats 

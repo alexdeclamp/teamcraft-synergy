@@ -166,12 +166,25 @@ serve(async (req) => {
       console.error('Error in documents count query:', error);
     }
     
+    // Check for pro subscription and determine account type and limits
+    let hasProSubscription = false;
+    // Here you would query your subscriptions table or Stripe API
+    // For now, we'll just assume everyone is on the free plan
+    
+    // Define account limits based on subscription status
+    const accountLimits = {
+      maxBrains: hasProSubscription ? Infinity : 5,
+      maxApiCalls: hasProSubscription ? Infinity : 50,
+    };
+    
     return new Response(
       JSON.stringify({ 
         apiCalls: apiCallCount,
         ownedBrains: ownedProjectsCount,
         sharedBrains: sharedProjectsCount,
         documents: documentsCount,
+        hasProSubscription: hasProSubscription,
+        accountLimits: accountLimits,
         status: "success"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
