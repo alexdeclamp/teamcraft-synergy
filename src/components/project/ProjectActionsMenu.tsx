@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Edit, Archive, ArchiveRestore, Trash, LogOut } from "lucide-react";
+import { MoreHorizontal, Edit, Archive, ArchiveRestore, Trash } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,7 +33,6 @@ const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({
   const { user } = useAuth();
   const isOwnerOrAdmin = userRole === 'owner' || userRole === 'admin';
   const isOwner = userRole === 'owner';
-  const isMember = userRole === 'member' || userRole === 'admin' || userRole === 'editor' || userRole === 'viewer';
   
   const handleArchiveToggle = async () => {
     try {
@@ -83,56 +82,6 @@ const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({
     }
   };
 
-  const handleQuitBrain = async () => {
-    if (!isMember || !user) return;
-
-    const confirmed = window.confirm(
-      "Are you sure you want to leave this brain? You'll need to be invited again to rejoin."
-    );
-
-    if (!confirmed) return;
-
-    try {
-      console.log('Attempting to leave brain:', projectId, 'User ID:', user.id);
-      
-      // First check if the member entry exists
-      const { data: memberData, error: checkError } = await supabase
-        .from('project_members')
-        .select('id')
-        .eq('project_id', projectId)
-        .eq('user_id', user.id);
-        
-      if (checkError) {
-        console.error('Error checking membership:', checkError);
-        throw checkError;
-      }
-      
-      console.log('Membership data found:', memberData);
-      
-      if (!memberData || memberData.length === 0) {
-        throw new Error('You are not a member of this brain');
-      }
-      
-      // Then delete the membership
-      const { error } = await supabase
-        .from('project_members')
-        .delete()
-        .eq('project_id', projectId)
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error details:', error);
-        throw error;
-      }
-
-      toast.success('You have left the brain');
-      navigate('/dashboard');
-    } catch (error: any) {
-      console.error('Error leaving brain:', error);
-      toast.error(error.message || 'Failed to leave brain');
-    }
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -177,15 +126,6 @@ const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({
           >
             <Trash className="h-4 w-4 mr-2" />
             Delete Brain
-          </DropdownMenuItem>
-        )}
-
-        {isMember && !isOwner && (
-          <DropdownMenuItem 
-            onClick={handleQuitBrain}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Leave Brain
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>
