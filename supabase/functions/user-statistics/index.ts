@@ -7,13 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-type UserSubscription = {
-  id: string;
-  user_id: string;
-  plan_type: 'free' | 'pro';
-  is_active: boolean;
-};
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -126,6 +119,7 @@ serve(async (req) => {
         console.error('Error fetching owned projects:', ownedError);
       } else {
         ownedProjectsCount = ownedProjects?.length || 0;
+        console.log('Owned projects count:', ownedProjectsCount);
       }
       
       // Count projects where user is a member (excluding owned projects)
@@ -147,6 +141,8 @@ serve(async (req) => {
         } else {
           sharedProjectsCount = memberIds.length;
         }
+        
+        console.log('Shared projects count:', sharedProjectsCount);
       }
       
     } catch (error) {
@@ -170,44 +166,12 @@ serve(async (req) => {
       console.error('Error in documents count query:', error);
     }
     
-    // Check for pro subscription and determine account type and limits
-    let hasProSubscription = false;
-    
-    try {
-      // Check if user has an active Pro subscription
-      const { data: subscriptionData, error: subscriptionError } = await adminClient
-        .from('user_subscriptions')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .eq('plan_type', 'pro')
-        .single();
-      
-      if (subscriptionError && subscriptionError.code !== 'PGRST116') { // PGRST116 is not found
-        console.error('Error checking subscription:', subscriptionError);
-      }
-      
-      if (subscriptionData) {
-        hasProSubscription = true;
-      }
-    } catch (error) {
-      console.error('Error in subscription check:', error);
-    }
-    
-    // Define account limits based on subscription status
-    const accountLimits = {
-      maxBrains: hasProSubscription ? Infinity : 5,
-      maxApiCalls: hasProSubscription ? Infinity : 50,
-    };
-    
     return new Response(
       JSON.stringify({ 
         apiCalls: apiCallCount,
         ownedBrains: ownedProjectsCount,
         sharedBrains: sharedProjectsCount,
         documents: documentsCount,
-        hasProSubscription: hasProSubscription,
-        accountLimits: accountLimits,
         status: "success"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -8,10 +8,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface ProjectChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
-  disabled?: boolean;
 }
 
-const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLoading, disabled = false }) => {
+const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLoading }) => {
   const [input, setInput] = useState('');
   const isMobile = useIsMobile();
 
@@ -40,12 +39,11 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLo
           }`}
           onKeyDown={handleKeyDown}
           style={isMobile ? { fontSize: '16px' } : undefined}
-          disabled={disabled || isLoading}
         />
         <div className="flex flex-col gap-2">
           <Button
             onClick={handleSend}
-            disabled={isLoading || !input.trim() || disabled}
+            disabled={isLoading || !input.trim()}
             className="h-12 w-12 rounded-full flex-shrink-0 shadow-sm"
             aria-label="Send message"
           >

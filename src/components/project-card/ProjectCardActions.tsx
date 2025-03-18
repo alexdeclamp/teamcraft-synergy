@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Pencil, UserPlus, Archive, Star, ArchiveRestore, Trash } from 'lucide-react';
+import { Pencil, UserPlus, Archive, Star, ArchiveRestore, Trash, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -34,9 +34,11 @@ const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
   setFavorite,
   isArchived = false,
   onArchiveStatusChange,
-  userRole = isOwner ? 'owner' : 'viewer'
+  userRole = isOwner ? 'owner' : 'member'
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isMember = userRole === 'member' || userRole === 'admin' || userRole === 'editor' || userRole === 'viewer';
 
   const handleEditBrain = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -104,6 +106,43 @@ const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
     } catch (error) {
       console.error('Error deleting brain:', error);
       toast.error('Failed to delete brain');
+    }
+  };
+
+  const handleQuitBrain = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isMember || !user) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to leave this brain? You'll need to be invited again to rejoin."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      console.log('Attempting to leave brain:', id, 'User ID:', user.id);
+      
+      const { error } = await supabase
+        .from('project_members')
+        .delete()
+        .eq('project_id', id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error details:', error);
+        throw error;
+      }
+
+      toast.success('You have left the brain');
+      
+      if (onArchiveStatusChange) {
+        onArchiveStatusChange();
+      }
+    } catch (error) {
+      console.error('Error leaving brain:', error);
+      toast.error('Failed to leave brain');
     }
   };
 
@@ -194,6 +233,13 @@ const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
                 Delete brain
               </DropdownMenuItem>
             </>
+          )}
+          
+          {isMember && !isOwner && (
+            <DropdownMenuItem onClick={handleQuitBrain}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Leave brain
+            </DropdownMenuItem>
           )}
         </DropdownMenuContent>
       </DropdownMenu>

@@ -7,14 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Define subscription type to avoid importing from read-only file
-type UserSubscription = {
-  id: string;
-  user_id: string;
-  plan_type: 'free' | 'pro';
-  is_active: boolean;
-};
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -96,10 +88,30 @@ serve(async (req) => {
       );
     }
 
-    // Get OpenAI API call count for the current month
+    // Log the OpenAI API call if requested - using admin client
+    if (action === 'log_api_call') {
+      try {
+        const { error: logError } = await adminClient.from('user_usage_stats').insert({
+          user_id: userIdToUse,
+          action_type: 'openai_api_call',
+        });
+
+        if (logError) {
+          console.error('Error logging API call:', logError);
+          // Continue execution to still return statistics even if logging fails
+        }
+      } catch (error) {
+        console.error('Error inserting API call record:', error);
+        // Continue execution to still return statistics
+      }
+    }
+
+    // Get user usage statistics - using admin client
+    // Only count rows where action_type is 'openai_api_call'
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     
+    // Get OpenAI API call count for the current month
     let apiCallCount = 0;
     try {
       const { count, error: apiError } = await adminClient
@@ -118,66 +130,9 @@ serve(async (req) => {
       console.error('Error in API call count query:', error);
     }
     
-    // Check for pro subscription to determine limits
-    let hasProSubscription = false;
-    let maxApiCalls = 50; // Default for free plan
-    
-    try {
-      // Check if user has an active Pro subscription
-      const { data: subscriptionData, error: subscriptionError } = await adminClient
-        .from('user_subscriptions')
-        .select('*')
-        .eq('user_id', userIdToUse)
-        .eq('is_active', true)
-        .eq('plan_type', 'pro')
-        .single();
-      
-      if (subscriptionError && subscriptionError.code !== 'PGRST116') { // PGRST116 is not found
-        console.error('Error checking subscription:', subscriptionError);
-      }
-      
-      if (subscriptionData) {
-        hasProSubscription = true;
-        maxApiCalls = Infinity;
-      }
-    } catch (error) {
-      console.error('Error in subscription check:', error);
-    }
-    
-    // If logging API call and user has reached their limit, return an error
-    if (action === 'log_api_call') {
-      if (apiCallCount >= maxApiCalls && maxApiCalls !== Infinity) {
-        return new Response(
-          JSON.stringify({ 
-            apiCalls: apiCallCount,
-            status: "error",
-            limitReached: true,
-            message: "Monthly API call limit reached. Upgrade to Pro for unlimited calls."
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
-        );
-      }
-      
-      // Log the OpenAI API call if user has not reached their limit
-      try {
-        const { error: logError } = await adminClient.from('user_usage_stats').insert({
-          user_id: userIdToUse,
-          action_type: 'openai_api_call',
-        });
-
-        if (logError) {
-          console.error('Error logging API call:', logError);
-        }
-      } catch (error) {
-        console.error('Error inserting API call record:', error);
-      }
-    }
-    
     return new Response(
       JSON.stringify({ 
         apiCalls: apiCallCount,
-        hasProSubscription: hasProSubscription,
-        maxApiCalls: maxApiCalls,
         status: "success"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
