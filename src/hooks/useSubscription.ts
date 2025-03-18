@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Json } from '@/integrations/supabase/types';
+import { setupSubscriptionTables } from '@/pages/api/setup-subscription-tables';
 
 type SubscriptionData = {
   userSubscription: UserSubscription | null;
@@ -31,18 +32,9 @@ export const useSubscription = (): SubscriptionData => {
     setError(null);
     
     try {
-      // Call the Edge Function to ensure subscription tables exist
+      // Call the function to ensure subscription tables exist
       try {
-        const response = await fetch('/api/setup-subscription-tables', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (!response.ok) {
-          console.warn('Edge function response not OK:', await response.text());
-        }
+        await setupSubscriptionTables();
       } catch (setupError) {
         console.error('Error calling subscription setup function:', setupError);
         // Continue anyway as tables might already be set up
@@ -185,9 +177,10 @@ export const useSubscription = (): SubscriptionData => {
           }
         }
       } else if (subscriptionData) {
-        // The RPC function is expected to return an array with one item
-        // We need to handle both cases: when it returns an array and when it's already the item
-        const subData = Array.isArray(subscriptionData) ? subscriptionData[0] : subscriptionData;
+        // Handle both array and object responses from RPC
+        const subData = Array.isArray(subscriptionData) 
+          ? (subscriptionData.length > 0 ? subscriptionData[0] : null) 
+          : subscriptionData;
         
         if (!subData) {
           console.log('No subscription data found, will create one');
