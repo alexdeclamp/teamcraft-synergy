@@ -166,41 +166,12 @@ serve(async (req) => {
       console.error('Error in documents count query:', error);
     }
     
-    // 4. Get membership tier
-    let membershipTier = 'Free';
-    try {
-      const { data: profileData, error: profileError } = await adminClient
-        .from('profiles')
-        .select('membership_tier_id')
-        .eq('id', userId)
-        .single();
-        
-      if (profileError) {
-        console.error('Error fetching profile membership:', profileError);
-      } else if (profileData?.membership_tier_id) {
-        const { data: tierData, error: tierError } = await adminClient
-          .from('membership_tiers')
-          .select('name')
-          .eq('id', profileData.membership_tier_id)
-          .single();
-          
-        if (!tierError && tierData) {
-          membershipTier = tierData.name;
-        } else {
-          console.error('Error fetching membership tier:', tierError);
-        }
-      }
-    } catch (error) {
-      console.error('Error in membership tier query:', error);
-    }
-    
     return new Response(
       JSON.stringify({ 
         apiCalls: apiCallCount,
         ownedBrains: ownedProjectsCount,
         sharedBrains: sharedProjectsCount,
         documents: documentsCount,
-        membershipTier: membershipTier,
         status: "success"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

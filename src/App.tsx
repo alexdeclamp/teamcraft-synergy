@@ -19,7 +19,6 @@ import Brand from '@/pages/Brand';
 import BrandAssets from '@/pages/BrandAssets';
 import Waitlist from '@/pages/Waitlist';
 import Sitemap from '@/pages/Sitemap';
-import Membership from '@/pages/Membership';
 import Index from '@/pages/Index';
 
 // Components
@@ -46,14 +45,6 @@ const App = () => {
                 <Route path="/sitemap" element={<Sitemap />} />
                 
                 {/* Protected Routes */}
-                <Route 
-                  path="/membership" 
-                  element={
-                    <ProtectedRoute>
-                      <Membership />
-                    </ProtectedRoute>
-                  } 
-                />
                 <Route
                   path="/dashboard"
                   element={
