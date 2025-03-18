@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import LandingNavbar from '@/components/landing/LandingNavbar';
@@ -12,17 +13,21 @@ import FooterSection from '@/components/landing/FooterSection';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
+import { InvitationBanner } from '@/components/ui/invitation-banner';
+
 const Landing = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  return <div className="min-h-screen bg-background overflow-hidden">
+  
+  return (
+    <div className="min-h-screen bg-background overflow-hidden">
+      {/* Invitation Banner */}
+      <InvitationBanner />
+      
       {/* Navigation bar */}
       <LandingNavbar />
       
       <HeroSection />
-      
-      {/* Demo CTA Banner */}
-      
       
       <TimelineSection />
       <KeyFeaturesSection />
@@ -31,6 +36,8 @@ const Landing = () => {
       <TestimonialsSection />
       <CtaSection />
       <FooterSection />
-    </div>;
+    </div>
+  );
 };
+
 export default Landing;

@@ -19,7 +19,6 @@ import Brand from '@/pages/Brand';
 import BrandAssets from '@/pages/BrandAssets';
 import Waitlist from '@/pages/Waitlist';
 import Sitemap from '@/pages/Sitemap';
-import Index from '@/pages/Index';
 
 // Components
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -35,8 +34,7 @@ const App = () => {
           <AuthProvider>
             <OnboardingProvider>
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/landing" element={<Landing />} />
+                <Route path="/" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/waitlist" element={<Waitlist />} />
                 <Route path="/summarize-demo" element={<SummarizeDemo />} />
