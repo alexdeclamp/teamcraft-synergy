@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardToolbar from '@/components/dashboard/DashboardToolbar';
 import ProjectGrid from '@/components/dashboard/ProjectGrid';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import SubscriptionInfo from '@/components/subscription/SubscriptionInfo';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const Dashboard = () => {
   const {
@@ -18,6 +20,8 @@ const Dashboard = () => {
     setSortOrder,
     refreshProjects
   } = useDashboardData();
+  
+  const { planDetails, isLoading: subscriptionLoading, error: subscriptionError } = useSubscription();
 
   return (
     <div className="min-h-screen bg-background pb-12 animate-fade-in">
@@ -25,6 +29,12 @@ const Dashboard = () => {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
         <DashboardHeader />
+        
+        <SubscriptionInfo 
+          planDetails={planDetails} 
+          isLoading={subscriptionLoading} 
+          error={subscriptionError} 
+        />
         
         <DashboardToolbar
           searchTerm={searchTerm}

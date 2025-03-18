@@ -1,0 +1,4 @@
+
+# Config file for the setup-subscription-tables edge function
+
+slug = "setup-subscription-tables"
