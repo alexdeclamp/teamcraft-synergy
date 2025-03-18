@@ -124,6 +124,25 @@ const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
     try {
       console.log('Attempting to leave brain:', id, 'User ID:', user.id);
       
+      // First check if the member entry exists
+      const { data: memberData, error: checkError } = await supabase
+        .from('project_members')
+        .select('id')
+        .eq('project_id', id)
+        .eq('user_id', user.id);
+        
+      if (checkError) {
+        console.error('Error checking membership:', checkError);
+        throw checkError;
+      }
+      
+      console.log('Membership data found:', memberData);
+      
+      if (!memberData || memberData.length === 0) {
+        throw new Error('You are not a member of this brain');
+      }
+      
+      // Then delete the membership
       const { error } = await supabase
         .from('project_members')
         .delete()
@@ -140,9 +159,9 @@ const ProjectCardActions: React.FC<ProjectCardActionsProps> = ({
       if (onArchiveStatusChange) {
         onArchiveStatusChange();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error leaving brain:', error);
-      toast.error('Failed to leave brain');
+      toast.error(error.message || 'Failed to leave brain');
     }
   };
 
