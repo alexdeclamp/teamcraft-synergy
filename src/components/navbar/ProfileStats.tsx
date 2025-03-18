@@ -1,18 +1,26 @@
 
 import React from 'react';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, Brain, FileText, Zap } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type ProfileStatsProps = {
   isLoading: boolean;
   error: string | null;
   apiCalls: number;
+  brains?: number;
+  documents?: number;
 };
 
-const ProfileStats = ({ isLoading, error, apiCalls }: ProfileStatsProps) => {
+const ProfileStats = ({ isLoading, error, apiCalls, brains = 0, documents = 0 }: ProfileStatsProps) => {
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-4">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      <div className="w-full space-y-2 mt-4">
+        <div className="text-sm font-medium mb-1">Usage Statistics</div>
+        <div className="flex flex-col gap-2">
+          <Skeleton className="w-full h-12" />
+          <Skeleton className="w-full h-12" />
+          <Skeleton className="w-full h-12" />
+        </div>
       </div>
     );
   }
@@ -28,11 +36,32 @@ const ProfileStats = ({ isLoading, error, apiCalls }: ProfileStatsProps) => {
   }
 
   return (
-    <div className="w-full space-y-2 mt-2">
-      <div className="text-sm font-medium mb-1">AI Usage Statistics</div>
-      <div className="flex justify-between p-3 bg-muted rounded-md">
-        <span className="text-sm font-medium">OpenAI API Calls (This Month)</span>
-        <span className="text-sm">{apiCalls}</span>
+    <div className="w-full space-y-2 mt-4">
+      <div className="text-sm font-medium mb-1">Usage Statistics</div>
+      <div className="grid grid-cols-1 gap-2">
+        <div className="flex justify-between p-3 bg-muted rounded-md">
+          <div className="flex items-center gap-2">
+            <Brain className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">Total Brains</span>
+          </div>
+          <span className="text-sm">{brains}</span>
+        </div>
+        
+        <div className="flex justify-between p-3 bg-muted rounded-md">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">Stored Documents</span>
+          </div>
+          <span className="text-sm">{documents}</span>
+        </div>
+        
+        <div className="flex justify-between p-3 bg-muted rounded-md">
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">AI API Calls (This Month)</span>
+          </div>
+          <span className="text-sm">{apiCalls}</span>
+        </div>
       </div>
       <p className="text-xs text-muted-foreground">
         Only counts actual AI calls for document/note summarization and chat responses.

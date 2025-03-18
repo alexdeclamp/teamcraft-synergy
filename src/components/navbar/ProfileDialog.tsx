@@ -25,6 +25,8 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
   const { user, profile, signOut } = useAuth();
   const [statsLoading, setStatsLoading] = useState(true);
   const [apiCalls, setApiCalls] = useState(0);
+  const [brainCount, setBrainCount] = useState(0);
+  const [documentCount, setDocumentCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   // Get user initials for avatar fallback
@@ -48,24 +50,23 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
       setError(null);
       
       try {
-        console.log('Fetching user stats for OpenAI usage...');
+        console.log('Fetching user statistics...');
         
-        // Call the edge function with explicit userId
-        const { data, error: functionError } = await supabase.functions.invoke('track-usage', {
+        // Call the user-statistics edge function
+        const { data, error: functionError } = await supabase.functions.invoke('user-statistics', {
           body: { 
-            action: 'get_stats',
             userId: user.id
           },
         });
         
         if (functionError) {
-          console.error('Error invoking edge function:', functionError);
+          console.error('Error invoking user-statistics function:', functionError);
           setError('Failed to fetch statistics');
           toast.error('Could not load usage statistics');
           return;
         }
         
-        console.log('Edge function response:', data);
+        console.log('User statistics response:', data);
         
         if (!data) {
           setError('No data returned from server');
@@ -77,8 +78,10 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
           return;
         }
         
-        // Set the OpenAI API calls count
+        // Set the statistics
         setApiCalls(data.apiCalls ?? 0);
+        setBrainCount(data.brains ?? 0);
+        setDocumentCount(data.documents ?? 0);
       } catch (error) {
         console.error('Error fetching user stats:', error);
         setError('An unexpected error occurred');
@@ -127,6 +130,8 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
             isLoading={statsLoading}
             error={error}
             apiCalls={apiCalls}
+            brains={brainCount}
+            documents={documentCount}
           />
         </div>
         <div className="flex justify-between">
