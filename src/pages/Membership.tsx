@@ -8,6 +8,7 @@ import MembershipCard from '@/components/membership/MembershipCard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
+import { Json } from '@/integrations/supabase/types';
 
 type MembershipTier = {
   id: string;
@@ -60,7 +61,13 @@ const Membership = () => {
           throw userError;
         }
         
-        setMembershipTiers(tiers);
+        // Transform the data to ensure features is properly typed
+        const formattedTiers = tiers.map(tier => ({
+          ...tier,
+          features: parseFeatures(tier.features)
+        }));
+        
+        setMembershipTiers(formattedTiers);
         setCurrentTierId(userData?.membership_tier_id || null);
       } catch (error) {
         console.error('Error fetching membership data:', error);
@@ -72,6 +79,24 @@ const Membership = () => {
     
     fetchMembershipData();
   }, [user, navigate]);
+  
+  // Helper function to parse the features from JSON
+  const parseFeatures = (features: Json): { name: string; description: string }[] => {
+    if (!features) return [];
+    
+    try {
+      if (typeof features === 'string') {
+        return JSON.parse(features);
+      } else if (Array.isArray(features)) {
+        return features as { name: string; description: string }[];
+      } else {
+        return Object.values(features);
+      }
+    } catch (e) {
+      console.error('Error parsing features:', e);
+      return [];
+    }
+  };
   
   const handleSelectTier = (tierId: string) => {
     toast.info('Stripe integration coming soon!');

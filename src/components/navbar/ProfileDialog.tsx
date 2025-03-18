@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -14,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProfileStats from './ProfileStats';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 type ProfileDialogProps = {
   open: boolean;
@@ -23,6 +23,7 @@ type ProfileDialogProps = {
 
 const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProps) => {
   const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
   const [statsLoading, setStatsLoading] = useState(true);
   const [apiCalls, setApiCalls] = useState(0);
   const [ownedBrainCount, setOwnedBrainCount] = useState(0);
@@ -31,7 +32,6 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
   const [membershipTier, setMembershipTier] = useState('Free');
   const [error, setError] = useState<string | null>(null);
 
-  // Get user initials for avatar fallback
   const getInitials = () => {
     if (profile?.full_name) {
       return profile.full_name
@@ -54,7 +54,6 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
       try {
         console.log('Fetching user statistics...');
         
-        // Call the user-statistics edge function
         const { data, error: functionError } = await supabase.functions.invoke('user-statistics', {
           body: { 
             userId: user.id
@@ -80,7 +79,6 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
           return;
         }
         
-        // Set the statistics
         setApiCalls(data.apiCalls ?? 0);
         setOwnedBrainCount(data.ownedBrains ?? 0);
         setSharedBrainCount(data.sharedBrains ?? 0);
@@ -104,10 +102,8 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
   };
 
   const handleViewMemberships = () => {
-    onOpenChange(false); // Close the profile dialog
-    // We'll implement the membership page navigation later
-    // For now, just show a toast
-    toast.info("Membership page coming soon!");
+    onOpenChange(false);
+    navigate('/membership');
   };
 
   return (
