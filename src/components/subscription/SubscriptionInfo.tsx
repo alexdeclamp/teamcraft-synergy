@@ -5,14 +5,25 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Zap, Brain, FileText, AlertCircle } from 'lucide-react';
 import { SubscriptionTier } from '@/types/subscription';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 
 interface SubscriptionInfoProps {
   planDetails: SubscriptionTier | null;
   isLoading: boolean;
   error: string | null;
+  userBrainCount?: number;
+  userDocumentCount?: number;
+  apiCallsUsed?: number;
 }
 
-const SubscriptionInfo = ({ planDetails, isLoading, error }: SubscriptionInfoProps) => {
+const SubscriptionInfo = ({ 
+  planDetails, 
+  isLoading, 
+  error,
+  userBrainCount = 0,
+  userDocumentCount = 0,
+  apiCallsUsed = 0
+}: SubscriptionInfoProps) => {
   if (isLoading) {
     return (
       <Card className="mb-6">
@@ -46,6 +57,11 @@ const SubscriptionInfo = ({ planDetails, isLoading, error }: SubscriptionInfoPro
     return null;
   }
 
+  // Calculate percentages for progress bars
+  const brainPercentage = Math.min(Math.round((userBrainCount / planDetails.max_brains) * 100), 100);
+  const documentPercentage = Math.min(Math.round((userDocumentCount / planDetails.max_documents) * 100), 100);
+  const apiCallsPercentage = Math.min(Math.round((apiCallsUsed / planDetails.max_api_calls) * 100), 100);
+
   return (
     <Card className="mb-6">
       <CardHeader className="pb-2">
@@ -67,29 +83,46 @@ const SubscriptionInfo = ({ planDetails, isLoading, error }: SubscriptionInfoPro
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div className="flex flex-col bg-muted rounded-lg p-3">
-            <div className="flex items-center gap-2 text-sm font-medium mb-1">
-              <Zap className="h-4 w-4 text-primary" />
-              AI API Calls
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Zap className="h-4 w-4 text-primary" />
+                AI API Calls
+              </div>
+              <span className="text-sm font-medium">
+                {apiCallsUsed} / {planDetails.max_api_calls}
+              </span>
             </div>
-            <span className="text-lg font-semibold">{planDetails.max_api_calls} / month</span>
+            <Progress value={apiCallsPercentage} className="h-2 mb-1" />
+            <span className="text-xs text-muted-foreground">Resets monthly</span>
           </div>
           
           <div className="flex flex-col bg-muted rounded-lg p-3">
-            <div className="flex items-center gap-2 text-sm font-medium mb-1">
-              <Brain className="h-4 w-4 text-primary" />
-              Max Brains
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Brain className="h-4 w-4 text-primary" />
+                Brains
+              </div>
+              <span className="text-sm font-medium">
+                {userBrainCount} / {planDetails.max_brains}
+              </span>
             </div>
-            <span className="text-lg font-semibold">{planDetails.max_brains}</span>
+            <Progress value={brainPercentage} className="h-2" />
           </div>
           
           <div className="flex flex-col bg-muted rounded-lg p-3">
-            <div className="flex items-center gap-2 text-sm font-medium mb-1">
-              <FileText className="h-4 w-4 text-primary" />
-              Documents
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <FileText className="h-4 w-4 text-primary" />
+                Documents
+              </div>
+              <span className="text-sm font-medium">
+                {userDocumentCount} / {planDetails.max_documents}
+              </span>
             </div>
-            <span className="text-lg font-semibold">{planDetails.max_documents} / brain</span>
+            <Progress value={documentPercentage} className="h-2 mb-1" />
+            <span className="text-xs text-muted-foreground">Per brain limit</span>
           </div>
         </div>
         

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -17,6 +16,24 @@ import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Badge } from '@/components/ui/badge';
 
+export type UserStats = {
+  apiCalls: number;
+  ownedBrains: number;
+  sharedBrains: number;
+  documents: number;
+};
+
+let globalUserStats: UserStats = {
+  apiCalls: 0,
+  ownedBrains: 0,
+  sharedBrains: 0,
+  documents: 0
+};
+
+export const getUserStats = (): UserStats => {
+  return globalUserStats;
+};
+
 type ProfileDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,7 +50,6 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
   const [error, setError] = useState<string | null>(null);
   const { planDetails, isLoading: subscriptionLoading } = useSubscription();
 
-  // Get user initials for avatar fallback
   const getInitials = () => {
     if (profile?.full_name) {
       return profile.full_name
@@ -56,7 +72,6 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
       try {
         console.log('Fetching user statistics...');
         
-        // Call the user-statistics edge function
         const { data, error: functionError } = await supabase.functions.invoke('user-statistics', {
           body: { 
             userId: user.id
@@ -82,11 +97,23 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
           return;
         }
         
-        // Set the statistics
-        setApiCalls(data.apiCalls ?? 0);
-        setOwnedBrainCount(data.ownedBrains ?? 0);
-        setSharedBrainCount(data.sharedBrains ?? 0);
-        setDocumentCount(data.documents ?? 0);
+        const apiCallsCount = data.apiCalls ?? 0;
+        const ownedBrains = data.ownedBrains ?? 0;
+        const sharedBrains = data.sharedBrains ?? 0;
+        const docs = data.documents ?? 0;
+        
+        setApiCalls(apiCallsCount);
+        setOwnedBrainCount(ownedBrains);
+        setSharedBrainCount(sharedBrains);
+        setDocumentCount(docs);
+        
+        globalUserStats = {
+          apiCalls: apiCallsCount,
+          ownedBrains: ownedBrains,
+          sharedBrains: sharedBrains,
+          documents: docs
+        };
+        
       } catch (error) {
         console.error('Error fetching user stats:', error);
         setError('An unexpected error occurred');
@@ -120,7 +147,6 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
           <h3 className="text-xl font-medium">{profile?.full_name || 'User'}</h3>
           <p className="text-sm text-muted-foreground">{user?.email}</p>
           
-          {/* Subscription Badge */}
           {!subscriptionLoading && planDetails && (
             <Badge 
               variant={planDetails.plan_type === 'pro' ? "default" : "secondary"}
