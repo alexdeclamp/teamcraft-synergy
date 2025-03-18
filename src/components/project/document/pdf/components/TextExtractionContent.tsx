@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Loader2, FileText, AlertCircle, ExternalLink, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -95,7 +94,7 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
 
   if (isExtracting) {
     return (
-      <div className="py-12 flex flex-col items-center justify-center">
+      <div className="py-12 flex flex-col items-center justify-center h-[400px]">
         <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
         <p className="text-lg font-medium">Extracting text from PDF...</p>
         <p className="text-sm text-muted-foreground mt-2">This may take a moment depending on the file size.</p>
@@ -130,7 +129,7 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
 
   if (isSummarizing) {
     return (
-      <div className="py-12 flex flex-col items-center justify-center">
+      <div className="py-12 flex flex-col items-center justify-center h-[400px]">
         <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
         <p className="text-lg font-medium">Generating summary...</p>
         <p className="text-sm text-muted-foreground mt-2">Our AI is analyzing your document and creating a concise summary.</p>
@@ -140,16 +139,18 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
 
   if (showSummary && summary) {
     return (
-      <div className="py-4 px-1">
-        <div className="bg-muted/40 rounded-md p-4 max-h-[400px] overflow-y-auto whitespace-pre-wrap text-sm relative">
-          {summary}
+      <ScrollArea className="h-[400px]">
+        <div className="pr-4">
+          <div className="bg-muted/40 rounded-md p-4 whitespace-pre-wrap text-sm">
+            {summary}
+          </div>
         </div>
-      </div>
+      </ScrollArea>
     );
   }
 
   return (
-    <div className="py-4 px-1">
+    <div className="h-full">
       <TextExtractionBanner 
         isExtracting={isExtracting}
         extractionError={extractionError}
@@ -157,51 +158,53 @@ const TextExtractionContent: React.FC<TextExtractionContentProps> = ({
       />
       
       {extractedText ? (
-        <ScrollArea className="h-[500px] pr-4">
-          <div className="mb-4">
-            <h3 className="text-sm font-medium mb-2">Ask a question about this document</h3>
-            <div className="flex flex-col space-y-2">
-              <Textarea 
-                placeholder="Enter your question here..."
-                value={question}
-                onChange={handleQuestionChange}
-                className="min-h-[60px]"
-              />
-              <Button 
-                onClick={handleAskQuestion} 
-                disabled={isAskingQuestion || !question.trim()}
-                className="self-end"
-              >
-                {isAskingQuestion ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4 mr-2" />
-                    Ask Question
-                  </>
-                )}
-              </Button>
+        <ScrollArea className="h-[400px]">
+          <div className="pr-4">
+            <div className="mb-4">
+              <h3 className="text-sm font-medium mb-2">Ask a question about this document</h3>
+              <div className="flex flex-col space-y-2">
+                <Textarea 
+                  placeholder="Enter your question here..."
+                  value={question}
+                  onChange={handleQuestionChange}
+                  className="min-h-[60px]"
+                />
+                <Button 
+                  onClick={handleAskQuestion} 
+                  disabled={isAskingQuestion || !question.trim()}
+                  className="self-end"
+                >
+                  {isAskingQuestion ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Ask Question
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {showAnswer && answer && (
+                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+                  <h4 className="font-medium text-green-800 mb-2">Answer:</h4>
+                  <div className="text-sm text-green-900 whitespace-pre-wrap">
+                    {answer}
+                  </div>
+                </div>
+              )}
             </div>
             
-            {showAnswer && answer && (
-              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
-                <h4 className="font-medium text-green-800 mb-2">Answer:</h4>
-                <div className="text-sm text-green-900 whitespace-pre-wrap max-h-[200px] overflow-y-auto">
-                  {answer}
-                </div>
-              </div>
-            )}
-          </div>
-          
-          <div className="bg-muted/40 rounded-md p-4 mt-4 whitespace-pre-wrap text-sm font-mono">
-            {extractedText}
+            <div className="bg-muted/40 rounded-md p-4 mt-4 whitespace-pre-wrap text-sm font-mono">
+              {extractedText}
+            </div>
           </div>
         </ScrollArea>
       ) : (
-        <div className="py-8 flex flex-col items-center justify-center">
+        <div className="py-8 flex flex-col items-center justify-center h-[400px]">
           <FileText className="h-10 w-10 text-muted-foreground mb-4" />
           <p className="text-center text-muted-foreground">No text could be extracted from this PDF. It may be an image-based PDF.</p>
         </div>

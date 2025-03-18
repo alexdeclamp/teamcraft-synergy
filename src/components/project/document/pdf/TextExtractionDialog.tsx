@@ -135,39 +135,45 @@ const TextExtractionDialog: React.FC<TextExtractionDialogProps> = ({
   return (
     <>
       <Dialog open={showTextModal} onOpenChange={setShowTextModal}>
-        <DialogContent className="sm:max-w-[750px] max-h-[85vh] flex flex-col">
-          <TextExtractionHeader
-            fileName={fileName}
-            pageCount={pageCount}
-            textLength={textLength}
-            showSummary={showSummary}
-            summary={summary}
-            toggleTextView={toggleTextView}
-            isSummarizing={isSummarizing}
-            diagnosisInfo={diagnosisInfo}
-            pdfInfo={pdfInfo}
-          />
+        <DialogContent className="sm:max-w-[750px] max-h-[85vh] flex flex-col p-0 gap-0">
+          <div className="p-6 pb-0 flex-shrink-0">
+            <TextExtractionHeader
+              fileName={fileName}
+              pageCount={pageCount}
+              textLength={textLength}
+              showSummary={showSummary}
+              summary={summary}
+              toggleTextView={toggleTextView}
+              isSummarizing={isSummarizing}
+              diagnosisInfo={diagnosisInfo}
+              pdfInfo={pdfInfo}
+            />
+          </div>
           
-          <TextExtractionContent
-            isExtracting={isExtracting}
-            isSummarizing={isSummarizing}
-            extractionError={extractionError}
-            extractedText={extractedText}
-            summary={summary}
-            showSummary={showSummary}
-            onRetryExtraction={onRetryExtraction}
-            handleOpenPdfDirectly={handleOpenPdfDirectly}
-          />
+          <div className="flex-grow overflow-hidden p-6 pt-4">
+            <TextExtractionContent
+              isExtracting={isExtracting}
+              isSummarizing={isSummarizing}
+              extractionError={extractionError}
+              extractedText={extractedText}
+              summary={summary}
+              showSummary={showSummary}
+              onRetryExtraction={onRetryExtraction}
+              handleOpenPdfDirectly={handleOpenPdfDirectly}
+            />
+          </div>
           
-          <TextExtractionFooter
-            isExtracting={isExtracting}
-            isSummarizing={isSummarizing}
-            extractedText={extractedText}
-            showSummary={showSummary}
-            handleDownloadText={handleDownloadText}
-            handleCreateNote={projectId ? handleCreateNote : undefined}
-            projectId={projectId}
-          />
+          <div className="p-6 pt-0 flex-shrink-0 border-t">
+            <TextExtractionFooter
+              isExtracting={isExtracting}
+              isSummarizing={isSummarizing}
+              extractedText={extractedText}
+              showSummary={showSummary}
+              handleDownloadText={handleDownloadText}
+              handleCreateNote={projectId ? handleCreateNote : undefined}
+              projectId={projectId}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 

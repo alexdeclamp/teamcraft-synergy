@@ -63,18 +63,20 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) onClose();
     }}>
-      <DialogContent className="sm:max-w-[750px] max-h-[90vh] flex flex-col">
-        <div className="absolute right-4 top-4">
-          <SummaryCloseButton />
+      <DialogContent className="sm:max-w-[750px] max-h-[90vh] flex flex-col p-0 gap-0">
+        <div className="p-6 pb-2 flex-shrink-0 relative">
+          <div className="absolute right-4 top-4">
+            <SummaryCloseButton />
+          </div>
+          
+          <SummaryDialogHeader 
+            title={title} 
+            hasSavedVersion={localHasSavedVersion} 
+            isLoading={isLoading} 
+          />
         </div>
         
-        <SummaryDialogHeader 
-          title={title} 
-          hasSavedVersion={localHasSavedVersion} 
-          isLoading={isLoading} 
-        />
-        
-        <div className="mt-4 overflow-y-auto flex-grow">
+        <div className="flex-grow overflow-hidden p-6 pt-2">
           <SummaryContent 
             isLoading={isLoading} 
             summary={summary} 
@@ -83,28 +85,30 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
           />
         </div>
         
-        <SummaryAlert 
-          hasSummary={hasSummary}
-          localHasSavedVersion={localHasSavedVersion}
-          projectId={projectId}
-        />
-        
-        <SummaryFooter 
-          isLoading={isLoading}
-          localHasSavedVersion={localHasSavedVersion}
-          feedbackGiven={feedbackGiven}
-          summary={summary}
-          isCreatingNote={isCreatingNote}
-          projectId={projectId}
-          hasSummary={hasSummary}
-          buttonText={localHasSavedVersion ? "Already Saved" : "Save as Note"}
-          onFeedback={handleFeedback}
-          onCopy={handleCopy}
-          onDownload={handleDownload}
-          onCreateNote={handleCreateNote}
-          error={error}
-          onRetry={onRetry}
-        />
+        <div className="p-6 pt-2 flex-shrink-0">
+          <SummaryAlert 
+            hasSummary={hasSummary}
+            localHasSavedVersion={localHasSavedVersion}
+            projectId={projectId}
+          />
+          
+          <SummaryFooter 
+            isLoading={isLoading}
+            localHasSavedVersion={localHasSavedVersion}
+            feedbackGiven={feedbackGiven}
+            summary={summary}
+            isCreatingNote={isCreatingNote}
+            projectId={projectId}
+            hasSummary={hasSummary}
+            buttonText={localHasSavedVersion ? "Already Saved" : "Save as Note"}
+            onFeedback={handleFeedback}
+            onCopy={handleCopy}
+            onDownload={handleDownload}
+            onCreateNote={handleCreateNote}
+            error={error}
+            onRetry={onRetry}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
