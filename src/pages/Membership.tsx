@@ -66,18 +66,8 @@ const Membership = () => {
           throw tiersError;
         }
         
-        // Get user's current membership tier
-        const { data: userData, error: userError } = await supabase
-          .from('profiles')
-          .select('membership_tier_id')
-          .eq('id', user.id)
-          .single();
-          
-        if (userError) {
-          throw userError;
-        }
-        
-        console.log("Current membership tier:", userData?.membership_tier_id);
+        // Get user's current membership tier directly from auth context
+        console.log("Current membership tier from profile:", profile?.membership_tier_id);
         
         // Transform the data to ensure features is properly typed and add payment links
         const formattedTiers: MembershipTier[] = tiers.map(tier => {
@@ -97,7 +87,7 @@ const Membership = () => {
         });
         
         setMembershipTiers(formattedTiers);
-        setCurrentTierId(userData?.membership_tier_id || null);
+        setCurrentTierId(profile?.membership_tier_id || null);
       } catch (error) {
         console.error('Error fetching membership data:', error);
         toast.error('Failed to load membership information');
@@ -107,7 +97,7 @@ const Membership = () => {
     };
     
     fetchMembershipData();
-  }, [user, navigate, refreshing]);
+  }, [user, navigate, profile, refreshing]);
   
   // Helper function to parse the features from JSON
   const parseFeatures = (features: Json): { name: string; description: string }[] => {
@@ -141,6 +131,30 @@ const Membership = () => {
     }, 500);
   };
   
+  // Handle subscription completion redirect from Stripe
+  useEffect(() => {
+    const checkUrlParams = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const success = urlParams.get('success');
+      const canceled = urlParams.get('canceled');
+      
+      if (success === 'true') {
+        toast.success('Payment successful! Your membership is being updated.');
+        refreshMembership();
+        // Clean up the URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      } else if (canceled === 'true') {
+        toast.error('Payment was canceled');
+        // Clean up the URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+      }
+    };
+    
+    checkUrlParams();
+  }, []);
+  
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -159,18 +173,18 @@ const Membership = () => {
           </p>
         </div>
         
-        <Alert className="mb-4">
-          <Info className="h-4 w-4" />
+        <Alert className="mb-4 bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
+          <Info className="h-4 w-4 text-yellow-500" />
           <AlertDescription>
             {USE_TEST_MODE 
-              ? 'This is running in TEST MODE. Use Stripe test cards for payments.' 
+              ? 'This is running in TEST MODE. Use Stripe test cards for payments (e.g. 4242 4242 4242 4242).' 
               : 'After completing payment, your account will be automatically upgraded. If you don\'t see changes immediately, please refresh the page.'}
           </AlertDescription>
         </Alert>
         
         <div className="text-center">
           <Button 
-            variant="outline" 
+            variant="default" 
             onClick={refreshMembership}
             disabled={refreshing}
             className="mb-4"
@@ -190,7 +204,7 @@ const Membership = () => {
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
             Having trouble with payments? After checkout, click the "Refresh Membership Status" button above.
-            Current plan: {profile?.membership_tier_id || "Free"}
+            Current tier ID: {profile?.membership_tier_id || "None"}
           </AlertDescription>
         </Alert>
         

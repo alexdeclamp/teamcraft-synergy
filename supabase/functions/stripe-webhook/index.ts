@@ -16,7 +16,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "whsec_2Au2bLfMry4948i1wH6UhFN97ADIW1d0";
 
 // Map Stripe product IDs to membership tier IDs in your database
-const PRODUCT_TO_TIER_MAP: Record<string, string> = {
+const PRODUCT_TO_TIER_MAP = {
   // Production products
   "prod_Rxy6Y9WaxBQYC7": "pro", // Pro tier
   "prod_Rxy7KmZSQH2riU": "team", // Team tier
@@ -87,9 +87,8 @@ serve(async (req) => {
       console.log("Price ID:", priceId);
       console.log("Product ID:", productId);
       
-      // Get the user ID from customer metadata or find the user by Stripe customer ID
       // Retrieve the user's email from the session
-      const customerEmail = session.customer_details.email;
+      const customerEmail = session.customer_details?.email;
 
       if (!customerEmail) {
         console.error("No customer email found in session");
@@ -99,56 +98,70 @@ serve(async (req) => {
       // Log information about the subscription for debugging
       console.log("Processing subscription for:", customerEmail);
       console.log("Product ID:", productId);
-      console.log("Tier mapping:", PRODUCT_TO_TIER_MAP[productId as string]);
+      console.log("Tier mapping:", PRODUCT_TO_TIER_MAP[productId]);
 
       // Find the user by email
-      const { data: userData, error: userError } = await supabase
-        .rpc('get_user_by_email', { lookup_email: customerEmail });
-
-      if (userError) {
-        console.error("Error finding user by email:", userError);
-        return new Response(`Error finding user: ${userError.message}`, { status: 500 });
-      }
-
       let userId;
-      if (!userData || userData.length === 0) {
-        console.error("No user found with email:", customerEmail);
+      
+      // Try multiple approaches to find the user
+      // First, try direct lookup in auth.users
+      const { data: authData, error: authError } = await supabase
+        .from('auth')
+        .select('users.id')
+        .eq('users.email', customerEmail)
+        .single();
+      
+      if (authError || !authData) {
+        console.log("Auth lookup failed, trying profiles table...");
         
-        // Try alternative lookup by email directly in auth.users
-        const { data: authData, error: authError } = await supabase
-          .from('auth')
-          .select('users.id')
-          .eq('users.email', customerEmail)
+        // Try direct lookup in profiles table
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .ilike('email', customerEmail)
           .single();
+        
+        if (profileError || !profileData) {
+          console.log("Profile lookup failed, trying case-insensitive search...");
           
-        if (authError) {
-          console.error("Failed to find user in auth.users:", authError);
-          
-          // Try another approach - look directly in profiles
-          const { data: profileData, error: profileError } = await supabase
+          // Try case-insensitive search
+          const { data: profiles, error: profilesError } = await supabase
             .from('profiles')
-            .select('id')
-            .ilike('email', customerEmail)
-            .single();
-            
-          if (profileError || !profileData) {
-            console.error("Failed to find user in profiles:", profileError);
-            return new Response("User not found", { status: 404 });
+            .select('id, email');
+          
+          if (profilesError) {
+            console.error("Failed to query profiles table:", profilesError);
+            return new Response("Error finding user", { status: 500 });
           }
           
+          // Manual case-insensitive search
+          const matchingProfile = profiles.find(p => 
+            p.email && p.email.toLowerCase() === customerEmail.toLowerCase()
+          );
+          
+          if (matchingProfile) {
+            userId = matchingProfile.id;
+            console.log("Found user via case-insensitive search:", userId);
+          } else {
+            console.error("No user found with email:", customerEmail);
+            return new Response("User not found", { status: 404 });
+          }
+        } else {
           userId = profileData.id;
           console.log("Found user in profiles:", userId);
-        } else {
-          userId = authData.users.id;
-          console.log("Found user in auth.users:", userId);
         }
       } else {
-        userId = userData[0].id;
-        console.log("Found user via RPC:", userId);
+        userId = authData.users?.id;
+        console.log("Found user in auth.users:", userId);
+      }
+      
+      if (!userId) {
+        console.error("Failed to find user ID for email:", customerEmail);
+        return new Response("User ID not found", { status: 404 });
       }
 
-      // Find the membership tier ID that corresponds to the product
-      const tierId = PRODUCT_TO_TIER_MAP[productId as string];
+      // Map product ID to tier ID
+      let tierId = PRODUCT_TO_TIER_MAP[productId];
       
       if (!tierId) {
         console.error(`No tier mapping found for product ID: ${productId}`);
@@ -163,25 +176,42 @@ serve(async (req) => {
         .select('id')
         .eq('id', tierId)
         .single();
-        
+      
       if (tierError) {
-        // If we can't find it by ID, try looking up by name
+        // If not found by ID, try looking up by name
+        console.log("Tier not found by ID, looking up by name:", tierId);
+        
         const { data: tierByNameData, error: tierByNameError } = await supabase
           .from('membership_tiers')
           .select('id')
-          .ilike('name', '%pro%')
+          .ilike('name', `%${tierId}%`)
           .single();
           
         if (tierByNameError || !tierByNameData) {
-          console.error("Error finding tier:", tierError);
-          console.error("Also failed by name:", tierByNameError);
-          return new Response("Tier not found", { status: 404 });
+          console.error("Failed to find tier by name:", tierByNameError);
+          
+          // Last resort: get the pro tier by name pattern
+          const { data: fallbackTier, error: fallbackError } = await supabase
+            .from('membership_tiers')
+            .select('id')
+            .not('monthly_price', 'eq', 0)  // Not the free tier
+            .order('monthly_price', { ascending: true })
+            .limit(1);
+            
+          if (fallbackError || !fallbackTier || fallbackTier.length === 0) {
+            console.error("Failed to find any paid tier:", fallbackError);
+            return new Response("No paid tier found", { status: 404 });
+          }
+          
+          tierId = fallbackTier[0].id;
+          console.log("Using fallback paid tier:", tierId);
+        } else {
+          tierId = tierByNameData.id;
+          console.log("Found tier by name:", tierId);
         }
-        
-        console.log("Found tier by name:", tierByNameData.id);
-        tierId = tierByNameData.id;
       } else {
-        console.log("Found tier by ID:", tierData.id);
+        tierId = tierData.id;
+        console.log("Found tier by ID:", tierId);
       }
 
       // Update user's profile with the membership tier ID
