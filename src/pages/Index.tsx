@@ -40,6 +40,9 @@ const Index = () => {
     navigate('/summarize-demo');
   };
 
+  // Add console log for debugging
+  console.log('Index page rendering');
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Navigation with logo */}

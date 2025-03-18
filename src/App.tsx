@@ -30,11 +30,11 @@ const queryClient = new QueryClient();
 
 const App = () => {
   return (
-    <AuthProvider>
-      <OnboardingProvider>
+    <Router>
+      <ThemeProvider defaultTheme="light">
         <QueryClientProvider client={queryClient}>
-          <ThemeProvider defaultTheme="light">
-            <Router>
+          <AuthProvider>
+            <OnboardingProvider>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/landing" element={<Landing />} />
@@ -83,11 +83,11 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <Toaster />
-            </Router>
-          </ThemeProvider>
+            </OnboardingProvider>
+          </AuthProvider>
         </QueryClientProvider>
-      </OnboardingProvider>
-    </AuthProvider>
+      </ThemeProvider>
+    </Router>
   );
 };
 
