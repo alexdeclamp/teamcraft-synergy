@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Loader2 } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type MembershipFeature = {
@@ -18,10 +18,6 @@ type MembershipCardProps = {
   features: MembershipFeature[];
   isCurrentPlan: boolean;
   onSelect: () => void;
-  isLoading?: boolean;
-  billingCycle?: 'monthly' | 'yearly';
-  selectedTierId?: string | null;
-  tierId?: string;
 };
 
 const MembershipCard = ({
@@ -31,56 +27,29 @@ const MembershipCard = ({
   yearlyPrice,
   features,
   isCurrentPlan,
-  onSelect,
-  isLoading = false,
-  billingCycle = 'monthly',
-  selectedTierId = null,
-  tierId
+  onSelect
 }: MembershipCardProps) => {
-  // Calculate the price to display based on the selected billing cycle
-  const displayPrice = billingCycle === 'monthly' ? monthlyPrice : yearlyPrice;
-  
-  // Calculate the billing interval label
-  const intervalLabel = billingCycle === 'monthly' ? '/month' : '/year';
-
-  // Calculate yearly savings percentage (if applicable)
-  const yearlySavingsPercentage = Math.round((1 - (yearlyPrice / (monthlyPrice * 12))) * 100);
-  
-  // Determine if this specific card is in loading state
-  const isThisCardLoading = isLoading && selectedTierId === tierId;
-  
   return (
     <Card className={cn(
       "flex flex-col h-full transition-all", 
-      isCurrentPlan && "border-primary shadow-lg"
+      isCurrentPlan && "border-primary shadow-md"
     )}>
       <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>{name}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </div>
-          {isCurrentPlan && (
-            <span className="px-2 py-1 bg-primary/10 text-primary text-xs font-medium rounded-md">
-              Current Plan
-            </span>
-          )}
-        </div>
+        <CardTitle>{name}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <div className="mb-6">
-          <p className="text-3xl font-bold">${displayPrice}<span className="text-sm font-normal">{intervalLabel}</span></p>
-          {billingCycle === 'monthly' && yearlyPrice > 0 && (
-            <p className="text-sm text-muted-foreground">or ${yearlyPrice}/year (save {yearlySavingsPercentage}%)</p>
-          )}
+        <div className="mb-4">
+          <p className="text-3xl font-bold">${monthlyPrice}<span className="text-sm font-normal">/month</span></p>
+          <p className="text-sm text-muted-foreground">or ${yearlyPrice}/year (save {Math.round((1 - (yearlyPrice / (monthlyPrice * 12))) * 100)}%)</p>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-2">
           <p className="text-sm font-medium">Features</p>
           <ul className="space-y-2">
             {features.map((feature, index) => (
               <li key={index} className="flex items-start gap-2">
-                <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <Check className="h-4 w-4 text-primary mt-0.5" />
                 <div>
                   <p className="text-sm font-medium">{feature.name}</p>
                   <p className="text-xs text-muted-foreground">{feature.description}</p>
@@ -92,23 +61,10 @@ const MembershipCard = ({
       </CardContent>
       <CardFooter>
         {isCurrentPlan ? (
-          <Button className="w-full" variant="outline" disabled>
-            Current Plan
-          </Button>
+          <Button className="w-full" disabled>Current Plan</Button>
         ) : (
-          <Button 
-            className="w-full" 
-            onClick={onSelect}
-            disabled={isThisCardLoading || isLoading}
-          >
-            {isThisCardLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              monthlyPrice === 0 ? 'Downgrade to Free' : 'Upgrade Plan'
-            )}
+          <Button variant="outline" className="w-full" onClick={onSelect}>
+            {monthlyPrice === 0 ? 'Downgrade' : 'Upgrade'}
           </Button>
         )}
       </CardFooter>
