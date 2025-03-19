@@ -69,7 +69,7 @@ serve(async (req) => {
         if (checkoutSession.payment_status === 'paid') {
           // Get the user ID from the client_reference_id or metadata
           const userId = checkoutSession.client_reference_id || 
-                         checkoutSession.metadata?.userId;
+                       checkoutSession.metadata?.userId;
           
           if (!userId) {
             throw new Error('No user ID found in the checkout session');
