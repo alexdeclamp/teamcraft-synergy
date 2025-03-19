@@ -25,7 +25,7 @@ const SubscriptionDialog = ({
   userBrainCount = 0,
   apiCallsUsed = 0
 }: SubscriptionDialogProps) => {
-  const { planDetails, isLoading, error } = useSubscription();
+  const { planDetails, isLoading, error, upgradeToProPlan, isUpgrading } = useSubscription();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -49,6 +49,8 @@ const SubscriptionDialog = ({
             error={error}
             userBrainCount={userBrainCount}
             apiCallsUsed={apiCallsUsed}
+            upgradeToProPlan={upgradeToProPlan}
+            isUpgrading={isUpgrading}
           />
           
           <div className="mt-8">

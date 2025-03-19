@@ -14,6 +14,8 @@ interface SubscriptionInfoProps {
   userBrainCount?: number;
   userDocumentCount?: number;
   apiCallsUsed?: number;
+  upgradeToProPlan?: () => Promise<void>;
+  isUpgrading?: boolean;
 }
 
 const SubscriptionInfo = ({ 
@@ -22,7 +24,9 @@ const SubscriptionInfo = ({
   error,
   userBrainCount = 0,
   userDocumentCount = 0,
-  apiCallsUsed = 0
+  apiCallsUsed = 0,
+  upgradeToProPlan,
+  isUpgrading = false
 }: SubscriptionInfoProps) => {
   if (isLoading) {
     return (
@@ -128,9 +132,19 @@ const SubscriptionInfo = ({
         </div>
       </div>
       
-      {planDetails.plan_type === 'starter' && (
-        <Button className="w-full mt-6" variant="default">
-          Upgrade to Pro
+      {planDetails.plan_type === 'starter' && upgradeToProPlan && (
+        <Button 
+          className="w-full mt-6" 
+          variant="default"
+          onClick={upgradeToProPlan}
+          disabled={isUpgrading}
+        >
+          {isUpgrading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              Processing...
+            </>
+          ) : 'Upgrade to Pro'}
         </Button>
       )}
       
