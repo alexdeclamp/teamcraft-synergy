@@ -20,25 +20,13 @@ export const useSubscription = () => {
       setIsUpgrading(true);
       toast.info('Preparing checkout...');
       
-      // Call the Supabase Edge Function to create a payment link
-      const { data, error } = await supabase.functions.invoke('create-payment-link', {
-        body: { userId: user.id }
-      });
+      // Use the direct Stripe checkout URL instead of generating one
+      const paymentUrl = "https://buy.stripe.com/test_14k7sLg803UpbuwdQQ";
       
-      if (error) {
-        console.error('Error invoking create-payment-link:', error);
-        throw new Error(error.message || 'Failed to create payment link');
-      }
-      
-      if (!data || !data.paymentUrl) {
-        console.error('No payment URL returned:', data);
-        throw new Error('No payment URL returned from the server');
-      }
-      
-      console.log('Redirecting to Stripe checkout:', data.paymentUrl);
+      console.log('Redirecting to Stripe checkout:', paymentUrl);
       
       // Redirect to the Stripe checkout page
-      window.location.href = data.paymentUrl;
+      window.location.href = paymentUrl;
       
     } catch (err) {
       console.error('Error upgrading to Pro:', err);
