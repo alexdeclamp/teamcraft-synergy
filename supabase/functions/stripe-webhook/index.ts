@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12.18.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
@@ -47,18 +46,11 @@ serve(async (req) => {
     }
     
     const stripe = new Stripe(stripeSecretKey);
-    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
     
-    if (!webhookSecret) {
-      console.error('[WEBHOOK] STRIPE_WEBHOOK_SECRET environment variable is not set');
-      return new Response(
-        JSON.stringify({ error: 'Server configuration error: Missing webhook secret' }), 
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 500 
-        }
-      );
-    }
+    // Hard-code the webhook secret provided by the user
+    const webhookSecret = "whsec_2Au2bLfMry4948i1wH6UhFN97ADIW1d0";
+    
+    console.log('[WEBHOOK] Using webhook signing secret');
 
     // Construct the event from the raw body and signature using the webhook secret
     let event;
