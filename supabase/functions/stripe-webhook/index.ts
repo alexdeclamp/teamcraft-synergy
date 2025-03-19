@@ -95,14 +95,36 @@ serve(async (req) => {
       }
       
       case 'customer.subscription.updated': {
-        // Handle subscription updates - could implement if needed
-        console.log('Subscription updated event received');
+        const subscription = event.data.object;
+        
+        // Extract customer ID and metadata
+        const customerId = subscription.customer;
+        const status = subscription.status;
+        
+        console.log(`Subscription ${subscription.id} status updated to ${status} for customer ${customerId}`);
+        
+        // If subscription is active, ensure user's subscription is active in our database
+        if (status === 'active') {
+          // We need to look up the user based on the Stripe customer ID
+          // This would require having the Stripe customer ID stored in our user's metadata
+          // For now, log that we would need to implement this
+          console.log(`Would update subscription status to active for customer ${customerId}`);
+        } else if (status === 'canceled' || status === 'unpaid') {
+          console.log(`Would downgrade subscription for customer ${customerId}`);
+        }
         break;
       }
       
       case 'customer.subscription.deleted': {
-        // Handle subscription cancellations - could implement if needed
-        console.log('Subscription cancelled event received');
+        const subscription = event.data.object;
+        const customerId = subscription.customer;
+        
+        console.log(`Subscription ${subscription.id} deleted for customer ${customerId}`);
+        
+        // For now, just log that a subscription was cancelled
+        // In a real implementation, we would look up the user by Stripe customer ID
+        // and downgrade their account
+        console.log(`Would downgrade subscription for customer ${customerId}`);
         break;
       }
       
