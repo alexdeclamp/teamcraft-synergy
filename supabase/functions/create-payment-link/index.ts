@@ -22,24 +22,31 @@ serve(async (req) => {
     
     if (!userId) {
       console.error('User ID is missing in the request');
-      throw new Error('User ID is required');
+      return new Response(
+        JSON.stringify({ error: 'User ID is required' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      );
     }
 
     // Initialize Stripe with the secret key
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
     if (!stripeKey) {
       console.error('STRIPE_SECRET_KEY is not set');
-      throw new Error('STRIPE_SECRET_KEY environment variable is not set');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error: Missing Stripe secret key' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      );
     }
     
     const stripe = new Stripe(stripeKey);
-    const priceId = Deno.env.get('STRIPE_PRO_PRICE_ID');
+    const priceId = Deno.env.get('STRIPE_PRO_PRICE_ID') || 'price_1PBpYrAiKn6gWARTvv6eeUBu';
     
-    if (!priceId) {
-      console.error('STRIPE_PRO_PRICE_ID is not set');
-      throw new Error('STRIPE_PRO_PRICE_ID environment variable is not set');
-    }
-
     console.log(`Using price ID: ${priceId}`);
     
     // Get origin for success/cancel URLs
@@ -66,7 +73,13 @@ serve(async (req) => {
 
     if (!session.url) {
       console.error('Stripe did not return a checkout URL');
-      throw new Error('Failed to create checkout session');
+      return new Response(
+        JSON.stringify({ error: 'Failed to create checkout session' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      );
     }
 
     console.log(`Created payment link: ${session.url}`);

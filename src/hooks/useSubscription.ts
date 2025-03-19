@@ -20,13 +20,27 @@ export const useSubscription = () => {
       setIsUpgrading(true);
       toast.info('Preparing checkout...');
       
-      // Use the direct Stripe checkout URL instead of generating one
-      const paymentUrl = "https://buy.stripe.com/test_14k7sLg803UpbuwdQQ";
+      // Generate a dynamic payment URL that includes the user ID
+      const { data, error } = await supabase.functions.invoke('create-payment-link', {
+        body: { userId: user.id }
+      });
       
-      console.log('Redirecting to Stripe checkout:', paymentUrl);
+      if (error) {
+        console.error('Error creating payment link:', error);
+        toast.error('Failed to create payment link. Please try again.');
+        return;
+      }
+      
+      if (!data?.paymentUrl) {
+        console.error('No payment URL returned from API');
+        toast.error('Failed to generate checkout. Please try again.');
+        return;
+      }
+      
+      console.log('Redirecting to Stripe checkout:', data.paymentUrl);
       
       // Redirect to the Stripe checkout page
-      window.location.href = paymentUrl;
+      window.location.href = data.paymentUrl;
       
     } catch (err) {
       console.error('Error upgrading to Pro:', err);

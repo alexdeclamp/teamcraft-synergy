@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12.18.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
@@ -19,30 +20,8 @@ serve(async (req) => {
     
     if (!signature) {
       console.error('[WEBHOOK] No Stripe signature found in the request');
-      throw new Error('No Stripe signature found in the request');
-    }
-
-    // Get the raw request body
-    const rawBody = await req.text();
-    console.log('[WEBHOOK] Received webhook payload length:', rawBody.length);
-    
-    // Initialize Stripe with the secret key
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '');
-    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
-    
-    if (!webhookSecret) {
-      console.error('[WEBHOOK] STRIPE_WEBHOOK_SECRET environment variable is not set');
-      throw new Error('STRIPE_WEBHOOK_SECRET environment variable is not set');
-    }
-
-    // Construct the event from the raw body and signature using the webhook secret
-    let event;
-    try {
-      event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
-    } catch (err) {
-      console.error(`[WEBHOOK] Signature verification failed: ${err.message}`);
       return new Response(
-        JSON.stringify({ error: 'Webhook signature verification failed' }),
+        JSON.stringify({ error: 'No stripe signature in request' }), 
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           status: 400 
@@ -50,9 +29,70 @@ serve(async (req) => {
       );
     }
 
+    // Get the raw request body
+    const rawBody = await req.text();
+    console.log('[WEBHOOK] Received webhook payload length:', rawBody.length);
+    
+    // Initialize Stripe with the secret key
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeSecretKey) {
+      console.error('[WEBHOOK] STRIPE_SECRET_KEY environment variable is not set');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error: Missing Stripe secret key' }), 
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      );
+    }
+    
+    const stripe = new Stripe(stripeSecretKey);
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+    
+    if (!webhookSecret) {
+      console.error('[WEBHOOK] STRIPE_WEBHOOK_SECRET environment variable is not set');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error: Missing webhook secret' }), 
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      );
+    }
+
+    // Construct the event from the raw body and signature using the webhook secret
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+      console.log(`[WEBHOOK] Successfully constructed event: ${event.type}`);
+    } catch (err) {
+      console.error(`[WEBHOOK] Signature verification failed: ${err.message}`);
+      console.error(`[WEBHOOK] Signature provided: ${signature ? signature.substring(0, 20) + '...' : 'none'}`);
+      console.error(`[WEBHOOK] First 100 chars of payload: ${rawBody.substring(0, 100)}...`);
+      
+      return new Response(
+        JSON.stringify({ 
+          error: 'Webhook signature verification failed',
+          message: err.message
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401 
+        }
+      );
+    }
+
     console.log(`[WEBHOOK] Received Stripe event: ${event.type}`);
     console.log(`[WEBHOOK] Event ID: ${event.id}`);
-    console.log(`[WEBHOOK] Event data object: ${JSON.stringify(event.data.object).substring(0, 200)}...`);
+    
+    // Log only a safe subset of the event data
+    const safeEvent = {
+      id: event.id,
+      type: event.type,
+      created: event.created,
+      object: event.object,
+    };
+    console.log(`[WEBHOOK] Event summary: ${JSON.stringify(safeEvent)}`);
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
@@ -60,7 +100,13 @@ serve(async (req) => {
     
     if (!supabaseUrl || !supabaseServiceKey) {
       console.error('[WEBHOOK] Missing Supabase environment variables');
-      throw new Error('Missing Supabase environment variables');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error: Missing Supabase credentials' }), 
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      );
     }
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -78,7 +124,13 @@ serve(async (req) => {
           
           if (!userId) {
             console.error('[WEBHOOK] No user ID found in the checkout session');
-            throw new Error('No user ID found in the checkout session');
+            return new Response(
+              JSON.stringify({ error: 'Missing user ID in checkout session' }), 
+              { 
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 400 
+              }
+            );
           }
 
           // Determine which plan was purchased - in this case we only have 'pro'
@@ -161,7 +213,13 @@ serve(async (req) => {
               }
             } catch (fallbackErr) {
               console.error(`[WEBHOOK] All subscription update methods failed: ${fallbackErr.message}`);
-              throw fallbackErr;
+              return new Response(
+                JSON.stringify({ error: 'Failed to update subscription', details: fallbackErr.message }), 
+                { 
+                  headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                  status: 500 
+                }
+              );
             }
           } else {
             console.log(`[WEBHOOK] Successfully updated subscription via RPC for user ${userId} to ${planType}`);

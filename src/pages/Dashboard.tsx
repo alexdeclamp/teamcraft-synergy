@@ -35,12 +35,15 @@ const Dashboard = () => {
       console.log('Dashboard detected successful payment redirect');
       
       // If we haven't shown the loading toast yet, show it
-      if (!document.getElementById('subscription-update')) {
-        toast.loading('Processing your subscription upgrade...', { 
-          id: 'subscription-update',
-          duration: 8000
-        });
-      }
+      toast.loading('Processing your subscription upgrade...', { 
+        id: 'subscription-update',
+        duration: 8000
+      });
+      
+      // Clear the URL parameters
+      const url = new URL(window.location.href);
+      url.searchParams.delete('subscription');
+      window.history.replaceState({}, '', url.toString());
       
       // Trigger an immediate subscription refresh
       refetchSubscription();
