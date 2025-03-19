@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12.18.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
@@ -19,6 +18,7 @@ serve(async (req) => {
     const signature = req.headers.get('stripe-signature');
     
     if (!signature) {
+      console.error('[WEBHOOK] No Stripe signature found in the request');
       throw new Error('No Stripe signature found in the request');
     }
 
@@ -30,6 +30,7 @@ serve(async (req) => {
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
     
     if (!webhookSecret) {
+      console.error('[WEBHOOK] STRIPE_WEBHOOK_SECRET environment variable is not set');
       throw new Error('STRIPE_WEBHOOK_SECRET environment variable is not set');
     }
 
@@ -38,7 +39,7 @@ serve(async (req) => {
     try {
       event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
     } catch (err) {
-      console.error(`Webhook signature verification failed: ${err.message}`);
+      console.error(`[WEBHOOK] Signature verification failed: ${err.message}`);
       return new Response(
         JSON.stringify({ error: 'Webhook signature verification failed' }),
         { 
@@ -48,13 +49,16 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Received Stripe event: ${event.type}`);
+    console.log(`[WEBHOOK] Received Stripe event: ${event.type}`);
+    console.log(`[WEBHOOK] Event ID: ${event.id}`);
+    console.log(`[WEBHOOK] Event data object: ${JSON.stringify(event.data.object).substring(0, 200)}...`);
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
     if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('[WEBHOOK] Missing Supabase environment variables');
       throw new Error('Missing Supabase environment variables');
     }
     
@@ -72,6 +76,7 @@ serve(async (req) => {
                        checkoutSession.metadata?.userId;
           
           if (!userId) {
+            console.error('[WEBHOOK] No user ID found in the checkout session');
             throw new Error('No user ID found in the checkout session');
           }
 
@@ -82,10 +87,25 @@ serve(async (req) => {
           const customerId = checkoutSession.customer;
           const subscriptionId = checkoutSession.subscription;
           
-          console.log(`Processing checkout completion for userId: ${userId}, customerId: ${customerId}, subscriptionId: ${subscriptionId}`);
+          console.log(`[WEBHOOK] Processing checkout completion for userId: ${userId}, customerId: ${customerId}, subscriptionId: ${subscriptionId}`);
           
-          // First make sure we update any existing subscription to be active
-          if (customerId && subscriptionId) {
+          // First check if we already have a subscription for this user
+          const { data: existingSubscription, error: lookupError } = await supabase
+            .from('user_subscriptions')
+            .select('*')
+            .eq('user_id', userId)
+            .maybeSingle();
+            
+          console.log(`[WEBHOOK] Existing subscription lookup result: ${JSON.stringify(existingSubscription || 'none')}`);
+          
+          if (lookupError) {
+            console.error(`[WEBHOOK] Error looking up existing subscription: ${lookupError.message}`);
+          }
+          
+          // If the user already has a subscription, update it
+          if (existingSubscription) {
+            console.log(`[WEBHOOK] Updating existing subscription for user ${userId} to plan ${planType}`);
+            
             const { error: updateError } = await supabase
               .from('user_subscriptions')
               .update({
@@ -97,41 +117,45 @@ serve(async (req) => {
               })
               .eq('user_id', userId);
             
-            // If no subscription exists yet, create a new one
             if (updateError) {
-              console.log(`No existing subscription found, creating new one for user ${userId}`);
+              console.error(`[WEBHOOK] Error updating subscription: ${updateError.message}`);
+              throw new Error(`Failed to update subscription: ${updateError.message}`);
+            }
+            
+            console.log(`[WEBHOOK] Successfully updated subscription for user ${userId} to ${planType}`);
+          } else {
+            // Create a new subscription for the user
+            console.log(`[WEBHOOK] Creating new subscription for user ${userId} with plan ${planType}`);
+            
+            const { error: insertError } = await supabase
+              .from('user_subscriptions')
+              .insert({
+                user_id: userId,
+                plan_type: planType,
+                is_active: true,
+                subscription_id: subscriptionId,
+                customer_id: customerId
+              });
+            
+            if (insertError) {
+              console.error(`[WEBHOOK] Error creating new subscription: ${insertError.message}`);
               
-              // Create a new subscription for the user
-              const { error: insertError } = await supabase
-                .from('user_subscriptions')
-                .insert({
-                  user_id: userId,
-                  plan_type: planType,
-                  is_active: true,
-                  subscription_id: subscriptionId,
-                  customer_id: customerId
-                });
+              // Try RPC as fallback
+              const { error: rpcError } = await supabase.rpc('create_user_subscription', {
+                p_user_id: userId,
+                p_plan_type: planType
+              });
               
-              if (insertError) {
-                console.error('Error creating new subscription:', insertError.message);
-                throw new Error(`Failed to create new subscription: ${insertError.message}`);
+              if (rpcError) {
+                console.error(`[WEBHOOK] RPC fallback also failed: ${rpcError.message}`);
+                throw new Error(`Failed to create subscription: ${rpcError.message}`);
               }
             }
-          } else {
-            // If for some reason we don't have customer/subscription IDs, use the RPC function as fallback
-            console.log(`Using RPC fallback to update subscription for user ${userId}`);
-            const { error } = await supabase.rpc('create_user_subscription', {
-              p_user_id: userId,
-              p_plan_type: planType
-            });
             
-            if (error) {
-              console.error('Error updating user subscription with RPC:', error.message);
-              throw new Error(`Failed to update user subscription: ${error.message}`);
-            }
+            console.log(`[WEBHOOK] Successfully created subscription for user ${userId} with plan ${planType}`);
           }
-          
-          console.log(`Successfully upgraded user ${userId} to ${planType} plan with Stripe customer ${customerId}`);
+        } else {
+          console.log(`[WEBHOOK] Checkout session payment status is not 'paid': ${checkoutSession.payment_status}`);
         }
         break;
       }
@@ -143,7 +167,7 @@ serve(async (req) => {
         const customerId = subscription.customer;
         const status = subscription.status;
         
-        console.log(`Subscription ${subscription.id} status updated to ${status} for customer ${customerId}`);
+        console.log(`[WEBHOOK] Subscription ${subscription.id} status updated to ${status} for customer ${customerId}`);
         
         // If subscription is active, ensure user's subscription is active in our database
         if (status === 'active') {
@@ -189,7 +213,7 @@ serve(async (req) => {
         const subscription = event.data.object;
         const customerId = subscription.customer;
         
-        console.log(`Subscription ${subscription.id} deleted for customer ${customerId}`);
+        console.log(`[WEBHOOK] Subscription ${subscription.id} deleted for customer ${customerId}`);
         
         // Handle the cancellation
         await handleCanceledSubscription(supabase, customerId);
@@ -200,7 +224,7 @@ serve(async (req) => {
         const paymentIntent = event.data.object;
         const customerId = paymentIntent.customer;
         
-        console.log(`Payment succeeded for customer ${customerId}`);
+        console.log(`[WEBHOOK] Payment succeeded for customer ${customerId}`);
         
         // If this is related to a subscription, we might want to update payment status
         // For now, just log the successful payment
@@ -214,7 +238,7 @@ serve(async (req) => {
           if (userError) {
             console.error('Error looking up user by customer ID:', userError.message);
           } else if (userData) {
-            console.log(`Payment succeeded for user ${userData.user_id}`);
+            console.log(`[WEBHOOK] Payment succeeded for user ${userData.user_id}`);
           }
         }
         break;
@@ -224,7 +248,7 @@ serve(async (req) => {
         const paymentIntent = event.data.object;
         const customerId = paymentIntent.customer;
         
-        console.log(`Payment failed for customer ${customerId}`);
+        console.log(`[WEBHOOK] Payment failed for customer ${customerId}`);
         
         // If payment fails, we might want to notify the user or update their status
         if (customerId) {
@@ -237,7 +261,7 @@ serve(async (req) => {
           if (userError) {
             console.error('Error looking up user by customer ID:', userError.message);
           } else if (userData) {
-            console.log(`Payment failed for user ${userData.user_id}`);
+            console.log(`[WEBHOOK] Payment failed for user ${userData.user_id}`);
             // For now, just log that the payment failed
             // In a real implementation, we might want to send a notification
           }
@@ -246,7 +270,7 @@ serve(async (req) => {
       }
       
       default: {
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`[WEBHOOK] Unhandled event type: ${event.type}`);
       }
     }
 
@@ -296,17 +320,30 @@ serve(async (req) => {
       }
     }
 
+    console.log(`[WEBHOOK] Successfully processed webhook event: ${event.type}`);
+    
     return new Response(
-      JSON.stringify({ received: true }),
+      JSON.stringify({ 
+        received: true,
+        processed: true,
+        event_type: event.type,
+        timestamp: new Date().toISOString()
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
       }
     );
   } catch (error) {
-    console.error('Error processing webhook:', error);
+    console.error(`[WEBHOOK] Error processing webhook: ${error.message}`);
+    console.error(error.stack);
+    
     return new Response(
-      JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred',
+        details: error.stack,
+        timestamp: new Date().toISOString()
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 

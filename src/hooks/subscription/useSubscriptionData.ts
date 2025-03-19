@@ -69,12 +69,36 @@ export const useSubscriptionData = (): SubscriptionData => {
       
       if (subscriptionStatus === 'success') {
         console.log('Detected successful payment, refetching subscription data...');
-        // Add a small delay to allow the webhook to process
+        // Show loading toast
+        toast.loading('Updating your subscription status...', { id: 'subscription-update' });
+        
+        // Add a larger delay to allow the webhook to process
         setTimeout(() => {
           fetchSubscriptionData().then(() => {
             console.log('Subscription data refreshed after payment');
+            toast.success('Your subscription has been upgraded to Pro!', { 
+              id: 'subscription-update',
+              duration: 5000
+            });
+            
+            // Clear the URL parameters after processing
+            const url = new URL(window.location.href);
+            url.searchParams.delete('subscription');
+            window.history.replaceState({}, '', url.toString());
+          }).catch(() => {
+            toast.error('There was a problem updating your subscription. Please try refreshing the page.', { 
+              id: 'subscription-update',
+              duration: 5000
+            });
           });
-        }, 2000);
+        }, 3000); // Increased delay to 3 seconds
+      } else if (subscriptionStatus === 'canceled') {
+        toast.info('Subscription upgrade was canceled.', { duration: 4000 });
+        
+        // Clear the URL parameters after processing
+        const url = new URL(window.location.href);
+        url.searchParams.delete('subscription');
+        window.history.replaceState({}, '', url.toString());
       }
     };
     
