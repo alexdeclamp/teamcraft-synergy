@@ -7,6 +7,7 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardToolbar from '@/components/dashboard/DashboardToolbar';
 import ProjectGrid from '@/components/dashboard/ProjectGrid';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const Dashboard = () => {
   const {
@@ -20,6 +21,9 @@ const Dashboard = () => {
     setSortOrder,
     refreshProjects
   } = useDashboardData();
+  
+  // Get subscription data to trigger refresh when arriving from payment
+  const { refetch: refetchSubscription } = useSubscription();
 
   // Check URL parameters for subscription status
   const location = useLocation();
@@ -28,14 +32,27 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (subscriptionStatus === 'success') {
-      toast.success(
-        'Payment successful! Your subscription will be upgraded once the payment is processed.',
-        { duration: 6000 }
-      );
+      console.log('Dashboard detected successful payment redirect');
+      
+      // If we haven't shown the loading toast yet, show it
+      if (!document.getElementById('subscription-update')) {
+        toast.loading('Processing your subscription upgrade...', { 
+          id: 'subscription-update',
+          duration: 8000
+        });
+      }
+      
+      // Trigger an immediate subscription refresh
+      refetchSubscription();
     } else if (subscriptionStatus === 'canceled') {
       toast.info('Subscription upgrade was canceled.', { duration: 4000 });
+      
+      // Clear the URL parameters
+      const url = new URL(window.location.href);
+      url.searchParams.delete('subscription');
+      window.history.replaceState({}, '', url.toString());
     }
-  }, [subscriptionStatus]);
+  }, [subscriptionStatus, refetchSubscription]);
 
   return (
     <div className="min-h-screen bg-background pb-12 animate-fade-in">

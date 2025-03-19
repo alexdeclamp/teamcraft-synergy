@@ -24,6 +24,7 @@ serve(async (req) => {
 
     // Get the raw request body
     const rawBody = await req.text();
+    console.log('[WEBHOOK] Received webhook payload length:', rawBody.length);
     
     // Initialize Stripe with the secret key
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '');
@@ -89,70 +90,94 @@ serve(async (req) => {
           
           console.log(`[WEBHOOK] Processing checkout completion for userId: ${userId}, customerId: ${customerId}, subscriptionId: ${subscriptionId}`);
           
-          // First check if we already have a subscription for this user
-          const { data: existingSubscription, error: lookupError } = await supabase
+          // DIRECT DATABASE UPDATE: Perform direct SQL update to ensure the plan changes immediately
+          const { data: directUpdateResult, error: directUpdateError } = await supabase.rpc(
+            'create_user_subscription',
+            {
+              p_user_id: userId,
+              p_plan_type: planType
+            }
+          );
+          
+          if (directUpdateError) {
+            console.error(`[WEBHOOK] Error in direct update via RPC: ${directUpdateError.message}`);
+            
+            // Fall back to regular update/insert
+            try {
+              // First check if we already have a subscription for this user
+              const { data: existingSubscription, error: lookupError } = await supabase
+                .from('user_subscriptions')
+                .select('*')
+                .eq('user_id', userId)
+                .maybeSingle();
+                
+              console.log(`[WEBHOOK] Existing subscription lookup result: ${JSON.stringify(existingSubscription || 'none')}`);
+              
+              if (lookupError) {
+                console.error(`[WEBHOOK] Error looking up existing subscription: ${lookupError.message}`);
+              }
+              
+              // If the user already has a subscription, update it
+              if (existingSubscription) {
+                console.log(`[WEBHOOK] Updating existing subscription for user ${userId} to plan ${planType}`);
+                
+                const { error: updateError } = await supabase
+                  .from('user_subscriptions')
+                  .update({
+                    is_active: true,
+                    subscription_id: subscriptionId,
+                    customer_id: customerId,
+                    plan_type: planType,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('user_id', userId);
+                
+                if (updateError) {
+                  console.error(`[WEBHOOK] Error updating subscription: ${updateError.message}`);
+                  throw new Error(`Failed to update subscription: ${updateError.message}`);
+                }
+                
+                console.log(`[WEBHOOK] Successfully updated subscription for user ${userId} to ${planType}`);
+              } else {
+                // Create a new subscription for the user
+                console.log(`[WEBHOOK] Creating new subscription for user ${userId} with plan ${planType}`);
+                
+                const { error: insertError } = await supabase
+                  .from('user_subscriptions')
+                  .insert({
+                    user_id: userId,
+                    plan_type: planType,
+                    is_active: true,
+                    subscription_id: subscriptionId,
+                    customer_id: customerId
+                  });
+                
+                if (insertError) {
+                  console.error(`[WEBHOOK] Error creating new subscription: ${insertError.message}`);
+                  throw new Error(`Failed to create subscription: ${insertError.message}`);
+                }
+                
+                console.log(`[WEBHOOK] Successfully created subscription for user ${userId} with plan ${planType}`);
+              }
+            } catch (fallbackErr) {
+              console.error(`[WEBHOOK] All subscription update methods failed: ${fallbackErr.message}`);
+              throw fallbackErr;
+            }
+          } else {
+            console.log(`[WEBHOOK] Successfully updated subscription via RPC for user ${userId} to ${planType}`);
+          }
+          
+          // Double check that the update was successful by reading back the subscription
+          const { data: verifySubscription, error: verifyError } = await supabase
             .from('user_subscriptions')
             .select('*')
             .eq('user_id', userId)
             .maybeSingle();
             
-          console.log(`[WEBHOOK] Existing subscription lookup result: ${JSON.stringify(existingSubscription || 'none')}`);
-          
-          if (lookupError) {
-            console.error(`[WEBHOOK] Error looking up existing subscription: ${lookupError.message}`);
-          }
-          
-          // If the user already has a subscription, update it
-          if (existingSubscription) {
-            console.log(`[WEBHOOK] Updating existing subscription for user ${userId} to plan ${planType}`);
-            
-            const { error: updateError } = await supabase
-              .from('user_subscriptions')
-              .update({
-                is_active: true,
-                subscription_id: subscriptionId,
-                customer_id: customerId,
-                plan_type: planType,
-                updated_at: new Date().toISOString()
-              })
-              .eq('user_id', userId);
-            
-            if (updateError) {
-              console.error(`[WEBHOOK] Error updating subscription: ${updateError.message}`);
-              throw new Error(`Failed to update subscription: ${updateError.message}`);
-            }
-            
-            console.log(`[WEBHOOK] Successfully updated subscription for user ${userId} to ${planType}`);
+          if (verifyError) {
+            console.error(`[WEBHOOK] Error verifying subscription update: ${verifyError.message}`);
           } else {
-            // Create a new subscription for the user
-            console.log(`[WEBHOOK] Creating new subscription for user ${userId} with plan ${planType}`);
-            
-            const { error: insertError } = await supabase
-              .from('user_subscriptions')
-              .insert({
-                user_id: userId,
-                plan_type: planType,
-                is_active: true,
-                subscription_id: subscriptionId,
-                customer_id: customerId
-              });
-            
-            if (insertError) {
-              console.error(`[WEBHOOK] Error creating new subscription: ${insertError.message}`);
-              
-              // Try RPC as fallback
-              const { error: rpcError } = await supabase.rpc('create_user_subscription', {
-                p_user_id: userId,
-                p_plan_type: planType
-              });
-              
-              if (rpcError) {
-                console.error(`[WEBHOOK] RPC fallback also failed: ${rpcError.message}`);
-                throw new Error(`Failed to create subscription: ${rpcError.message}`);
-              }
-            }
-            
-            console.log(`[WEBHOOK] Successfully created subscription for user ${userId} with plan ${planType}`);
+            console.log(`[WEBHOOK] Verification of subscription update: ${JSON.stringify(verifySubscription)}`);
           }
         } else {
           console.log(`[WEBHOOK] Checkout session payment status is not 'paid': ${checkoutSession.payment_status}`);

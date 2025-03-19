@@ -72,26 +72,62 @@ export const useSubscriptionData = (): SubscriptionData => {
         // Show loading toast
         toast.loading('Updating your subscription status...', { id: 'subscription-update' });
         
-        // Add a larger delay to allow the webhook to process
-        setTimeout(() => {
-          fetchSubscriptionData().then(() => {
-            console.log('Subscription data refreshed after payment');
-            toast.success('Your subscription has been upgraded to Pro!', { 
-              id: 'subscription-update',
-              duration: 5000
-            });
+        // Add multiple refetch attempts with increasing delays
+        const attemptRefetch = (attempt = 1, maxAttempts = 5) => {
+          console.log(`Subscription data refresh attempt ${attempt}/${maxAttempts}`);
+          
+          fetchSubscriptionData().then((result) => {
+            console.log('Subscription data refreshed after payment:', result);
             
-            // Clear the URL parameters after processing
-            const url = new URL(window.location.href);
-            url.searchParams.delete('subscription');
-            window.history.replaceState({}, '', url.toString());
-          }).catch(() => {
-            toast.error('There was a problem updating your subscription. Please try refreshing the page.', { 
-              id: 'subscription-update',
-              duration: 5000
-            });
+            // Check if the plan was actually updated to pro
+            if (userSubscription?.plan_type === 'pro') {
+              toast.success('Your subscription has been upgraded to Pro!', { 
+                id: 'subscription-update',
+                duration: 5000
+              });
+              
+              // Clear URL parameters after successful update
+              const url = new URL(window.location.href);
+              url.searchParams.delete('subscription');
+              window.history.replaceState({}, '', url.toString());
+            } else if (attempt < maxAttempts) {
+              // If not pro yet, try again with increasing delay
+              const delay = attempt * 2000; // Increasing delay: 2s, 4s, 6s, 8s
+              console.log(`Plan not updated yet (still ${userSubscription?.plan_type}), retrying in ${delay}ms`);
+              setTimeout(() => attemptRefetch(attempt + 1), delay);
+            } else {
+              // After all attempts, show a message that we're still processing
+              toast.info('Your payment was successful! Your subscription will be updated shortly.', { 
+                id: 'subscription-update',
+                duration: 8000
+              });
+              
+              // Clear URL parameters after processing
+              const url = new URL(window.location.href);
+              url.searchParams.delete('subscription');
+              window.history.replaceState({}, '', url.toString());
+            }
+          }).catch((err) => {
+            console.error('Error during subscription refresh:', err);
+            if (attempt < maxAttempts) {
+              const delay = attempt * 2000;
+              setTimeout(() => attemptRefetch(attempt + 1), delay);
+            } else {
+              toast.error('There was a problem updating your subscription. It may take a few minutes to process.', { 
+                id: 'subscription-update',
+                duration: 5000
+              });
+              
+              // Clear URL parameters after processing
+              const url = new URL(window.location.href);
+              url.searchParams.delete('subscription');
+              window.history.replaceState({}, '', url.toString());
+            }
           });
-        }, 3000); // Increased delay to 3 seconds
+        };
+        
+        // Start the first attempt after a short delay to allow webhook processing
+        setTimeout(() => attemptRefetch(), 3000);
       } else if (subscriptionStatus === 'canceled') {
         toast.info('Subscription upgrade was canceled.', { duration: 4000 });
         
@@ -103,7 +139,7 @@ export const useSubscriptionData = (): SubscriptionData => {
     };
     
     handleSubscriptionUpdate();
-  }, [fetchSubscriptionData]);
+  }, [fetchSubscriptionData, userSubscription?.plan_type]);
 
   return {
     userSubscription,
