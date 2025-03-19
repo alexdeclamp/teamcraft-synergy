@@ -78,10 +78,18 @@ serve(async (req) => {
           // Determine which plan was purchased - in this case we only have 'pro'
           const planType = 'pro';
           
-          // Update the user's subscription in the database
+          // Store customer ID for future reference
+          const customerId = checkoutSession.customer;
+          const subscriptionId = checkoutSession.subscription;
+          
+          console.log(`Processing checkout completion for userId: ${userId}, customerId: ${customerId}, subscriptionId: ${subscriptionId}`);
+          
+          // Update the user's subscription in the database with customer ID and subscription ID
           const { data, error } = await supabase.rpc('create_user_subscription', {
             p_user_id: userId,
-            p_plan_type: planType
+            p_plan_type: planType,
+            p_subscription_id: subscriptionId,
+            p_customer_id: customerId
           });
           
           if (error) {
@@ -89,7 +97,7 @@ serve(async (req) => {
             throw new Error(`Failed to update user subscription: ${error.message}`);
           }
           
-          console.log(`Successfully upgraded user ${userId} to ${planType} plan`);
+          console.log(`Successfully upgraded user ${userId} to ${planType} plan with Stripe customer ${customerId}`);
         }
         break;
       }
@@ -105,12 +113,39 @@ serve(async (req) => {
         
         // If subscription is active, ensure user's subscription is active in our database
         if (status === 'active') {
-          // We need to look up the user based on the Stripe customer ID
-          // This would require having the Stripe customer ID stored in our user's metadata
-          // For now, log that we would need to implement this
-          console.log(`Would update subscription status to active for customer ${customerId}`);
+          // Look up the user based on the Stripe customer ID
+          const { data: userData, error: userError } = await supabase
+            .from('user_subscriptions')
+            .select('user_id')
+            .eq('customer_id', customerId)
+            .maybeSingle();
+          
+          if (userError) {
+            console.error('Error looking up user by customer ID:', userError.message);
+            throw new Error(`Failed to look up user by customer ID: ${userError.message}`);
+          }
+          
+          if (userData) {
+            // Update the subscription status to active
+            const { error: updateError } = await supabase
+              .from('user_subscriptions')
+              .update({ 
+                is_active: true,
+                updated_at: new Date().toISOString()
+              })
+              .eq('customer_id', customerId);
+            
+            if (updateError) {
+              console.error('Error updating subscription status:', updateError.message);
+              throw new Error(`Failed to update subscription status: ${updateError.message}`);
+            }
+            
+            console.log(`Updated subscription status to active for user ${userData.user_id}`);
+          } else {
+            console.log(`No user found for customer ${customerId}`);
+          }
         } else if (status === 'canceled' || status === 'unpaid') {
-          console.log(`Would downgrade subscription for customer ${customerId}`);
+          await handleCanceledSubscription(supabase, customerId);
         }
         break;
       }
@@ -121,15 +156,94 @@ serve(async (req) => {
         
         console.log(`Subscription ${subscription.id} deleted for customer ${customerId}`);
         
-        // For now, just log that a subscription was cancelled
-        // In a real implementation, we would look up the user by Stripe customer ID
-        // and downgrade their account
-        console.log(`Would downgrade subscription for customer ${customerId}`);
+        // Handle the cancellation
+        await handleCanceledSubscription(supabase, customerId);
+        break;
+      }
+      
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object;
+        const customerId = paymentIntent.customer;
+        
+        console.log(`Payment succeeded for customer ${customerId}`);
+        
+        // If this is related to a subscription, we might want to update payment status
+        // For now, just log the successful payment
+        if (customerId) {
+          const { data: userData, error: userError } = await supabase
+            .from('user_subscriptions')
+            .select('user_id')
+            .eq('customer_id', customerId)
+            .maybeSingle();
+          
+          if (userError) {
+            console.error('Error looking up user by customer ID:', userError.message);
+          } else if (userData) {
+            console.log(`Payment succeeded for user ${userData.user_id}`);
+          }
+        }
+        break;
+      }
+      
+      case 'payment_intent.payment_failed': {
+        const paymentIntent = event.data.object;
+        const customerId = paymentIntent.customer;
+        
+        console.log(`Payment failed for customer ${customerId}`);
+        
+        // If payment fails, we might want to notify the user or update their status
+        if (customerId) {
+          const { data: userData, error: userError } = await supabase
+            .from('user_subscriptions')
+            .select('user_id')
+            .eq('customer_id', customerId)
+            .maybeSingle();
+          
+          if (userError) {
+            console.error('Error looking up user by customer ID:', userError.message);
+          } else if (userData) {
+            console.log(`Payment failed for user ${userData.user_id}`);
+            // For now, just log that the payment failed
+            // In a real implementation, we might want to send a notification
+          }
+        }
         break;
       }
       
       default: {
         console.log(`Unhandled event type: ${event.type}`);
+      }
+    }
+
+    // Helper function to handle canceled or deleted subscriptions
+    async function handleCanceledSubscription(supabase, customerId) {
+      // Look up the user based on the Stripe customer ID
+      const { data: userData, error: userError } = await supabase
+        .from('user_subscriptions')
+        .select('user_id')
+        .eq('customer_id', customerId)
+        .maybeSingle();
+      
+      if (userError) {
+        console.error('Error looking up user by customer ID:', userError.message);
+        throw new Error(`Failed to look up user by customer ID: ${userError.message}`);
+      }
+      
+      if (userData) {
+        // Downgrade the user to the free plan
+        const { error: updateError } = await supabase.rpc('create_user_subscription', {
+          p_user_id: userData.user_id,
+          p_plan_type: 'starter'
+        });
+        
+        if (updateError) {
+          console.error('Error downgrading subscription:', updateError.message);
+          throw new Error(`Failed to downgrade subscription: ${updateError.message}`);
+        }
+        
+        console.log(`Downgraded subscription for user ${userData.user_id} to starter plan`);
+      } else {
+        console.log(`No user found for customer ${customerId}`);
       }
     }
 
