@@ -1,9 +1,10 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { SubscriptionPlan, SubscriptionTier, UserSubscription } from '@/types/subscription';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchUserSubscriptionAndPlan } from './services/subscriptionService';
 import { getDefaultPlan } from './utils/planUtils';
+import { toast } from 'sonner';
 
 type SubscriptionData = {
   userSubscription: UserSubscription | null;
@@ -20,7 +21,7 @@ export const useSubscriptionData = (): SubscriptionData => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSubscriptionData = async () => {
+  const fetchSubscriptionData = useCallback(async () => {
     if (!user) {
       setIsLoading(false);
       return;
@@ -30,14 +31,17 @@ export const useSubscriptionData = (): SubscriptionData => {
     setError(null);
     
     try {
+      console.log('Fetching subscription data for user:', user.id);
       // Get the subscription data using the service function
       const { subscription, plan, error: fetchError } = await fetchUserSubscriptionAndPlan(user.id);
       
       if (fetchError) {
+        console.error('Error from subscription service:', fetchError);
         setError(fetchError);
         // Set default fallback plan
         setPlanDetails(getDefaultPlan());
       } else {
+        console.log('Successfully fetched subscription data:', subscription?.plan_type);
         setUserSubscription(subscription);
         setPlanDetails(plan);
       }
@@ -50,11 +54,32 @@ export const useSubscriptionData = (): SubscriptionData => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
+  // Initial data fetch
   useEffect(() => {
     fetchSubscriptionData();
-  }, [user]);
+  }, [fetchSubscriptionData]);
+
+  // Listen for URL parameter changes to refetch after payment completion
+  useEffect(() => {
+    const handleSubscriptionUpdate = () => {
+      const params = new URLSearchParams(window.location.search);
+      const subscriptionStatus = params.get('subscription');
+      
+      if (subscriptionStatus === 'success') {
+        console.log('Detected successful payment, refetching subscription data...');
+        // Add a small delay to allow the webhook to process
+        setTimeout(() => {
+          fetchSubscriptionData().then(() => {
+            console.log('Subscription data refreshed after payment');
+          });
+        }, 2000);
+      }
+    };
+    
+    handleSubscriptionUpdate();
+  }, [fetchSubscriptionData]);
 
   return {
     userSubscription,

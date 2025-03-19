@@ -16,176 +16,75 @@ export const fetchUserSubscriptionAndPlan = async (userId: string): Promise<{
     // First ensure subscription tables are set up
     await setupSubscriptionData();
     
-    // Use the RPC function to get the user's subscription
+    // Direct query for the subscription rather than RPC to avoid any potential issues
     const { data: subscriptionData, error: subscriptionError } = await supabase
-      .rpc('get_user_subscription', { p_user_id: userId });
+      .from('user_subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
 
     if (subscriptionError) {
-      // Handle RPC error with direct query fallback
-      return await handleDirectFallbackQuery(userId);
-    }
-    
-    // Handle subscription data from RPC
-    return await processSubscriptionData(subscriptionData, userId);
-    
-  } catch (err) {
-    console.error('Error in fetchUserSubscriptionAndPlan:', err);
-    return {
-      subscription: null,
-      plan: getDefaultPlan(),
-      error: 'An unexpected error occurred'
-    };
-  }
-};
-
-// Process the RPC result
-const processSubscriptionData = async (
-  subscriptionData: any,
-  userId: string
-): Promise<{
-  subscription: UserSubscription | null;
-  plan: SubscriptionTier | null;
-  error: string | null;
-}> => {
-  // Handle both array and object responses from RPC
-  const subData = Array.isArray(subscriptionData) 
-    ? (subscriptionData.length > 0 ? subscriptionData[0] : null) 
-    : subscriptionData;
-  
-  if (!subData) {
-    console.log('No subscription data found, will create one');
-    // Handle the case where user has no subscription yet - find starter plan
-    const starterPlan = await fetchStarterPlan();
-      
-    if (starterPlan) {
-      // Create starter subscription automatically
-      await supabase.rpc('create_user_subscription', {
-        p_user_id: userId,
-        p_plan_type: 'starter'
-      });
-      
-      // Return default values while the subscription is being created
-      return {
-        subscription: createDefaultSubscription(userId),
-        plan: getDefaultPlan(),
-        error: null
-      };
-    } else {
-      // If no starter plan found, just set a default in the UI
-      return {
-        subscription: createDefaultSubscription(userId),
-        plan: getDefaultPlan(),
-        error: null
-      };
-    }
-  }
-  
-  // We have subscription data, convert to our type
-  // Ensure plan_type is cast to SubscriptionPlan type
-  const planType = subData.plan_type as SubscriptionPlan;
-  
-  const userSub: UserSubscription = {
-    id: subData.id,
-    user_id: userId,
-    plan_type: planType,
-    is_active: subData.is_active,
-    trial_ends_at: subData.trial_ends_at,
-    created_at: subData.created_at
-  };
-  
-  // Get plan details
-  const plan = await fetchPlanByType(userSub.plan_type);
-  
-  return {
-    subscription: userSub,
-    plan,
-    error: null
-  };
-};
-
-// Fallback to direct database query if RPC fails
-const handleDirectFallbackQuery = async (userId: string): Promise<{
-  subscription: UserSubscription | null;
-  plan: SubscriptionTier | null;
-  error: string | null;
-}> => {
-  console.error('Falling back to direct query for subscription data');
-  
-  const { data: fallbackData, error: fallbackError } = await supabase
-    .from('user_subscriptions')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
-    
-  if (fallbackError) {
-    console.error('Error fetching subscription directly:', fallbackError);
-    
-    // Even if we have an error, let's attempt to get the starter plan as fallback
-    const starterPlan = await fetchStarterPlan();
-      
-    if (starterPlan) {
+      console.error('Error fetching subscription:', subscriptionError);
       return {
         subscription: null,
-        plan: starterPlan,
+        plan: getDefaultPlan(),
         error: 'Failed to load subscription information'
       };
     }
     
-    return {
-      subscription: null,
-      plan: getDefaultPlan(),
-      error: 'Failed to load subscription information'
-    };
-  }
-  
-  // Process the fallback data
-  if (fallbackData) {
-    // Fix: Cast plan_type to SubscriptionPlan type to satisfy TypeScript
-    const planType = fallbackData.plan_type as SubscriptionPlan;
+    // If no subscription found, create a default one
+    if (!subscriptionData) {
+      console.log('No subscription data found, creating default subscription');
+      
+      // Create starter subscription automatically
+      const defaultSubscription = createDefaultSubscription(userId);
+      
+      try {
+        await createDefaultUserSubscription(userId);
+        console.log('Default subscription created for user', userId);
+      } catch (err) {
+        console.error('Error creating default subscription:', err);
+      }
+      
+      // Get starter plan details
+      const starterPlan = await fetchStarterPlan();
+      
+      return {
+        subscription: defaultSubscription,
+        plan: starterPlan || getDefaultPlan(),
+        error: null
+      };
+    }
+    
+    // We have subscription data, convert to our type
+    const planType = subscriptionData.plan_type as SubscriptionPlan;
+    
+    console.log(`Found subscription for user ${userId} with plan type: ${planType}`);
     
     const userSub: UserSubscription = {
-      id: fallbackData.id,
+      id: subscriptionData.id,
       user_id: userId,
       plan_type: planType,
-      is_active: fallbackData.is_active,
-      trial_ends_at: fallbackData.trial_ends_at,
-      created_at: fallbackData.created_at
+      is_active: subscriptionData.is_active,
+      trial_ends_at: subscriptionData.trial_ends_at,
+      created_at: subscriptionData.created_at
     };
     
     // Get plan details
     const plan = await fetchPlanByType(userSub.plan_type);
+    console.log(`Fetched plan details for ${planType}:`, plan.name);
     
     return {
       subscription: userSub,
       plan,
       error: null
     };
-  } else {
-    // No subscription found, create default one with starter plan
-    const starterPlan = await fetchStarterPlan();
-      
-    if (starterPlan) {
-      // Create virtual subscription with starter plan
-      const userSub = createDefaultSubscription(userId);
-      
-      // Create a record in the database for this user with the starter plan
-      try {
-        await createDefaultUserSubscription(userId);
-      } catch (err) {
-        console.error('Error creating default subscription:', err);
-      }
-      
-      return {
-        subscription: userSub,
-        plan: starterPlan,
-        error: null
-      };
-    }
-    
+  } catch (err) {
+    console.error('Unexpected error fetching subscription:', err);
     return {
-      subscription: createDefaultSubscription(userId),
+      subscription: null,
       plan: getDefaultPlan(),
-      error: null
+      error: 'An unexpected error occurred'
     };
   }
 };

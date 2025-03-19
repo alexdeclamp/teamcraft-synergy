@@ -84,17 +84,51 @@ serve(async (req) => {
           
           console.log(`Processing checkout completion for userId: ${userId}, customerId: ${customerId}, subscriptionId: ${subscriptionId}`);
           
-          // Update the user's subscription in the database with customer ID and subscription ID
-          const { data, error } = await supabase.rpc('create_user_subscription', {
-            p_user_id: userId,
-            p_plan_type: planType,
-            p_subscription_id: subscriptionId,
-            p_customer_id: customerId
-          });
-          
-          if (error) {
-            console.error('Error updating user subscription:', error.message);
-            throw new Error(`Failed to update user subscription: ${error.message}`);
+          // First make sure we update any existing subscription to be active
+          if (customerId && subscriptionId) {
+            const { error: updateError } = await supabase
+              .from('user_subscriptions')
+              .update({
+                is_active: true,
+                subscription_id: subscriptionId,
+                customer_id: customerId,
+                plan_type: planType,
+                updated_at: new Date().toISOString()
+              })
+              .eq('user_id', userId);
+            
+            // If no subscription exists yet, create a new one
+            if (updateError) {
+              console.log(`No existing subscription found, creating new one for user ${userId}`);
+              
+              // Create a new subscription for the user
+              const { error: insertError } = await supabase
+                .from('user_subscriptions')
+                .insert({
+                  user_id: userId,
+                  plan_type: planType,
+                  is_active: true,
+                  subscription_id: subscriptionId,
+                  customer_id: customerId
+                });
+              
+              if (insertError) {
+                console.error('Error creating new subscription:', insertError.message);
+                throw new Error(`Failed to create new subscription: ${insertError.message}`);
+              }
+            }
+          } else {
+            // If for some reason we don't have customer/subscription IDs, use the RPC function as fallback
+            console.log(`Using RPC fallback to update subscription for user ${userId}`);
+            const { error } = await supabase.rpc('create_user_subscription', {
+              p_user_id: userId,
+              p_plan_type: planType
+            });
+            
+            if (error) {
+              console.error('Error updating user subscription with RPC:', error.message);
+              throw new Error(`Failed to update user subscription: ${error.message}`);
+            }
           }
           
           console.log(`Successfully upgraded user ${userId} to ${planType} plan with Stripe customer ${customerId}`);
@@ -131,6 +165,7 @@ serve(async (req) => {
               .from('user_subscriptions')
               .update({ 
                 is_active: true,
+                plan_type: 'pro', // Explicitly set to pro
                 updated_at: new Date().toISOString()
               })
               .eq('customer_id', customerId);
@@ -231,14 +266,28 @@ serve(async (req) => {
       
       if (userData) {
         // Downgrade the user to the free plan
-        const { error: updateError } = await supabase.rpc('create_user_subscription', {
-          p_user_id: userData.user_id,
-          p_plan_type: 'starter'
-        });
+        const { error: updateError } = await supabase
+          .from('user_subscriptions')
+          .update({
+            plan_type: 'starter',
+            is_active: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userData.user_id);
         
         if (updateError) {
           console.error('Error downgrading subscription:', updateError.message);
-          throw new Error(`Failed to downgrade subscription: ${updateError.message}`);
+          
+          // Try RPC as fallback
+          const { error: rpcError } = await supabase.rpc('create_user_subscription', {
+            p_user_id: userData.user_id,
+            p_plan_type: 'starter'
+          });
+          
+          if (rpcError) {
+            console.error('RPC fallback also failed:', rpcError.message);
+            throw new Error(`Failed to downgrade subscription: ${rpcError.message}`);
+          }
         }
         
         console.log(`Downgraded subscription for user ${userData.user_id} to starter plan`);
