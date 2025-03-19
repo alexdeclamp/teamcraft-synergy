@@ -1,0 +1,3 @@
+
+# Config file for the stripe-webhook edge function
+slug = "stripe-webhook"

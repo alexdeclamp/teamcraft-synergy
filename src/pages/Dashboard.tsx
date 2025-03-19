@@ -1,5 +1,7 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardToolbar from '@/components/dashboard/DashboardToolbar';
@@ -18,6 +20,22 @@ const Dashboard = () => {
     setSortOrder,
     refreshProjects
   } = useDashboardData();
+
+  // Check URL parameters for subscription status
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const subscriptionStatus = queryParams.get('subscription');
+
+  useEffect(() => {
+    if (subscriptionStatus === 'success') {
+      toast.success(
+        'Payment successful! Your subscription will be upgraded once the payment is processed.',
+        { duration: 6000 }
+      );
+    } else if (subscriptionStatus === 'canceled') {
+      toast.info('Subscription upgrade was canceled.', { duration: 4000 });
+    }
+  }, [subscriptionStatus]);
 
   return (
     <div className="min-h-screen bg-background pb-12 animate-fade-in">
