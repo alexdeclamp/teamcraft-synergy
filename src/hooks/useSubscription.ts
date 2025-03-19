@@ -18,6 +18,7 @@ export const useSubscription = () => {
 
     try {
       setIsUpgrading(true);
+      toast.info('Preparing checkout...');
       
       // Call the Supabase Edge Function to create a payment link
       const { data, error } = await supabase.functions.invoke('create-payment-link', {
@@ -25,12 +26,16 @@ export const useSubscription = () => {
       });
       
       if (error) {
+        console.error('Error invoking create-payment-link:', error);
         throw new Error(error.message || 'Failed to create payment link');
       }
       
-      if (!data?.paymentUrl) {
-        throw new Error('No payment URL returned');
+      if (!data || !data.paymentUrl) {
+        console.error('No payment URL returned:', data);
+        throw new Error('No payment URL returned from the server');
       }
+      
+      console.log('Redirecting to Stripe checkout:', data.paymentUrl);
       
       // Redirect to the Stripe checkout page
       window.location.href = data.paymentUrl;

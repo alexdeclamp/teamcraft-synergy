@@ -15,19 +15,36 @@ serve(async (req) => {
 
   try {
     // Get the user ID from the request
-    const { userId } = await req.json();
+    const requestData = await req.json();
+    const userId = requestData.userId;
+    
+    console.log(`Creating payment link for user: ${userId}`);
     
     if (!userId) {
+      console.error('User ID is missing in the request');
       throw new Error('User ID is required');
     }
 
     // Initialize Stripe with the secret key
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '');
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeKey) {
+      console.error('STRIPE_SECRET_KEY is not set');
+      throw new Error('STRIPE_SECRET_KEY environment variable is not set');
+    }
+    
+    const stripe = new Stripe(stripeKey);
     const priceId = Deno.env.get('STRIPE_PRO_PRICE_ID');
     
     if (!priceId) {
+      console.error('STRIPE_PRO_PRICE_ID is not set');
       throw new Error('STRIPE_PRO_PRICE_ID environment variable is not set');
     }
+
+    console.log(`Using price ID: ${priceId}`);
+    
+    // Get origin for success/cancel URLs
+    const origin = req.headers.get('origin') || 'http://localhost:3000';
+    console.log(`Using origin for redirect URLs: ${origin}`);
 
     // Create a checkout session with the price information
     const session = await stripe.checkout.sessions.create({
@@ -39,13 +56,20 @@ serve(async (req) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${req.headers.get('origin')}/dashboard?subscription=success`,
-      cancel_url: `${req.headers.get('origin')}/dashboard?subscription=canceled`,
+      success_url: `${origin}/dashboard?subscription=success`,
+      cancel_url: `${origin}/dashboard?subscription=canceled`,
       client_reference_id: userId,
       metadata: {
         userId: userId
       }
     });
+
+    if (!session.url) {
+      console.error('Stripe did not return a checkout URL');
+      throw new Error('Failed to create checkout session');
+    }
+
+    console.log(`Created payment link: ${session.url}`);
 
     return new Response(
       JSON.stringify({ paymentUrl: session.url }),
@@ -57,7 +81,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error creating payment link:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
+      JSON.stringify({ 
+        error: error.message || 'An unexpected error occurred',
+        details: error.toString()
+      }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 
