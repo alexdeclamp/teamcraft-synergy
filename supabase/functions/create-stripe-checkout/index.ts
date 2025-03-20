@@ -28,7 +28,7 @@ serve(async (req: Request) => {
       });
     }
 
-    const { userId } = await req.json();
+    const { userId, priceId } = await req.json();
 
     if (!userId) {
       return new Response(JSON.stringify({ error: 'User ID is required' }), {
@@ -39,10 +39,31 @@ serve(async (req: Request) => {
 
     console.log('Creating checkout session for user:', userId);
 
-    // Create a checkout session with Stripe
-    const session = await stripe.checkout.sessions.create({
+    // Create checkout session config
+    const sessionConfig: any = {
       payment_method_types: ['card'],
-      line_items: [
+      mode: 'subscription',
+      success_url: `${req.headers.get('origin')}/dashboard?subscription=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get('origin')}/dashboard?subscription=canceled`,
+      client_reference_id: userId,
+      metadata: {
+        userId: userId,
+      },
+    };
+
+    // If a specific priceId is provided, use it directly
+    if (priceId) {
+      console.log('Using provided price ID:', priceId);
+      sessionConfig.line_items = [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ];
+    } else {
+      // Use default product configuration
+      console.log('Using default product configuration');
+      sessionConfig.line_items = [
         {
           price_data: {
             currency: 'usd',
@@ -57,15 +78,11 @@ serve(async (req: Request) => {
           },
           quantity: 1,
         },
-      ],
-      mode: 'subscription',
-      success_url: `${req.headers.get('origin')}/dashboard?subscription=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get('origin')}/dashboard?subscription=canceled`,
-      client_reference_id: userId,
-      metadata: {
-        userId: userId,
-      },
-    });
+      ];
+    }
+
+    // Create a checkout session with Stripe
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     console.log('Checkout session created:', session.id);
 

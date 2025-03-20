@@ -10,7 +10,7 @@ export const useSubscription = () => {
   const { user } = useAuth();
   const [isUpgrading, setIsUpgrading] = useState(false);
 
-  const upgradeToProPlan = async () => {
+  const upgradeToProPlan = async (priceId?: string) => {
     if (!user) {
       toast.error('You must be logged in to upgrade');
       return;
@@ -24,7 +24,10 @@ export const useSubscription = () => {
       
       // Call our Stripe checkout edge function
       const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
-        body: { userId: user.id }
+        body: { 
+          userId: user.id,
+          priceId: priceId // Pass the price ID if provided
+        }
       });
       
       if (error) {
