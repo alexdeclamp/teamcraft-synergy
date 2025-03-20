@@ -54,6 +54,78 @@ serve(async (req: Request) => {
     });
   }
 
+  // Test webhook endpoint - NO signature verification (for troubleshooting only)
+  if (req.url.endsWith('/test-webhook')) {
+    console.log('Test webhook endpoint called - NO SIGNATURE VERIFICATION');
+    
+    try {
+      const body = await req.text();
+      console.log('Test webhook body received, length:', body.length);
+      
+      let eventData;
+      try {
+        eventData = JSON.parse(body);
+      } catch (parseError) {
+        console.error('Failed to parse test webhook body:', parseError);
+        return new Response(JSON.stringify({ error: 'Invalid JSON in test webhook body' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      console.log('Test webhook event type:', eventData.type);
+      
+      // Try a test query to Supabase to verify connection
+      if (supabase) {
+        try {
+          console.log('Testing Supabase connection from test webhook...');
+          const { data, error } = await supabase.from('user_subscriptions').select('count(*)', { count: 'exact', head: true });
+          
+          if (error) {
+            console.error('Supabase test query failed:', error);
+            return new Response(JSON.stringify({ 
+              error: 'Supabase connection test failed',
+              details: error.message,
+              code: error.code
+            }), {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+          
+          console.log('Supabase test query succeeded');
+        } catch (dbError) {
+          console.error('Unexpected error testing Supabase:', dbError);
+          return new Response(JSON.stringify({ 
+            error: 'Unexpected error testing Supabase',
+            details: dbError.message
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      
+      return new Response(JSON.stringify({ 
+        received: true,
+        message: 'Test webhook processed without signature verification',
+        eventType: eventData.type || 'unknown'
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      console.error('Error in test webhook endpoint:', error);
+      return new Response(JSON.stringify({ 
+        error: 'Test webhook processing error',
+        details: error.message
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight request');
