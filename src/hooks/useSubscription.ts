@@ -22,8 +22,9 @@ export const useSubscription = () => {
       // Direct payment link instead of generating one through an edge function
       const basePaymentUrl = 'https://buy.stripe.com/test_14k7sLg803UpbuwdQQ';
       
-      // Append the client_reference_id directly to the URL as a query parameter for Stripe to include in webhooks
-      const paymentUrl = `${basePaymentUrl}?client_reference_id=${user.id}`;
+      // Make sure to properly encode the user ID and include it as a client_reference_id
+      // This is critical for the webhook to associate the payment with the user
+      const paymentUrl = `${basePaymentUrl}?client_reference_id=${encodeURIComponent(user.id)}`;
       
       console.log('Redirecting to Stripe checkout:', paymentUrl, 'User ID:', user.id);
       
