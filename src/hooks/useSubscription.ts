@@ -56,7 +56,7 @@ export const useSubscription = () => {
     }
   };
 
-  // New function to check if user is at or over limits
+  // Function to check if user is at or over limits
   const checkUserLimits = async (actionType: 'brain' | 'api_call' | 'document' = 'api_call') => {
     if (!subscriptionData.planDetails || subscriptionData.isLoading) {
       return { canProceed: false, message: 'Loading subscription information...' };
@@ -68,6 +68,9 @@ export const useSubscription = () => {
       const userStats = getUserStats();
       const plan = subscriptionData.planDetails;
       
+      console.log(`Checking limits for ${actionType}. Current stats:`, userStats);
+      console.log('Plan details:', plan);
+      
       // If user is on Pro plan, they can always proceed
       if (plan.plan_type === 'pro') {
         return { canProceed: true };
@@ -77,6 +80,7 @@ export const useSubscription = () => {
       switch (actionType) {
         case 'brain':
           if (userStats.ownedBrains >= plan.max_brains) {
+            console.log(`Brain limit reached: ${userStats.ownedBrains}/${plan.max_brains}`);
             return {
               canProceed: false,
               message: `You've reached the maximum limit of ${plan.max_brains} brains on your Starter plan. Please upgrade to Pro for unlimited brains.`
@@ -94,7 +98,6 @@ export const useSubscription = () => {
           break;
         
         case 'document':
-          // For document uploads - unlikely to hit this limit on Starter plan as it's very high
           if (userStats.documents >= plan.max_documents) {
             return {
               canProceed: false, 
@@ -109,8 +112,11 @@ export const useSubscription = () => {
       
     } catch (error) {
       console.error('Error checking user limits:', error);
-      // Fallback to allow the action on error, but log it
-      return { canProceed: true };
+      // On error, we should block the action to be safe
+      return { 
+        canProceed: false, 
+        message: 'Could not verify your subscription limits. Please try again or contact support.' 
+      };
     } finally {
       setIsCheckingLimits(false);
     }

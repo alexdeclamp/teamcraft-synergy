@@ -92,6 +92,7 @@ serve(async (req) => {
     let userSubscription = null;
     let planDetails = null;
     let canMakeApiCall = true;
+    let canCreateBrain = true;
     let limitMessage = null;
     
     try {
@@ -115,26 +116,49 @@ serve(async (req) => {
         if (!planError && planData) {
           planDetails = planData;
           
-          // If this is a starter plan and we're logging an API call,
-          // check if the user is at their limit
-          if (action === 'log_api_call' && planData.plan_type === 'starter') {
-            // Count current API calls this month
+          // Check limits based on action type
+          if (planData.plan_type === 'starter') {
             const now = new Date();
             const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             
-            const { count, error: countError } = await adminClient
-              .from('user_usage_stats')
-              .select('*', { count: 'exact', head: true })
-              .eq('user_id', userIdToUse)
-              .eq('action_type', 'openai_api_call')
-              .gte('created_at', firstDayOfMonth.toISOString());
+            // Check API call limits
+            if (action === 'log_api_call') {
+              // Count current API calls this month
+              const { count, error: countError } = await adminClient
+                .from('user_usage_stats')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', userIdToUse)
+                .eq('action_type', 'openai_api_call')
+                .gte('created_at', firstDayOfMonth.toISOString());
+              
+              if (!countError) {
+                const currentCount = count || 0;
+                console.log(`Current API call count: ${currentCount}/${planData.max_api_calls}`);
+                // If user is at or above their limit, they can't make more API calls
+                if (currentCount >= planData.max_api_calls) {
+                  canMakeApiCall = false;
+                  limitMessage = `You've reached your monthly limit of ${planData.max_api_calls} AI API calls. Please upgrade to Pro for unlimited usage.`;
+                }
+              }
+            }
             
-            if (!countError) {
-              const currentCount = count || 0;
-              // If user is at or above their limit, they can't make more API calls
-              if (currentCount >= planData.max_api_calls) {
-                canMakeApiCall = false;
-                limitMessage = `You've reached your monthly limit of ${planData.max_api_calls} AI API calls. Please upgrade to Pro for unlimited usage.`;
+            // Check brain creation limits
+            if (action === 'check_brain_limit') {
+              // Count current brains
+              const { count, error: brainCountError } = await adminClient
+                .from('projects')
+                .select('*', { count: 'exact', head: true })
+                .eq('owner_id', userIdToUse)
+                .eq('is_archived', false);
+              
+              if (!brainCountError) {
+                const currentBrainCount = count || 0;
+                console.log(`Current brain count: ${currentBrainCount}/${planData.max_brains}`);
+                // If user is at or above their limit, they can't create more brains
+                if (currentBrainCount >= planData.max_brains) {
+                  canCreateBrain = false;
+                  limitMessage = `You've reached your limit of ${planData.max_brains} brains. Please upgrade to Pro for unlimited brains.`;
+                }
               }
             }
           }
@@ -170,6 +194,28 @@ serve(async (req) => {
             message: limitMessage || "You've reached your plan limits. Please upgrade to continue.",
             apiCalls: planDetails?.max_api_calls || 0,
             canProceed: false
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      }
+    }
+
+    // Handle brain limit checking
+    if (action === 'check_brain_limit') {
+      if (!canCreateBrain) {
+        return new Response(
+          JSON.stringify({
+            status: "limit_exceeded",
+            message: limitMessage || "You've reached your brain limit. Please upgrade to create more brains.",
+            canProceed: false
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      } else {
+        return new Response(
+          JSON.stringify({
+            status: "success",
+            canProceed: true
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
         );
