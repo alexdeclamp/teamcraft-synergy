@@ -41,7 +41,7 @@ export const useSubscription = () => {
       
       if (data?.url) {
         toast.success('Redirecting to secure checkout...', { id: 'stripe-checkout' });
-        console.log('Redirecting to Stripe checkout');
+        console.log('Redirecting to Stripe checkout URL:', data.url);
         window.location.href = data.url;
       } else {
         toast.error('Could not create checkout session. Please try again later.', { id: 'stripe-checkout' });

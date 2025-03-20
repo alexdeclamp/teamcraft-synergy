@@ -67,10 +67,7 @@ export const useSubscriptionData = (): SubscriptionData => {
     try {
       toast.loading('Finalizing your subscription...', { id: 'subscription-update' });
       
-      console.log(`Registering subscription for session ${sessionId}`);
-      
-      // Get the auth token to pass with the function invocation
-      const { data: { session } } = await supabase.auth.getSession();
+      console.log(`Registering subscription for session ${sessionId} and user ${user.id}`);
       
       const { data, error } = await supabase.functions.invoke('process-stripe-webhook', {
         body: { 
@@ -80,7 +77,7 @@ export const useSubscriptionData = (): SubscriptionData => {
       });
       
       if (error) {
-        console.error('Error registering subscription:', error);
+        console.error('Error invoking webhook function:', error);
         toast.error('Failed to finalize subscription. Please contact support.', { 
           id: 'subscription-update' 
         });
@@ -99,7 +96,7 @@ export const useSubscriptionData = (): SubscriptionData => {
         return true;
       } else {
         console.error('Failed to register subscription:', data?.error);
-        toast.error('Failed to update subscription. Please try refreshing the page.', { 
+        toast.error(`Failed to update subscription: ${data?.error || 'Unknown error'}`, { 
           id: 'subscription-update' 
         });
         return false;
@@ -127,7 +124,6 @@ export const useSubscriptionData = (): SubscriptionData => {
       
       if (subscriptionStatus === 'success' && sessionId) {
         console.log('Detected successful payment, registering subscription...');
-        toast.loading('Processing your subscription...', { id: 'subscription-update' });
         
         // Register the subscription and then clear URL parameters
         const success = await registerStripeSubscription(sessionId);
@@ -139,13 +135,11 @@ export const useSubscriptionData = (): SubscriptionData => {
         window.history.replaceState({}, '', url.toString());
         
         if (!success) {
-          toast.error('Could not verify your subscription. Please contact support.', { 
-            id: 'subscription-update' 
-          });
+          console.error('Could not verify subscription');
         }
       } else if (subscriptionStatus === 'success') {
         // Legacy handling without session_id
-        console.log('Detected successful payment (legacy mode), refetching subscription data...');
+        console.log('Detected successful payment (legacy mode)');
         toast.loading('Updating your subscription status...', { id: 'subscription-update' });
         
         // Just refetch and hope the webhook worked
