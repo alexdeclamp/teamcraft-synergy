@@ -27,12 +27,12 @@ export const useSubscription = () => {
       
       if (error) {
         console.error('Error creating payment link:', error);
-        toast.error(`Failed to create payment link: ${error.message || 'Unknown error'}`);
+        toast.error('Failed to create payment link. Please try again.');
         return;
       }
       
       if (!data?.paymentUrl) {
-        console.error('No payment URL returned from API:', data);
+        console.error('No payment URL returned from API');
         toast.error('Failed to generate checkout. Please try again.');
         return;
       }
@@ -44,7 +44,7 @@ export const useSubscription = () => {
       
     } catch (err) {
       console.error('Error upgrading to Pro:', err);
-      toast.error(`Failed to initiate upgrade process: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error('Failed to initiate upgrade process. Please try again.');
     } finally {
       setIsUpgrading(false);
     }
