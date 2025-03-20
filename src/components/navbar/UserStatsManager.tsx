@@ -18,6 +18,11 @@ let globalUserStats: UserStats = {
   documents: 0
 };
 
+// Also expose via window for other components to access directly
+if (typeof window !== 'undefined') {
+  window.globalUserStats = globalUserStats;
+}
+
 export const getUserStats = (): UserStats => {
   return globalUserStats;
 };
@@ -73,12 +78,18 @@ const UserStatsManager: React.FC<UserStatsManagerProps> = ({ userId, isOpen }) =
         setSharedBrainCount(sharedBrains);
         setDocumentCount(docs);
         
+        // Update global stats
         globalUserStats = {
           apiCalls: apiCallsCount,
           ownedBrains: ownedBrains,
           sharedBrains: sharedBrains,
           documents: docs
         };
+        
+        // Also update window property
+        if (typeof window !== 'undefined') {
+          window.globalUserStats = globalUserStats;
+        }
         
       } catch (error) {
         console.error('Error fetching user stats:', error);
