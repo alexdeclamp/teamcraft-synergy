@@ -20,7 +20,7 @@ export const useSubscription = () => {
       toast.info('Redirecting to checkout...');
       
       // Direct payment link instead of generating one through an edge function
-      const paymentUrl = 'https://buy.stripe.com/test_28odSwaPgdRe1OcbIO';
+      const paymentUrl = 'https://buy.stripe.com/test_14k7sLg803UpbuwdQQ';
       
       console.log('Redirecting to Stripe checkout:', paymentUrl);
       
