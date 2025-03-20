@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12.18.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
@@ -28,9 +29,13 @@ serve(async (req) => {
       );
     }
 
+    // Log the signature for debugging
+    console.log(`[WEBHOOK] Received signature: ${signature.substring(0, 20)}...`);
+
     // Get the raw request body
     const rawBody = await req.text();
     console.log('[WEBHOOK] Received webhook payload length:', rawBody.length);
+    console.log('[WEBHOOK] First 50 chars of payload:', rawBody.substring(0, 50));
     
     // Initialize Stripe with the secret key
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
@@ -50,22 +55,31 @@ serve(async (req) => {
     // Hard-code the webhook secret provided by the user
     const webhookSecret = "whsec_2Au2bLfMry4948i1wH6UhFN97ADIW1d0";
     
-    console.log('[WEBHOOK] Using webhook signing secret');
+    console.log('[WEBHOOK] Using webhook secret:', webhookSecret.substring(0, 10) + '...');
 
     // Construct the event from the raw body and signature using the webhook secret
     let event;
     try {
+      console.log('[WEBHOOK] Attempting to construct event with body length:', rawBody.length);
       event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
       console.log(`[WEBHOOK] Successfully constructed event: ${event.type}`);
     } catch (err) {
       console.error(`[WEBHOOK] Signature verification failed: ${err.message}`);
       console.error(`[WEBHOOK] Signature provided: ${signature ? signature.substring(0, 20) + '...' : 'none'}`);
       console.error(`[WEBHOOK] First 100 chars of payload: ${rawBody.substring(0, 100)}...`);
+      console.error(`[WEBHOOK] Webhook secret used (first 10 chars): ${webhookSecret.substring(0, 10)}...`);
+      
+      // Check for timestamp issues
+      if (err.message.includes('timestamp')) {
+        console.error('[WEBHOOK] Possible timestamp tolerance issue. Consider increasing tolerance.');
+      }
       
       return new Response(
         JSON.stringify({ 
           error: 'Webhook signature verification failed',
-          message: err.message
+          message: err.message,
+          signatureLength: signature ? signature.length : 0,
+          payloadLength: rawBody.length
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
