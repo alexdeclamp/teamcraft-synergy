@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchUserSubscriptionAndPlan } from './services/subscriptionService';
 import { getDefaultPlan } from './utils/planUtils';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 type SubscriptionData = {
   userSubscription: UserSubscription | null;
@@ -56,6 +57,59 @@ export const useSubscriptionData = (): SubscriptionData => {
     }
   }, [user]);
 
+  // Function to manually register subscription after checkout
+  const registerStripeSubscription = useCallback(async (sessionId: string) => {
+    if (!user) {
+      console.error('Cannot register subscription without a logged in user');
+      return false;
+    }
+    
+    try {
+      toast.loading('Finalizing your subscription...', { id: 'subscription-update' });
+      
+      console.log(`Registering subscription for session ${sessionId}`);
+      const { data, error } = await supabase.functions.invoke('process-stripe-webhook', {
+        url: '/register-subscription',
+        body: { 
+          userId: user.id,
+          sessionId
+        }
+      });
+      
+      if (error) {
+        console.error('Error registering subscription:', error);
+        toast.error('Failed to finalize subscription. Please contact support.', { 
+          id: 'subscription-update' 
+        });
+        return false;
+      }
+      
+      if (data?.success) {
+        console.log('Subscription registered successfully');
+        toast.success('Your subscription has been upgraded to Pro!', { 
+          id: 'subscription-update',
+          duration: 5000
+        });
+        
+        // Refresh subscription data
+        await fetchSubscriptionData();
+        return true;
+      } else {
+        console.error('Failed to register subscription:', data?.error);
+        toast.error('Failed to update subscription. Please try refreshing the page.', { 
+          id: 'subscription-update' 
+        });
+        return false;
+      }
+    } catch (err) {
+      console.error('Unexpected error registering subscription:', err);
+      toast.error('An unexpected error occurred while finalizing your subscription.', { 
+        id: 'subscription-update' 
+      });
+      return false;
+    }
+  }, [user, fetchSubscriptionData]);
+
   // Initial data fetch
   useEffect(() => {
     fetchSubscriptionData();
@@ -66,70 +120,47 @@ export const useSubscriptionData = (): SubscriptionData => {
     const handleSubscriptionUpdate = () => {
       const params = new URLSearchParams(window.location.search);
       const subscriptionStatus = params.get('subscription');
+      const sessionId = params.get('session_id');
       
-      if (subscriptionStatus === 'success') {
-        console.log('Detected successful payment, refetching subscription data...');
-        // Show loading toast
+      if (subscriptionStatus === 'success' && sessionId) {
+        console.log('Detected successful payment, registering subscription...');
+        
+        // Register the subscription and then clear URL parameters
+        registerStripeSubscription(sessionId).then((success) => {
+          // Clear URL parameters after processing
+          const url = new URL(window.location.href);
+          url.searchParams.delete('subscription');
+          url.searchParams.delete('session_id');
+          window.history.replaceState({}, '', url.toString());
+        });
+      } else if (subscriptionStatus === 'success') {
+        // Legacy handling without session_id
+        console.log('Detected successful payment (legacy mode), refetching subscription data...');
         toast.loading('Updating your subscription status...', { id: 'subscription-update' });
         
-        // Add multiple refetch attempts with increasing delays
-        const attemptRefetch = (attempt = 1, maxAttempts = 15) => {
-          console.log(`Subscription data refresh attempt ${attempt}/${maxAttempts}`);
+        // Just refetch and hope the webhook worked
+        fetchSubscriptionData().then(() => {
+          if (userSubscription?.plan_type === 'pro') {
+            toast.success('Your subscription has been upgraded to Pro!', { 
+              id: 'subscription-update',
+              duration: 5000
+            });
+          } else {
+            toast.info('Your payment was successful! Your subscription will be updated shortly.', { 
+              id: 'subscription-update',
+              duration: 5000
+            });
+          }
           
-          fetchSubscriptionData().then(() => {
-            // Check if the plan was actually updated to pro
-            if (userSubscription?.plan_type === 'pro') {
-              toast.success('Your subscription has been upgraded to Pro!', { 
-                id: 'subscription-update',
-                duration: 5000
-              });
-              
-              // Clear URL parameters after successful update
-              const url = new URL(window.location.href);
-              url.searchParams.delete('subscription');
-              window.history.replaceState({}, '', url.toString());
-            } else if (attempt < maxAttempts) {
-              // If not pro yet, try again with increasing delay
-              const delay = Math.min(attempt * 1000, 5000); // Increasing delay with a max of 5 seconds
-              console.log(`Plan not updated yet (still ${userSubscription?.plan_type || 'loading'}), retrying in ${delay}ms`);
-              setTimeout(() => attemptRefetch(attempt + 1), delay);
-            } else {
-              // After all attempts, show a message that we're still processing
-              toast.info('Your payment was successful! Your subscription will be updated shortly. Please refresh the page in a few moments.', { 
-                id: 'subscription-update',
-                duration: 8000
-              });
-              
-              // Clear URL parameters after processing
-              const url = new URL(window.location.href);
-              url.searchParams.delete('subscription');
-              window.history.replaceState({}, '', url.toString());
-            }
-          }).catch((err) => {
-            console.error('Error during subscription refresh:', err);
-            if (attempt < maxAttempts) {
-              const delay = Math.min(attempt * 1000, 5000);
-              setTimeout(() => attemptRefetch(attempt + 1), delay);
-            } else {
-              toast.error('There was a problem updating your subscription. Please refresh the page in a few moments.', { 
-                id: 'subscription-update',
-                duration: 5000
-              });
-              
-              // Clear URL parameters after processing
-              const url = new URL(window.location.href);
-              url.searchParams.delete('subscription');
-              window.history.replaceState({}, '', url.toString());
-            }
-          });
-        };
-        
-        // Start the first attempt immediately, then try with longer intervals
-        attemptRefetch();
+          // Clear URL parameters
+          const url = new URL(window.location.href);
+          url.searchParams.delete('subscription');
+          window.history.replaceState({}, '', url.toString());
+        });
       } else if (subscriptionStatus === 'canceled') {
         toast.info('Subscription upgrade was canceled.', { duration: 4000 });
         
-        // Clear the URL parameters after processing
+        // Clear the URL parameters
         const url = new URL(window.location.href);
         url.searchParams.delete('subscription');
         window.history.replaceState({}, '', url.toString());
@@ -137,7 +168,7 @@ export const useSubscriptionData = (): SubscriptionData => {
     };
     
     handleSubscriptionUpdate();
-  }, [fetchSubscriptionData, userSubscription?.plan_type]);
+  }, [fetchSubscriptionData, registerStripeSubscription, userSubscription?.plan_type]);
 
   return {
     userSubscription,

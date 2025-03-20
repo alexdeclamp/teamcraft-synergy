@@ -35,6 +35,131 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// New function to manually check and update subscription status
+async function checkAndUpdateSubscription(userId, subscriptionId) {
+  if (!userId || !subscriptionId) {
+    console.error('Missing user ID or subscription ID');
+    return { success: false, error: 'Missing user ID or subscription ID' };
+  }
+
+  try {
+    console.log(`Checking subscription status for user ${userId}, subscription ${subscriptionId}`);
+    
+    // Fetch subscription data from Stripe
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    console.log(`Subscription status: ${subscription.status}`);
+    
+    // Determine if subscription is active
+    const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+    
+    if (!supabase) {
+      return { success: false, error: 'Supabase client not initialized' };
+    }
+    
+    // Update subscription in database
+    const { data, error } = await supabase
+      .from('user_subscriptions')
+      .update({ 
+        is_active: isActive, 
+        plan_type: isActive ? 'pro' : 'starter',
+        updated_at: new Date().toISOString()
+      })
+      .eq('user_id', userId)
+      .eq('subscription_id', subscriptionId);
+      
+    if (error) {
+      console.error('Error updating subscription:', error);
+      return { success: false, error: error.message };
+    }
+    
+    console.log(`Successfully updated subscription for user ${userId}`);
+    return { success: true, isActive };
+  } catch (err) {
+    console.error('Error checking subscription:', err);
+    return { success: false, error: err.message };
+  }
+}
+
+// New endpoint to manually check subscription status
+async function handleManualCheck(userId, subscriptionId) {
+  try {
+    const result = await checkAndUpdateSubscription(userId, subscriptionId);
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error('Error in manual check endpoint:', error);
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: error.message 
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+// Function to create a default subscription when user upgrades
+async function createOrUpdateSubscription(userId, subscriptionId) {
+  if (!supabase) {
+    console.error('Supabase client not initialized');
+    return false;
+  }
+  
+  try {
+    // Check if user already has a subscription
+    const { data: existingSubscription, error: fetchError } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+      
+    if (fetchError && fetchError.code !== 'PGRST116') { // Not found error
+      console.error('Error fetching subscription:', fetchError);
+      return false;
+    }
+    
+    if (existingSubscription) {
+      // Update existing subscription
+      const { error: updateError } = await supabase
+        .from('user_subscriptions')
+        .update({ 
+          plan_type: 'pro',
+          subscription_id: subscriptionId,
+          is_active: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+        
+      if (updateError) {
+        console.error('Error updating subscription:', updateError);
+        return false;
+      }
+    } else {
+      // Create new subscription
+      const { error: insertError } = await supabase
+        .from('user_subscriptions')
+        .insert({ 
+          user_id: userId,
+          plan_type: 'pro',
+          subscription_id: subscriptionId,
+          is_active: true
+        });
+        
+      if (insertError) {
+        console.error('Error creating subscription:', insertError);
+        return false;
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error creating/updating subscription:', error);
+    return false;
+  }
+}
+
 serve(async (req: Request) => {
   // Service health check endpoint
   if (req.url.endsWith('/health')) {
@@ -52,6 +177,122 @@ serve(async (req: Request) => {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+  }
+
+  // New endpoint to manually check and update subscription status
+  if (req.url.endsWith('/check-subscription')) {
+    console.log('Manual subscription check endpoint called');
+    
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
+    
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    try {
+      const { userId, subscriptionId } = await req.json();
+      
+      if (!userId || !subscriptionId) {
+        return new Response(JSON.stringify({ 
+          error: 'Missing required parameters: userId and subscriptionId' 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      return await handleManualCheck(userId, subscriptionId);
+    } catch (error) {
+      console.error('Error parsing request:', error);
+      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+  }
+  
+  // New endpoint to register a subscription after checkout completion
+  if (req.url.endsWith('/register-subscription')) {
+    console.log('Register subscription endpoint called');
+    
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
+    
+    if (req.method !== 'POST') {
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    try {
+      const { userId, subscriptionId, sessionId } = await req.json();
+      
+      if (!userId) {
+        return new Response(JSON.stringify({ error: 'Missing required parameter: userId' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      // If we have a sessionId but no subscriptionId, try to get it from Stripe
+      let finalSubscriptionId = subscriptionId;
+      if (sessionId && !subscriptionId) {
+        try {
+          console.log(`Fetching subscription info from checkout session ${sessionId}`);
+          const session = await stripe.checkout.sessions.retrieve(sessionId);
+          finalSubscriptionId = session.subscription?.toString();
+          console.log(`Got subscription ID ${finalSubscriptionId} from session`);
+        } catch (err) {
+          console.error('Error fetching session:', err);
+        }
+      }
+      
+      if (!finalSubscriptionId) {
+        return new Response(JSON.stringify({ 
+          error: 'Could not determine subscription ID' 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      // Create or update the subscription
+      const success = await createOrUpdateSubscription(userId, finalSubscriptionId);
+      
+      if (success) {
+        return new Response(JSON.stringify({ 
+          success: true, 
+          message: 'Subscription registered successfully' 
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } else {
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'Failed to register subscription' 
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    } catch (error) {
+      console.error('Error processing subscription registration:', error);
+      return new Response(JSON.stringify({ 
+        error: 'Error processing request', 
+        details: error.message 
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
   }
 
   // Test webhook endpoint - NO signature verification (for troubleshooting only)
@@ -126,7 +367,7 @@ serve(async (req: Request) => {
     }
   }
 
-  // New endpoint specifically to test signature verification
+  // Verify signature endpoint
   if (req.url.endsWith('/verify-signature')) {
     console.log('Signature verification test endpoint called');
     
