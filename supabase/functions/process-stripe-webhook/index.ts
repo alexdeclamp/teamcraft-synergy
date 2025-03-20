@@ -14,6 +14,14 @@ const stripe = new Stripe(stripeSecretKey, {
 // Initialize Supabase client
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+
+// Log configuration details (without exposing secrets)
+console.log('Function configuration:');
+console.log('- Supabase URL configured:', !!supabaseUrl);
+console.log('- Supabase service key configured:', !!supabaseServiceKey);
+console.log('- Stripe secret key configured:', !!stripeSecretKey);
+console.log('- Webhook secret configured:', !!webhookSecret);
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 const corsHeaders = {
@@ -92,6 +100,16 @@ serve(async (req: Request) => {
       }
 
       try {
+        // Test Supabase connection first to verify credentials
+        console.log('Testing Supabase connection...');
+        const { data: testData, error: testError } = await supabase.from('user_subscriptions').select('count(*)', { count: 'exact', head: true });
+        
+        if (testError) {
+          console.error('Supabase connection test failed:', testError);
+          throw new Error(`Supabase authentication failed: ${testError.message}`);
+        }
+        console.log('Supabase connection successful');
+        
         // Directly update the subscription in the database
         const { data: existingSubscription, error: fetchError } = await supabase
           .from('user_subscriptions')
@@ -142,7 +160,7 @@ serve(async (req: Request) => {
         }
       } catch (error) {
         console.error('Subscription update failed:', error);
-        return new Response(JSON.stringify({ error: 'Failed to update subscription' }), {
+        return new Response(JSON.stringify({ error: 'Failed to update subscription', details: error.message }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -192,7 +210,7 @@ serve(async (req: Request) => {
     });
   } catch (error) {
     console.error('Unexpected error:', error);
-    return new Response(JSON.stringify({ error: 'Unexpected error occurred' }), {
+    return new Response(JSON.stringify({ error: 'Unexpected error occurred', details: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
