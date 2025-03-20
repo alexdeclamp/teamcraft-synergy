@@ -16,7 +16,7 @@ interface DashboardHeaderProps {
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { checkUserLimits, upgradeToProPlan, isUpgrading } = useSubscription();
+  const { checkUserLimits, upgradeToProPlan, isUpgrading, planDetails } = useSubscription();
   const [isCheckingLimits, setIsCheckingLimits] = useState(true);
   const [limitReached, setLimitReached] = useState(false);
   const [limitMessage, setLimitMessage] = useState('');
@@ -26,18 +26,41 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
     const checkBrainLimits = async () => {
       setIsCheckingLimits(true);
       const result = await checkUserLimits('brain');
-      if (!result.canProceed) {
-        setLimitReached(true);
+      
+      // Only set it to false if we actually have a result
+      if (result) {
+        setLimitReached(!result.canProceed);
         setLimitMessage(result.message || "You've reached your brain limit on the Starter plan. Please upgrade to Pro for unlimited brains.");
-      } else {
-        setLimitReached(false);
-        setLimitMessage('');
       }
+      
       setIsCheckingLimits(false);
     };
     
     checkBrainLimits();
+    
+    // Add an interval to periodically check brain limits
+    const intervalId = setInterval(checkBrainLimits, 10000);
+    
+    // Clean up the interval on unmount
+    return () => clearInterval(intervalId);
   }, [checkUserLimits]);
+  
+  // Additional check based on plan details
+  useEffect(() => {
+    if (planDetails && !isCheckingLimits) {
+      // If we're on the starter plan, double check limits using static plan details
+      if (planDetails.plan_type === 'starter') {
+        const userStats = getUserStats();
+        if (userStats.ownedBrains >= planDetails.max_brains) {
+          setLimitReached(true);
+          setLimitMessage(`You've reached the maximum limit of ${planDetails.max_brains} brains on your Starter plan. Please upgrade to Pro for unlimited brains.`);
+        }
+      } else if (planDetails.plan_type === 'pro') {
+        // If we're on the pro plan, we shouldn't have limits
+        setLimitReached(false);
+      }
+    }
+  }, [planDetails, isCheckingLimits]);
 
   return (
     <div className={`flex flex-col mb-4 sm:mb-8 gap-4 ${className}`}>
@@ -92,6 +115,17 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
       )}
     </div>
   );
+};
+
+// Helper function to get user stats
+const getUserStats = () => {
+  try {
+    // Import the function from navbar module
+    return require('@/components/navbar/UserStatsManager').getUserStats();
+  } catch (error) {
+    console.error('Error getting user stats:', error);
+    return { ownedBrains: 0, sharedBrains: 0, apiCalls: 0, documents: 0 };
+  }
 };
 
 export default DashboardHeader;
