@@ -69,7 +69,6 @@ export const useSubscriptionData = (): SubscriptionData => {
       
       console.log(`Registering subscription for session ${sessionId}`);
       const { data, error } = await supabase.functions.invoke('process-stripe-webhook', {
-        url: '/register-subscription',
         body: { 
           userId: user.id,
           sessionId
