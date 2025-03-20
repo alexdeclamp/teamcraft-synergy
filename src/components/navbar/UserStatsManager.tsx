@@ -11,7 +11,7 @@ interface UserStatsManagerProps {
 }
 
 // Initialize global stats with default values
-let globalUserStats: UserStats = {
+const globalUserStats: UserStats = {
   apiCalls: 0,
   ownedBrains: 0,
   sharedBrains: 0,
@@ -78,13 +78,13 @@ const UserStatsManager: React.FC<UserStatsManagerProps> = ({ userId, isOpen }) =
         setSharedBrainCount(sharedBrains);
         setDocumentCount(docs);
         
-        // Update global stats
-        globalUserStats = {
+        // Update global stats - use Object.assign to update the reference, not replace it
+        Object.assign(globalUserStats, {
           apiCalls: apiCallsCount,
           ownedBrains: ownedBrains,
           sharedBrains: sharedBrains,
           documents: docs
-        };
+        });
         
         // Also update window property
         if (typeof window !== 'undefined') {

@@ -28,6 +28,9 @@ const Dashboard = () => {
   const location = useLocation();
   
   useEffect(() => {
+    // Force project refresh when dashboard loads
+    refreshProjects();
+    
     // Force an immediate subscription check when Dashboard loads
     const queryParams = new URLSearchParams(location.search);
     const subscriptionStatus = queryParams.get('subscription');
@@ -43,7 +46,7 @@ const Dashboard = () => {
       // Trigger an immediate subscription refresh - this will process URL parameters
       refetchSubscription();
     }
-  }, [location.search, refetchSubscription]);
+  }, [location.search, refetchSubscription, refreshProjects]);
 
   return (
     <div className="min-h-screen bg-background pb-12 animate-fade-in">
