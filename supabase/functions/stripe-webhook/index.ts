@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12.18.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.0";
@@ -10,7 +9,6 @@ const corsHeaders = {
 
 serve(async (req) => {
   console.log(`[WEBHOOK] Received request: ${req.method} ${new URL(req.url).pathname}`);
-  console.log(`[WEBHOOK] Request headers: ${JSON.stringify(Object.fromEntries([...req.headers]))}`);
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -19,6 +17,11 @@ serve(async (req) => {
   }
 
   try {
+    // Get the raw request body first to ensure we have the exact payload Stripe sent
+    const rawBody = await req.text();
+    console.log('[WEBHOOK] Raw body length:', rawBody.length);
+    console.log('[WEBHOOK] First 100 chars of payload:', rawBody.substring(0, 100));
+    
     // Get the Stripe signature from the request headers
     const signature = req.headers.get('stripe-signature');
     
@@ -34,23 +37,8 @@ serve(async (req) => {
     }
 
     // Log the signature for debugging
-    console.log(`[WEBHOOK] Received signature: ${signature.substring(0, 20)}...`);
+    console.log(`[WEBHOOK] Received signature: ${signature}`);
 
-    // Get the raw request body
-    const rawBody = await req.text();
-    console.log('[WEBHOOK] Received webhook payload length:', rawBody.length);
-    if (rawBody.length < 10) {
-      console.error('[WEBHOOK] Webhook payload is too short or empty:', rawBody);
-      return new Response(
-        JSON.stringify({ error: 'Webhook payload is too short or empty' }), 
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400 
-        }
-      );
-    }
-    console.log('[WEBHOOK] First 100 chars of payload:', rawBody.substring(0, 100));
-    
     // Initialize Stripe with the secret key
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
     if (!stripeSecretKey) {
@@ -79,31 +67,25 @@ serve(async (req) => {
       );
     }
     
-    console.log('[WEBHOOK] Using webhook secret:', webhookSecret.substring(0, 10) + '...');
+    console.log('[WEBHOOK] Using webhook secret:', webhookSecret.substring(0, 5) + '...');
 
     // Construct the event from the raw body and signature using the webhook secret
     let event;
     try {
-      console.log('[WEBHOOK] Attempting to construct event with body length:', rawBody.length);
       event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
       console.log(`[WEBHOOK] Successfully constructed event: ${event.type}`);
     } catch (err) {
-      console.error(`[WEBHOOK] Signature verification failed: ${err.message}`);
+      console.error(`[WEBHOOK] ⚠️ Webhook signature verification failed: ${err.message}`);
       console.error(`[WEBHOOK] Signature provided: ${signature ? signature.substring(0, 20) + '...' : 'none'}`);
+      console.error(`[WEBHOOK] Raw payload length: ${rawBody.length}`);
       console.error(`[WEBHOOK] First 100 chars of payload: ${rawBody.substring(0, 100)}...`);
-      console.error(`[WEBHOOK] Webhook secret used (first 10 chars): ${webhookSecret.substring(0, 10)}...`);
-      
-      // Check for timestamp issues
-      if (err.message.includes('timestamp')) {
-        console.error('[WEBHOOK] Possible timestamp tolerance issue. Consider increasing tolerance.');
-      }
+      console.error(`[WEBHOOK] Webhook secret used (first 5 chars): ${webhookSecret.substring(0, 5)}...`);
       
       return new Response(
         JSON.stringify({ 
           error: 'Webhook signature verification failed',
           message: err.message,
-          signatureLength: signature ? signature.length : 0,
-          payloadLength: rawBody.length
+          details: 'Please check webhook secret and Stripe configuration'
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -115,15 +97,6 @@ serve(async (req) => {
     console.log(`[WEBHOOK] Received Stripe event: ${event.type}`);
     console.log(`[WEBHOOK] Event ID: ${event.id}`);
     
-    // Log only a safe subset of the event data
-    const safeEvent = {
-      id: event.id,
-      type: event.type,
-      created: event.created,
-      object: event.object,
-    };
-    console.log(`[WEBHOOK] Event summary: ${JSON.stringify(safeEvent)}`);
-
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
@@ -454,7 +427,6 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message || 'An unexpected error occurred',
-        details: error.stack,
         timestamp: new Date().toISOString()
       }),
       { 

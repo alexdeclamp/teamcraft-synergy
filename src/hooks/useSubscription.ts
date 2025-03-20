@@ -19,14 +19,15 @@ export const useSubscription = () => {
       setIsUpgrading(true);
       toast.info('Redirecting to checkout...');
       
-      // Direct payment link instead of generating one through an edge function
+      // Use the direct payment link approach
       const basePaymentUrl = 'https://buy.stripe.com/test_14k7sLg803UpbuwdQQ';
       
-      // Make sure to properly encode the user ID and include it as a client_reference_id
-      // This is critical for the webhook to associate the payment with the user
+      // Make sure to properly encode the user ID for the client_reference_id
+      // The webhook relies on this to associate the payment with the user
       const paymentUrl = `${basePaymentUrl}?client_reference_id=${encodeURIComponent(user.id)}`;
       
-      console.log('Redirecting to Stripe checkout:', paymentUrl, 'User ID:', user.id);
+      console.log('Redirecting to Stripe checkout:', paymentUrl);
+      console.log('User ID for checkout:', user.id);
       
       // Redirect to the Stripe checkout page
       window.location.href = paymentUrl;
