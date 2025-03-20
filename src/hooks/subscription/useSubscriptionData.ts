@@ -68,6 +68,10 @@ export const useSubscriptionData = (): SubscriptionData => {
       toast.loading('Finalizing your subscription...', { id: 'subscription-update' });
       
       console.log(`Registering subscription for session ${sessionId}`);
+      
+      // Get the auth token to pass with the function invocation
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const { data, error } = await supabase.functions.invoke('process-stripe-webhook', {
         body: { 
           userId: user.id,
