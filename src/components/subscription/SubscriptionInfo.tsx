@@ -56,7 +56,6 @@ const SubscriptionInfo = ({
     return null;
   }
 
-  // Calculate percentages for progress bars
   const brainPercentage = planDetails.plan_type === 'pro' 
     ? 0 // Pro has unlimited brains, so we don't show a percentage
     : Math.min(Math.round((userBrainCount / planDetails.max_brains) * 100), 100);
@@ -143,7 +142,7 @@ const SubscriptionInfo = ({
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
               Processing...
             </>
-          ) : 'Upgrade to Pro (Coming Soon)'}
+          ) : 'Upgrade to Pro'}
         </Button>
       )}
       
