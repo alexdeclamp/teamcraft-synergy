@@ -28,7 +28,12 @@ serve(async (req: Request) => {
   }
 
   try {
+    // Log request information for debugging
+    console.log('Received webhook request:', req.method, req.url);
+    console.log('Request headers:', JSON.stringify(Object.fromEntries([...req.headers]), null, 2));
+    
     if (req.method !== 'POST') {
+      console.error(`Method not allowed: ${req.method}`);
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -48,15 +53,18 @@ serve(async (req: Request) => {
 
     // Get the raw body
     const body = await req.text();
+    console.log('Webhook body length:', body.length);
     let event;
 
     // Verify the webhook signature
     try {
-      event = webhookSecret
-        ? stripe.webhooks.constructEvent(body, signature, webhookSecret)
-        : JSON.parse(body);
-      
-      console.log('Webhook signature verified successfully');
+      if (webhookSecret) {
+        event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+        console.log('Webhook signature verified successfully');
+      } else {
+        console.warn('No webhook secret configured, skipping signature verification');
+        event = JSON.parse(body);
+      }
     } catch (err) {
       console.error(`Webhook signature verification failed: ${err.message}`);
       return new Response(JSON.stringify({ error: `Webhook Error: ${err.message}` }), {
