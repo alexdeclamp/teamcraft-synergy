@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Sparkles, Loader2, Zap } from 'lucide-react';
@@ -23,42 +22,52 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
 
   // Check brain limits when component mounts
   useEffect(() => {
+    let isMounted = true; // Flag to track if component is mounted
+    
     const checkBrainLimits = async () => {
+      if (!isMounted) return;
+      
       setIsCheckingLimits(true);
       const result = await checkUserLimits('brain');
       
-      // Only set it to false if we actually have a result
-      if (result) {
+      // Only update state if component is still mounted and we have a result
+      if (isMounted && result) {
         setLimitReached(!result.canProceed);
         setLimitMessage(result.message || "You've reached your brain limit on the Starter plan. Please upgrade to Pro for unlimited brains.");
       }
       
-      setIsCheckingLimits(false);
+      if (isMounted) {
+        setIsCheckingLimits(false);
+      }
     };
     
+    // Run check immediately
     checkBrainLimits();
     
-    // Add an interval to periodically check brain limits
+    // Set up interval for periodic checking
     const intervalId = setInterval(checkBrainLimits, 10000);
     
-    // Clean up the interval on unmount
-    return () => clearInterval(intervalId);
+    // Clean up function to prevent memory leaks and state updates on unmounted component
+    return () => {
+      isMounted = false; // Mark as unmounted
+      clearInterval(intervalId);
+    };
   }, [checkUserLimits]);
   
   // Additional check based on plan details
   useEffect(() => {
-    if (planDetails && !isCheckingLimits) {
-      // If we're on the starter plan, double check limits using static plan details
-      if (planDetails.plan_type === 'starter') {
-        const userStats = getUserStats();
-        if (userStats.ownedBrains >= planDetails.max_brains) {
-          setLimitReached(true);
-          setLimitMessage(`You've reached the maximum limit of ${planDetails.max_brains} brains on your Starter plan. Please upgrade to Pro for unlimited brains.`);
-        }
-      } else if (planDetails.plan_type === 'pro') {
-        // If we're on the pro plan, we shouldn't have limits
-        setLimitReached(false);
+    if (!planDetails || isCheckingLimits) return;
+    
+    // If we're on the starter plan, double check limits using static plan details
+    if (planDetails.plan_type === 'starter') {
+      const userStats = getUserStats();
+      if (userStats.ownedBrains >= planDetails.max_brains) {
+        setLimitReached(true);
+        setLimitMessage(`You've reached the maximum limit of ${planDetails.max_brains} brains on your Starter plan. Please upgrade to Pro for unlimited brains.`);
       }
+    } else if (planDetails.plan_type === 'pro') {
+      // If we're on the pro plan, we shouldn't have limits
+      setLimitReached(false);
     }
   }, [planDetails, isCheckingLimits]);
 
@@ -106,8 +115,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
         </div>
       </div>
       
-      {/* Display banner if limit is reached */}
-      {limitReached && !isCheckingLimits && (
+      {/* Display banner if limit is reached - Keep this outside conditional rendering based on isCheckingLimits */}
+      {limitReached && (
         <PlanLimitBanner 
           message={limitMessage} 
           onUpgrade={() => upgradeToProPlan()} 
