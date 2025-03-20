@@ -88,21 +88,91 @@ serve(async (req) => {
       );
     }
 
-    // Log the OpenAI API call if requested - using admin client
-    if (action === 'log_api_call') {
-      try {
-        const { error: logError } = await adminClient.from('user_usage_stats').insert({
-          user_id: userIdToUse,
-          action_type: 'openai_api_call',
-        });
-
-        if (logError) {
-          console.error('Error logging API call:', logError);
-          // Continue execution to still return statistics even if logging fails
+    // Get user subscription info to check limits
+    let userSubscription = null;
+    let planDetails = null;
+    let canMakeApiCall = true;
+    let limitMessage = null;
+    
+    try {
+      // First get the user's subscription
+      const { data: subscriptionData, error: subError } = await adminClient.rpc(
+        'get_user_subscription',
+        { p_user_id: userIdToUse }
+      );
+      
+      if (!subError && subscriptionData) {
+        userSubscription = subscriptionData;
+        
+        // Then get the plan details to check limits
+        const { data: planData, error: planError } = await adminClient
+          .from('subscription_tiers')
+          .select('*')
+          .eq('plan_type', subscriptionData.plan_type)
+          .eq('is_default', true)
+          .maybeSingle();
+        
+        if (!planError && planData) {
+          planDetails = planData;
+          
+          // If this is a starter plan and we're logging an API call,
+          // check if the user is at their limit
+          if (action === 'log_api_call' && planData.plan_type === 'starter') {
+            // Count current API calls this month
+            const now = new Date();
+            const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            
+            const { count, error: countError } = await adminClient
+              .from('user_usage_stats')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', userIdToUse)
+              .eq('action_type', 'openai_api_call')
+              .gte('created_at', firstDayOfMonth.toISOString());
+            
+            if (!countError) {
+              const currentCount = count || 0;
+              // If user is at or above their limit, they can't make more API calls
+              if (currentCount >= planData.max_api_calls) {
+                canMakeApiCall = false;
+                limitMessage = `You've reached your monthly limit of ${planData.max_api_calls} AI API calls. Please upgrade to Pro for unlimited usage.`;
+              }
+            }
+          }
         }
-      } catch (error) {
-        console.error('Error inserting API call record:', error);
-        // Continue execution to still return statistics
+      }
+    } catch (error) {
+      console.error('Error checking subscription limits:', error);
+      // On error, we'll still allow the call but log the issue
+    }
+
+    // Log the OpenAI API call if requested and user is not at their limit
+    if (action === 'log_api_call') {
+      if (canMakeApiCall) {
+        try {
+          const { error: logError } = await adminClient.from('user_usage_stats').insert({
+            user_id: userIdToUse,
+            action_type: 'openai_api_call',
+          });
+
+          if (logError) {
+            console.error('Error logging API call:', logError);
+            // Continue execution to still return statistics even if logging fails
+          }
+        } catch (error) {
+          console.error('Error inserting API call record:', error);
+          // Continue execution to still return statistics
+        }
+      } else {
+        // If user is at their limit, return error response
+        return new Response(
+          JSON.stringify({
+            status: "limit_exceeded",
+            message: limitMessage || "You've reached your plan limits. Please upgrade to continue.",
+            apiCalls: planDetails?.max_api_calls || 0,
+            canProceed: false
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
       }
     }
 
@@ -133,7 +203,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         apiCalls: apiCallCount,
-        status: "success"
+        status: "success",
+        planType: userSubscription?.plan_type || 'starter',
+        maxApiCalls: planDetails?.max_api_calls || 0,
+        canProceed: canMakeApiCall
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

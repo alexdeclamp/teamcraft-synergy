@@ -17,10 +17,12 @@ import { toast } from "sonner";
 import { ArrowLeft, Info, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const NewProject = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { checkUserLimits } = useSubscription();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -45,6 +47,13 @@ const NewProject = () => {
 
     if (!user) {
       toast.error("You must be logged in to create a brain");
+      return;
+    }
+    
+    // Check if user is at their brain limit before creating
+    const limitCheck = await checkUserLimits('brain');
+    if (!limitCheck.canProceed) {
+      toast.error(limitCheck.message || "You've reached your plan limits. Please upgrade to create more brains.");
       return;
     }
     
