@@ -9,8 +9,12 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log(`[WEBHOOK] Received request: ${req.method} ${new URL(req.url).pathname}`);
+  console.log(`[WEBHOOK] Request headers: ${JSON.stringify(Object.fromEntries([...req.headers]))}`);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('[WEBHOOK] Handling CORS preflight request');
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -35,7 +39,17 @@ serve(async (req) => {
     // Get the raw request body
     const rawBody = await req.text();
     console.log('[WEBHOOK] Received webhook payload length:', rawBody.length);
-    console.log('[WEBHOOK] First 50 chars of payload:', rawBody.substring(0, 50));
+    if (rawBody.length < 10) {
+      console.error('[WEBHOOK] Webhook payload is too short or empty:', rawBody);
+      return new Response(
+        JSON.stringify({ error: 'Webhook payload is too short or empty' }), 
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
+        }
+      );
+    }
+    console.log('[WEBHOOK] First 100 chars of payload:', rawBody.substring(0, 100));
     
     // Initialize Stripe with the secret key
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
@@ -52,8 +66,18 @@ serve(async (req) => {
     
     const stripe = new Stripe(stripeSecretKey);
     
-    // Hard-code the webhook secret provided by the user
-    const webhookSecret = "whsec_2Au2bLfMry4948i1wH6UhFN97ADIW1d0";
+    // Get the webhook secret from environment variables
+    const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      console.error('[WEBHOOK] STRIPE_WEBHOOK_SECRET environment variable is not set');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error: Missing webhook secret' }), 
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      );
+    }
     
     console.log('[WEBHOOK] Using webhook secret:', webhookSecret.substring(0, 10) + '...');
 
