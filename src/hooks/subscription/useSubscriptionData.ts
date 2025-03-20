@@ -73,7 +73,7 @@ export const useSubscriptionData = (): SubscriptionData => {
         toast.loading('Updating your subscription status...', { id: 'subscription-update' });
         
         // Add multiple refetch attempts with increasing delays
-        const attemptRefetch = (attempt = 1, maxAttempts = 10) => {
+        const attemptRefetch = (attempt = 1, maxAttempts = 15) => {
           console.log(`Subscription data refresh attempt ${attempt}/${maxAttempts}`);
           
           fetchSubscriptionData().then(() => {
@@ -90,12 +90,12 @@ export const useSubscriptionData = (): SubscriptionData => {
               window.history.replaceState({}, '', url.toString());
             } else if (attempt < maxAttempts) {
               // If not pro yet, try again with increasing delay
-              const delay = Math.min(attempt * 1500, 8000); // Increasing delay with a max of 8 seconds
-              console.log(`Plan not updated yet (still ${userSubscription?.plan_type}), retrying in ${delay}ms`);
+              const delay = Math.min(attempt * 1000, 5000); // Increasing delay with a max of 5 seconds
+              console.log(`Plan not updated yet (still ${userSubscription?.plan_type || 'loading'}), retrying in ${delay}ms`);
               setTimeout(() => attemptRefetch(attempt + 1), delay);
             } else {
               // After all attempts, show a message that we're still processing
-              toast.info('Your payment was successful! Your subscription will be updated shortly.', { 
+              toast.info('Your payment was successful! Your subscription will be updated shortly. Please refresh the page in a few moments.', { 
                 id: 'subscription-update',
                 duration: 8000
               });
@@ -108,10 +108,10 @@ export const useSubscriptionData = (): SubscriptionData => {
           }).catch((err) => {
             console.error('Error during subscription refresh:', err);
             if (attempt < maxAttempts) {
-              const delay = Math.min(attempt * 1500, 8000);
+              const delay = Math.min(attempt * 1000, 5000);
               setTimeout(() => attemptRefetch(attempt + 1), delay);
             } else {
-              toast.error('There was a problem updating your subscription. It may take a few minutes to process.', { 
+              toast.error('There was a problem updating your subscription. Please refresh the page in a few moments.', { 
                 id: 'subscription-update',
                 duration: 5000
               });
