@@ -55,6 +55,8 @@ serve(async (req: Request) => {
       event = webhookSecret
         ? stripe.webhooks.constructEvent(body, signature, webhookSecret)
         : JSON.parse(body);
+      
+      console.log('Webhook signature verified successfully');
     } catch (err) {
       console.error(`Webhook signature verification failed: ${err.message}`);
       return new Response(JSON.stringify({ error: `Webhook Error: ${err.message}` }), {
@@ -71,6 +73,7 @@ serve(async (req: Request) => {
       const userId = session.client_reference_id || session.metadata?.userId;
       
       console.log(`Processing completed checkout for user: ${userId}`);
+      console.log('Session details:', JSON.stringify(session, null, 2));
       
       if (!userId) {
         console.error('No user ID found in session');
@@ -80,33 +83,61 @@ serve(async (req: Request) => {
         });
       }
 
-      // Update user subscription to Pro in your database
-      const { data, error } = await supabase.rpc('create_user_subscription', {
-        p_user_id: userId,
-        p_plan_type: 'pro'
-      });
+      try {
+        // Directly update the subscription in the database
+        const { data: existingSubscription, error: fetchError } = await supabase
+          .from('user_subscriptions')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+        
+        if (fetchError && fetchError.code !== 'PGRST116') { // Not found error
+          console.error('Error fetching subscription:', fetchError);
+          throw fetchError;
+        }
 
-      if (error) {
-        console.error('Error updating subscription:', error);
+        if (existingSubscription) {
+          // Update existing subscription
+          const { error: updateError } = await supabase
+            .from('user_subscriptions')
+            .update({ 
+              plan_type: 'pro',
+              subscription_id: session.subscription,
+              is_active: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', userId);
+
+          if (updateError) {
+            console.error('Error updating subscription:', updateError);
+            throw updateError;
+          }
+          
+          console.log('Subscription updated for user:', userId);
+        } else {
+          // Create new subscription
+          const { error: insertError } = await supabase
+            .from('user_subscriptions')
+            .insert({ 
+              user_id: userId,
+              plan_type: 'pro',
+              subscription_id: session.subscription,
+              is_active: true
+            });
+
+          if (insertError) {
+            console.error('Error creating subscription:', insertError);
+            throw insertError;
+          }
+          
+          console.log('New subscription created for user:', userId);
+        }
+      } catch (error) {
+        console.error('Subscription update failed:', error);
         return new Response(JSON.stringify({ error: 'Failed to update subscription' }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
-      }
-
-      console.log('Subscription updated for user:', userId);
-      
-      // Store the Stripe subscription ID for future management
-      const { error: updateError } = await supabase
-        .from('user_subscriptions')
-        .update({ 
-          subscription_id: session.subscription,
-          is_active: true
-        })
-        .eq('user_id', userId);
-
-      if (updateError) {
-        console.error('Error storing subscription ID:', updateError);
       }
     }
     
@@ -131,10 +162,14 @@ serve(async (req: Request) => {
       }
       
       // Downgrade user to starter plan
-      const { error: downgradeError } = await supabase.rpc('create_user_subscription', {
-        p_user_id: userData.user_id,
-        p_plan_type: 'starter'
-      });
+      const { error: downgradeError } = await supabase
+        .from('user_subscriptions')
+        .update({ 
+          plan_type: 'starter',
+          is_active: true,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userData.user_id);
       
       if (downgradeError) {
         console.error('Error downgrading subscription:', downgradeError);

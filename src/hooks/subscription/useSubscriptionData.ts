@@ -73,12 +73,10 @@ export const useSubscriptionData = (): SubscriptionData => {
         toast.loading('Updating your subscription status...', { id: 'subscription-update' });
         
         // Add multiple refetch attempts with increasing delays
-        const attemptRefetch = (attempt = 1, maxAttempts = 5) => {
+        const attemptRefetch = (attempt = 1, maxAttempts = 10) => {
           console.log(`Subscription data refresh attempt ${attempt}/${maxAttempts}`);
           
-          fetchSubscriptionData().then((result) => {
-            console.log('Subscription data refreshed after payment:', result);
-            
+          fetchSubscriptionData().then(() => {
             // Check if the plan was actually updated to pro
             if (userSubscription?.plan_type === 'pro') {
               toast.success('Your subscription has been upgraded to Pro!', { 
@@ -92,7 +90,7 @@ export const useSubscriptionData = (): SubscriptionData => {
               window.history.replaceState({}, '', url.toString());
             } else if (attempt < maxAttempts) {
               // If not pro yet, try again with increasing delay
-              const delay = attempt * 2000; // Increasing delay: 2s, 4s, 6s, 8s
+              const delay = Math.min(attempt * 1500, 8000); // Increasing delay with a max of 8 seconds
               console.log(`Plan not updated yet (still ${userSubscription?.plan_type}), retrying in ${delay}ms`);
               setTimeout(() => attemptRefetch(attempt + 1), delay);
             } else {
@@ -110,7 +108,7 @@ export const useSubscriptionData = (): SubscriptionData => {
           }).catch((err) => {
             console.error('Error during subscription refresh:', err);
             if (attempt < maxAttempts) {
-              const delay = attempt * 2000;
+              const delay = Math.min(attempt * 1500, 8000);
               setTimeout(() => attemptRefetch(attempt + 1), delay);
             } else {
               toast.error('There was a problem updating your subscription. It may take a few minutes to process.', { 
@@ -126,8 +124,8 @@ export const useSubscriptionData = (): SubscriptionData => {
           });
         };
         
-        // Start the first attempt after a short delay to allow webhook processing
-        setTimeout(() => attemptRefetch(), 3000);
+        // Start the first attempt immediately, then try with longer intervals
+        attemptRefetch();
       } else if (subscriptionStatus === 'canceled') {
         toast.info('Subscription upgrade was canceled.', { duration: 4000 });
         
