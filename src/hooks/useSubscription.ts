@@ -17,20 +17,10 @@ export const useSubscription = () => {
 
     try {
       setIsUpgrading(true);
-      toast.info('Redirecting to checkout...');
+      toast.info('Upgrade functionality temporarily disabled');
+      // Removed all Stripe-related code
       
-      // Use the direct payment link approach
-      const basePaymentUrl = 'https://buy.stripe.com/test_14k7sLg803UpbuwdQQ';
-      
-      // Make sure to properly encode the user ID for the client_reference_id
-      // The webhook relies on this to associate the payment with the user
-      const paymentUrl = `${basePaymentUrl}?client_reference_id=${encodeURIComponent(user.id)}`;
-      
-      console.log('Redirecting to Stripe checkout:', paymentUrl);
-      console.log('User ID for checkout:', user.id);
-      
-      // Redirect to the Stripe checkout page
-      window.location.href = paymentUrl;
+      console.log('Upgrade requested for user:', user.id);
       
     } catch (err) {
       console.error('Error upgrading to Pro:', err);
