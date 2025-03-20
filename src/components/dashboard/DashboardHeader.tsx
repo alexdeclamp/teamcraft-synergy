@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Sparkles } from 'lucide-react';
+import { Plus, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardTutorial from '@/components/tutorial/DashboardTutorial';
 import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useSubscription } from '@/hooks/useSubscription';
+import PlanLimitBanner from '@/components/subscription/PlanLimitBanner';
 
 interface DashboardHeaderProps {
   className?: string;
@@ -14,6 +16,28 @@ interface DashboardHeaderProps {
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { checkUserLimits, upgradeToProPlan, isUpgrading } = useSubscription();
+  const [isCheckingLimits, setIsCheckingLimits] = useState(true);
+  const [limitReached, setLimitReached] = useState(false);
+  const [limitMessage, setLimitMessage] = useState('');
+
+  // Check brain limits when component mounts
+  useEffect(() => {
+    const checkBrainLimits = async () => {
+      setIsCheckingLimits(true);
+      const result = await checkUserLimits('brain');
+      if (!result.canProceed) {
+        setLimitReached(true);
+        setLimitMessage(result.message || "You've reached your brain limit on the Starter plan. Please upgrade to Pro for unlimited brains.");
+      } else {
+        setLimitReached(false);
+        setLimitMessage('');
+      }
+      setIsCheckingLimits(false);
+    };
+    
+    checkBrainLimits();
+  }, [checkUserLimits]);
 
   return (
     <div className={`flex flex-col mb-4 sm:mb-8 gap-4 ${className}`}>
@@ -31,16 +55,41 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
         <div className={`flex items-center ${isMobile ? 'mt-4 justify-between' : 'space-x-2'} w-full sm:w-auto`}>
           {!isMobile && <StartOnboardingButton className="mr-2" />}
           {!isMobile && <DashboardTutorial className="mr-2" />}
-          <Button 
-            onClick={() => navigate('/new-project')}
-            className="shadow-sm rounded-full flex-grow sm:flex-grow-0"
-            id="new-brain-button"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Brain
-          </Button>
+          
+          {isCheckingLimits ? (
+            <Button disabled className="shadow-sm rounded-full flex-grow sm:flex-grow-0">
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Checking...
+            </Button>
+          ) : limitReached ? (
+            <Button 
+              onClick={() => upgradeToProPlan()}
+              className="shadow-sm rounded-full flex-grow sm:flex-grow-0"
+              disabled={isUpgrading}
+            >
+              <Zap className="h-4 w-4 mr-2" />
+              Upgrade to Pro
+            </Button>
+          ) : (
+            <Button 
+              onClick={() => navigate('/new-project')}
+              className="shadow-sm rounded-full flex-grow sm:flex-grow-0"
+              id="new-brain-button"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Brain
+            </Button>
+          )}
         </div>
       </div>
+      
+      {/* Display banner if limit is reached */}
+      {limitReached && !isCheckingLimits && (
+        <PlanLimitBanner 
+          message={limitMessage} 
+          onUpgrade={() => upgradeToProPlan()} 
+        />
+      )}
     </div>
   );
 };
