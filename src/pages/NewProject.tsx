@@ -37,8 +37,10 @@ const NewProject = () => {
     const checkLimits = async () => {
       if (!user) return;
       
+      // Perform server-side brain limit check
       const result = await checkUserLimits('brain');
       if (!result.canProceed) {
+        console.log('Limit check failed:', result.message);
         setLimitReached(true);
         setLimitMessage(result.message || 'You have reached your plan limit for brains.');
       } else {
@@ -72,6 +74,8 @@ const NewProject = () => {
     
     // Check if user is at their brain limit before creating
     setLoading(true);
+    
+    // Double-check with the server to ensure user hasn't created brains in another tab/session
     const limitCheck = await checkUserLimits('brain');
     
     if (!limitCheck.canProceed) {

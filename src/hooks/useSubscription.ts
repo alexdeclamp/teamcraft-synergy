@@ -58,6 +58,10 @@ export const useSubscription = () => {
 
   // Function to check if user is at or over limits
   const checkUserLimits = async (actionType: 'brain' | 'api_call' | 'document' = 'api_call') => {
+    if (!user) {
+      return { canProceed: false, message: 'You must be logged in to perform this action.' };
+    }
+    
     if (!subscriptionData.planDetails || subscriptionData.isLoading) {
       return { canProceed: false, message: 'Loading subscription information...' };
     }
@@ -74,6 +78,41 @@ export const useSubscription = () => {
       // If user is on Pro plan, they can always proceed
       if (plan.plan_type === 'pro') {
         return { canProceed: true };
+      }
+      
+      // For brain creation, we should also check with the server to ensure data is current
+      // especially important for enforcing brain creation limits
+      if (actionType === 'brain') {
+        try {
+          console.log('Performing server-side brain limit check');
+          const { data, error } = await supabase.functions.invoke('track-usage', {
+            body: { 
+              action: 'check_brain_limit',
+              userId: user.id
+            }
+          });
+          
+          if (error) {
+            console.error('Error checking brain limit with server:', error);
+            return { 
+              canProceed: false, 
+              message: 'Could not verify your subscription limits. Please try again.' 
+            };
+          }
+          
+          if (data && !data.canProceed) {
+            console.log('Server rejected brain creation:', data.message);
+            return {
+              canProceed: false,
+              message: data.message || `You've reached the maximum limit of ${plan.max_brains} brains on your Starter plan. Please upgrade to Pro for unlimited brains.`
+            };
+          }
+          
+          return { canProceed: true };
+        } catch (serverError) {
+          console.error('Exception during server brain limit check:', serverError);
+          // Fall back to local check if server check fails
+        }
       }
       
       // Check specific limits based on action type

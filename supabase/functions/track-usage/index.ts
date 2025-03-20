@@ -116,6 +116,21 @@ serve(async (req) => {
         if (!planError && planData) {
           planDetails = planData;
           
+          // Early return for pro users - they don't have limits
+          if (planData.plan_type === 'pro') {
+            // Pro users can always proceed
+            if (action === 'check_brain_limit') {
+              return new Response(
+                JSON.stringify({
+                  status: "success",
+                  canProceed: true,
+                  message: "Pro users have unlimited brains"
+                }),
+                { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+              );
+            }
+          }
+          
           // Check limits based on action type
           if (planData.plan_type === 'starter') {
             const now = new Date();
@@ -158,6 +173,17 @@ serve(async (req) => {
                 if (currentBrainCount >= planData.max_brains) {
                   canCreateBrain = false;
                   limitMessage = `You've reached your limit of ${planData.max_brains} brains. Please upgrade to Pro for unlimited brains.`;
+                  
+                  return new Response(
+                    JSON.stringify({
+                      status: "limit_exceeded",
+                      message: limitMessage,
+                      canProceed: false,
+                      currentCount: currentBrainCount,
+                      maxBrains: planData.max_brains
+                    }),
+                    { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+                  );
                 }
               }
             }
@@ -200,14 +226,26 @@ serve(async (req) => {
       }
     }
 
-    // Handle brain limit checking
+    // Handle brain limit checking - respond with detailed status
     if (action === 'check_brain_limit') {
+      // Get current brain count for response
+      const { count: brainCount, error: countError } = await adminClient
+        .from('projects')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', userIdToUse)
+        .eq('is_archived', false);
+      
+      const currentBrainCount = countError ? 0 : (brainCount || 0);
+      const maxBrains = planDetails?.max_brains || 3; // Default to 3 if plan details not available
+      
       if (!canCreateBrain) {
         return new Response(
           JSON.stringify({
             status: "limit_exceeded",
             message: limitMessage || "You've reached your brain limit. Please upgrade to create more brains.",
-            canProceed: false
+            canProceed: false,
+            currentCount: currentBrainCount,
+            maxBrains: maxBrains
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
         );
@@ -215,7 +253,9 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({
             status: "success",
-            canProceed: true
+            canProceed: true,
+            currentCount: currentBrainCount,
+            maxBrains: maxBrains
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
         );
