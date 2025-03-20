@@ -126,6 +126,116 @@ serve(async (req: Request) => {
     }
   }
 
+  // New endpoint specifically to test signature verification
+  if (req.url.endsWith('/verify-signature')) {
+    console.log('Signature verification test endpoint called');
+    
+    try {
+      // Get the signature from the header
+      const signature = req.headers.get('stripe-signature');
+      
+      if (!signature) {
+        console.error('Missing stripe-signature header');
+        return new Response(JSON.stringify({ 
+          error: 'Missing stripe-signature header',
+          success: false 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      console.log('Received stripe-signature:', signature);
+      
+      // Get webhook secret
+      if (!webhookSecret) {
+        console.error('Webhook secret not configured');
+        return new Response(JSON.stringify({ 
+          error: 'Webhook secret not configured in environment variables',
+          success: false,
+          webhookSecretConfigured: false
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      console.log('Using webhook secret:', webhookSecret.substring(0, 4) + '...');
+      
+      // Get the raw body
+      const body = await req.text();
+      if (!body) {
+        console.error('Empty request body');
+        return new Response(JSON.stringify({ 
+          error: 'Empty request body',
+          success: false 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      console.log('Request body received, length:', body.length);
+      
+      try {
+        // Attempt to verify the signature
+        console.log('Attempting signature verification...');
+        const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+        console.log('Signature verification successful!');
+        console.log('Verified event type:', event.type);
+        
+        return new Response(JSON.stringify({ 
+          success: true,
+          message: 'Signature verification successful',
+          eventType: event.type,
+          eventId: event.id
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch (verifyError) {
+        console.error('Signature verification failed:', verifyError.message);
+        
+        // Detailed error analysis
+        let detailedError = verifyError.message;
+        let suggestion = '';
+        
+        if (verifyError.message.includes('No signature found with expected scheme')) {
+          suggestion = 'Check that your Stripe webhook is sending the correct signature format';
+        } else if (verifyError.message.includes('Timestamp outside the tolerance zone')) {
+          suggestion = 'The webhook might be delayed or there might be a clock synchronization issue';
+        } else if (verifyError.message.includes('No signatures found matching the expected signature')) {
+          suggestion = 'The webhook secret used by Stripe does not match the one configured in this function';
+        }
+        
+        return new Response(JSON.stringify({ 
+          success: false,
+          error: 'Signature verification failed',
+          details: detailedError,
+          suggestion,
+          secretFirstChars: webhookSecret.substring(0, 4),
+          secretLength: webhookSecret.length,
+          signaturePresent: !!signature,
+          bodyReceived: !!body,
+          bodyLength: body.length
+        }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    } catch (error) {
+      console.error('Unexpected error in verify-signature endpoint:', error);
+      return new Response(JSON.stringify({ 
+        error: 'Unexpected error in signature verification endpoint',
+        details: error.message,
+        success: false
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight request');
