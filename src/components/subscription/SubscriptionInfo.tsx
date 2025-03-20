@@ -14,7 +14,7 @@ interface SubscriptionInfoProps {
   userBrainCount?: number;
   userDocumentCount?: number;
   apiCallsUsed?: number;
-  upgradeToProPlan?: () => Promise<void>;
+  upgradeToProPlan?: (priceId?: string) => Promise<void>;
   isUpgrading?: boolean;
 }
 
@@ -135,7 +135,7 @@ const SubscriptionInfo = ({
         <Button 
           className="w-full mt-6" 
           variant="default"
-          onClick={upgradeToProPlan}
+          onClick={() => upgradeToProPlan()}
           disabled={isUpgrading}
         >
           {isUpgrading ? (
