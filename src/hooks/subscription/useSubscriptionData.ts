@@ -116,46 +116,52 @@ export const useSubscriptionData = (): SubscriptionData => {
 
   // Listen for URL parameter changes to refetch after payment completion
   useEffect(() => {
-    const handleSubscriptionUpdate = () => {
+    const handleSubscriptionUpdate = async () => {
       const params = new URLSearchParams(window.location.search);
       const subscriptionStatus = params.get('subscription');
       const sessionId = params.get('session_id');
       
       if (subscriptionStatus === 'success' && sessionId) {
         console.log('Detected successful payment, registering subscription...');
+        toast.loading('Processing your subscription...', { id: 'subscription-update' });
         
         // Register the subscription and then clear URL parameters
-        registerStripeSubscription(sessionId).then((success) => {
-          // Clear URL parameters after processing
-          const url = new URL(window.location.href);
-          url.searchParams.delete('subscription');
-          url.searchParams.delete('session_id');
-          window.history.replaceState({}, '', url.toString());
-        });
+        const success = await registerStripeSubscription(sessionId);
+        
+        // Clear URL parameters after processing
+        const url = new URL(window.location.href);
+        url.searchParams.delete('subscription');
+        url.searchParams.delete('session_id');
+        window.history.replaceState({}, '', url.toString());
+        
+        if (!success) {
+          toast.error('Could not verify your subscription. Please contact support.', { 
+            id: 'subscription-update' 
+          });
+        }
       } else if (subscriptionStatus === 'success') {
         // Legacy handling without session_id
         console.log('Detected successful payment (legacy mode), refetching subscription data...');
         toast.loading('Updating your subscription status...', { id: 'subscription-update' });
         
         // Just refetch and hope the webhook worked
-        fetchSubscriptionData().then(() => {
-          if (userSubscription?.plan_type === 'pro') {
-            toast.success('Your subscription has been upgraded to Pro!', { 
-              id: 'subscription-update',
-              duration: 5000
-            });
-          } else {
-            toast.info('Your payment was successful! Your subscription will be updated shortly.', { 
-              id: 'subscription-update',
-              duration: 5000
-            });
-          }
-          
-          // Clear URL parameters
-          const url = new URL(window.location.href);
-          url.searchParams.delete('subscription');
-          window.history.replaceState({}, '', url.toString());
-        });
+        await fetchSubscriptionData();
+        if (userSubscription?.plan_type === 'pro') {
+          toast.success('Your subscription has been upgraded to Pro!', { 
+            id: 'subscription-update',
+            duration: 5000
+          });
+        } else {
+          toast.info('Your payment was successful! Your subscription will be updated shortly.', { 
+            id: 'subscription-update',
+            duration: 5000
+          });
+        }
+        
+        // Clear URL parameters
+        const url = new URL(window.location.href);
+        url.searchParams.delete('subscription');
+        window.history.replaceState({}, '', url.toString());
       } else if (subscriptionStatus === 'canceled') {
         toast.info('Subscription upgrade was canceled.', { duration: 4000 });
         

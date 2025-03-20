@@ -59,8 +59,8 @@ serve(async (req: Request) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${req.headers.get('origin')}/?subscription=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.headers.get('origin')}/?subscription=canceled`,
+      success_url: `${req.headers.get('origin')}/dashboard?subscription=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.get('origin')}/dashboard?subscription=canceled`,
       client_reference_id: userId,
       metadata: {
         userId: userId,

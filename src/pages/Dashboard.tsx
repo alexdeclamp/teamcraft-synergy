@@ -22,40 +22,29 @@ const Dashboard = () => {
     refreshProjects
   } = useDashboardData();
   
-  // Get subscription data to trigger refresh when arriving from payment
+  // Get subscription data to trigger active processing of URL parameters
   const { refetch: refetchSubscription } = useSubscription();
-
+  
   // Check URL parameters for subscription status
   const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const subscriptionStatus = queryParams.get('subscription');
-
+  
   useEffect(() => {
+    // Force an immediate subscription check when Dashboard loads
+    const queryParams = new URLSearchParams(location.search);
+    const subscriptionStatus = queryParams.get('subscription');
+    const sessionId = queryParams.get('session_id');
+    
     if (subscriptionStatus === 'success') {
-      console.log('Dashboard detected successful payment redirect');
+      console.log('Dashboard detected successful checkout completion');
       
-      // If we haven't shown the loading toast yet, show it
-      toast.loading('Processing your subscription upgrade...', { 
-        id: 'subscription-update',
-        duration: 8000
-      });
+      if (sessionId) {
+        console.log('Session ID detected:', sessionId);
+      }
       
-      // Clear the URL parameters
-      const url = new URL(window.location.href);
-      url.searchParams.delete('subscription');
-      window.history.replaceState({}, '', url.toString());
-      
-      // Trigger an immediate subscription refresh
+      // Trigger an immediate subscription refresh - this will process URL parameters
       refetchSubscription();
-    } else if (subscriptionStatus === 'canceled') {
-      toast.info('Subscription upgrade was canceled.', { duration: 4000 });
-      
-      // Clear the URL parameters
-      const url = new URL(window.location.href);
-      url.searchParams.delete('subscription');
-      window.history.replaceState({}, '', url.toString());
     }
-  }, [subscriptionStatus, refetchSubscription]);
+  }, [location.search, refetchSubscription]);
 
   return (
     <div className="min-h-screen bg-background pb-12 animate-fade-in">
