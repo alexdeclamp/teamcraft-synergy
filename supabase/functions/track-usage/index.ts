@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.25.0";
 
@@ -19,6 +18,23 @@ serve(async (req) => {
     
     // Create a Supabase admin client with the service role key
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // First, enable real-time for the user_usage_stats table if not already enabled
+    try {
+      await adminClient.rpc('supabase_functions.get_config');
+      
+      // Enable realtime for user_usage_stats table
+      await adminClient.query(`
+        ALTER TABLE user_usage_stats REPLICA IDENTITY FULL;
+        ALTER PUBLICATION supabase_realtime ADD TABLE user_usage_stats;
+      `).catch(e => {
+        // This might fail if already configured, which is fine
+        console.log('Realtime setup note:', e.message);
+      });
+    } catch (error) {
+      console.warn('Could not setup realtime:', error);
+      // Continue execution even if this fails
+    }
     
     // Parse the request body safely
     let body;
