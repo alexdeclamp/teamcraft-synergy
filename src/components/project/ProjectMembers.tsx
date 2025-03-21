@@ -23,7 +23,7 @@ const ProjectMembers: React.FC<ProjectMembersProps> = ({ projectId, userRole }) 
     showInviteDialog,
     setShowInviteDialog,
     handleAddMember 
-  } = useProjectMembers(projectId, null, userRole === 'owner' ? projectId : undefined);
+  } = useProjectMembers(projectId, undefined, undefined);
 
   const handleInviteSuccess = () => {
     // Refresh happens automatically via useProjectMembers
