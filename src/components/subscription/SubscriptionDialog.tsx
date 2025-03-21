@@ -27,6 +27,7 @@ const SubscriptionDialog = ({
   apiCallsUsed = 0
 }: SubscriptionDialogProps) => {
   const { planDetails, isLoading, error, upgradeToProPlan, isUpgrading } = useSubscription();
+  const isPro = planDetails?.plan_type === 'pro';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,7 +55,7 @@ const SubscriptionDialog = ({
             isUpgrading={isUpgrading}
           />
           
-          {planDetails?.plan_type !== 'pro' && <ProPlanBenefits />}
+          <ProPlanBenefits isPro={isPro} />
         </div>
       </DialogContent>
     </Dialog>
