@@ -38,7 +38,7 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={disabled ? "API limit reached. Please upgrade to continue." : "Type your message here..."}
+          placeholder="Type your message here..."
           className={`min-h-[80px] focus-visible:ring-primary/30 bg-background resize-none p-4 rounded-xl ${
             isMobile ? 'text-base' : ''
           } ${disabled ? 'opacity-60' : ''}`}

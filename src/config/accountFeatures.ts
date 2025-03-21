@@ -10,8 +10,8 @@ export const accountFeatures: AccountFeatureConfig = {
     canUseImageAnalysis: true,
     canUseAdvancedAI: false,
     maxBrains: 3,
-    maxApiCalls: 10,
-    maxDailyApiCalls: 10 // New field: daily API call limit
+    maxApiCalls: null, // Changed from 10 to null (unlimited)
+    maxDailyApiCalls: null // Changed from 10 to null (unlimited)
   },
   pro: {
     canCreateBrains: true,

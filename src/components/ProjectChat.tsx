@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Info, Maximize2, Send, AlertCircle, ZapOff } from 'lucide-react';
+import { Loader2, Info, Maximize2, Send, AlertCircle } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -41,38 +41,18 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
     sendMessage(question);
   };
 
-  // Check if error is related to API limit
-  const isApiLimitError = error?.includes('Daily API limit reached');
-
   // Render error message if one exists
   const renderError = () => {
     if (!error) return null;
     
     return (
       <div className="p-4 bg-destructive/10 rounded-md flex items-start space-x-3 my-4">
-        {isApiLimitError ? (
-          <ZapOff className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-        ) : (
-          <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-        )}
+        <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
         <div className="space-y-2 flex-1">
           <p className="font-medium text-destructive">
-            {isApiLimitError ? 'Daily AI API Limit Reached' : 'Error sending message'}
+            Error sending message
           </p>
           <p className="text-sm text-muted-foreground">{error}</p>
-          
-          {isApiLimitError && (
-            <div className="pt-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigate('/subscription')}
-                className="w-full sm:w-auto mt-1"
-              >
-                Upgrade to Pro for unlimited API calls
-              </Button>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -165,7 +145,7 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ projectId, disableAutoScroll 
               />
             </div>
           )}
-          <ProjectChatInput onSendMessage={sendMessage} isLoading={isLoading} disabled={isApiLimitError} />
+          <ProjectChatInput onSendMessage={sendMessage} isLoading={isLoading} />
         </div>
       </Card>
     </>

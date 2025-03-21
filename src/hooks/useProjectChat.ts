@@ -98,26 +98,6 @@ export function useProjectChat(projectId: string) {
       if (response.error) {
         console.error('Error from edge function:', response.error);
         
-        // Check if the error contains information about API limits
-        const errorMessage = response.error.message || '';
-        const isApiLimitError = 
-          errorMessage.includes('Daily API limit reached') || 
-          (response.data && response.data.limitReached);
-        
-        if (isApiLimitError) {
-          const limitError = 'Daily API limit reached. Free accounts are limited to 10 AI operations per day. Please upgrade to Pro for unlimited API calls.';
-          setState(prev => ({
-            ...prev,
-            isLoading: false,
-            error: limitError
-          }));
-          
-          toast.error('Daily AI API limit reached', {
-            description: 'Free accounts are limited to 10 AI operations per day. Upgrade to Pro for unlimited API calls.'
-          });
-          return;
-        }
-        
         // General error handling
         setState(prev => ({
           ...prev,
