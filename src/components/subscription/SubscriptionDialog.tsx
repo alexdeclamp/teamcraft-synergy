@@ -53,31 +53,29 @@ const SubscriptionDialog = ({
             isUpgrading={isUpgrading}
           />
           
-          <div className="mt-8">
-            <h3 className="text-lg font-medium mb-4">Subscription Benefits</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start">
-                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5 flex-shrink-0">✓</span>
-                <span>Upgrade to unlimited API calls per month</span>
-              </li>
-              <li className="flex items-start">
-                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5 flex-shrink-0">✓</span>
-                <span>Create and manage unlimited brains</span>
-              </li>
-              <li className="flex items-start">
-                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5 flex-shrink-0">✓</span>
-                <span>Share your brains with team members</span>
-              </li>
-              <li className="flex items-start">
-                <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5 flex-shrink-0">✓</span>
-                <span>Priority support and early access to new features</span>
-              </li>
-            </ul>
-          </div>
+          {planDetails?.plan_type !== 'pro' && (
+            <div className="mt-8 p-4 bg-primary/5 rounded-lg">
+              <h3 className="text-lg font-medium mb-3">Pro Plan Benefits</h3>
+              <ul className="space-y-2">
+                <BenefitItem text="Unlimited AI calls per month" />
+                <BenefitItem text="Create and manage unlimited brains" />
+                <BenefitItem text="Share brains with team members" />
+                <BenefitItem text="Early access to new features" />
+                <BenefitItem text="Priority support" />
+              </ul>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
   );
 };
+
+const BenefitItem = ({ text }: { text: string }) => (
+  <li className="flex items-start">
+    <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5 flex-shrink-0">✓</span>
+    <span>{text}</span>
+  </li>
+);
 
 export default SubscriptionDialog;
