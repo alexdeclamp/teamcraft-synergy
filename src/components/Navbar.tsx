@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { cn } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Zap } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserFeatures } from '@/hooks/useUserFeatures';
+import { Badge } from '@/components/ui/badge';
 
 // Import the smaller components
 import Logo from './navbar/Logo';
@@ -20,6 +22,7 @@ const Navbar = () => {
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
+  const { userFeatures, isLoading, planType } = useUserFeatures();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -39,6 +42,14 @@ const Navbar = () => {
     setSettingsDialogOpen(true);
   };
 
+  // Create API credits badge if needed
+  const apiCreditsBadge = !isLoading && planType === 'starter' && userFeatures.remainingDailyApiCalls !== Infinity ? (
+    <Badge variant="outline" className="text-xs font-normal bg-primary/5 hover:bg-primary/5">
+      <Zap className="h-3 w-3 mr-1 text-primary/60" />
+      <span>Daily AI API credits: {userFeatures.remainingDailyApiCalls}</span>
+    </Badge>
+  ) : null;
+
   return (
     <header 
       className={cn(
@@ -54,7 +65,10 @@ const Navbar = () => {
         <div className="flex items-center space-x-6">
           <NavLinks />
           <div className="hidden md:block">
-            <ProfileButton onClick={() => setProfileDialogOpen(true)} />
+            <ProfileButton 
+              onClick={() => setProfileDialogOpen(true)} 
+              badge={apiCreditsBadge}
+            />
           </div>
           
           <button 

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Sparkles, AlertCircle, Zap } from 'lucide-react';
+import { Plus, Sparkles, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardTutorial from '@/components/tutorial/DashboardTutorial';
 import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton';
@@ -9,7 +9,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserFeatures } from '@/hooks/useUserFeatures';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import ApiUsageAlert from './ApiUsageAlert';
-import { Badge } from '@/components/ui/badge';
 
 interface DashboardHeaderProps {
   className?: string;
@@ -18,23 +17,9 @@ interface DashboardHeaderProps {
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { userFeatures, isLoading, planType } = useUserFeatures();
+  const { userFeatures, isLoading } = useUserFeatures();
 
   const brainLimitReached = !isLoading && userFeatures.brainLimitReached && userFeatures.maxBrains !== Infinity;
-  
-  // Helper to render API credits badge
-  const renderApiCreditsBadge = () => {
-    if (isLoading || planType !== 'starter' || userFeatures.remainingDailyApiCalls === Infinity) {
-      return null;
-    }
-
-    return (
-      <Badge variant="outline" className="ml-2 text-xs font-normal bg-primary/5 hover:bg-primary/5">
-        <Zap className="h-3 w-3 mr-1 text-primary/60" />
-        <span>Daily AI API credits: {userFeatures.remainingDailyApiCalls}</span>
-      </Badge>
-    );
-  };
   
   return (
     <div className={`flex flex-col mb-4 sm:mb-8 gap-4 ${className}`}>
@@ -55,7 +40,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
         <div className={`flex items-center ${isMobile ? 'mt-4 justify-between' : 'space-x-2'} w-full sm:w-auto`}>
           {!isMobile && <StartOnboardingButton className="mr-2" />}
           {!isMobile && <DashboardTutorial className="mr-2" />}
-          {!isMobile && renderApiCreditsBadge()}
           <Button 
             onClick={() => navigate('/new-project')}
             className="shadow-sm rounded-full flex-grow sm:flex-grow-0"
