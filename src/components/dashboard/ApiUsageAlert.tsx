@@ -10,12 +10,12 @@ const ApiUsageAlert = () => {
   const { userFeatures, isLoading, planType } = useUserFeatures();
   const navigate = useNavigate();
   
-  // Only show for starter plan users who haven't reached their daily limit
+  // Only show alerts for starter plan users who have critical usage situations
   if (isLoading || planType !== 'starter' || userFeatures.remainingDailyApiCalls === Infinity) {
     return null;
   }
   
-  // Show different versions based on remaining calls
+  // Only show alerts for critical situations - when limit reached or very low remaining
   if (userFeatures.dailyApiCallsLimitReached) {
     return (
       <Alert variant="destructive" className="mb-4">
@@ -36,8 +36,8 @@ const ApiUsageAlert = () => {
     );
   }
   
-  // Low remaining calls warning (3 or fewer)
-  if (userFeatures.remainingDailyApiCalls <= 3) {
+  // Low remaining calls warning (2 or fewer)
+  if (userFeatures.remainingDailyApiCalls <= 2) {
     return (
       <Alert variant="warning" className="mb-4">
         <Zap className="h-4 w-4" />
@@ -57,16 +57,8 @@ const ApiUsageAlert = () => {
     );
   }
   
-  // Normal display for users with >3 remaining calls - make this more subtle
-  return (
-    <Alert variant="default" className="mb-4 border-primary/10 bg-primary/5 text-xs text-muted-foreground">
-      <Zap className="h-3 w-3 text-primary/60" />
-      <AlertTitle className="text-sm font-medium">API Credits: {userFeatures.remainingDailyApiCalls}</AlertTitle>
-      <AlertDescription className="text-xs">
-        Daily AI calls available for summaries, chat, and image analysis.
-      </AlertDescription>
-    </Alert>
-  );
+  // For normal remaining calls, don't show any alert - we show the badge in the header instead
+  return null;
 };
 
 export default ApiUsageAlert;

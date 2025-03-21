@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Sparkles, AlertCircle } from 'lucide-react';
+import { Plus, Sparkles, AlertCircle, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardTutorial from '@/components/tutorial/DashboardTutorial';
 import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton';
@@ -9,6 +9,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserFeatures } from '@/hooks/useUserFeatures';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import ApiUsageAlert from './ApiUsageAlert';
+import { Badge } from '@/components/ui/badge';
 
 interface DashboardHeaderProps {
   className?: string;
@@ -17,13 +18,27 @@ interface DashboardHeaderProps {
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { userFeatures, isLoading } = useUserFeatures();
+  const { userFeatures, isLoading, planType } = useUserFeatures();
 
   const brainLimitReached = !isLoading && userFeatures.brainLimitReached && userFeatures.maxBrains !== Infinity;
   
+  // Helper to render API credits badge
+  const renderApiCreditsBadge = () => {
+    if (isLoading || planType !== 'starter' || userFeatures.remainingDailyApiCalls === Infinity) {
+      return null;
+    }
+
+    return (
+      <Badge variant="outline" className="ml-2 text-xs font-normal bg-primary/5 hover:bg-primary/5">
+        <Zap className="h-3 w-3 mr-1 text-primary/60" />
+        <span>{userFeatures.remainingDailyApiCalls} credits</span>
+      </Badge>
+    );
+  };
+  
   return (
     <div className={`flex flex-col mb-4 sm:mb-8 gap-4 ${className}`}>
-      {/* API Usage Alert */}
+      {/* API Usage Alert - only show when critical */}
       <ApiUsageAlert />
       
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
@@ -31,6 +46,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-bold" id="dashboard-heading">Brains</h1>
             <Sparkles className="h-5 w-5 text-primary/70" />
+            {renderApiCreditsBadge()}
           </div>
           <p className="text-muted-foreground mt-1">
             Manage and organize your intelligent workspaces
