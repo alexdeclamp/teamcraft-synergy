@@ -1,11 +1,13 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Sparkles } from 'lucide-react';
+import { Plus, Sparkles, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardTutorial from '@/components/tutorial/DashboardTutorial';
 import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useUserFeatures } from '@/hooks/useUserFeatures';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface DashboardHeaderProps {
   className?: string;
@@ -14,6 +16,7 @@ interface DashboardHeaderProps {
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { userFeatures, isLoading } = useUserFeatures();
 
   return (
     <div className={`flex flex-col mb-4 sm:mb-8 gap-4 ${className}`}>
@@ -35,12 +38,26 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
             onClick={() => navigate('/new-project')}
             className="shadow-sm rounded-full flex-grow sm:flex-grow-0"
             id="new-brain-button"
+            disabled={!isLoading && userFeatures.brainLimitReached && !userFeatures.maxBrains}
           >
             <Plus className="h-4 w-4 mr-2" />
             New Brain
           </Button>
         </div>
       </div>
+
+      {!isLoading && userFeatures.brainLimitReached && userFeatures.maxBrains !== Infinity && (
+        <Alert variant="destructive" className="mt-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Brain limit reached</AlertTitle>
+          <AlertDescription>
+            You've reached your limit of {userFeatures.maxBrains} brains. 
+            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/subscription')}>
+              Upgrade your plan
+            </Button> to create more brains.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 };

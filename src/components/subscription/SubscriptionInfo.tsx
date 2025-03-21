@@ -2,10 +2,11 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Zap, Brain, AlertCircle } from 'lucide-react';
+import { Loader2, Zap, Brain, AlertCircle, Check, X } from 'lucide-react';
 import { SubscriptionTier } from '@/types/subscription';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useUserFeatures } from '@/hooks/useUserFeatures';
 
 interface SubscriptionInfoProps {
   planDetails: SubscriptionTier | null;
@@ -28,6 +29,8 @@ const SubscriptionInfo = ({
   upgradeToProPlan,
   isUpgrading = false
 }: SubscriptionInfoProps) => {
+  const { userFeatures } = useUserFeatures();
+  
   if (isLoading) {
     return (
       <div className="py-4">
@@ -131,6 +134,82 @@ const SubscriptionInfo = ({
         </div>
       </div>
       
+      <div className="mt-6">
+        <h3 className="text-lg font-medium mb-4">Available Features</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="flex items-start">
+            {userFeatures.canCreateBrains ? 
+              <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" /> : 
+              <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+            }
+            <div>
+              <p className="font-medium">Create Brains</p>
+              <p className="text-sm text-muted-foreground">Create {userFeatures.maxBrains === Infinity ? 'unlimited' : userFeatures.maxBrains} brains</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            {userFeatures.canShareBrains ? 
+              <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" /> : 
+              <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+            }
+            <div>
+              <p className="font-medium">Share Brains</p>
+              <p className="text-sm text-muted-foreground">Collaborate with team members</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            {userFeatures.canUploadDocuments ? 
+              <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" /> : 
+              <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+            }
+            <div>
+              <p className="font-medium">Upload Documents</p>
+              <p className="text-sm text-muted-foreground">Add PDFs and other files</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            {userFeatures.canUseImageAnalysis ? 
+              <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" /> : 
+              <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+            }
+            <div>
+              <p className="font-medium">Image Analysis</p>
+              <p className="text-sm text-muted-foreground">AI-powered image processing</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            {userFeatures.canUseAdvancedAI ? 
+              <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" /> : 
+              <X className="h-5 w-5 text-red-500 mr-2 mt-0.5" />
+            }
+            <div>
+              <p className="font-medium">Advanced AI Features</p>
+              <p className="text-sm text-muted-foreground">Enhanced AI capabilities</p>
+            </div>
+          </div>
+          
+          <div className="flex items-start">
+            {userFeatures.maxApiCalls === Infinity ? 
+              <Check className="h-5 w-5 text-green-500 mr-2 mt-0.5" /> : 
+              <div className={`h-5 w-5 mr-2 mt-0.5 flex items-center justify-center 
+                ${apiCallsUsed >= userFeatures.maxApiCalls ? 'text-red-500' : 'text-amber-500'}`}>
+                {apiCallsUsed}/{userFeatures.maxApiCalls}
+              </div>
+            }
+            <div>
+              <p className="font-medium">API Calls</p>
+              <p className="text-sm text-muted-foreground">
+                {userFeatures.maxApiCalls === Infinity ? 'Unlimited' : userFeatures.maxApiCalls} AI API calls per month
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {planDetails.plan_type === 'starter' && upgradeToProPlan && (
         <Button 
           className="w-full mt-6" 
@@ -149,7 +228,7 @@ const SubscriptionInfo = ({
       
       {planDetails.features && planDetails.features.length > 0 && (
         <div className="mt-6">
-          <h4 className="font-medium mb-2">Plan Features</h4>
+          <h4 className="font-medium mb-2">Plan Details</h4>
           <ul className="space-y-1 overflow-wrap-anywhere">
             {planDetails.features.map((feature, index) => (
               <li key={index} className="flex items-start text-sm">
