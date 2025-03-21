@@ -39,9 +39,9 @@ const ApiUsageAlert = () => {
   // Low remaining calls warning (3 or fewer)
   if (userFeatures.remainingDailyApiCalls <= 3) {
     return (
-      <Alert variant="warning" className="mb-4 border-amber-500">
-        <Zap className="h-4 w-4 text-amber-500" />
-        <AlertTitle className="text-amber-500">Low API credits remaining</AlertTitle>
+      <Alert variant="warning" className="mb-4">
+        <Zap className="h-4 w-4" />
+        <AlertTitle>Low API credits remaining</AlertTitle>
         <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-2">
           <span>You have only <strong>{userFeatures.remainingDailyApiCalls}</strong> AI API calls left today.</span>
           <Button 
