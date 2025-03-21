@@ -57,13 +57,13 @@ const ApiUsageAlert = () => {
     );
   }
   
-  // Normal display for users with >3 remaining calls
+  // Normal display for users with >3 remaining calls - make this more subtle
   return (
-    <Alert variant="default" className="mb-4 border-primary/30 bg-primary/5">
-      <Zap className="h-4 w-4 text-primary" />
-      <AlertTitle>API Credits Available</AlertTitle>
-      <AlertDescription>
-        You have <strong>{userFeatures.remainingDailyApiCalls}</strong> AI API calls remaining today. Use them for summaries, chat responses, or image analysis.
+    <Alert variant="default" className="mb-4 border-primary/10 bg-primary/5 text-xs text-muted-foreground">
+      <Zap className="h-3 w-3 text-primary/60" />
+      <AlertTitle className="text-sm font-medium">API Credits: {userFeatures.remainingDailyApiCalls}</AlertTitle>
+      <AlertDescription className="text-xs">
+        Daily AI calls available for summaries, chat, and image analysis.
       </AlertDescription>
     </Alert>
   );

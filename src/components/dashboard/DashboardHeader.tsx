@@ -19,6 +19,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
   const isMobile = useIsMobile();
   const { userFeatures, isLoading } = useUserFeatures();
 
+  const brainLimitReached = !isLoading && userFeatures.brainLimitReached && userFeatures.maxBrains !== Infinity;
+  
   return (
     <div className={`flex flex-col mb-4 sm:mb-8 gap-4 ${className}`}>
       {/* API Usage Alert */}
@@ -42,7 +44,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
             onClick={() => navigate('/new-project')}
             className="shadow-sm rounded-full flex-grow sm:flex-grow-0"
             id="new-brain-button"
-            disabled={!isLoading && userFeatures.brainLimitReached}
+            disabled={brainLimitReached}
           >
             <Plus className="h-4 w-4 mr-2" />
             New Brain
@@ -50,7 +52,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
         </div>
       </div>
 
-      {!isLoading && userFeatures.brainLimitReached && userFeatures.maxBrains !== Infinity && (
+      {brainLimitReached && (
         <Alert variant="destructive" className="mt-2">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Brain limit reached</AlertTitle>
