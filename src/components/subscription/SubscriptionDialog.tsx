@@ -19,6 +19,14 @@ interface SubscriptionDialogProps {
   apiCallsUsed: number;
 }
 
+// Simple benefit item component
+const BenefitItem = ({ text }: { text: string }) => (
+  <li className="flex items-start">
+    <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5 flex-shrink-0">✓</span>
+    <span>{text}</span>
+  </li>
+);
+
 const SubscriptionDialog = ({ 
   open, 
   onOpenChange,
@@ -70,12 +78,5 @@ const SubscriptionDialog = ({
     </Dialog>
   );
 };
-
-const BenefitItem = ({ text }: { text: string }) => (
-  <li className="flex items-start">
-    <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-xs mr-2 mt-0.5 flex-shrink-0">✓</span>
-    <span>{text}</span>
-  </li>
-);
 
 export default SubscriptionDialog;
