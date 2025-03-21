@@ -38,7 +38,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
             onClick={() => navigate('/new-project')}
             className="shadow-sm rounded-full flex-grow sm:flex-grow-0"
             id="new-brain-button"
-            disabled={!isLoading && userFeatures.brainLimitReached && !userFeatures.maxBrains}
+            disabled={!isLoading && userFeatures.brainLimitReached}
           >
             <Plus className="h-4 w-4 mr-2" />
             New Brain
