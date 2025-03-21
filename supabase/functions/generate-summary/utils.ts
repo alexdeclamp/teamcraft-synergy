@@ -20,74 +20,12 @@ export const getSupabaseClient = () => {
   return createClient(supabaseUrl, supabaseServiceKey);
 };
 
-// Check daily API usage limit
-export const checkDailyApiLimit = async (userId: string) => {
-  const supabase = getSupabaseClient();
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  
-  try {
-    // Get the user's subscription plan
-    const { data: subscriptionData, error: subscriptionError } = await supabase.rpc(
-      'get_user_subscription',
-      { p_user_id: userId }
-    );
-    
-    if (subscriptionError) {
-      console.error('Error fetching user subscription:', subscriptionError);
-      throw new Error('Could not verify user subscription');
-    }
-    
-    // If user is on pro plan, they have unlimited usage
-    if (subscriptionData && subscriptionData.plan_type === 'pro') {
-      return { allowed: true };
-    }
-    
-    // For starter plan, check daily usage
-    const { count, error: countError } = await supabase
-      .from('user_usage_stats')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('action_type', 'openai_api_call')
-      .gte('created_at', startOfDay.toISOString());
-    
-    if (countError) {
-      console.error('Error checking daily API usage:', countError);
-      throw new Error('Could not verify API usage');
-    }
-    
-    // Starter plan: 10 calls per day limit
-    const dailyLimit = 10;
-    const dailyUsage = count || 0;
-    
-    return {
-      allowed: dailyUsage < dailyLimit,
-      dailyUsage,
-      dailyLimit,
-      remainingCalls: Math.max(0, dailyLimit - dailyUsage)
-    };
-  } catch (error) {
-    console.error('Error in checkDailyApiLimit:', error);
-    throw error;
-  }
-};
-
-// Log API usage
+// Log API usage - now just logs without checking limits
 export const logApiUsage = async (userId: string) => {
   const supabase = getSupabaseClient();
   
   try {
-    // First check if the user is allowed to make this call
-    const usageCheck = await checkDailyApiLimit(userId);
-    
-    if (!usageCheck.allowed) {
-      return {
-        allowed: false,
-        error: `Daily API limit reached. You have used ${usageCheck.dailyUsage} out of ${usageCheck.dailyLimit} allowed calls.`
-      };
-    }
-    
-    // If allowed, log the API call
+    // Log the API call without checking limits
     const { error: logError } = await supabase
       .from('user_usage_stats')
       .insert({
@@ -97,16 +35,13 @@ export const logApiUsage = async (userId: string) => {
     
     if (logError) {
       console.error('Error logging OpenAI API call:', logError);
-      return { allowed: true, warning: 'API call usage could not be logged' };
+      return { warning: 'API call usage could not be logged' };
     }
     
-    return { 
-      allowed: true,
-      remainingCalls: usageCheck.remainingCalls - 1
-    };
+    return { success: true };
   } catch (error) {
     console.error('Error in logApiUsage:', error);
-    return { allowed: true, warning: 'API usage check failed, proceeding anyway' };
+    return { warning: 'API usage logging failed' };
   }
 };
 

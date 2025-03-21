@@ -91,7 +91,7 @@ const ProfileStats = ({
         </div>
       </div>
       <p className="text-xs text-muted-foreground">
-        Only counts actual AI calls for document/note summarization and chat responses.
+        AI calls are used for document/note summarization and chat responses.
       </p>
     </div>
   );

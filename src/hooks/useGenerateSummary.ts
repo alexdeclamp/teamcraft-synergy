@@ -61,15 +61,6 @@ export function useGenerateSummary({
 
       if (error) {
         console.error('Error from generate-summary function:', error);
-        
-        // Check if the error is due to API limit being reached by message content
-        if (error.message?.includes('Daily API limit reached') || (data && data.limitReached)) {
-          toast.error('You have reached your daily AI API limit. Please upgrade to Pro for unlimited API calls.', {
-            description: 'Free accounts are limited to 10 AI operations per day.'
-          });
-          return;
-        }
-        
         throw error;
       }
       
@@ -82,16 +73,7 @@ export function useGenerateSummary({
       setHasSummary(true);
     } catch (error: any) {
       console.error('Error generating summary:', error);
-      
-      // Check error message for API limit reached
-      if (error.message && error.message.includes('Daily API limit reached')) {
-        toast.error('You have reached your daily AI API limit. Please upgrade to Pro for unlimited API calls.', {
-          description: 'Free accounts are limited to 10 AI operations per day.'
-        });
-      } else {
-        toast.error(`Failed to generate summary: ${error.message || 'Unknown error'}`);
-      }
-      
+      toast.error(`Failed to generate summary: ${error.message || 'Unknown error'}`);
       setHasSummary(false);
     } finally {
       setIsGenerating(false);

@@ -74,8 +74,7 @@ serve(async (req) => {
               apiCalls: 0,
               dailyApiCalls: 0,
               status: "unauthenticated",
-              message: "Please log in to see your usage statistics",
-              limitReached: false
+              message: "Please log in to see your usage statistics"
             }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
           );
@@ -90,8 +89,7 @@ serve(async (req) => {
             apiCalls: 0,
             dailyApiCalls: 0,
             status: "error",
-            message: "Failed to authenticate user",
-            limitReached: false
+            message: "Failed to authenticate user"
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
         );
@@ -104,64 +102,14 @@ serve(async (req) => {
           apiCalls: 0,
           dailyApiCalls: 0,
           status: "error",
-          message: "User ID is required",
-          limitReached: false
+          message: "User ID is required"
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
 
-    // Get user's subscription plan
-    const { data: subscriptionData, error: subscriptionError } = await adminClient.rpc(
-      'get_user_subscription',
-      { p_user_id: userIdToUse }
-    );
-    
-    const isPro = subscriptionData && subscriptionData.plan_type === 'pro';
-    
-    // Get current API usage
-    const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
-    let dailyApiCallCount = 0;
-    try {
-      const { count, error: dailyApiError } = await adminClient
-        .from('user_usage_stats')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userIdToUse)
-        .eq('action_type', 'openai_api_call')
-        .gte('created_at', startOfDay.toISOString());
-      
-      if (!dailyApiError) {
-        dailyApiCallCount = count || 0;
-      } else {
-        console.error('Error fetching daily API calls:', dailyApiError);
-      }
-    } catch (error) {
-      console.error('Error in daily API call count query:', error);
-    }
-    
-    // Check if user has reached their daily limit (if they're not on pro plan)
-    const dailyLimit = 10; // Starter plan limit
-    const limitReached = !isPro && dailyApiCallCount >= dailyLimit;
-
-    // Log the OpenAI API call if requested and limit not reached
+    // Log the API call if requested 
     if (action === 'log_api_call') {
-      // Check if user has reached their limit before allowing the call
-      if (limitReached) {
-        return new Response(
-          JSON.stringify({ 
-            apiCalls: 0,
-            dailyApiCalls: dailyApiCallCount,
-            status: "error",
-            message: "Daily API limit reached",
-            limitReached: true,
-            canMakeCall: false
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 429 }
-        );
-      }
-      
       try {
         const { error: logError } = await adminClient.from('user_usage_stats').insert({
           user_id: userIdToUse,
@@ -179,10 +127,11 @@ serve(async (req) => {
     }
 
     // Get user usage statistics - using admin client
-    // Only count rows where action_type is 'openai_api_call'
+    const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
-    // Get OpenAI API call count for the current month
+    // Get monthly API call count 
     let apiCallCount = 0;
     try {
       const { count, error: apiError } = await adminClient
@@ -201,22 +150,23 @@ serve(async (req) => {
       console.error('Error in API call count query:', error);
     }
     
-    // Now that we've possibly logged a new call, get the updated daily count
-    if (action === 'log_api_call' && !limitReached) {
-      try {
-        const { count, error: dailyApiError } = await adminClient
-          .from('user_usage_stats')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', userIdToUse)
-          .eq('action_type', 'openai_api_call')
-          .gte('created_at', startOfDay.toISOString());
-        
-        if (!dailyApiError) {
-          dailyApiCallCount = count || 0;
-        }
-      } catch (error) {
-        console.error('Error updating daily API call count:', error);
+    // Get daily API call count
+    let dailyApiCallCount = 0;
+    try {
+      const { count, error: dailyApiError } = await adminClient
+        .from('user_usage_stats')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userIdToUse)
+        .eq('action_type', 'openai_api_call')
+        .gte('created_at', startOfDay.toISOString());
+      
+      if (!dailyApiError) {
+        dailyApiCallCount = count || 0;
+      } else {
+        console.error('Error fetching daily API calls:', dailyApiError);
       }
+    } catch (error) {
+      console.error('Error in daily API call count query:', error);
     }
     
     return new Response(
@@ -224,8 +174,7 @@ serve(async (req) => {
         apiCalls: apiCallCount,
         dailyApiCalls: dailyApiCallCount,
         status: "success",
-        limitReached: limitReached,
-        canMakeCall: !limitReached || isPro
+        canMakeCall: true
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -236,9 +185,7 @@ serve(async (req) => {
         error: error.message || 'Unknown error occurred',
         apiCalls: 0,
         dailyApiCalls: 0,
-        status: "error",
-        limitReached: false,
-        canMakeCall: false
+        status: "error"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );

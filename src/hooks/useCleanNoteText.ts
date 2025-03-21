@@ -35,15 +35,6 @@ export function useCleanNoteText({ model = 'claude' }: UseCleanNoteTextProps = {
       
       if (error) {
         console.error('Error from clean-note-text function:', error);
-        
-        // Check if the error is due to API limit being reached
-        if (error.message?.includes('Daily API limit reached') || (data && data.limitReached)) {
-          toast.error('You have reached your daily AI API limit. Please upgrade to Pro for unlimited API calls.', {
-            description: 'Free accounts are limited to 10 AI operations per day.'
-          });
-          return null;
-        }
-        
         throw error;
       }
       
@@ -55,16 +46,7 @@ export function useCleanNoteText({ model = 'claude' }: UseCleanNoteTextProps = {
       return data.cleanedText;
     } catch (error: any) {
       console.error(`Error ${cleanType}ing text:`, error);
-      
-      // Check error message for API limit reached
-      if (error.message && error.message.includes('Daily API limit reached')) {
-        toast.error('You have reached your daily AI API limit. Please upgrade to Pro for unlimited API calls.', {
-          description: 'Free accounts are limited to 10 AI operations per day.'
-        });
-      } else {
-        toast.error(`Failed to ${cleanType} text: ${error.message || 'Unknown error'}`);
-      }
-      
+      toast.error(`Failed to ${cleanType} text: ${error.message || 'Unknown error'}`);
       return null;
     } finally {
       setIsCleaning(false);

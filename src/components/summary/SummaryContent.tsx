@@ -1,9 +1,7 @@
 
 import React from 'react';
-import { Loader2, Save, AlertCircle, ZapOff } from 'lucide-react';
+import { Loader2, Save, AlertCircle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
 
 interface SummaryContentProps {
   isLoading: boolean;
@@ -19,9 +17,6 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
   error
 }) => {
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
-  
-  const isApiLimitError = error?.includes('Daily API limit reached');
 
   if (isLoading) {
     return (
@@ -35,33 +30,15 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
   if (error) {
     return (
       <div className="p-4 bg-destructive/10 rounded-md flex items-start space-x-3">
-        {isApiLimitError ? (
-          <ZapOff className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-        ) : (
-          <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
-        )}
+        <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
         <div className="space-y-2 flex-1">
           <p className="font-medium text-destructive">
-            {isApiLimitError ? 'Daily AI API Limit Reached' : 'Error generating summary'}
+            Error generating summary
           </p>
           <p className="text-sm text-muted-foreground">{error}</p>
-          
-          {isApiLimitError ? (
-            <div className="pt-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => navigate('/subscription')}
-                className="w-full sm:w-auto mt-1"
-              >
-                Upgrade to Pro for unlimited API calls
-              </Button>
-            </div>
-          ) : (
-            <p className="text-sm mt-2">
-              This could be due to server load or connection issues. Please try again in a few moments.
-            </p>
-          )}
+          <p className="text-sm mt-2">
+            This could be due to server load or connection issues. Please try again in a few moments.
+          </p>
         </div>
       </div>
     );
