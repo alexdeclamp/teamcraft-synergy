@@ -13,16 +13,10 @@ interface ProjectDocumentsTabProps {
 const ProjectDocumentsTab: React.FC<ProjectDocumentsTabProps> = ({ projectId, userRole }) => {
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6">
+        <FeatureAccess feature="canUploadDocuments">
           <ProjectDocuments projectId={projectId} />
-        </div>
-        
-        <div className="lg:col-span-1">
-          <FeatureAccess feature="canUploadDocuments">
-            <ProjectDocumentUpload projectId={projectId} />
-          </FeatureAccess>
-        </div>
+        </FeatureAccess>
       </div>
     </div>
   );
