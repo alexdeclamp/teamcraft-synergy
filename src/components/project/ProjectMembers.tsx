@@ -34,13 +34,13 @@ const ProjectMembers: React.FC<ProjectMembersProps> = ({ projectId, userRole }) 
           
         if (error) throw error;
         
-        // Transform data to ProjectMember format
+        // Transform data to ProjectMember format with proper type assertion
         const formattedMembers = data?.map(member => ({
           id: member.user_id,
-          name: member.user_name || 'Anonymous User',
+          name: 'Anonymous User', // Default name as user_name doesn't exist
           email: '',
-          role: member.role,
-          avatar: member.avatar_url
+          role: member.role as 'owner' | 'admin' | 'editor' | 'viewer', // Cast to valid role type
+          avatar: undefined // avatar_url doesn't exist
         })) || [];
         
         setMembers(formattedMembers);
@@ -69,13 +69,13 @@ const ProjectMembers: React.FC<ProjectMembersProps> = ({ projectId, userRole }) 
           
         if (error) throw error;
         
-        // Transform data to ProjectMember format
+        // Transform data with proper type assertion
         const formattedMembers = data?.map(member => ({
           id: member.user_id,
-          name: member.user_name || 'Anonymous User',
+          name: 'Anonymous User', // Default name
           email: '',
-          role: member.role,
-          avatar: member.avatar_url
+          role: member.role as 'owner' | 'admin' | 'editor' | 'viewer', // Cast to valid role type
+          avatar: undefined // No avatar_url
         })) || [];
         
         setMembers(formattedMembers);
@@ -97,10 +97,12 @@ const ProjectMembers: React.FC<ProjectMembersProps> = ({ projectId, userRole }) 
         
       if (error) throw error;
       
-      // Update local state
+      // Update local state with proper type assertion
       setMembers(prevMembers => 
         prevMembers.map(member => 
-          member.id === memberId ? { ...member, role: newRole as any } : member
+          member.id === memberId ? 
+          { ...member, role: newRole as 'owner' | 'admin' | 'editor' | 'viewer' } : 
+          member
         )
       );
       
