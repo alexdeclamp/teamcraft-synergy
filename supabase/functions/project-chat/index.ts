@@ -25,20 +25,33 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     
-    // Log the API call
-    try {
-      const { error: logError } = await supabase
-        .from('user_usage_stats')
-        .insert({
-          user_id: userId,
-          action_type: 'openai_api_call',
-        });
-      
-      if (logError) {
-        console.error('Error logging API call:', logError);
+    // Check if user can make this API call
+    const { data: usageData, error: usageError } = await supabase.functions.invoke('track-usage', {
+      body: { 
+        userId: userId,
+        action: 'log_api_call'
       }
-    } catch (error) {
-      console.error('Error inserting API call record:', error);
+    });
+    
+    if (usageError) {
+      console.error('Error checking API usage:', usageError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to verify API usage limits' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Check if the user has reached their limit
+    if (usageData.limitReached && !usageData.canMakeCall) {
+      console.log(`User ${userId} has reached their daily API limit`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Daily API limit reached',
+          limitReached: true,
+          dailyApiCalls: usageData.dailyApiCalls
+        }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
     
     // Verify project exists and get the latest data

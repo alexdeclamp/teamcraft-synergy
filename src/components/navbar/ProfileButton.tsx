@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Zap } from 'lucide-react';
+import { Loader2, Zap, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 type ProfileButtonProps = {
@@ -17,6 +17,7 @@ const ProfileButton = ({ onClick, badge, remainingDailyApiCalls }: ProfileButton
   const { user, profile } = useAuth();
   const [apiCalls, setApiCalls] = useState<number | undefined>(remainingDailyApiCalls);
   const [isLoading, setIsLoading] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
   
   // Get user initials for avatar fallback
   const getInitials = () => {
@@ -49,7 +50,9 @@ const ProfileButton = ({ onClick, badge, remainingDailyApiCalls }: ProfileButton
           // For starter plan: 10 calls per day limit
           const dailyLimit = 10;
           const dailyUsage = data.dailyApiCalls || 0;
-          setApiCalls(Math.max(0, dailyLimit - dailyUsage));
+          const remaining = Math.max(0, dailyLimit - dailyUsage);
+          setApiCalls(remaining);
+          setLimitReached(data.limitReached || remaining === 0);
         }
       } catch (error) {
         console.error('Failed to fetch API usage:', error);
@@ -85,9 +88,21 @@ const ProfileButton = ({ onClick, badge, remainingDailyApiCalls }: ProfileButton
 
   // Create API credits badge
   const apiCreditsBadge = apiCalls !== undefined ? (
-    <Badge variant="outline" className="text-xs font-normal bg-primary/5 hover:bg-primary/5">
-      <Zap className="h-3 w-3 mr-1 text-primary/60" />
-      <span>Daily AI API credits: {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : apiCalls}</span>
+    <Badge 
+      variant={limitReached ? "destructive" : "outline"} 
+      className={`text-xs font-normal ${limitReached ? 'bg-destructive/10' : 'bg-primary/5 hover:bg-primary/5'}`}
+    >
+      {limitReached ? (
+        <AlertTriangle className="h-3 w-3 mr-1 text-destructive" />
+      ) : (
+        <Zap className="h-3 w-3 mr-1 text-primary/60" />
+      )}
+      <span>
+        {limitReached 
+          ? "Daily AI limit reached" 
+          : `Daily AI API credits: ${isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : apiCalls}`
+        }
+      </span>
     </Badge>
   ) : badge;
 

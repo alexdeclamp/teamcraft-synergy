@@ -48,7 +48,7 @@ export function useGenerateSummary({
         return;
       }
       
-      const { data, error } = await supabase.functions.invoke('generate-summary', {
+      const { data, error, status } = await supabase.functions.invoke('generate-summary', {
         body: {
           type: 'note',
           content: noteContent,
@@ -61,6 +61,13 @@ export function useGenerateSummary({
 
       if (error) {
         console.error('Error from generate-summary function:', error);
+        
+        // Check if the error is due to API limit being reached
+        if (status === 429 || (data && data.limitReached)) {
+          toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+          return;
+        }
+        
         throw error;
       }
       
@@ -73,7 +80,14 @@ export function useGenerateSummary({
       setHasSummary(true);
     } catch (error: any) {
       console.error('Error generating summary:', error);
-      toast.error(`Failed to generate summary: ${error.message || 'Unknown error'}`);
+      
+      // Check error message for API limit reached
+      if (error.message && error.message.includes('Daily API limit reached')) {
+        toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+      } else {
+        toast.error(`Failed to generate summary: ${error.message || 'Unknown error'}`);
+      }
+      
       setHasSummary(false);
     } finally {
       setIsGenerating(false);

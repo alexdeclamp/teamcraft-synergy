@@ -131,6 +131,14 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       
       if (response.error) {
         console.error('Error from edge function:', response.error);
+        
+        // Check if the error is due to API limit being reached
+        if (response.status === 429 || (response.data && response.data.limitReached)) {
+          setError('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+          toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+          return;
+        }
+        
         throw new Error(`Error from edge function: ${response.error.message || response.error}`);
       }
       
@@ -142,6 +150,13 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       }
       
       if (data.error) {
+        // Check if the error is related to API limit
+        if (data.limitReached) {
+          setError('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+          toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+          return;
+        }
+        
         throw new Error(`Error from OpenAI: ${data.error}`);
       }
       
@@ -162,8 +177,15 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       console.error('Error generating image summary:', error);
       setSummary('');
       setHasSummary(false);
-      setError(error.message || 'Failed to generate summary');
-      toast.error(`Failed to generate summary: ${error.message}`);
+      
+      // Check if the error message contains limit-related wording
+      if (error.message && error.message.toLowerCase().includes('limit')) {
+        setError('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+        toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+      } else {
+        setError(error.message || 'Failed to generate summary');
+        toast.error(`Failed to generate summary: ${error.message}`);
+      }
     } finally {
       setIsGenerating(false);
     }
