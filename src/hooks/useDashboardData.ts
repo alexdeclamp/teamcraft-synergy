@@ -25,13 +25,20 @@ export const useDashboardData = (): UseDashboardDataResult => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'owned' | 'member' | 'favorites' | 'archived'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
+  const [error, setError] = useState<Error | null>(null);
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
 
   const fetchProjects = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user, skipping project fetch');
+      setLoading(false);
+      return;
+    }
 
     try {
       console.log('Fetching projects for user:', user.id);
       setLoading(true);
+      setError(null);
       
       // Fetch owned projects
       const { data: ownedProjects, error: ownedError } = await supabase
@@ -80,21 +87,24 @@ export const useDashboardData = (): UseDashboardDataResult => {
       }
 
       console.log('Member projects fetched:', memberProjects?.length || 0);
+      
+      // Safety check for unexpected data formats
+      if (!Array.isArray(ownedProjects)) {
+        console.error('Owned projects is not an array:', ownedProjects);
+        setProjects([]);
+        return;
+      }
+
+      if (!Array.isArray(memberProjects)) {
+        console.error('Member projects is not an array:', memberProjects);
+        // Continue with only owned projects
+        const formattedOwnedProjects = formatOwnedProjects(ownedProjects, user.id);
+        setProjects(formattedOwnedProjects);
+        return;
+      }
 
       // Format owned projects
-      const formattedOwnedProjects = (ownedProjects || []).map(project => ({
-        id: project.id,
-        title: project.title,
-        description: project.description || '',
-        createdAt: project.created_at,
-        updatedAt: project.updated_at,
-        status: 'active' as const,
-        memberCount: 1,
-        isOwner: true,
-        role: 'owner' as const,
-        isFavorite: project.is_favorite,
-        isArchived: project.is_archived
-      }));
+      const formattedOwnedProjects = formatOwnedProjects(ownedProjects, user.id);
 
       // Process member projects
       const memberProjectsMap = new Map();
@@ -141,22 +151,44 @@ export const useDashboardData = (): UseDashboardDataResult => {
       }));
 
       setProjects(allProjects);
+      setLastRefresh(Date.now());
       console.log('Projects state updated with', allProjects.length, 'projects');
     } catch (error) {
       console.error("Error fetching projects:", error);
+      setError(error as Error);
       toast.error("Failed to load projects");
     } finally {
       setLoading(false);
     }
   }, [user]);
 
-  // Fetch projects when user changes
+  // Helper function to format owned projects
+  const formatOwnedProjects = (ownedProjects: any[], userId: string): ProjectCardProps[] => {
+    return (ownedProjects || []).map(project => ({
+      id: project.id,
+      title: project.title,
+      description: project.description || '',
+      createdAt: project.created_at,
+      updatedAt: project.updated_at,
+      status: 'active' as const,
+      memberCount: 1,
+      isOwner: true,
+      role: 'owner' as const,
+      isFavorite: project.is_favorite,
+      isArchived: project.is_archived
+    }));
+  };
+
+  // Fetch projects when user changes or lastRefresh is updated
   useEffect(() => {
     if (user) {
-      console.log('User changed, fetching projects');
+      console.log('User or refresh trigger changed, fetching projects');
       fetchProjects();
+    } else {
+      setProjects([]);
+      setLoading(false);
     }
-  }, [user, fetchProjects]);
+  }, [user, fetchProjects, lastRefresh]);
 
   // Apply filters and sorting
   const filteredProjects = projects
@@ -183,6 +215,12 @@ export const useDashboardData = (): UseDashboardDataResult => {
       }
     });
 
+  // Manual refresh function to be called from outside
+  const manualRefresh = useCallback(async () => {
+    console.log('Manual refresh requested');
+    await fetchProjects();
+  }, [fetchProjects]);
+
   return {
     projects,
     filteredProjects,
@@ -193,6 +231,6 @@ export const useDashboardData = (): UseDashboardDataResult => {
     setSearchTerm,
     setFilter,
     setSortOrder,
-    refreshProjects: fetchProjects
+    refreshProjects: manualRefresh
   };
 };

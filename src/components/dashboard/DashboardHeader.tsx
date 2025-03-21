@@ -23,12 +23,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
   const [limitMessage, setLimitMessage] = useState('');
   const [checkAttempted, setCheckAttempted] = useState(false);
 
-  // Force initial check
+  // Force initial check when component mounts
   useEffect(() => {
     refetchSubscription();
   }, [refetchSubscription]);
 
-  // Check brain limits when component mounts or when planDetails changes
+  // Check plan limits when component mounts or when planDetails changes
   useEffect(() => {
     let isMounted = true;
     
@@ -43,11 +43,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
         
         if (!isMounted) return;
         
-        if (result) {
-          console.log('Brain limit check result:', result);
+        console.log('Brain limit check result:', result);
+        
+        // If we're on the Pro plan, never show the limit banner
+        if (planDetails?.plan_type === 'pro') {
+          setLimitReached(false);
+        } else if (result) {
           setLimitReached(!result.canProceed);
           setLimitMessage(result.message || "You've reached your brain limit on the Starter plan. Please upgrade to Pro for unlimited brains.");
         }
+        
         setCheckAttempted(true);
       } catch (error) {
         console.error('Error checking brain limits:', error);
@@ -56,8 +61,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
         
         setCheckAttempted(true);
         
-        // Fallback to plan-based check
-        if (planDetails) {
+        // If on Pro plan, force limitReached to false regardless of error
+        if (planDetails?.plan_type === 'pro') {
+          setLimitReached(false);
+        } else {
+          // Fallback to plan-based check for non-Pro users
           checkBasedOnPlanDetails();
         }
       } finally {
@@ -72,6 +80,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
       
       console.log('Checking limits based on plan details:', planDetails);
       
+      // If we're on the pro plan, ensure no limits are shown
+      if (planDetails.plan_type === 'pro') {
+        setLimitReached(false);
+        return;
+      }
+      
       try {
         // If we're on the starter plan, check limits using static plan details
         if (planDetails.plan_type === 'starter') {
@@ -84,13 +98,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
           } else {
             setLimitReached(false);
           }
-        } else if (planDetails.plan_type === 'pro') {
-          // If we're on the pro plan, we shouldn't have limits
-          setLimitReached(false);
         }
       } catch (error) {
         console.error('Error in plan details check:', error);
-        // If we can't get stats, better to show the button than block the user
+        // If we can't get stats, better to not show the banner
         setLimitReached(false);
       }
     };
@@ -126,16 +137,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               Checking...
             </Button>
-          ) : limitReached ? (
-            <Button 
-              onClick={() => upgradeToProPlan()}
-              className="shadow-sm rounded-full flex-grow sm:flex-grow-0"
-              disabled={isUpgrading}
-            >
-              <Zap className="h-4 w-4 mr-2" />
-              Upgrade to Pro
-            </Button>
-          ) : (
+          ) : planDetails?.plan_type === 'pro' || !limitReached ? (
             <Button 
               onClick={() => navigate('/new-project')}
               className="shadow-sm rounded-full flex-grow sm:flex-grow-0"
@@ -144,12 +146,21 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
               <Plus className="h-4 w-4 mr-2" />
               New Brain
             </Button>
+          ) : (
+            <Button 
+              onClick={() => upgradeToProPlan()}
+              className="shadow-sm rounded-full flex-grow sm:flex-grow-0"
+              disabled={isUpgrading}
+            >
+              <Zap className="h-4 w-4 mr-2" />
+              Upgrade to Pro
+            </Button>
           )}
         </div>
       </div>
       
-      {/* Always display banner if limit is reached, regardless of checking state */}
-      {limitReached && (
+      {/* Only display banner if limit is reached AND not on Pro plan */}
+      {limitReached && planDetails?.plan_type !== 'pro' && (
         <PlanLimitBanner 
           message={limitMessage} 
           onUpgrade={() => upgradeToProPlan()} 

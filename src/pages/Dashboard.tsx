@@ -28,7 +28,8 @@ const Dashboard = () => {
   const location = useLocation();
   
   useEffect(() => {
-    // Force project refresh when dashboard loads
+    console.log('Dashboard component mounted, forcing project refresh');
+    // Force project refresh when dashboard loads or remounts
     refreshProjects();
     
     // Force an immediate subscription check when Dashboard loads
@@ -46,6 +47,16 @@ const Dashboard = () => {
       // Trigger an immediate subscription refresh - this will process URL parameters
       refetchSubscription();
     }
+    
+    // Set up interval to refresh projects while dashboard is active
+    const intervalId = setInterval(() => {
+      console.log('Auto-refreshing dashboard projects');
+      refreshProjects();
+    }, 30000); // Refresh every 30 seconds
+    
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [location.search, refetchSubscription, refreshProjects]);
 
   return (

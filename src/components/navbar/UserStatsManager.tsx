@@ -24,6 +24,9 @@ if (typeof window !== 'undefined') {
 }
 
 export const getUserStats = (): UserStats => {
+  if (typeof window !== 'undefined' && window.globalUserStats) {
+    return window.globalUserStats;
+  }
   return globalUserStats;
 };
 
@@ -36,6 +39,8 @@ const UserStatsManager: React.FC<UserStatsManagerProps> = ({ userId, isOpen }) =
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchUserStats = async () => {
       if (!userId || !isOpen) return;
       
@@ -48,6 +53,8 @@ const UserStatsManager: React.FC<UserStatsManagerProps> = ({ userId, isOpen }) =
         const { data, error: functionError } = await supabase.functions.invoke('user-statistics', {
           body: { userId },
         });
+        
+        if (!isMounted) return;
         
         if (functionError) {
           console.error('Error invoking user-statistics function:', functionError);
@@ -73,34 +80,42 @@ const UserStatsManager: React.FC<UserStatsManagerProps> = ({ userId, isOpen }) =
         const sharedBrains = data.sharedBrains ?? 0;
         const docs = data.documents ?? 0;
         
-        setApiCalls(apiCallsCount);
-        setOwnedBrainCount(ownedBrains);
-        setSharedBrainCount(sharedBrains);
-        setDocumentCount(docs);
-        
-        // Update global stats - use Object.assign to update the reference, not replace it
-        Object.assign(globalUserStats, {
-          apiCalls: apiCallsCount,
-          ownedBrains: ownedBrains,
-          sharedBrains: sharedBrains,
-          documents: docs
-        });
-        
-        // Also update window property
-        if (typeof window !== 'undefined') {
-          window.globalUserStats = globalUserStats;
+        if (isMounted) {
+          setApiCalls(apiCallsCount);
+          setOwnedBrainCount(ownedBrains);
+          setSharedBrainCount(sharedBrains);
+          setDocumentCount(docs);
+          
+          // Update global stats
+          globalUserStats.apiCalls = apiCallsCount;
+          globalUserStats.ownedBrains = ownedBrains;
+          globalUserStats.sharedBrains = sharedBrains;
+          globalUserStats.documents = docs;
+          
+          // Also update window property
+          if (typeof window !== 'undefined') {
+            window.globalUserStats = { ...globalUserStats };
+          }
         }
         
       } catch (error) {
         console.error('Error fetching user stats:', error);
-        setError('An unexpected error occurred');
-        toast.error('Failed to load user statistics');
+        if (isMounted) {
+          setError('An unexpected error occurred');
+          toast.error('Failed to load user statistics');
+        }
       } finally {
-        setStatsLoading(false);
+        if (isMounted) {
+          setStatsLoading(false);
+        }
       }
     };
 
     fetchUserStats();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [userId, isOpen]);
 
   return (
