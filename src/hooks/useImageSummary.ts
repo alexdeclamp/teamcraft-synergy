@@ -134,8 +134,10 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
         
         // Check if the error is due to API limit being reached (from error message)
         if (response.error.message?.includes('Daily API limit reached') || (response.data && response.data.limitReached)) {
-          setError('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
-          toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+          setError('You have reached your daily AI API limit. Free accounts are limited to 10 AI operations per day. Please upgrade to Pro for unlimited API calls.');
+          toast.error('Daily AI API limit reached', {
+            description: 'Free accounts are limited to 10 AI operations per day. Upgrade to Pro for unlimited API calls.'
+          });
           return;
         }
         
@@ -152,8 +154,10 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       if (data.error) {
         // Check if the error is related to API limit
         if (data.limitReached) {
-          setError('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
-          toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+          setError('You have reached your daily AI API limit. Free accounts are limited to 10 AI operations per day. Please upgrade to Pro for unlimited API calls.');
+          toast.error('Daily AI API limit reached', {
+            description: 'Free accounts are limited to 10 AI operations per day. Upgrade to Pro for unlimited API calls.'
+          });
           return;
         }
         
@@ -180,8 +184,10 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       
       // Check if the error message contains limit-related wording
       if (error.message && error.message.toLowerCase().includes('limit')) {
-        setError('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
-        toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+        setError('You have reached your daily AI API limit. Free accounts are limited to 10 AI operations per day. Please upgrade to Pro for unlimited API calls.');
+        toast.error('Daily AI API limit reached', {
+          description: 'Free accounts are limited to 10 AI operations per day. Upgrade to Pro for unlimited API calls.'
+        });
       } else {
         setError(error.message || 'Failed to generate summary');
         toast.error(`Failed to generate summary: ${error.message}`);

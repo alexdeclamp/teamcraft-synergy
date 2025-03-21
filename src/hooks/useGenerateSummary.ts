@@ -64,7 +64,9 @@ export function useGenerateSummary({
         
         // Check if the error is due to API limit being reached by message content
         if (error.message?.includes('Daily API limit reached') || (data && data.limitReached)) {
-          toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+          toast.error('You have reached your daily AI API limit. Please upgrade to Pro for unlimited API calls.', {
+            description: 'Free accounts are limited to 10 AI operations per day.'
+          });
           return;
         }
         
@@ -83,7 +85,9 @@ export function useGenerateSummary({
       
       // Check error message for API limit reached
       if (error.message && error.message.includes('Daily API limit reached')) {
-        toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
+        toast.error('You have reached your daily AI API limit. Please upgrade to Pro for unlimited API calls.', {
+          description: 'Free accounts are limited to 10 AI operations per day.'
+        });
       } else {
         toast.error(`Failed to generate summary: ${error.message || 'Unknown error'}`);
       }
