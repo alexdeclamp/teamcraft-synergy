@@ -48,7 +48,7 @@ export function useGenerateSummary({
         return;
       }
       
-      const { data, error, status } = await supabase.functions.invoke('generate-summary', {
+      const { data, error } = await supabase.functions.invoke('generate-summary', {
         body: {
           type: 'note',
           content: noteContent,
@@ -62,8 +62,8 @@ export function useGenerateSummary({
       if (error) {
         console.error('Error from generate-summary function:', error);
         
-        // Check if the error is due to API limit being reached
-        if (status === 429 || (data && data.limitReached)) {
+        // Check if the error is due to API limit being reached by message content
+        if (error.message?.includes('Daily API limit reached') || (data && data.limitReached)) {
           toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
           return;
         }

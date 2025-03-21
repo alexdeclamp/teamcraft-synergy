@@ -23,7 +23,7 @@ export function useCleanNoteText({ model = 'claude' }: UseCleanNoteTextProps = {
       
       const toastId = toast.loading(`Cleaning text using ${model}...`);
       
-      const { data, error, status } = await supabase.functions.invoke('clean-note-text', {
+      const { data, error } = await supabase.functions.invoke('clean-note-text', {
         body: {
           noteContent,
           cleanType,
@@ -37,7 +37,7 @@ export function useCleanNoteText({ model = 'claude' }: UseCleanNoteTextProps = {
         console.error('Error from clean-note-text function:', error);
         
         // Check if the error is due to API limit being reached
-        if (status === 429 || (data && data.limitReached)) {
+        if (error.message?.includes('Daily API limit reached') || (data && data.limitReached)) {
           toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
           return null;
         }

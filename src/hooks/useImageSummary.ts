@@ -132,8 +132,8 @@ export function useImageSummary({ imageUrl, projectId }: UseImageSummaryProps) {
       if (response.error) {
         console.error('Error from edge function:', response.error);
         
-        // Check if the error is due to API limit being reached
-        if (response.status === 429 || (response.data && response.data.limitReached)) {
+        // Check if the error is due to API limit being reached (from error message)
+        if (response.error.message?.includes('Daily API limit reached') || (response.data && response.data.limitReached)) {
           setError('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
           toast.error('Daily API limit reached. Please upgrade to Pro for unlimited API calls.');
           return;
