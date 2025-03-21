@@ -41,6 +41,9 @@ export const useUserFeatures = (): {
       // Get user statistics
       const stats = getUserStats();
       
+      console.log('User stats:', stats);
+      console.log('Current plan type:', currentPlanType);
+      
       // Get features configuration for this plan
       const features = accountFeatures[currentPlanType] || accountFeatures[defaultPlanType];
       
@@ -50,6 +53,8 @@ export const useUserFeatures = (): {
       
       const apiCallsLimitReached = 
         features.maxApiCalls !== null && stats.apiCalls >= features.maxApiCalls;
+      
+      console.log('Brain limit reached:', brainLimitReached, 'Max brains:', features.maxBrains, 'Owned brains:', stats.ownedBrains);
       
       setUserFeatures({
         ...features,
