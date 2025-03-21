@@ -87,12 +87,12 @@ serve(async (req) => {
         name: 'Starter',
         plan_type: 'starter',
         price: 0,
-        max_api_calls: 25,
-        max_brains: 3,
+        max_api_calls: 9999, // Effectively unlimited API calls
+        max_brains: 2, // Changed from 3 to 2
         max_documents: 9999, // Effectively unlimited documents
         features: [
-          'Create up to 3 brains', 
-          '25 AI API calls per month', 
+          'Create up to 2 brains', // Updated to reflect the new limit
+          'Unlimited AI API calls', 
           'Document uploads', 
           'Image analysis'
         ],

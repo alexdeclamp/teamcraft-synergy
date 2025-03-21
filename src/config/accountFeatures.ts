@@ -9,9 +9,9 @@ export const accountFeatures: AccountFeatureConfig = {
     canUploadDocuments: true,
     canUseImageAnalysis: true,
     canUseAdvancedAI: false,
-    maxBrains: 3,
-    maxApiCalls: null, // Changed from 10 to null (unlimited)
-    maxDailyApiCalls: null // Changed from 10 to null (unlimited)
+    maxBrains: 2, // Changed from 3 to 2
+    maxApiCalls: null, // Keep this as null (unlimited)
+    maxDailyApiCalls: null // Keep this as null (unlimited)
   },
   pro: {
     canCreateBrains: true,
