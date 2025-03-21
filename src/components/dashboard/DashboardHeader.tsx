@@ -31,7 +31,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
     return (
       <Badge variant="outline" className="ml-2 text-xs font-normal bg-primary/5 hover:bg-primary/5">
         <Zap className="h-3 w-3 mr-1 text-primary/60" />
-        <span>{userFeatures.remainingDailyApiCalls} credits</span>
+        <span>Daily AI API credits: {userFeatures.remainingDailyApiCalls}</span>
       </Badge>
     );
   };
@@ -46,7 +46,6 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-bold" id="dashboard-heading">Brains</h1>
             <Sparkles className="h-5 w-5 text-primary/70" />
-            {renderApiCreditsBadge()}
           </div>
           <p className="text-muted-foreground mt-1">
             Manage and organize your intelligent workspaces
@@ -56,6 +55,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
         <div className={`flex items-center ${isMobile ? 'mt-4 justify-between' : 'space-x-2'} w-full sm:w-auto`}>
           {!isMobile && <StartOnboardingButton className="mr-2" />}
           {!isMobile && <DashboardTutorial className="mr-2" />}
+          {!isMobile && renderApiCreditsBadge()}
           <Button 
             onClick={() => navigate('/new-project')}
             className="shadow-sm rounded-full flex-grow sm:flex-grow-0"
