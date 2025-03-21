@@ -1,8 +1,6 @@
-
 import React, { useState } from 'react';
 import MembersList from './members/MembersList';
 import EmptyMembersList from './members/EmptyMembersList';
-import MemberInvite from '@/components/MemberInvite';
 import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUserFeatures } from '@/hooks/useUserFeatures';
@@ -157,35 +155,20 @@ const ProjectMembers: React.FC<ProjectMembersProps> = ({ projectId, userRole }) 
 
   return (
     <div className="space-y-6">
-      {userRole === 'owner' && (
-        <div className="mb-6">
-          <h3 className="text-lg font-medium mb-4">Invite New Members</h3>
-          <MemberInvite 
-            projectId={projectId} 
-            isOpen={showInviteDialog}
-            onClose={() => setShowInviteDialog(false)}
-            onInviteSuccess={handleInviteSuccess}
-          />
-        </div>
+      {members && members.length > 0 ? (
+        <MembersList 
+          members={members} 
+          userRole={userRole} 
+          onUpdateMemberRole={handleUpdateMemberRole}
+          onRemoveMember={handleRemoveMember}
+          onAddMember={handleAddMember}
+        />
+      ) : (
+        <EmptyMembersList 
+          userRole={userRole}
+          onAddMember={handleAddMember}
+        />
       )}
-
-      <div>
-        <h3 className="text-lg font-medium mb-4">Project Members</h3>
-        {members && members.length > 0 ? (
-          <MembersList 
-            members={members} 
-            userRole={userRole} 
-            onUpdateMemberRole={handleUpdateMemberRole}
-            onRemoveMember={handleRemoveMember}
-            onAddMember={handleAddMember}
-          />
-        ) : (
-          <EmptyMembersList 
-            userRole={userRole}
-            onAddMember={handleAddMember}
-          />
-        )}
-      </div>
     </div>
   );
 };
