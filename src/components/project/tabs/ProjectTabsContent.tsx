@@ -81,7 +81,7 @@ const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
       </TabsContent>
 
       <TabsContent value="documents" className="space-y-6">
-        {project && projectId && <ProjectDocumentsTab projectId={projectId} />}
+        {project && projectId && <ProjectDocumentsTab projectId={projectId} userRole={userRole} />}
       </TabsContent>
       
       <TabsContent value="images" className="space-y-6">
@@ -97,8 +97,6 @@ const ProjectTabsContent: React.FC<ProjectTabsContentProps> = ({
         {project && (
           <ProjectMembers
             projectId={project.id}
-            members={members}
-            setMembers={setMembers}
             userRole={userRole}
           />
         )}

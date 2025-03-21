@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Dialog,
   DialogContent,
@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import MemberInviteForm from '@/components/member/MemberInviteForm';
 import { useMemberInvite } from '@/hooks/useMemberInvite';
+import { Button } from './ui/button';
+import { Plus } from 'lucide-react';
 
 interface MemberInviteProps {
   projectId: string;
@@ -38,27 +40,34 @@ const MemberInvite: React.FC<MemberInviteProps> = ({
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Invite Team Member</DialogTitle>
-          <DialogDescription>
-            Invite a team member to collaborate on this project.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <MemberInviteForm
-          email={email}
-          setEmail={setEmail}
-          role={role}
-          setRole={setRole}
-          loading={loading}
-          error={error}
-          onSubmit={handleSubmit}
-          onCancel={onClose}
-        />
-      </DialogContent>
-    </Dialog>
+    <>
+      <Button onClick={onClose} variant="outline">
+        <Plus className="mr-2 h-4 w-4" />
+        Invite Member
+      </Button>
+
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Invite Team Member</DialogTitle>
+            <DialogDescription>
+              Invite a team member to collaborate on this project.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <MemberInviteForm
+            email={email}
+            setEmail={setEmail}
+            role={role}
+            setRole={setRole}
+            loading={loading}
+            error={error}
+            onSubmit={handleSubmit}
+            onCancel={onClose}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
