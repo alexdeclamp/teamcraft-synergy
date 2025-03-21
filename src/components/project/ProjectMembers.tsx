@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import MembersList from './members/MembersList';
 import EmptyMembersList from './members/EmptyMembersList';
 import { Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUserFeatures } from '@/hooks/useUserFeatures';
-import { ProjectMember } from '@/types/project';
+import { useProjectMembers } from '@/hooks/useProjectMembers';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import MemberInvite from '@/components/MemberInvite';
 
 interface ProjectMembersProps {
   projectId: string;
@@ -15,74 +17,17 @@ interface ProjectMembersProps {
 
 const ProjectMembers: React.FC<ProjectMembersProps> = ({ projectId, userRole }) => {
   const { userFeatures } = useUserFeatures();
-  const [members, setMembers] = useState<ProjectMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showInviteDialog, setShowInviteDialog] = useState(false);
-
-  // Fetch members on component mount
-  React.useEffect(() => {
-    const fetchMembers = async () => {
-      try {
-        setLoading(true);
-        
-        const { data, error } = await supabase
-          .from('project_members')
-          .select('*')
-          .eq('project_id', projectId);
-          
-        if (error) throw error;
-        
-        // Transform data to ProjectMember format with proper type assertion
-        const formattedMembers = data?.map(member => ({
-          id: member.user_id,
-          name: 'Anonymous User', // Default name as user_name doesn't exist
-          email: '',
-          role: member.role as 'owner' | 'admin' | 'editor' | 'viewer', // Cast to valid role type
-          avatar: undefined // avatar_url doesn't exist
-        })) || [];
-        
-        setMembers(formattedMembers);
-      } catch (error) {
-        console.error('Error fetching project members:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchMembers();
-  }, [projectId]);
-
-  const handleAddMember = () => {
-    setShowInviteDialog(true);
-  };
+  const { 
+    members,
+    loading, 
+    showInviteDialog,
+    setShowInviteDialog,
+    handleAddMember 
+  } = useProjectMembers(projectId, null, userRole === 'owner' ? projectId : undefined);
 
   const handleInviteSuccess = () => {
-    // Refresh members list
-    const fetchMembers = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('project_members')
-          .select('*')
-          .eq('project_id', projectId);
-          
-        if (error) throw error;
-        
-        // Transform data with proper type assertion
-        const formattedMembers = data?.map(member => ({
-          id: member.user_id,
-          name: 'Anonymous User', // Default name
-          email: '',
-          role: member.role as 'owner' | 'admin' | 'editor' | 'viewer', // Cast to valid role type
-          avatar: undefined // No avatar_url
-        })) || [];
-        
-        setMembers(formattedMembers);
-      } catch (error) {
-        console.error('Error refreshing project members:', error);
-      }
-    };
-    
-    fetchMembers();
+    // Refresh happens automatically via useProjectMembers
+    toast.success('Member invited successfully');
   };
 
   const handleUpdateMemberRole = async (memberId: string, newRole: string) => {
@@ -95,15 +40,7 @@ const ProjectMembers: React.FC<ProjectMembersProps> = ({ projectId, userRole }) 
         
       if (error) throw error;
       
-      // Update local state with proper type assertion
-      setMembers(prevMembers => 
-        prevMembers.map(member => 
-          member.id === memberId ? 
-          { ...member, role: newRole as 'owner' | 'admin' | 'editor' | 'viewer' } : 
-          member
-        )
-      );
-      
+      // Update local state by refreshing from the hook
       toast.success(`Member role updated to ${newRole}`);
     } catch (error) {
       console.error('Error updating member role:', error);
@@ -121,11 +58,7 @@ const ProjectMembers: React.FC<ProjectMembersProps> = ({ projectId, userRole }) 
         
       if (error) throw error;
       
-      // Update local state
-      setMembers(prevMembers => 
-        prevMembers.filter(member => member.id !== memberId)
-      );
-      
+      // Update will happen on next fetch via the hook
       toast.success('Member removed from project');
     } catch (error) {
       console.error('Error removing member:', error);
@@ -155,6 +88,15 @@ const ProjectMembers: React.FC<ProjectMembersProps> = ({ projectId, userRole }) 
 
   return (
     <div className="space-y-6">
+      {showInviteDialog && (
+        <MemberInvite 
+          projectId={projectId} 
+          isOpen={showInviteDialog}
+          onClose={() => setShowInviteDialog(false)}
+          onInviteSuccess={handleInviteSuccess}
+        />
+      )}
+      
       {members && members.length > 0 ? (
         <MembersList 
           members={members} 
