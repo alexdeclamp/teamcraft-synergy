@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect } from 'react';
-import { X, Send, Loader2 } from 'lucide-react';
+import { X, Send, Loader2, AlertCircle, ZapOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -9,6 +9,7 @@ import ProjectChatMessage from './ProjectChatMessage';
 import ProjectChatInput from './ProjectChatInput';
 import ProjectChatSuggestions from './ProjectChatSuggestions';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useNavigate } from 'react-router-dom';
 
 interface ProjectChatFullscreenProps {
   projectId: string;
@@ -21,9 +22,10 @@ const ProjectChatFullscreen: React.FC<ProjectChatFullscreenProps> = ({
   isOpen,
   onClose
 }) => {
-  const { messages, isLoading, predefinedQuestions, sendMessage } = useProjectChat(projectId);
+  const { messages, isLoading, error, predefinedQuestions, sendMessage } = useProjectChat(projectId);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   // Scroll to bottom when new messages are added
   useEffect(() => {
@@ -50,6 +52,43 @@ const ProjectChatFullscreen: React.FC<ProjectChatFullscreenProps> = ({
   // Handler for predefined questions
   const handlePredefinedQuestion = (question: string) => {
     sendMessage(question);
+  };
+
+  // Check if error is related to API limit
+  const isApiLimitError = error?.includes('Daily API limit reached');
+
+  // Render error message if one exists
+  const renderError = () => {
+    if (!error) return null;
+    
+    return (
+      <div className="p-4 bg-destructive/10 rounded-md flex items-start space-x-3 my-4 max-w-3xl mx-auto">
+        {isApiLimitError ? (
+          <ZapOff className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+        ) : (
+          <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+        )}
+        <div className="space-y-2 flex-1">
+          <p className="font-medium text-destructive">
+            {isApiLimitError ? 'Daily AI API Limit Reached' : 'Error sending message'}
+          </p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          
+          {isApiLimitError && (
+            <div className="pt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate('/subscription')}
+                className="w-full sm:w-auto mt-1"
+              >
+                Upgrade to Pro for unlimited API calls
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -89,6 +128,7 @@ const ProjectChatFullscreen: React.FC<ProjectChatFullscreenProps> = ({
                 </div>
               </div>
             )}
+            {renderError()}
             <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
@@ -105,7 +145,11 @@ const ProjectChatFullscreen: React.FC<ProjectChatFullscreenProps> = ({
             </div>
           )}
           <div className="max-w-3xl mx-auto">
-            <ProjectChatInput onSendMessage={sendMessage} isLoading={isLoading} />
+            <ProjectChatInput 
+              onSendMessage={sendMessage} 
+              isLoading={isLoading} 
+              disabled={isApiLimitError} 
+            />
           </div>
         </div>
       </DialogContent>

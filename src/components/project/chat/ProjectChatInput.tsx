@@ -8,14 +8,19 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface ProjectChatInputProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  disabled?: boolean;
 }
 
-const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLoading }) => {
+const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ 
+  onSendMessage, 
+  isLoading,
+  disabled = false
+}) => {
   const [input, setInput] = useState('');
   const isMobile = useIsMobile();
 
   const handleSend = () => {
-    if (!input.trim()) return;
+    if (!input.trim() || disabled) return;
     onSendMessage(input);
     setInput('');
   };
@@ -33,17 +38,18 @@ const ProjectChatInput: React.FC<ProjectChatInputProps> = ({ onSendMessage, isLo
         <Textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your message here..."
+          placeholder={disabled ? "API limit reached. Please upgrade to continue." : "Type your message here..."}
           className={`min-h-[80px] focus-visible:ring-primary/30 bg-background resize-none p-4 rounded-xl ${
             isMobile ? 'text-base' : ''
-          }`}
+          } ${disabled ? 'opacity-60' : ''}`}
           onKeyDown={handleKeyDown}
           style={isMobile ? { fontSize: '16px' } : undefined}
+          disabled={disabled}
         />
         <div className="flex flex-col gap-2">
           <Button
             onClick={handleSend}
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || !input.trim() || disabled}
             className="h-12 w-12 rounded-full flex-shrink-0 shadow-sm"
             aria-label="Send message"
           >
