@@ -8,6 +8,7 @@ import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserFeatures } from '@/hooks/useUserFeatures';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import ApiUsageAlert from './ApiUsageAlert';
 
 interface DashboardHeaderProps {
   className?: string;
@@ -20,6 +21,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
 
   return (
     <div className={`flex flex-col mb-4 sm:mb-8 gap-4 ${className}`}>
+      {/* API Usage Alert */}
+      <ApiUsageAlert />
+      
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
         <div>
           <div className="flex items-center gap-2">

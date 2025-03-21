@@ -84,6 +84,7 @@ serve(async (req) => {
     // Get statistics
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
     // 1. Get API call count for the current month
     let apiCallCount = 0;
@@ -104,7 +105,26 @@ serve(async (req) => {
       console.error('Error in API call count query:', error);
     }
     
-    // 2. Get projects count (brains) - split between owned and shared
+    // 2. Get API call count for today only
+    let dailyApiCallCount = 0;
+    try {
+      const { count, error: dailyApiError } = await adminClient
+        .from('user_usage_stats')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('action_type', 'openai_api_call')
+        .gte('created_at', startOfDay.toISOString());
+      
+      if (!dailyApiError) {
+        dailyApiCallCount = count || 0;
+      } else {
+        console.error('Error fetching daily API calls:', dailyApiError);
+      }
+    } catch (error) {
+      console.error('Error in daily API call count query:', error);
+    }
+    
+    // 3. Get projects count (brains) - split between owned and shared
     let ownedProjectsCount = 0;
     let sharedProjectsCount = 0;
     try {
@@ -149,7 +169,7 @@ serve(async (req) => {
       console.error('Error calculating projects count:', error);
     }
     
-    // 3. Get document count
+    // 4. Get document count
     let documentsCount = 0;
     try {
       const { count, error: docsError } = await adminClient
@@ -169,6 +189,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         apiCalls: apiCallCount,
+        dailyApiCalls: dailyApiCallCount,
         ownedBrains: ownedProjectsCount,
         sharedBrains: sharedProjectsCount,
         documents: documentsCount,

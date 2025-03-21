@@ -22,8 +22,11 @@ export const useUserFeatures = (): {
     canUseAdvancedAI: false,
     maxBrains: 0,
     maxApiCalls: 0,
+    maxDailyApiCalls: 0,
     brainLimitReached: false,
-    apiCallsLimitReached: false
+    apiCallsLimitReached: false,
+    dailyApiCallsLimitReached: false,
+    remainingDailyApiCalls: 0
   });
 
   const [planType, setPlanType] = useState(defaultPlanType);
@@ -53,15 +56,27 @@ export const useUserFeatures = (): {
       
       const apiCallsLimitReached = 
         features.maxApiCalls !== null && stats.apiCalls >= features.maxApiCalls;
+        
+      const dailyApiCallsLimitReached = 
+        features.maxDailyApiCalls !== null && stats.dailyApiCalls >= features.maxDailyApiCalls;
+      
+      // Calculate remaining daily API calls
+      const remainingDailyApiCalls = features.maxDailyApiCalls !== null 
+        ? Math.max(0, features.maxDailyApiCalls - stats.dailyApiCalls)
+        : Infinity;
       
       console.log('Brain limit reached:', brainLimitReached, 'Max brains:', features.maxBrains, 'Owned brains:', stats.ownedBrains);
+      console.log('Daily API calls:', stats.dailyApiCalls, 'Max daily:', features.maxDailyApiCalls, 'Remaining:', remainingDailyApiCalls);
       
       setUserFeatures({
         ...features,
         brainLimitReached,
         apiCallsLimitReached,
+        dailyApiCallsLimitReached,
+        remainingDailyApiCalls,
         maxBrains: features.maxBrains || Infinity,
-        maxApiCalls: features.maxApiCalls || Infinity
+        maxApiCalls: features.maxApiCalls || Infinity,
+        maxDailyApiCalls: features.maxDailyApiCalls || Infinity
       });
     } catch (error) {
       console.error('Error determining user features:', error);
@@ -71,8 +86,11 @@ export const useUserFeatures = (): {
         ...features,
         brainLimitReached: false,
         apiCallsLimitReached: false,
+        dailyApiCallsLimitReached: false,
+        remainingDailyApiCalls: features.maxDailyApiCalls || 0,
         maxBrains: features.maxBrains || 0,
-        maxApiCalls: features.maxApiCalls || 0
+        maxApiCalls: features.maxApiCalls || 0,
+        maxDailyApiCalls: features.maxDailyApiCalls || 0
       });
     } finally {
       setIsLoading(false);

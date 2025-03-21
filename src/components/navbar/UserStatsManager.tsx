@@ -13,6 +13,7 @@ interface UserStatsManagerProps {
 // Initialize global stats with default values
 let globalUserStats: UserStats = {
   apiCalls: 0,
+  dailyApiCalls: 0,
   ownedBrains: 0,
   sharedBrains: 0,
   documents: 0
@@ -25,6 +26,7 @@ export const getUserStats = (): UserStats => {
 const UserStatsManager: React.FC<UserStatsManagerProps> = ({ userId, isOpen }) => {
   const [statsLoading, setStatsLoading] = useState(true);
   const [apiCalls, setApiCalls] = useState(0);
+  const [dailyApiCalls, setDailyApiCalls] = useState(0);
   const [ownedBrainCount, setOwnedBrainCount] = useState(0);
   const [sharedBrainCount, setSharedBrainCount] = useState(0);
   const [documentCount, setDocumentCount] = useState(0);
@@ -64,17 +66,20 @@ const UserStatsManager: React.FC<UserStatsManagerProps> = ({ userId, isOpen }) =
         }
         
         const apiCallsCount = data.apiCalls ?? 0;
+        const dailyApiCallsCount = data.dailyApiCalls ?? 0;
         const ownedBrains = data.ownedBrains ?? 0;
         const sharedBrains = data.sharedBrains ?? 0;
         const docs = data.documents ?? 0;
         
         setApiCalls(apiCallsCount);
+        setDailyApiCalls(dailyApiCallsCount);
         setOwnedBrainCount(ownedBrains);
         setSharedBrainCount(sharedBrains);
         setDocumentCount(docs);
         
         globalUserStats = {
           apiCalls: apiCallsCount,
+          dailyApiCalls: dailyApiCallsCount,
           ownedBrains: ownedBrains,
           sharedBrains: sharedBrains,
           documents: docs
@@ -97,6 +102,7 @@ const UserStatsManager: React.FC<UserStatsManagerProps> = ({ userId, isOpen }) =
       isLoading={statsLoading}
       error={error}
       apiCalls={apiCalls}
+      dailyApiCalls={dailyApiCalls}
       ownedBrains={ownedBrainCount}
       sharedBrains={sharedBrainCount}
       documents={documentCount}

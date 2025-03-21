@@ -55,6 +55,7 @@ serve(async (req) => {
           return new Response(
             JSON.stringify({ 
               apiCalls: 0,
+              dailyApiCalls: 0,
               status: "unauthenticated",
               message: "Please log in to see your usage statistics"
             }),
@@ -69,6 +70,7 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ 
             apiCalls: 0,
+            dailyApiCalls: 0,
             status: "error",
             message: "Failed to authenticate user"
           }),
@@ -81,6 +83,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           apiCalls: 0,
+          dailyApiCalls: 0,
           status: "error",
           message: "User ID is required"
         }),
@@ -110,6 +113,7 @@ serve(async (req) => {
     // Only count rows where action_type is 'openai_api_call'
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
     // Get OpenAI API call count for the current month
     let apiCallCount = 0;
@@ -130,9 +134,29 @@ serve(async (req) => {
       console.error('Error in API call count query:', error);
     }
     
+    // Get OpenAI API call count for today only
+    let dailyApiCallCount = 0;
+    try {
+      const { count, error: dailyApiError } = await adminClient
+        .from('user_usage_stats')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userIdToUse)
+        .eq('action_type', 'openai_api_call')
+        .gte('created_at', startOfDay.toISOString());
+      
+      if (!dailyApiError) {
+        dailyApiCallCount = count || 0;
+      } else {
+        console.error('Error fetching daily API calls:', dailyApiError);
+      }
+    } catch (error) {
+      console.error('Error in daily API call count query:', error);
+    }
+    
     return new Response(
       JSON.stringify({ 
         apiCalls: apiCallCount,
+        dailyApiCalls: dailyApiCallCount,
         status: "success"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -143,6 +167,7 @@ serve(async (req) => {
       JSON.stringify({ 
         error: error.message || 'Unknown error occurred',
         apiCalls: 0,
+        dailyApiCalls: 0,
         status: "error"
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }

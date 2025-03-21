@@ -7,6 +7,7 @@ type ProfileStatsProps = {
   isLoading: boolean;
   error: string | null;
   apiCalls: number;
+  dailyApiCalls: number;
   ownedBrains?: number;
   sharedBrains?: number;
   documents?: number;
@@ -16,6 +17,7 @@ const ProfileStats = ({
   isLoading, 
   error, 
   apiCalls, 
+  dailyApiCalls,
   ownedBrains = 0, 
   sharedBrains = 0, 
   documents = 0 
@@ -70,6 +72,14 @@ const ProfileStats = ({
             <span className="text-sm font-medium">Stored Documents</span>
           </div>
           <span className="text-sm">{documents}</span>
+        </div>
+        
+        <div className="flex justify-between p-3 bg-muted rounded-md">
+          <div className="flex items-center gap-2">
+            <Zap className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">AI API Calls (Today)</span>
+          </div>
+          <span className="text-sm">{dailyApiCalls}</span>
         </div>
         
         <div className="flex justify-between p-3 bg-muted rounded-md">
