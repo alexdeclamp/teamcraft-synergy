@@ -83,7 +83,8 @@ export function useProjectChat(projectId: string) {
     }));
 
     try {
-      const { data, error } = await supabase.functions.invoke('project-chat', {
+      // Call the Supabase edge function
+      const response = await supabase.functions.invoke('project-chat', {
         body: {
           projectId,
           message: messageContent,
@@ -93,18 +94,22 @@ export function useProjectChat(projectId: string) {
         }
       });
 
-      if (error) {
-        console.error('Error sending message:', error);
+      // Check for errors in the response
+      if (response.error) {
+        console.error('Error from edge function:', response.error);
         
-        // Check specifically for API limit reached error
-        if (error.message && (
-          error.message.includes('Daily API limit reached') || 
-          (data && data.limitReached)
-        )) {
+        // Check if the error contains information about API limits
+        const errorMessage = response.error.message || '';
+        const isApiLimitError = 
+          errorMessage.includes('Daily API limit reached') || 
+          (response.data && response.data.limitReached);
+        
+        if (isApiLimitError) {
+          const limitError = 'Daily API limit reached. Free accounts are limited to 10 AI operations per day. Please upgrade to Pro for unlimited API calls.';
           setState(prev => ({
             ...prev,
             isLoading: false,
-            error: 'Daily API limit reached. Free accounts are limited to 10 AI operations per day. Please upgrade to Pro for unlimited API calls.'
+            error: limitError
           }));
           
           toast.error('Daily AI API limit reached', {
@@ -113,18 +118,32 @@ export function useProjectChat(projectId: string) {
           return;
         }
         
-        throw error;
+        // General error handling
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          error: 'Failed to send message. Please try again later.'
+        }));
+        
+        toast.error('Error', {
+          description: 'Failed to send message. Please try again.',
+        });
+        return;
       }
-
-      setState(prev => ({
-        ...prev,
-        messages: [...prev.messages, { role: 'assistant', content: data.response }],
-        isLoading: false
-      }));
-    } catch (error: any) {
-      console.error('Error sending message:', error);
       
-      // Set a generic error message or use the one from the error if available
+      // Process successful response
+      if (response.data) {
+        setState(prev => ({
+          ...prev,
+          messages: [...prev.messages, { role: 'assistant', content: response.data.response }],
+          isLoading: false
+        }));
+      } else {
+        throw new Error('Invalid response format from server');
+      }
+    } catch (error: any) {
+      console.error('Exception sending message:', error);
+      
       setState(prev => ({ 
         ...prev, 
         isLoading: false,
