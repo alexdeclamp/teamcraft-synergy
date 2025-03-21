@@ -7,9 +7,10 @@ import { useAuth } from '@/contexts/AuthContext';
 type ProfileButtonProps = {
   onClick: () => void;
   badge?: ReactNode;
+  remainingDailyApiCalls?: number;
 };
 
-const ProfileButton = ({ onClick, badge }: ProfileButtonProps) => {
+const ProfileButton = ({ onClick, badge, remainingDailyApiCalls }: ProfileButtonProps) => {
   const { user, profile } = useAuth();
   
   // Get user initials for avatar fallback
