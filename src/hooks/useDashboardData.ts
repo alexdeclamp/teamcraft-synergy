@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { ProjectCardProps } from '@/components/project-card/ProjectCard';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,22 +25,13 @@ export const useDashboardData = (): UseDashboardDataResult => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'owned' | 'member' | 'favorites' | 'archived'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'alphabetical'>('newest');
-  const [error, setError] = useState<Error | null>(null);
-  const [lastRefresh, setLastRefresh] = useState(Date.now());
 
-  const fetchProjects = useCallback(async () => {
-    if (!user) {
-      console.log('No user, skipping project fetch');
-      setLoading(false);
-      return;
-    }
+  const fetchProjects = async () => {
+    if (!user) return;
 
     try {
-      console.log('Fetching projects for user:', user.id);
       setLoading(true);
-      setError(null);
       
-      // Fetch owned projects
       const { data: ownedProjects, error: ownedError } = await supabase
         .from('projects')
         .select(`
@@ -55,14 +46,8 @@ export const useDashboardData = (): UseDashboardDataResult => {
         `)
         .eq('owner_id', user.id);
 
-      if (ownedError) {
-        console.error('Error fetching owned projects:', ownedError);
-        throw ownedError;
-      }
+      if (ownedError) throw ownedError;
 
-      console.log('Owned projects fetched:', ownedProjects?.length || 0);
-
-      // Fetch projects where user is a member
       const { data: memberProjects, error: memberError } = await supabase
         .from('project_members')
         .select(`
@@ -81,34 +66,24 @@ export const useDashboardData = (): UseDashboardDataResult => {
         `)
         .eq('user_id', user.id);
 
-      if (memberError) {
-        console.error('Error fetching member projects:', memberError);
-        throw memberError;
-      }
+      if (memberError) throw memberError;
 
-      console.log('Member projects fetched:', memberProjects?.length || 0);
-      
-      // Safety check for unexpected data formats
-      if (!Array.isArray(ownedProjects)) {
-        console.error('Owned projects is not an array:', ownedProjects);
-        setProjects([]);
-        return;
-      }
+      const formattedOwnedProjects = ownedProjects.map(project => ({
+        id: project.id,
+        title: project.title,
+        description: project.description || '',
+        createdAt: project.created_at,
+        updatedAt: project.updated_at,
+        status: 'active' as const,
+        memberCount: 1,
+        isOwner: true,
+        role: 'owner' as const,
+        isFavorite: project.is_favorite,
+        isArchived: project.is_archived
+      }));
 
-      if (!Array.isArray(memberProjects)) {
-        console.error('Member projects is not an array:', memberProjects);
-        // Continue with only owned projects
-        const formattedOwnedProjects = formatOwnedProjects(ownedProjects, user.id);
-        setProjects(formattedOwnedProjects);
-        return;
-      }
-
-      // Format owned projects
-      const formattedOwnedProjects = formatOwnedProjects(ownedProjects, user.id);
-
-      // Process member projects
       const memberProjectsMap = new Map();
-      (memberProjects || []).forEach(item => {
+      memberProjects.forEach(item => {
         if (item.projects && item.project_id) {
           const project = item.projects;
           if (project.owner_id !== user.id) {
@@ -132,65 +107,31 @@ export const useDashboardData = (): UseDashboardDataResult => {
       const formattedMemberProjects = Array.from(memberProjectsMap.values());
       
       const allProjects = [...formattedOwnedProjects, ...formattedMemberProjects];
-      console.log('Total projects after combining:', allProjects.length);
       
-      // Fetch member counts for all projects
       await Promise.all(allProjects.map(async (project) => {
-        try {
-          const { count, error: countError } = await supabase
-            .from('project_members')
-            .select('*', { count: 'exact', head: true })
-            .eq('project_id', project.id);
-            
-          if (!countError) {
-            project.memberCount = (count || 0) + 1;
-          }
-        } catch (error) {
-          console.error(`Error fetching member count for project ${project.id}:`, error);
+        const { count, error: countError } = await supabase
+          .from('project_members')
+          .select('*', { count: 'exact', head: true })
+          .eq('project_id', project.id);
+          
+        if (!countError) {
+          project.memberCount = (count || 0) + 1;
         }
       }));
 
       setProjects(allProjects);
-      setLastRefresh(Date.now());
-      console.log('Projects state updated with', allProjects.length, 'projects');
     } catch (error) {
       console.error("Error fetching projects:", error);
-      setError(error as Error);
       toast.error("Failed to load projects");
     } finally {
       setLoading(false);
     }
-  }, [user]);
-
-  // Helper function to format owned projects
-  const formatOwnedProjects = (ownedProjects: any[], userId: string): ProjectCardProps[] => {
-    return (ownedProjects || []).map(project => ({
-      id: project.id,
-      title: project.title,
-      description: project.description || '',
-      createdAt: project.created_at,
-      updatedAt: project.updated_at,
-      status: 'active' as const,
-      memberCount: 1,
-      isOwner: true,
-      role: 'owner' as const,
-      isFavorite: project.is_favorite,
-      isArchived: project.is_archived
-    }));
   };
 
-  // Fetch projects when user changes or lastRefresh is updated
   useEffect(() => {
-    if (user) {
-      console.log('User or refresh trigger changed, fetching projects');
-      fetchProjects();
-    } else {
-      setProjects([]);
-      setLoading(false);
-    }
-  }, [user, fetchProjects, lastRefresh]);
+    fetchProjects();
+  }, [user]);
 
-  // Apply filters and sorting
   const filteredProjects = projects
     .filter(project => {
       const matchesSearch = 
@@ -215,12 +156,6 @@ export const useDashboardData = (): UseDashboardDataResult => {
       }
     });
 
-  // Manual refresh function to be called from outside
-  const manualRefresh = useCallback(async () => {
-    console.log('Manual refresh requested');
-    await fetchProjects();
-  }, [fetchProjects]);
-
   return {
     projects,
     filteredProjects,
@@ -231,6 +166,6 @@ export const useDashboardData = (): UseDashboardDataResult => {
     setSearchTerm,
     setFilter,
     setSortOrder,
-    refreshProjects: manualRefresh
+    refreshProjects: fetchProjects
   };
 };

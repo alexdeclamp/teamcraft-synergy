@@ -11,22 +11,14 @@ interface UserStatsManagerProps {
 }
 
 // Initialize global stats with default values
-const globalUserStats: UserStats = {
+let globalUserStats: UserStats = {
   apiCalls: 0,
   ownedBrains: 0,
   sharedBrains: 0,
   documents: 0
 };
 
-// Also expose via window for other components to access directly
-if (typeof window !== 'undefined') {
-  window.globalUserStats = globalUserStats;
-}
-
 export const getUserStats = (): UserStats => {
-  if (typeof window !== 'undefined' && window.globalUserStats) {
-    return window.globalUserStats;
-  }
   return globalUserStats;
 };
 
@@ -39,8 +31,6 @@ const UserStatsManager: React.FC<UserStatsManagerProps> = ({ userId, isOpen }) =
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
-    
     const fetchUserStats = async () => {
       if (!userId || !isOpen) return;
       
@@ -53,8 +43,6 @@ const UserStatsManager: React.FC<UserStatsManagerProps> = ({ userId, isOpen }) =
         const { data, error: functionError } = await supabase.functions.invoke('user-statistics', {
           body: { userId },
         });
-        
-        if (!isMounted) return;
         
         if (functionError) {
           console.error('Error invoking user-statistics function:', functionError);
@@ -80,42 +68,28 @@ const UserStatsManager: React.FC<UserStatsManagerProps> = ({ userId, isOpen }) =
         const sharedBrains = data.sharedBrains ?? 0;
         const docs = data.documents ?? 0;
         
-        if (isMounted) {
-          setApiCalls(apiCallsCount);
-          setOwnedBrainCount(ownedBrains);
-          setSharedBrainCount(sharedBrains);
-          setDocumentCount(docs);
-          
-          // Update global stats
-          globalUserStats.apiCalls = apiCallsCount;
-          globalUserStats.ownedBrains = ownedBrains;
-          globalUserStats.sharedBrains = sharedBrains;
-          globalUserStats.documents = docs;
-          
-          // Also update window property
-          if (typeof window !== 'undefined') {
-            window.globalUserStats = { ...globalUserStats };
-          }
-        }
+        setApiCalls(apiCallsCount);
+        setOwnedBrainCount(ownedBrains);
+        setSharedBrainCount(sharedBrains);
+        setDocumentCount(docs);
+        
+        globalUserStats = {
+          apiCalls: apiCallsCount,
+          ownedBrains: ownedBrains,
+          sharedBrains: sharedBrains,
+          documents: docs
+        };
         
       } catch (error) {
         console.error('Error fetching user stats:', error);
-        if (isMounted) {
-          setError('An unexpected error occurred');
-          toast.error('Failed to load user statistics');
-        }
+        setError('An unexpected error occurred');
+        toast.error('Failed to load user statistics');
       } finally {
-        if (isMounted) {
-          setStatsLoading(false);
-        }
+        setStatsLoading(false);
       }
     };
 
     fetchUserStats();
-    
-    return () => {
-      isMounted = false;
-    };
   }, [userId, isOpen]);
 
   return (

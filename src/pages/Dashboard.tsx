@@ -1,6 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardToolbar from '@/components/dashboard/DashboardToolbar';
@@ -28,10 +29,6 @@ const Dashboard = () => {
   const location = useLocation();
   
   useEffect(() => {
-    console.log('Dashboard component mounted, forcing project refresh');
-    // Force project refresh when dashboard loads or remounts
-    refreshProjects();
-    
     // Force an immediate subscription check when Dashboard loads
     const queryParams = new URLSearchParams(location.search);
     const subscriptionStatus = queryParams.get('subscription');
@@ -47,17 +44,7 @@ const Dashboard = () => {
       // Trigger an immediate subscription refresh - this will process URL parameters
       refetchSubscription();
     }
-    
-    // Set up interval to refresh projects while dashboard is active
-    const intervalId = setInterval(() => {
-      console.log('Auto-refreshing dashboard projects');
-      refreshProjects();
-    }, 30000); // Refresh every 30 seconds
-    
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [location.search, refetchSubscription, refreshProjects]);
+  }, [location.search, refetchSubscription]);
 
   return (
     <div className="min-h-screen bg-background pb-12 animate-fade-in">

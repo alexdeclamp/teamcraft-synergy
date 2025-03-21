@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { getUserStats } from '@/components/navbar/UserStatsManager';
 
 // Default Stripe price ID for the Pro plan
 const DEFAULT_PRO_PRICE_ID = 'price_1R42nVDkiO3r5OEtK8vc77rS';
@@ -13,7 +12,6 @@ export const useSubscription = () => {
   const subscriptionData = useSubscriptionData();
   const { user } = useAuth();
   const [isUpgrading, setIsUpgrading] = useState(false);
-  const [isCheckingLimits, setIsCheckingLimits] = useState(false);
 
   const upgradeToProPlan = async (priceId: string = DEFAULT_PRO_PRICE_ID) => {
     if (!user) {
@@ -56,116 +54,9 @@ export const useSubscription = () => {
     }
   };
 
-  // Function to check if user is at or over limits
-  const checkUserLimits = async (actionType: 'brain' | 'api_call' | 'document' = 'api_call') => {
-    if (!user) {
-      return { canProceed: false, message: 'You must be logged in to perform this action.' };
-    }
-    
-    if (!subscriptionData.planDetails || subscriptionData.isLoading) {
-      return { canProceed: false, message: 'Loading subscription information...' };
-    }
-
-    setIsCheckingLimits(true);
-    try {
-      // Get current usage stats
-      const userStats = getUserStats();
-      const plan = subscriptionData.planDetails;
-      
-      console.log(`Checking limits for ${actionType}. Current stats:`, userStats);
-      console.log('Plan details:', plan);
-      
-      // If user is on Pro plan, they can always proceed
-      if (plan.plan_type === 'pro') {
-        return { canProceed: true };
-      }
-      
-      // For brain creation, we should also check with the server to ensure data is current
-      // especially important for enforcing brain creation limits
-      if (actionType === 'brain') {
-        try {
-          console.log('Performing server-side brain limit check');
-          const { data, error } = await supabase.functions.invoke('track-usage', {
-            body: { 
-              action: 'check_brain_limit',
-              userId: user.id
-            }
-          });
-          
-          if (error) {
-            console.error('Error checking brain limit with server:', error);
-            return { 
-              canProceed: false, 
-              message: 'Could not verify your subscription limits. Please try again.' 
-            };
-          }
-          
-          if (data && !data.canProceed) {
-            console.log('Server rejected brain creation:', data.message);
-            return {
-              canProceed: false,
-              message: data.message || `You've reached the maximum limit of ${plan.max_brains} brains on your Starter plan. Please upgrade to Pro for unlimited brains.`
-            };
-          }
-          
-          return { canProceed: true };
-        } catch (serverError) {
-          console.error('Exception during server brain limit check:', serverError);
-          // Fall back to local check if server check fails
-        }
-      }
-      
-      // Check specific limits based on action type
-      switch (actionType) {
-        case 'brain':
-          if (userStats.ownedBrains >= plan.max_brains) {
-            console.log(`Brain limit reached: ${userStats.ownedBrains}/${plan.max_brains}`);
-            return {
-              canProceed: false,
-              message: `You've reached the maximum limit of ${plan.max_brains} brains on your Starter plan. Please upgrade to Pro for unlimited brains.`
-            };
-          }
-          break;
-        
-        case 'api_call':
-          if (userStats.apiCalls >= plan.max_api_calls) {
-            return {
-              canProceed: false,
-              message: `You've reached your monthly limit of ${plan.max_api_calls} AI API calls. Please upgrade to Pro for unlimited API usage.`
-            };
-          }
-          break;
-        
-        case 'document':
-          if (userStats.documents >= plan.max_documents) {
-            return {
-              canProceed: false, 
-              message: `You've reached your limit of ${plan.max_documents} documents. Please upgrade to Pro for unlimited storage.`
-            };
-          }
-          break;
-      }
-      
-      // If we get here, user is within limits
-      return { canProceed: true };
-      
-    } catch (error) {
-      console.error('Error checking user limits:', error);
-      // On error, we should block the action to be safe
-      return { 
-        canProceed: false, 
-        message: 'Could not verify your subscription limits. Please try again or contact support.' 
-      };
-    } finally {
-      setIsCheckingLimits(false);
-    }
-  };
-
   return {
     ...subscriptionData,
     upgradeToProPlan,
-    isUpgrading,
-    checkUserLimits,
-    isCheckingLimits
+    isUpgrading
   };
 };
