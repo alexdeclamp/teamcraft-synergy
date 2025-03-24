@@ -68,6 +68,79 @@ const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({
     if (!confirmed) return;
 
     try {
+      toast.loading('Deleting brain and related data...');
+      
+      // Delete associated data first - image_summaries
+      const { error: imageSummaryError } = await supabase
+        .from('image_summaries')
+        .delete()
+        .eq('project_id', projectId);
+        
+      if (imageSummaryError) {
+        console.warn('Error deleting image summaries:', imageSummaryError);
+      }
+      
+      // Delete associated note summaries
+      const { error: noteSummaryError } = await supabase
+        .from('note_summaries')
+        .delete()
+        .eq('project_id', projectId);
+        
+      if (noteSummaryError) {
+        console.warn('Error deleting note summaries:', noteSummaryError);
+      }
+      
+      // Delete associated image tags
+      const { error: imageTagsError } = await supabase
+        .from('image_tags')
+        .delete()
+        .eq('project_id', projectId);
+        
+      if (imageTagsError) {
+        console.warn('Error deleting image tags:', imageTagsError);
+      }
+      
+      // Delete project documents
+      const { error: documentsError } = await supabase
+        .from('project_documents')
+        .delete()
+        .eq('project_id', projectId);
+        
+      if (documentsError) {
+        console.warn('Error deleting project documents:', documentsError);
+      }
+      
+      // Delete project notes
+      const { error: notesError } = await supabase
+        .from('project_notes')
+        .delete()
+        .eq('project_id', projectId);
+        
+      if (notesError) {
+        console.warn('Error deleting project notes:', notesError);
+      }
+      
+      // Delete project updates
+      const { error: updatesError } = await supabase
+        .from('project_updates')
+        .delete()
+        .eq('project_id', projectId);
+        
+      if (updatesError) {
+        console.warn('Error deleting project updates:', updatesError);
+      }
+      
+      // Delete project members
+      const { error: membersError } = await supabase
+        .from('project_members')
+        .delete()
+        .eq('project_id', projectId);
+        
+      if (membersError) {
+        console.warn('Error deleting project members:', membersError);
+      }
+      
+      // Finally delete the project
       const { error } = await supabase
         .from('projects')
         .delete()
@@ -75,9 +148,11 @@ const ProjectActionsMenu: React.FC<ProjectActionsMenuProps> = ({
 
       if (error) throw error;
 
+      toast.dismiss();
       toast.success('Brain deleted successfully');
       navigate('/dashboard');
     } catch (error) {
+      toast.dismiss();
       console.error('Error deleting brain:', error);
       toast.error('Failed to delete brain');
     }
