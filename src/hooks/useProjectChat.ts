@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { chatPrompts } from '@/utils/aiPrompts';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -83,6 +84,9 @@ export function useProjectChat(projectId: string) {
     }));
 
     try {
+      // Get system prompt from centralized prompts
+      const systemPrompt = chatPrompts.system(state.projectData.description, state.projectData.aiPersona);
+      
       // Call the Supabase edge function
       const response = await supabase.functions.invoke('project-chat', {
         body: {
@@ -90,7 +94,8 @@ export function useProjectChat(projectId: string) {
           message: messageContent,
           userId: user.id,
           description: state.projectData.description,
-          aiPersona: state.projectData.aiPersona
+          aiPersona: state.projectData.aiPersona,
+          systemPrompt
         }
       });
 

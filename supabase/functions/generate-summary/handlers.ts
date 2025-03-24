@@ -3,6 +3,7 @@ import { validateRequestParams, logApiUsage, corsHeaders } from "./utils.ts";
 import { processImage } from "./imageProcessor.ts";
 import { processText } from "./textProcessor.ts";
 import { saveNoteSummary, saveImageSummary } from "./storage.ts";
+import { documentPrompts } from "../../../src/utils/aiPrompts.ts";
 
 // Main request handler
 export async function handleRequest(req: Request): Promise<Response> {
