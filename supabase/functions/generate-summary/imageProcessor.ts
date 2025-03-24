@@ -1,6 +1,8 @@
 
 import { openAIApiKey, corsHeaders } from "./utils.ts";
-import { imagePrompts } from "../../../src/utils/aiPrompts.ts";
+
+// Define image analysis prompt directly in the function
+const imageAnalysisPrompt = `You are an AI assistant specialized in analyzing images and extracting information. Please describe this image in detail, including any text, objects, people, or other elements visible in it.`;
 
 // Process and analyze an image using OpenAI's API
 export async function processImage(imageUrl: string): Promise<string> {
@@ -55,14 +57,11 @@ async function analyzeImageWithOpenAI(dataUrl: string): Promise<string> {
   }
 
   try {
-    // Use the centralized image analysis prompt
-    const analysisPrompt = imagePrompts.analysis;
-    
-    // Set up messages for OpenAI with image using our centralized prompt
+    // Set up messages for OpenAI with image using our prompt
     const messages = [
       {
         role: 'system',
-        content: analysisPrompt
+        content: imageAnalysisPrompt
       },
       {
         role: 'user',

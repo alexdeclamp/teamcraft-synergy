@@ -1,7 +1,15 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { textPrompts } from "../../../src/utils/aiPrompts.ts";
+
+// Define the prompts directly in the edge function instead of importing from src/utils/aiPrompts.ts
+const textFormattingPrompts = {
+  format: `Format and clean this text. Correct spelling and grammar, improve readability, and organize with proper paragraphs and spacing. Do not summarize or change the meaning. Keep all original information intact.`,
+  
+  summarize: `Summarize this text concisely while preserving the key points and main ideas. Organize with clear headings and bullet points where appropriate.`,
+  
+  enhance: `Enhance this text by improving clarity, flow, and organization. Fix grammar and spelling issues, improve sentence structure, add appropriate headings, and organize content logically. Do not add new information that wasn't in the original text.`
+};
 
 const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -36,8 +44,8 @@ serve(async (req) => {
 
     console.log(`Cleaning note text with ${model} model, type: ${cleanType}`);
     
-    // Use the appropriate prompt from our centralized prompts
-    const prompt = textPrompts.formatting[cleanType] + `\n\nHere is the text to clean:\n${noteContent}`;
+    // Use the appropriate prompt from our local prompts object
+    const prompt = textFormattingPrompts[cleanType] + `\n\nHere is the text to clean:\n${noteContent}`;
 
     let result;
     if (model === 'claude') {
