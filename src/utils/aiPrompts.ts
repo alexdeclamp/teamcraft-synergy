@@ -10,7 +10,7 @@
 
 // Types for better organization
 export type ModelType = 'claude' | 'openai';
-export type PromptType = 'summary' | 'tagging' | 'formatting' | 'metadata' | 'chat' | 'image';
+export type PromptType = 'summary' | 'tagging' | 'formatting' | 'metadata' | 'chat' | 'image' | 'pdf';
 
 // Text processing prompts
 export const textPrompts = {
