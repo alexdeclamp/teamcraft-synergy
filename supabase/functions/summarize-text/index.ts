@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, model = 'claude', maxLength = 1500, title, projectId } = await req.json();
+    const { text, model = 'claude', maxLength = 1500, title, projectId, systemPrompt } = await req.json();
 
     if (!text || text.trim().length === 0) {
       throw new Error('No text provided for summarization');
@@ -29,10 +29,27 @@ serve(async (req) => {
     
     let summary;
     
+    // Define the BCG consultant prompt
+    const bcgConsultantPrompt = `You are an expert BCG consultant summarizing business documents in a structured format.
+Be concise, data-driven, and focus on actionable insights with a strategic perspective.
+
+Create summaries with these specific sections:
+
+1. Executive Summary: A brief 2-3 sentence overview highlighting the core strategic message and business implications
+2. Description: A clear explanation of the content and its business context without unnecessary details
+3. Key Learning Points: The critical strategic insights from the document, presented as focused bullet points
+4. Warnings: Any potential risks, challenges, or red flags that should be considered (if relevant, otherwise omit)
+5. Next Steps: Recommended actions and strategic priorities based on this information (if relevant)
+
+FORMAT YOUR SUMMARY AS CLEAN MARKDOWN with these exact section headings. Maintain a professional, consulting tone throughout.`;
+    
+    // Use the provided system prompt if available, otherwise use our BCG consultant prompt
+    const promptToUse = systemPrompt || bcgConsultantPrompt;
+    
     if (model === 'claude' && claudeApiKey) {
-      summary = await summarizeWithClaude(text, maxLength, title);
+      summary = await summarizeWithClaude(text, maxLength, title, promptToUse);
     } else if (openAIApiKey) {
-      summary = await summarizeWithOpenAI(text, maxLength, title);
+      summary = await summarizeWithOpenAI(text, maxLength, title, promptToUse);
     } else {
       throw new Error('No API key available for the selected model');
     }
@@ -71,8 +88,8 @@ function formatSummaryText(text) {
     // Convert headings to markdown
     .replace(/^Executive Summary:/gmi, '## Executive Summary')
     .replace(/^Description:/gmi, '## Description')
-    .replace(/^Key Learnings:/gmi, '## Key Learnings')
-    .replace(/^Blockers:/gmi, '## Blockers')
+    .replace(/^Key Learning Points:/gmi, '## Key Learning Points')
+    .replace(/^Warnings:/gmi, '## Warnings')
     .replace(/^Next Steps:/gmi, '## Next Steps')
     // Ensure double line breaks between sections
     .replace(/\n(## )/g, '\n\n$1')
@@ -88,7 +105,7 @@ function formatSummaryText(text) {
   return formatted.trim();
 }
 
-async function summarizeWithClaude(text: string, maxLength: number, title?: string): Promise<string> {
+async function summarizeWithClaude(text: string, maxLength: number, title?: string, systemPrompt?: string): Promise<string> {
   try {
     console.log("Calling Claude API...");
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -104,15 +121,9 @@ async function summarizeWithClaude(text: string, maxLength: number, title?: stri
         messages: [
           {
             role: 'user',
-            content: `Please summarize the following ${title ? 'document titled "' + title + '"' : 'text'} in a structured format with these sections:
+            content: `${systemPrompt}
 
-1. Executive Summary: A brief 2-3 sentence overview of the key points
-2. Description: A more detailed explanation of the content and context
-3. Key Learnings: The main takeaways from the document, presented as bullet points
-4. Blockers: Any challenges, obstacles, or issues mentioned (if relevant, otherwise omit this section)
-5. Next Steps: Recommendations or future actions based on the content
-
-Use proper markdown formatting with each section clearly labeled. Here's the text to summarize:
+Here's the ${title ? 'document titled "' + title + '"' : 'text'} to summarize:
 
 ${text.slice(0, 100000)}`
           }
@@ -135,7 +146,7 @@ ${text.slice(0, 100000)}`
   }
 }
 
-async function summarizeWithOpenAI(text: string, maxLength: number, title?: string): Promise<string> {
+async function summarizeWithOpenAI(text: string, maxLength: number, title?: string, systemPrompt?: string): Promise<string> {
   try {
     console.log("Calling OpenAI API...");
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -149,15 +160,7 @@ async function summarizeWithOpenAI(text: string, maxLength: number, title?: stri
         messages: [
           {
             role: 'system',
-            content: `You are an AI assistant that summarizes documents in a structured format. Create summaries with these specific sections:
-
-1. Executive Summary: A brief 2-3 sentence overview of the key points
-2. Description: A more detailed explanation of the content and context
-3. Key Learnings: The main takeaways from the document, presented as bullet points
-4. Blockers: Any challenges, obstacles, or issues mentioned (if relevant, otherwise omit this section)
-5. Next Steps: Recommendations or future actions based on the content
-
-FORMAT YOUR SUMMARY AS CLEAN MARKDOWN with these exact section headings.`
+            content: systemPrompt
           },
           {
             role: 'user',

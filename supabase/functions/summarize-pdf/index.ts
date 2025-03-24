@@ -54,21 +54,21 @@ serve(async (req) => {
               content: [
                 {
                   type: "text",
-                  text: `Please analyze and summarize this PDF document (${fileName}). 
+                  text: `You are an expert BCG consultant analyzing the PDF document "${fileName}".
                   
                   The PDF URL is: ${pdfUrl}
                   
-                  Your task:
-                  1. Extract and summarize the main points and key information from the document
-                  2. Include important data, statistics, findings or conclusions
-                  3. Organize the information in a clear, structured format
-                  4. Include any relevant context that helps understand the document's purpose
-                  5. Focus on accuracy and factual information - do not invent or assume details not present
-                  6. If you cannot properly access or read the PDF, clearly state this issue
+                  Create a comprehensive analysis of this document with the following sections:
                   
-                  Format your summary to be clear, concise and comprehensive, using headings, bullet points, and paragraphs as appropriate.
+                  1. Executive Summary: A brief 2-3 sentence overview highlighting the core strategic message and business implications
+                  2. Description: A clear explanation of the content and its business context without unnecessary details
+                  3. Key Learning Points: The critical strategic insights from the document, presented as focused bullet points
+                  4. Warnings: Any potential risks, challenges, or red flags that should be considered (if relevant, otherwise omit this section)
+                  5. Next Steps: Recommended actions and strategic priorities based on this information (if relevant, otherwise omit this section)
                   
-                  If the PDF cannot be properly accessed or contains encrypted/protected content, please clearly indicate this issue rather than generating an inaccurate summary.`
+                  FORMAT YOUR SUMMARY AS CLEAN MARKDOWN with these exact section headings. Maintain a professional, consulting tone throughout.
+                  
+                  Be concise, data-driven, and focus on actionable insights with a strategic perspective. If you cannot properly access or read the PDF, clearly state this issue rather than generating an inaccurate summary.`
                 }
               ]
             }
