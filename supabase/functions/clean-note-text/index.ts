@@ -10,6 +10,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Import our formatting prompts
+const formattingPrompts = {
+  format: `Format and clean this text. Correct spelling and grammar, improve readability, and organize with proper paragraphs and spacing. Do not summarize or change the meaning. Keep all original information intact.`,
+  
+  summarize: `Summarize this text concisely while preserving the key points and main ideas. Organize with clear headings and bullet points where appropriate.`,
+  
+  enhance: `Enhance this text by improving clarity, flow, and organization. Fix grammar and spelling issues, improve sentence structure, add appropriate headings, and organize content logically. Do not add new information that wasn't in the original text.`
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -35,17 +44,8 @@ serve(async (req) => {
 
     console.log(`Cleaning note text with ${model} model, type: ${cleanType}`);
     
-    let prompt = '';
-    
-    if (cleanType === 'format') {
-      prompt = 'Format and clean this text. Correct spelling and grammar, improve readability, and organize with proper paragraphs and spacing. Do not summarize or change the meaning. Keep all original information intact.\n\n';
-    } else if (cleanType === 'summarize') {
-      prompt = 'Summarize this text concisely while preserving the key points and main ideas. Organize with clear headings and bullet points where appropriate.\n\n';
-    } else if (cleanType === 'enhance') {
-      prompt = 'Enhance this text by improving clarity, flow, and organization. Fix grammar and spelling issues, improve sentence structure, add appropriate headings, and organize content logically. Do not add new information that wasn\'t in the original text.\n\n';
-    }
-    
-    prompt += `Here is the text to clean:\n${noteContent}`;
+    // Use the appropriate prompt from our centralized prompts
+    const prompt = formattingPrompts[cleanType] + `\n\nHere is the text to clean:\n${noteContent}`;
 
     let result;
     if (model === 'claude') {
