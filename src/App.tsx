@@ -13,7 +13,6 @@ import Dashboard from "./pages/Dashboard";
 import NewProject from "./pages/NewProject";
 import Project from "./pages/Project";
 import NotFound from "./pages/NotFound";
-import WaitlistPage from "./pages/Waitlist";
 import Sitemap from "./pages/Sitemap";
 import Brand from "./pages/Brand";
 import BrandAssets from "./pages/BrandAssets";
@@ -36,7 +35,6 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/home" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/waitlist" element={<WaitlistPage />} />
             <Route path="/sitemap" element={<Sitemap />} />
             <Route path="/brand" element={<Brand />} />
             <Route path="/brand-assets" element={<BrandAssets />} />

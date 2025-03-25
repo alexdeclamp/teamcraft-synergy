@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -17,13 +15,8 @@ export function InvitationBanner({ className }: InvitationBannerProps) {
       "w-full bg-primary/10 py-2 px-4 text-sm flex items-center justify-center gap-1.5 font-medium",
       className
     )}>
-      <Lock className="h-3.5 w-3.5 text-primary" />
       <span>
-        Currently in private beta. 
-        <Link to="/waitlist" className="ml-1 text-primary hover:underline">
-          Join our waitlist
-        </Link>
-        {' '}or use an invitation code to access.
+        Welcome to Bra3n - Your collaborative knowledge management system
       </span>
     </div>
   );

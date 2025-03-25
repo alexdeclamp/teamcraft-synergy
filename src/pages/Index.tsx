@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,6 @@ const Index = () => {
   };
 
   const handleSummarize = () => {
-    // Show auth dialog regardless of text length for the homepage
     setShowAuthDialog(true);
   };
 
@@ -42,7 +40,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Navigation with logo */}
       <header className="w-full py-4 px-6 border-b border-border/30 sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Logo />
@@ -96,11 +93,11 @@ const Index = () => {
           
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
-              onClick={() => navigate('/waitlist')} 
+              onClick={() => navigate('/auth?tab=register')} 
               size="lg" 
               className="rounded-md px-8 text-base shadow-sm w-full sm:w-auto bg-primary hover:bg-primary/90"
             >
-              Join Waitlist
+              Get Started
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
             
