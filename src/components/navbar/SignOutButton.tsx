@@ -14,9 +14,12 @@ const SignOutButton = ({ onClick }: SignOutButtonProps) => {
   
   const handleSignOut = async () => {
     try {
-      await signOut();
+      // Immediately call the callback if provided to close any dialogs
       if (onClick) onClick();
-      toast.success('Signed out successfully');
+      
+      // Then sign out
+      await signOut();
+      // Toast is now handled in the AuthContext
     } catch (error) {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out. Please try again.');

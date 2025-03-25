@@ -31,8 +31,10 @@ const ProfileDialog = ({ open, onOpenChange, onOpenSettings }: ProfileDialogProp
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      // Close the dialog first to improve perceived performance
       onOpenChange(false);
+      // Then sign out
+      await signOut();
     } catch (error) {
       console.error('Error in ProfileDialog signOut:', error);
     }

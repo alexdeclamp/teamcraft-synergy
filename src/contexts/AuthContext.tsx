@@ -124,24 +124,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       console.log('Signing out...');
-      const { error } = await supabase.auth.signOut();
       
-      if (error) {
-        console.error('Error during sign out:', error);
-        toast.error(error.message);
-        return;
-      }
-      
-      // Clear local state
+      // First clear local state regardless of server response
       setSession(null);
       setUser(null);
       setProfile(null);
       
-      // Navigate after state is cleared
+      // Then attempt to sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Error during sign out:', error);
+        // Don't return early on error - we still want to navigate
+      }
+      
+      // Always navigate to auth page
       navigate('/auth');
+      toast.success('Signed out successfully');
     } catch (error: any) {
       console.error('Exception during sign out:', error);
-      toast.error(error.message || 'An unexpected error occurred');
+      // Even if there's an error, we should still try to navigate away
+      navigate('/auth');
     }
   };
 
