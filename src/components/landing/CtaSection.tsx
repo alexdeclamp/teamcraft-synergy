@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
+import { Brain } from 'lucide-react';
 
 const CtaSection: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const CtaSection: React.FC = () => {
         onClick={() => navigate('/auth?tab=register')} 
         className="rounded-full px-8 gap-2"
       >
-        <Sparkles className="h-4 w-4" />
+        <Brain className="h-4 w-4" />
         Get Started Now
       </Button>
     </section>

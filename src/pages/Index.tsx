@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -97,7 +98,7 @@ const Index = () => {
               size="lg" 
               className="rounded-md px-8 text-base shadow-sm w-full sm:w-auto bg-primary hover:bg-primary/90"
             >
-              Get Started
+              Get Instant Insights
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
             
