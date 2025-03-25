@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
-// Default Stripe price ID for the Pro plan
+// Production Stripe price ID for the Pro plan
+// Note: This is a placeholder - replace with your actual production price ID
 const DEFAULT_PRO_PRICE_ID = 'price_1R42nVDkiO3r5OEtK8vc77rS';
 
 export const useSubscription = () => {
