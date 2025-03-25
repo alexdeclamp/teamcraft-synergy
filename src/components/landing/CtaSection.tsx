@@ -19,7 +19,7 @@ const CtaSection: React.FC = () => {
         className="rounded-full px-8 gap-2"
       >
         <Brain className="h-4 w-4" />
-        Get Started Now
+        Get Instant Insights
       </Button>
     </section>
   );

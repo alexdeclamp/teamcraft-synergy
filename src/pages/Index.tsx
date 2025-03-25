@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ArrowRight, MessageSquare, Users, Map, FileText, Brain, PaperclipIcon } from 'lucide-react';
+import { Brain, ArrowRight, MessageSquare, Users, Map, FileText, PaperclipIcon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import Logo from '@/components/navbar/Logo';
