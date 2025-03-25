@@ -1,3 +1,4 @@
+
 import { useSubscriptionData } from './subscription/useSubscriptionData';
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,6 +7,9 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Production Stripe price ID for the Pro plan
 const DEFAULT_PRO_PRICE_ID = 'price_1R6ZG0DkiO3r5OEtxXnJaSP3';
+
+// Direct Stripe payment link
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/3cs4iF0sn2Urffy003';
 
 export const useSubscription = () => {
   const subscriptionData = useSubscriptionData();
@@ -22,29 +26,12 @@ export const useSubscription = () => {
       setIsUpgrading(true);
       toast.loading('Preparing checkout...', { id: 'stripe-checkout' });
       
-      console.log('Initiating upgrade for user:', user.id, 'with price ID:', priceId);
+      console.log('Initiating upgrade for user:', user.id);
       
-      // Call our Stripe checkout edge function
-      const { data, error } = await supabase.functions.invoke('create-stripe-checkout', {
-        body: { 
-          userId: user.id,
-          priceId: priceId // Pass the price ID
-        }
-      });
+      // Using direct payment link instead of creating a checkout session
+      toast.success('Redirecting to secure checkout...', { id: 'stripe-checkout' });
+      window.location.href = STRIPE_PAYMENT_LINK;
       
-      if (error) {
-        console.error('Error creating checkout session:', error);
-        toast.error('Failed to create checkout session. Please try again.', { id: 'stripe-checkout' });
-        return;
-      }
-      
-      if (data?.url) {
-        toast.success('Redirecting to secure checkout...', { id: 'stripe-checkout' });
-        console.log('Redirecting to Stripe checkout URL:', data.url);
-        window.location.href = data.url;
-      } else {
-        toast.error('Could not create checkout session. Please try again later.', { id: 'stripe-checkout' });
-      }
     } catch (err) {
       console.error('Error upgrading to Pro:', err);
       toast.error('Failed to initiate upgrade process. Please try again.', { id: 'stripe-checkout' });
