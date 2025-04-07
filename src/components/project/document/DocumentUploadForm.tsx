@@ -81,6 +81,7 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
               <AlertDescription>
                 Click the "Upload PDF{files.length > 1 ? 's' : ''}" button below to complete the upload process.
                 <p className="text-xs mt-1">Maximum file size: 25MB per PDF</p>
+                <p className="text-xs mt-1">Tip: Use simple filenames with only letters, numbers, and periods.</p>
               </AlertDescription>
             </Alert>
           )}

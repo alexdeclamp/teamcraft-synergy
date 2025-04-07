@@ -59,9 +59,10 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
         setCurrentFileIndex(i);
         const file = files[i];
         
-        // Define file path in storage
+        // Define file path in storage - sanitize filename to avoid special characters issues
         const timestamp = new Date().getTime();
-        const pdfPath = `${userId}/${projectId}/${timestamp}_${file.name}`;
+        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const pdfPath = `${userId}/${projectId}/${timestamp}_${sanitizedFileName}`;
         const bucketName = 'project_documents';
         
         // Update progress for current file
@@ -81,7 +82,20 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
         
         if (uploadError) {
           console.error(`Error uploading file ${file.name} to storage:`, uploadError);
-          toast.error(`Failed to upload ${file.name}: ${uploadError.message}`);
+          
+          // Provide more detailed error messages based on error type
+          let errorMsg = `Failed to upload ${file.name}`;
+          if (uploadError.message.includes('Invalid key')) {
+            errorMsg += ': The filename contains characters that are not allowed. Try renaming the file.';
+          } else if (uploadError.message.includes('already exists')) {
+            errorMsg += ': A file with this name already exists.';
+          } else if (uploadError.message.includes('size limit')) {
+            errorMsg += ': The file exceeds the maximum size limit.';
+          } else {
+            errorMsg += `: ${uploadError.message}`;
+          }
+          
+          toast.error(errorMsg);
           continue; // Continue with next file even if this one fails
         }
         

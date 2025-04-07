@@ -29,7 +29,10 @@ export const DocumentUploadStatus: React.FC<DocumentUploadStatusProps> = ({
           <div>
             <p className="font-medium mb-1">Error uploading document</p>
             <p>{errorMessage}</p>
-            <p className="mt-2 text-xs">If this error persists, please try again or check your network connection.</p>
+            <p className="mt-2 text-xs">
+              If you see an "Invalid key" error, try renaming your file to use only letters, numbers, and simple punctuation.
+              Avoid special characters, spaces and symbols in filenames.
+            </p>
           </div>
         </div>
       )}
