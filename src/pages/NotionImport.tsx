@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,7 +8,16 @@ import Navbar from '@/components/Navbar';
 import FooterSection from '@/components/landing/FooterSection';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, ExternalLink, FileIcon, Loader2, RefreshCw } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  ChevronDown, 
+  ChevronLeft, 
+  ChevronRight, 
+  ExternalLink, 
+  FileIcon, 
+  Loader2, 
+  RefreshCw 
+} from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 
@@ -15,6 +25,7 @@ const NotionImport = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [notionPages, setNotionPages] = useState([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
@@ -22,6 +33,9 @@ const NotionImport = () => {
   const [recentlyImported, setRecentlyImported] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [importingPageId, setImportingPageId] = useState<string | null>(null);
 
   useEffect(() => {
     const checkNotionConnection = async () => {
@@ -40,39 +54,7 @@ const NotionImport = () => {
           return;
         }
         
-        const { data: ownedProjects, error: ownedError } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('owner_id', user.id);
-          
-        if (ownedError) {
-          console.error("Error fetching owned projects:", ownedError);
-          toast.error("Failed to load projects");
-        }
-        
-        const { data: memberProjects, error: memberError } = await supabase
-          .from('project_members')
-          .select('project_id, projects:project_id(*)')
-          .eq('user_id', user.id);
-          
-        if (memberError) {
-          console.error("Error fetching member projects:", memberError);
-        }
-        
-        let allProjects = ownedProjects || [];
-        
-        if (memberProjects) {
-          const memberProjectsData = memberProjects
-            .filter(item => item.projects)
-            .map(item => item.projects)
-            .filter(project => !allProjects.some(p => p.id === project.id));
-            
-          allProjects = [...allProjects, ...memberProjectsData];
-        }
-        
-        console.log("All user projects:", allProjects);
-        setUserProjects(allProjects);
-        
+        await fetchUserProjects();
         await fetchNotionPages();
       } catch (err) {
         console.error("Error checking Notion connection:", err);
@@ -86,24 +68,99 @@ const NotionImport = () => {
     checkNotionConnection();
   }, [user, navigate]);
   
-  const fetchNotionPages = async () => {
+  const fetchUserProjects = async () => {
     if (!user) return;
     
-    setIsLoading(true);
     try {
+      const { data: ownedProjects, error: ownedError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('owner_id', user.id);
+        
+      if (ownedError) {
+        console.error("Error fetching owned projects:", ownedError);
+        toast.error("Failed to load projects");
+      }
+      
+      const { data: memberProjects, error: memberError } = await supabase
+        .from('project_members')
+        .select('project_id, projects:project_id(*)')
+        .eq('user_id', user.id);
+        
+      if (memberError) {
+        console.error("Error fetching member projects:", memberError);
+      }
+      
+      let allProjects = ownedProjects || [];
+      
+      if (memberProjects) {
+        const memberProjectsData = memberProjects
+          .filter(item => item.projects)
+          .map(item => item.projects)
+          .filter(project => !allProjects.some(p => p.id === project.id));
+          
+        allProjects = [...allProjects, ...memberProjectsData];
+      }
+      
+      console.log("All user projects:", allProjects);
+      setUserProjects(allProjects);
+      
+      // If there's only one project, auto-select it
+      if (allProjects.length === 1 && !selectedProject) {
+        setSelectedProject(allProjects[0].id);
+      }
+    } catch (err) {
+      console.error("Error fetching projects:", err);
+      toast.error("Failed to load projects");
+    }
+  };
+  
+  const fetchNotionPages = async (reset = true) => {
+    if (!user) return;
+    
+    if (reset) {
+      setIsLoading(true);
+      setNotionPages([]);
+      setNextCursor(null);
+    } else {
+      setIsLoadingMore(true);
+    }
+    
+    try {
+      const cursor = reset ? null : nextCursor;
+      
       const { data, error } = await supabase.functions.invoke('notion-list-pages', {
-        body: { userId: user.id }
+        body: { 
+          userId: user.id,
+          pageSize: 30,
+          startCursor: cursor
+        }
       });
       
       if (error) throw error;
       
       console.log("Notion pages:", data.pages);
-      setNotionPages(data.pages || []);
+      
+      if (reset) {
+        setNotionPages(data.pages || []);
+      } else {
+        setNotionPages(prev => [...prev, ...(data.pages || [])]);
+      }
+      
+      setNextCursor(data.next_cursor);
+      setHasMore(data.has_more);
     } catch (err: any) {
       console.error("Error fetching Notion pages:", err);
       toast.error(`Failed to fetch Notion pages: ${err.message || 'Unknown error'}`);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
+    }
+  };
+  
+  const loadMorePages = () => {
+    if (hasMore && nextCursor) {
+      fetchNotionPages(false);
     }
   };
   
@@ -114,6 +171,8 @@ const NotionImport = () => {
     }
     
     setIsImporting(true);
+    setImportingPageId(pageId);
+    
     try {
       const { data, error } = await supabase.functions.invoke('notion-import-page', {
         body: { 
@@ -127,6 +186,9 @@ const NotionImport = () => {
       
       setRecentlyImported(prev => [...prev, pageId]);
       
+      // Get the project details for a more helpful message
+      const project = userProjects.find(p => p.id === selectedProject);
+      
       toast.success(
         <div>
           <p>Imported "{pageName}" successfully</p>
@@ -135,16 +197,20 @@ const NotionImport = () => {
             className="p-0 h-auto text-sm underline" 
             onClick={() => navigate(`/project/${selectedProject}`)}
           >
-            View in Project
+            View in Project: {project?.title || 'View Project'}
           </Button>
         </div>,
         { duration: 5000 }
       );
+      
+      // Refresh projects to update any counters
+      fetchUserProjects();
     } catch (err: any) {
       console.error("Error importing Notion page:", err);
       toast.error(`Failed to import page: ${err.message || 'Unknown error'}`);
     } finally {
       setIsImporting(false);
+      setImportingPageId(null);
     }
   };
 
@@ -171,7 +237,7 @@ const NotionImport = () => {
   };
 
   const NotionPagesList = () => {
-    if (isLoading) {
+    if (isLoading && !notionPages.length) {
       return (
         <div className="space-y-4">
           <Skeleton className="h-12 w-full" />
@@ -187,7 +253,7 @@ const NotionImport = () => {
           <p className="text-muted-foreground">No pages found in your Notion workspace</p>
           <Button 
             variant="outline" 
-            onClick={fetchNotionPages} 
+            onClick={() => fetchNotionPages()} 
             className="mt-4 flex items-center"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
@@ -216,63 +282,94 @@ const NotionImport = () => {
     }
     
     return (
-      <div className="space-y-2">
-        {filteredPages.map((page: any) => {
-          const isImported = recentlyImported.includes(page.id);
-          const lastEdited = new Date(page.last_edited).toLocaleDateString();
-          
-          return (
-            <Card key={page.id} className="p-4">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center">
-                    {renderIcon(page.icon)}
-                    <h3 className="font-medium">{page.title}</h3>
+      <>
+        <div className="space-y-2">
+          {filteredPages.map((page: any, index: number) => {
+            const isImported = recentlyImported.includes(page.id);
+            const lastEdited = new Date(page.last_edited).toLocaleDateString();
+            const isCurrentlyImporting = importingPageId === page.id;
+            
+            return (
+              <Card key={page.id} className="p-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center">
+                      {renderIcon(page.icon)}
+                      <h3 className="font-medium">{page.title}</h3>
+                    </div>
+                    
+                    <div className="mt-1 flex flex-wrap gap-2 items-center">
+                      <Badge variant="outline" className="text-xs capitalize">
+                        {page.parent.type}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {page.parent.name}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        Last edited: {lastEdited}
+                      </span>
+                      {page.has_children && (
+                        <Badge variant="outline" className="text-xs bg-blue-50">
+                          Has nested content
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {isImported && (
+                      <span className="text-xs text-green-600 font-medium block mt-1">
+                        Imported
+                      </span>
+                    )}
                   </div>
                   
-                  <div className="mt-1 flex flex-wrap gap-2 items-center">
-                    <Badge variant="outline" className="text-xs capitalize">
-                      {page.parent.type}
-                    </Badge>
-                    <Badge variant="secondary" className="text-xs">
-                      {page.parent.name}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      Last edited: {lastEdited}
-                    </span>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(page.url, '_blank')}
+                      className="flex items-center"
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                    
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleImportPage(page.id, page.title)}
+                      disabled={isImporting || !selectedProject || isImported}
+                    >
+                      {isCurrentlyImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : isImported ? "Imported" : "Import"}
+                    </Button>
                   </div>
-                  
-                  {isImported && (
-                    <span className="text-xs text-green-600 font-medium block mt-1">
-                      Imported
-                    </span>
-                  )}
                 </div>
-                
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => window.open(page.url, '_blank')}
-                    className="flex items-center"
-                  >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    View
-                  </Button>
-                  
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleImportPage(page.id, page.title)}
-                    disabled={isImporting || !selectedProject || isImported}
-                  >
-                    {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : isImported ? "Imported" : "Import"}
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
+              </Card>
+            );
+          })}
+        </div>
+        
+        {hasMore && (
+          <div className="flex justify-center mt-6">
+            <Button
+              variant="outline"
+              onClick={loadMorePages}
+              disabled={isLoadingMore}
+              className="flex items-center"
+            >
+              {isLoadingMore ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4 mr-2" />
+                  Load More
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </>
     );
   };
 
@@ -293,7 +390,7 @@ const NotionImport = () => {
           
           <h1 className="text-3xl font-bold tracking-tight">Import from Notion</h1>
           <p className="text-muted-foreground mt-2">
-            Select pages from your Notion workspace to import as notes
+            Select pages from your Notion workspace to import as notes. Nested content like toggles and dropdowns will be included.
           </p>
         </div>
         
@@ -331,7 +428,7 @@ const NotionImport = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              onClick={fetchNotionPages}
+              onClick={() => fetchNotionPages()}
               disabled={isLoading}
               className="flex items-center"
             >

@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { userId } = await req.json();
+    const { userId, pageSize = 30, startCursor = null } = await req.json();
     
     if (!userId) {
       throw new Error("Missing required parameter: userId");
@@ -39,7 +39,24 @@ serve(async (req) => {
     
     const accessToken = connectionData.access_token;
     
-    // First, fetch pages from Notion
+    // First, fetch pages from Notion with pagination support
+    const searchParams = {
+      filter: {
+        value: 'page',
+        property: 'object'
+      },
+      sort: {
+        direction: 'descending',
+        timestamp: 'last_edited_time'
+      },
+      page_size: pageSize
+    };
+    
+    // Add start_cursor for pagination if provided
+    if (startCursor) {
+      searchParams['start_cursor'] = startCursor;
+    }
+    
     const response = await fetch('https://api.notion.com/v1/search', {
       method: 'POST',
       headers: {
@@ -47,17 +64,7 @@ serve(async (req) => {
         'Notion-Version': '2022-06-28',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        filter: {
-          value: 'page',
-          property: 'object'
-        },
-        sort: {
-          direction: 'descending',
-          timestamp: 'last_edited_time'
-        },
-        page_size: 50 // Increase page size to get more results
-      }),
+      body: JSON.stringify(searchParams),
     });
     
     if (!response.ok) {
@@ -132,11 +139,13 @@ serve(async (req) => {
       });
     }
     
-    // Return success response with detailed pages
+    // Return success response with pagination data and detailed pages
     return new Response(
       JSON.stringify({
         success: true,
         pages: pagesWithDetails,
+        next_cursor: searchResults.next_cursor || null,
+        has_more: searchResults.has_more || false
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

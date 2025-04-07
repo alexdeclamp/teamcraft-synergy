@@ -74,7 +74,7 @@ serve(async (req) => {
     const pageData = await pageResponse.json();
     
     // Fetch page content from Notion
-    const blockResponse = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
+    const blockResponse = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children?page_size=100`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -96,66 +96,123 @@ serve(async (req) => {
                       pageData.properties.Name?.title?.[0]?.plain_text || 
                       'Untitled Notion Page';
     
-    // Convert blocks to markdown-like format
+    // Convert blocks to markdown-like format with expanded handling for nested content
     let content = '';
     
-    for (const block of blocksData.results) {
+    // Recursive function to process nested blocks
+    async function processBlocks(blocks, level = 0) {
+      let blockContent = '';
+      
+      for (const block of blocks) {
+        // Process the current block based on its type
+        blockContent += await processBlock(block, level);
+        
+        // Check if the block has children
+        if (block.has_children) {
+          try {
+            // Fetch the children blocks
+            const childrenResponse = await fetch(`https://api.notion.com/v1/blocks/${block.id}/children`, {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Notion-Version': '2022-06-28',
+              },
+            });
+            
+            if (childrenResponse.ok) {
+              const childrenData = await childrenResponse.json();
+              // Process the children blocks with an increased level
+              blockContent += await processBlocks(childrenData.results, level + 1);
+            }
+          } catch (err) {
+            console.error(`Error fetching children for block ${block.id}:`, err);
+            blockContent += `\n\n*[Error loading nested content]*\n\n`;
+          }
+        }
+      }
+      
+      return blockContent;
+    }
+    
+    // Process a single block
+    async function processBlock(block, level = 0) {
+      const indent = '  '.repeat(level);
+      
       switch (block.type) {
         case 'paragraph':
           if (block.paragraph.rich_text && block.paragraph.rich_text.length > 0) {
-            content += block.paragraph.rich_text.map((text) => text.plain_text).join('') + '\n\n';
+            return `${indent}${block.paragraph.rich_text.map((text) => text.plain_text).join('')}\n\n`;
           } else {
-            content += '\n';
+            return `${indent}\n\n`;
           }
-          break;
         case 'heading_1':
           if (block.heading_1.rich_text && block.heading_1.rich_text.length > 0) {
-            content += '# ' + block.heading_1.rich_text.map((text) => text.plain_text).join('') + '\n\n';
+            return `${indent}# ${block.heading_1.rich_text.map((text) => text.plain_text).join('')}\n\n`;
           }
           break;
         case 'heading_2':
           if (block.heading_2.rich_text && block.heading_2.rich_text.length > 0) {
-            content += '## ' + block.heading_2.rich_text.map((text) => text.plain_text).join('') + '\n\n';
+            return `${indent}## ${block.heading_2.rich_text.map((text) => text.plain_text).join('')}\n\n`;
           }
           break;
         case 'heading_3':
           if (block.heading_3.rich_text && block.heading_3.rich_text.length > 0) {
-            content += '### ' + block.heading_3.rich_text.map((text) => text.plain_text).join('') + '\n\n';
+            return `${indent}### ${block.heading_3.rich_text.map((text) => text.plain_text).join('')}\n\n`;
           }
           break;
         case 'bulleted_list_item':
           if (block.bulleted_list_item.rich_text && block.bulleted_list_item.rich_text.length > 0) {
-            content += '- ' + block.bulleted_list_item.rich_text.map((text) => text.plain_text).join('') + '\n';
+            return `${indent}- ${block.bulleted_list_item.rich_text.map((text) => text.plain_text).join('')}\n`;
           }
           break;
         case 'numbered_list_item':
           if (block.numbered_list_item.rich_text && block.numbered_list_item.rich_text.length > 0) {
-            content += '1. ' + block.numbered_list_item.rich_text.map((text) => text.plain_text).join('') + '\n';
+            return `${indent}1. ${block.numbered_list_item.rich_text.map((text) => text.plain_text).join('')}\n`;
           }
           break;
         case 'to_do':
           if (block.to_do.rich_text && block.to_do.rich_text.length > 0) {
             const checkbox = block.to_do.checked ? '[x]' : '[ ]';
-            content += `- ${checkbox} ` + block.to_do.rich_text.map((text) => text.plain_text).join('') + '\n';
+            return `${indent}- ${checkbox} ${block.to_do.rich_text.map((text) => text.plain_text).join('')}\n`;
           }
           break;
+        case 'toggle':
+          if (block.toggle.rich_text && block.toggle.rich_text.length > 0) {
+            return `${indent}**Toggle: ${block.toggle.rich_text.map((text) => text.plain_text).join('')}**\n\n`;
+          }
+          break;
+        case 'child_page':
+          return `${indent}**Child Page: ${block.child_page.title || 'Untitled'}**\n\n`;
         case 'quote':
           if (block.quote.rich_text && block.quote.rich_text.length > 0) {
-            content += '> ' + block.quote.rich_text.map((text) => text.plain_text).join('') + '\n\n';
+            return `${indent}> ${block.quote.rich_text.map((text) => text.plain_text).join('')}\n\n`;
           }
           break;
         case 'code':
           if (block.code.rich_text && block.code.rich_text.length > 0) {
-            content += '```' + (block.code.language || '') + '\n' + 
-                        block.code.rich_text.map((text) => text.plain_text).join('') + 
-                        '\n```\n\n';
+            return `${indent}\`\`\`${block.code.language || ''}\n${block.code.rich_text.map((text) => text.plain_text).join('')}\n\`\`\`\n\n`;
           }
           break;
         case 'divider':
-          content += '---\n\n';
+          return `${indent}---\n\n`;
+        case 'callout':
+          if (block.callout.rich_text && block.callout.rich_text.length > 0) {
+            const emoji = block.callout.icon?.emoji ? `${block.callout.icon.emoji} ` : '';
+            return `${indent}> ${emoji}**Callout:** ${block.callout.rich_text.map((text) => text.plain_text).join('')}\n\n`;
+          }
           break;
+        case 'table':
+          return `${indent}[Table content not fully supported]\n\n`;
+        case 'column_list':
+          return `${indent}[Column layout not fully supported]\n\n`;
+        default:
+          return `${indent}[${block.type} block type not supported]\n\n`;
       }
+      
+      return '';
     }
+    
+    // Process all the blocks recursively
+    content = await processBlocks(blocksData.results);
     
     // Create a note with the Notion content
     const { data: noteData, error: noteError } = await supabase
