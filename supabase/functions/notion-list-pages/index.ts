@@ -30,7 +30,7 @@ serve(async (req) => {
       .from('notion_connections')
       .select('access_token')
       .eq('user_id', userId)
-      .maybeSingle();
+      .single();
     
     if (connectionError || !connectionData) {
       console.error("Error fetching Notion connection:", connectionError);
@@ -194,9 +194,30 @@ serve(async (req) => {
 // Function to get workspaces and top-level pages/databases
 async function getWorkspaces(accessToken, corsHeaders) {
   try {
-    console.log("Fetching workspace data from Notion API");
+    // First get databases
+    const dbResponse = await fetch('https://api.notion.com/v1/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        filter: {
+          value: 'database',
+          property: 'object'
+        },
+        page_size: 100
+      }),
+    });
     
-    // First get top level pages (in workspace)
+    if (!dbResponse.ok) {
+      throw new Error(`Failed to fetch databases: ${dbResponse.statusText}`);
+    }
+    
+    const dbResults = await dbResponse.json();
+    
+    // Get top level pages (in workspace)
     const pageResponse = await fetch('https://api.notion.com/v1/search', {
       method: 'POST',
       headers: {
@@ -216,73 +237,41 @@ async function getWorkspaces(accessToken, corsHeaders) {
     });
     
     if (!pageResponse.ok) {
-      const pageErrorData = await pageResponse.json();
-      console.error("Error fetching top-level pages:", pageErrorData);
-      throw new Error(`Failed to fetch top-level pages: ${pageErrorData.message || pageResponse.statusText}`);
+      throw new Error(`Failed to fetch top-level pages: ${pageResponse.statusText}`);
     }
     
     const pageResults = await pageResponse.json();
-    console.log(`Found ${pageResults.results?.length || 0} top-level pages`);
-    
-    // Then get databases at the top level
-    const dbResponse = await fetch('https://api.notion.com/v1/search', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Notion-Version': '2022-06-28',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        filter: {
-          value: 'database',
-          property: 'object'
-        },
-        page_size: 100
-      }),
-    });
-    
-    if (!dbResponse.ok) {
-      const dbErrorData = await dbResponse.json();
-      console.error("Error fetching databases:", dbErrorData);
-      throw new Error(`Failed to fetch databases: ${dbErrorData.message || dbResponse.statusText}`);
-    }
-    
-    const dbResults = await dbResponse.json();
-    console.log(`Found ${dbResults.results?.length || 0} databases`);
     
     const workspaceItems = [];
     
     // Process databases
     for (const db of dbResults.results) {
-      // Check if this is a top-level database (parent is workspace)
-      if (db.parent?.type === 'workspace') {
-        let dbTitle = '';
-        let dbIcon = null;
-        
-        if (db.title && db.title.length > 0) {
-          dbTitle = db.title.map(t => t.plain_text).join('');
-        } else {
-          dbTitle = 'Untitled Database';
-        }
-        
-        if (db.icon) {
-          dbIcon = db.icon.type === 'emoji' ? db.icon.emoji : 
-                  (db.icon.type === 'external' ? db.icon.external.url : null);
-        }
-        
-        workspaceItems.push({
-          id: db.id,
-          title: dbTitle,
-          icon: dbIcon,
-          type: 'database',
-          parent: {
-            type: db.parent.type,
-            id: null
-          },
-          has_children: true,
-          last_edited: db.last_edited_time
-        });
+      let dbTitle = '';
+      let dbIcon = null;
+      
+      if (db.title && db.title.length > 0) {
+        dbTitle = db.title.map(t => t.plain_text).join('');
+      } else {
+        dbTitle = 'Untitled Database';
       }
+      
+      if (db.icon) {
+        dbIcon = db.icon.type === 'emoji' ? db.icon.emoji : 
+                (db.icon.type === 'external' ? db.icon.external.url : null);
+      }
+      
+      workspaceItems.push({
+        id: db.id,
+        title: dbTitle,
+        icon: dbIcon,
+        type: 'database',
+        parent: {
+          type: db.parent.type,
+          id: db.parent.type === 'page_id' ? db.parent.page_id : null
+        },
+        has_children: true,
+        last_edited: db.last_edited_time
+      });
     }
     
     // Process pages
@@ -322,8 +311,6 @@ async function getWorkspaces(accessToken, corsHeaders) {
       }
     }
     
-    console.log(`Returning ${workspaceItems.length} workspace items`);
-    
     return new Response(
       JSON.stringify({
         success: true,
@@ -352,8 +339,6 @@ async function getWorkspaces(accessToken, corsHeaders) {
 // Function to get children of a specific parent (page or database)
 async function getParentChildren(accessToken, parentId, pageSize, startCursor, corsHeaders) {
   try {
-    console.log(`Fetching children for parent ${parentId}`);
-    
     // Check what type of parent we have (page or database)
     const parentResponse = await fetch(`https://api.notion.com/v1/blocks/${parentId}`, {
       headers: {
@@ -364,15 +349,13 @@ async function getParentChildren(accessToken, parentId, pageSize, startCursor, c
     
     if (!parentResponse.ok) {
       const parentData = await parentResponse.json();
-      console.log("Parent response error:", parentData);
       
       if (parentData.code === 'object_not_found') {
         // If not found as a block, try as a database
-        console.log("Parent not found as block, trying as database");
         return await getDatabaseItems(accessToken, parentId, pageSize, startCursor, corsHeaders);
       }
       
-      throw new Error(`Failed to fetch parent info: ${parentData.message || parentResponse.statusText}`);
+      throw new Error(`Failed to fetch parent info: ${parentResponse.statusText}`);
     }
     
     // It's a page, get its children
@@ -385,13 +368,10 @@ async function getParentChildren(accessToken, parentId, pageSize, startCursor, c
     });
     
     if (!childrenResponse.ok) {
-      const childrenError = await childrenResponse.json();
-      console.error("Error fetching children:", childrenError);
-      throw new Error(`Failed to fetch children: ${childrenError.message || childrenResponse.statusText}`);
+      throw new Error(`Failed to fetch children: ${childrenResponse.statusText}`);
     }
     
     const childrenData = await childrenResponse.json();
-    console.log(`Found ${childrenData.results?.length || 0} children`);
     
     const childItems = [];
     
@@ -451,8 +431,6 @@ async function getParentChildren(accessToken, parentId, pageSize, startCursor, c
 // Function to get database items
 async function getDatabaseItems(accessToken, databaseId, pageSize, startCursor, corsHeaders) {
   try {
-    console.log(`Querying database ${databaseId}`);
-    
     const queryParams = {
       page_size: pageSize
     };
@@ -472,13 +450,10 @@ async function getDatabaseItems(accessToken, databaseId, pageSize, startCursor, 
     });
     
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Error querying database:", errorData);
-      throw new Error(`Failed to query database: ${errorData.message || response.statusText}`);
+      throw new Error(`Failed to query database: ${response.statusText}`);
     }
     
     const data = await response.json();
-    console.log(`Found ${data.results?.length || 0} database items`);
     
     const items = [];
     
