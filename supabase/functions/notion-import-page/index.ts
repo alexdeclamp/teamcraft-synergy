@@ -39,104 +39,130 @@ serve(async (req) => {
     
     const accessToken = connectionData.access_token;
     
-    // Fetch page from Notion
+    // Fetch page details from Notion
     const pageResponse = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json',
       },
     });
     
     if (!pageResponse.ok) {
       const errorData = await pageResponse.json();
-      console.error("Notion API error fetching page:", errorData);
+      console.error("Notion API error (page):", errorData);
       throw new Error(`Notion API error: ${errorData.message || 'Unknown error'}`);
     }
     
     const pageData = await pageResponse.json();
     
-    // Fetch page content (blocks) from Notion
-    const blocksResponse = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
+    // Fetch page content from Notion
+    const blockResponse = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json',
       },
     });
     
-    if (!blocksResponse.ok) {
-      const errorData = await blocksResponse.json();
-      console.error("Notion API error fetching blocks:", errorData);
+    if (!blockResponse.ok) {
+      const errorData = await blockResponse.json();
+      console.error("Notion API error (blocks):", errorData);
       throw new Error(`Notion API error: ${errorData.message || 'Unknown error'}`);
     }
     
-    const blocksData = await blocksResponse.json();
+    const blocksData = await blockResponse.json();
     
-    // Extract title from page data
+    // Get page title
     const pageTitle = pageData.properties.title?.title?.[0]?.plain_text || 
                       pageData.properties.Name?.title?.[0]?.plain_text || 
-                      'Imported from Notion';
+                      'Untitled Notion Page';
     
-    // Convert Notion blocks to markdown (simplified version)
+    // Convert blocks to markdown-like format
     let content = '';
+    
     for (const block of blocksData.results) {
-      if (block.type === 'paragraph') {
-        const text = block.paragraph.rich_text.map((rt: any) => rt.plain_text).join('');
-        content += text + '\n\n';
-      } else if (block.type === 'heading_1') {
-        const text = block.heading_1.rich_text.map((rt: any) => rt.plain_text).join('');
-        content += `# ${text}\n\n`;
-      } else if (block.type === 'heading_2') {
-        const text = block.heading_2.rich_text.map((rt: any) => rt.plain_text).join('');
-        content += `## ${text}\n\n`;
-      } else if (block.type === 'heading_3') {
-        const text = block.heading_3.rich_text.map((rt: any) => rt.plain_text).join('');
-        content += `### ${text}\n\n`;
-      } else if (block.type === 'bulleted_list_item') {
-        const text = block.bulleted_list_item.rich_text.map((rt: any) => rt.plain_text).join('');
-        content += `- ${text}\n`;
-      } else if (block.type === 'numbered_list_item') {
-        const text = block.numbered_list_item.rich_text.map((rt: any) => rt.plain_text).join('');
-        content += `1. ${text}\n`;
-      } else if (block.type === 'to_do') {
-        const text = block.to_do.rich_text.map((rt: any) => rt.plain_text).join('');
-        const checked = block.to_do.checked ? '[x]' : '[ ]';
-        content += `- ${checked} ${text}\n`;
-      } else if (block.type === 'quote') {
-        const text = block.quote.rich_text.map((rt: any) => rt.plain_text).join('');
-        content += `> ${text}\n\n`;
-      } else if (block.type === 'code') {
-        const text = block.code.rich_text.map((rt: any) => rt.plain_text).join('');
-        const language = block.code.language || '';
-        content += `\`\`\`${language}\n${text}\n\`\`\`\n\n`;
-      } else if (block.type === 'divider') {
-        content += `---\n\n`;
+      switch (block.type) {
+        case 'paragraph':
+          if (block.paragraph.rich_text && block.paragraph.rich_text.length > 0) {
+            content += block.paragraph.rich_text.map((text) => text.plain_text).join('') + '\n\n';
+          } else {
+            content += '\n';
+          }
+          break;
+        case 'heading_1':
+          if (block.heading_1.rich_text && block.heading_1.rich_text.length > 0) {
+            content += '# ' + block.heading_1.rich_text.map((text) => text.plain_text).join('') + '\n\n';
+          }
+          break;
+        case 'heading_2':
+          if (block.heading_2.rich_text && block.heading_2.rich_text.length > 0) {
+            content += '## ' + block.heading_2.rich_text.map((text) => text.plain_text).join('') + '\n\n';
+          }
+          break;
+        case 'heading_3':
+          if (block.heading_3.rich_text && block.heading_3.rich_text.length > 0) {
+            content += '### ' + block.heading_3.rich_text.map((text) => text.plain_text).join('') + '\n\n';
+          }
+          break;
+        case 'bulleted_list_item':
+          if (block.bulleted_list_item.rich_text && block.bulleted_list_item.rich_text.length > 0) {
+            content += '- ' + block.bulleted_list_item.rich_text.map((text) => text.plain_text).join('') + '\n';
+          }
+          break;
+        case 'numbered_list_item':
+          if (block.numbered_list_item.rich_text && block.numbered_list_item.rich_text.length > 0) {
+            content += '1. ' + block.numbered_list_item.rich_text.map((text) => text.plain_text).join('') + '\n';
+          }
+          break;
+        case 'to_do':
+          if (block.to_do.rich_text && block.to_do.rich_text.length > 0) {
+            const checkbox = block.to_do.checked ? '[x]' : '[ ]';
+            content += `- ${checkbox} ` + block.to_do.rich_text.map((text) => text.plain_text).join('') + '\n';
+          }
+          break;
+        case 'quote':
+          if (block.quote.rich_text && block.quote.rich_text.length > 0) {
+            content += '> ' + block.quote.rich_text.map((text) => text.plain_text).join('') + '\n\n';
+          }
+          break;
+        case 'code':
+          if (block.code.rich_text && block.code.rich_text.length > 0) {
+            content += '```' + (block.code.language || '') + '\n' + 
+                        block.code.rich_text.map((text) => text.plain_text).join('') + 
+                        '\n```\n\n';
+          }
+          break;
+        case 'divider':
+          content += '---\n\n';
+          break;
       }
     }
     
-    // Save as project note
+    // Create a note with the Notion content
     const { data: noteData, error: noteError } = await supabase
       .from('project_notes')
       .insert({
+        title: `Notion: ${pageTitle}`,
+        content: content.trim(),
         project_id: projectId,
         user_id: userId,
-        title: pageTitle,
-        content: content,
-        tags: ['notion-import'],
+        tags: ['notion', 'imported', 'notion-import'],
         source_document: {
           type: 'notion',
-          pageId: pageId,
           url: pageData.url,
-          imported_at: new Date().toISOString()
+          name: pageTitle,
+          id: pageId
         }
       })
       .select()
       .single();
     
     if (noteError) {
-      console.error("Error saving note:", noteError);
-      throw new Error(`Failed to save imported note: ${noteError.message}`);
+      console.error("Error creating note:", noteError);
+      throw new Error(`Failed to create note: ${noteError.message}`);
     }
     
     // Return success response
@@ -144,6 +170,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         note: noteData,
+        message: `Successfully imported "${pageTitle}" from Notion`,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

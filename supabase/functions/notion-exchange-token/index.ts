@@ -68,23 +68,50 @@ serve(async (req) => {
       bot_id: tokenData.bot_id
     });
     
-    // Store the access token in the database
-    const { error: insertError } = await supabase
+    // First check if there's an existing connection for this user
+    const { data: existingConnection } = await supabase
       .from('notion_connections')
-      .upsert({
-        user_id: userId,
-        access_token: tokenData.access_token,
-        bot_id: tokenData.bot_id,
-        workspace_id: tokenData.workspace_id,
-        workspace_name: tokenData.workspace_name,
-        workspace_icon: tokenData.workspace_icon,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' });
-    
-    if (insertError) {
-      console.error("Supabase insert error:", insertError);
-      throw new Error(`Failed to save Notion connection: ${insertError.message}`);
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+      
+    if (existingConnection) {
+      // Update existing connection
+      const { error: updateError } = await supabase
+        .from('notion_connections')
+        .update({
+          access_token: tokenData.access_token,
+          bot_id: tokenData.bot_id,
+          workspace_id: tokenData.workspace_id,
+          workspace_name: tokenData.workspace_name,
+          workspace_icon: tokenData.workspace_icon,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+        
+      if (updateError) {
+        console.error("Supabase update error:", updateError);
+        throw new Error(`Failed to update Notion connection: ${updateError.message}`);
+      }
+    } else {
+      // Insert new connection
+      const { error: insertError } = await supabase
+        .from('notion_connections')
+        .insert({
+          user_id: userId,
+          access_token: tokenData.access_token,
+          bot_id: tokenData.bot_id,
+          workspace_id: tokenData.workspace_id,
+          workspace_name: tokenData.workspace_name,
+          workspace_icon: tokenData.workspace_icon,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+        
+      if (insertError) {
+        console.error("Supabase insert error:", insertError);
+        throw new Error(`Failed to save Notion connection: ${insertError.message}`);
+      }
     }
     
     // Return success response
