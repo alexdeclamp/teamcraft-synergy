@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -8,8 +7,9 @@ import Navbar from '@/components/Navbar';
 import FooterSection from '@/components/landing/FooterSection';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Loader2, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ExternalLink, FileIcon, Loader2, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 
 const NotionImport = () => {
   const { user } = useAuth();
@@ -20,14 +20,14 @@ const NotionImport = () => {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [userProjects, setUserProjects] = useState<any[]>([]);
   const [recentlyImported, setRecentlyImported] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<string | null>(null);
 
-  // Check if user is connected to Notion
   useEffect(() => {
     const checkNotionConnection = async () => {
       if (!user) return;
       
       try {
-        // Use query builder with explicit 'from' method to avoid type errors
         const { data, error } = await supabase
           .from('notion_connections')
           .select('*')
@@ -40,7 +40,6 @@ const NotionImport = () => {
           return;
         }
         
-        // Fetch user's projects - include both owned projects and projects where user is a member
         const { data: ownedProjects, error: ownedError } = await supabase
           .from('projects')
           .select('*')
@@ -51,7 +50,6 @@ const NotionImport = () => {
           toast.error("Failed to load projects");
         }
         
-        // Fetch projects where user is a member
         const { data: memberProjects, error: memberError } = await supabase
           .from('project_members')
           .select('project_id, projects:project_id(*)')
@@ -61,15 +59,13 @@ const NotionImport = () => {
           console.error("Error fetching member projects:", memberError);
         }
         
-        // Combine owned and member projects
         let allProjects = ownedProjects || [];
         
-        // Add member projects (avoiding duplicates)
         if (memberProjects) {
           const memberProjectsData = memberProjects
-            .filter(item => item.projects) // Filter out null projects
+            .filter(item => item.projects)
             .map(item => item.projects)
-            .filter(project => !allProjects.some(p => p.id === project.id)); // Avoid duplicates
+            .filter(project => !allProjects.some(p => p.id === project.id));
             
           allProjects = [...allProjects, ...memberProjectsData];
         }
@@ -77,7 +73,6 @@ const NotionImport = () => {
         console.log("All user projects:", allProjects);
         setUserProjects(allProjects);
         
-        // Then fetch Notion pages
         await fetchNotionPages();
       } catch (err) {
         console.error("Error checking Notion connection:", err);
@@ -102,6 +97,7 @@ const NotionImport = () => {
       
       if (error) throw error;
       
+      console.log("Notion pages:", data.pages);
       setNotionPages(data.pages || []);
     } catch (err: any) {
       console.error("Error fetching Notion pages:", err);
@@ -129,10 +125,8 @@ const NotionImport = () => {
       
       if (error) throw error;
       
-      // Add this page to recently imported list
       setRecentlyImported(prev => [...prev, pageId]);
       
-      // Show success message with a link to view the project
       toast.success(
         <div>
           <p>Imported "{pageName}" successfully</p>
@@ -154,7 +148,28 @@ const NotionImport = () => {
     }
   };
 
-  // Placeholder component - this will be fleshed out with the actual Notion page list
+  const filteredPages = notionPages.filter((page: any) => {
+    const matchesSearch = page.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterType ? page.parent.type === filterType : true;
+    return matchesSearch && matchesFilter;
+  });
+
+  const parentTypes = [...new Set(notionPages.map((page: any) => page.parent.type))];
+
+  const renderIcon = (icon: any) => {
+    if (!icon) return <FileIcon className="h-4 w-4 mr-1" />;
+    
+    if (typeof icon === 'string') {
+      if (icon.length <= 2) {
+        return <span className="mr-2">{icon}</span>;
+      } else {
+        return <img src={icon} alt="icon" className="h-4 w-4 mr-2 object-contain" />;
+      }
+    }
+    
+    return <FileIcon className="h-4 w-4 mr-1" />;
+  };
+
   const NotionPagesList = () => {
     if (isLoading) {
       return (
@@ -182,31 +197,78 @@ const NotionImport = () => {
       );
     }
     
-    // This is a simple placeholder - the real implementation will display
-    // actual pages from the Notion API
+    if (filteredPages.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No pages match your search or filter</p>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              setSearchTerm('');
+              setFilterType(null);
+            }} 
+            className="mt-4"
+          >
+            Clear Filters
+          </Button>
+        </div>
+      );
+    }
+    
     return (
       <div className="space-y-2">
-        {notionPages.map((page: any) => {
+        {filteredPages.map((page: any) => {
           const isImported = recentlyImported.includes(page.id);
+          const lastEdited = new Date(page.last_edited).toLocaleDateString();
           
           return (
-            <Card key={page.id} className="p-4 flex justify-between items-center">
-              <div>
-                <h3 className="font-medium">{page.title}</h3>
-                <p className="text-sm text-muted-foreground">{page.type}</p>
-                {isImported && (
-                  <span className="text-xs text-green-600 font-medium">
-                    Imported
-                  </span>
-                )}
+            <Card key={page.id} className="p-4">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex items-center">
+                    {renderIcon(page.icon)}
+                    <h3 className="font-medium">{page.title}</h3>
+                  </div>
+                  
+                  <div className="mt-1 flex flex-wrap gap-2 items-center">
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {page.parent.type}
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      {page.parent.name}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      Last edited: {lastEdited}
+                    </span>
+                  </div>
+                  
+                  {isImported && (
+                    <span className="text-xs text-green-600 font-medium block mt-1">
+                      Imported
+                    </span>
+                  )}
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.open(page.url, '_blank')}
+                    className="flex items-center"
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    View
+                  </Button>
+                  
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleImportPage(page.id, page.title)}
+                    disabled={isImporting || !selectedProject || isImported}
+                  >
+                    {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : isImported ? "Imported" : "Import"}
+                  </Button>
+                </div>
               </div>
-              <Button 
-                size="sm" 
-                onClick={() => handleImportPage(page.id, page.title)}
-                disabled={isImporting || !selectedProject || isImported}
-              >
-                {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : isImported ? "Imported" : "Import"}
-              </Button>
             </Card>
           );
         })}
@@ -263,18 +325,45 @@ const NotionImport = () => {
           )}
         </div>
         
-        <div className="mb-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Your Notion Pages</h2>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={fetchNotionPages}
-            disabled={isLoading}
-            className="flex items-center"
-          >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-            Refresh
-          </Button>
+        <div className="mb-6 space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Your Notion Pages</h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={fetchNotionPages}
+              disabled={isLoading}
+              className="flex items-center"
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+              Refresh
+            </Button>
+          </div>
+          
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search pages..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full p-2 border rounded-md bg-background"
+              />
+            </div>
+            
+            <select
+              className="p-2 border rounded-md bg-background"
+              value={filterType || ''}
+              onChange={(e) => setFilterType(e.target.value || null)}
+            >
+              <option value="">All types</option>
+              {parentTypes.map(type => (
+                <option key={type} value={type}>
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         
         <NotionPagesList />
