@@ -8,41 +8,18 @@ import Navbar from '@/components/Navbar';
 import FooterSection from '@/components/landing/FooterSection';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-import {
-  ArrowLeft,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  FileIcon,
-  FolderIcon,
-  HomeIcon,
-  Loader2,
-  RefreshCw
+import { 
+  ArrowLeft, 
+  ChevronDown, 
+  ChevronLeft, 
+  ChevronRight, 
+  ExternalLink, 
+  FileIcon, 
+  Loader2, 
+  RefreshCw 
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Select,
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue
-} from '@/components/ui/select';
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 
 const NotionImport = () => {
   const { user } = useAuth();
@@ -59,14 +36,6 @@ const NotionImport = () => {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [importingPageId, setImportingPageId] = useState<string | null>(null);
-  
-  // New state for workspace navigation
-  const [viewMode, setViewMode] = useState<'workspaces' | 'pages'>('workspaces');
-  const [workspaces, setWorkspaces] = useState<any[]>([]);
-  const [isLoadingWorkspaces, setIsLoadingWorkspaces] = useState(true);
-  const [currentParent, setCurrentParent] = useState<any>(null);
-  const [navigationPath, setNavigationPath] = useState<any[]>([]);
-  const [currentItems, setCurrentItems] = useState<any[]>([]);
 
   useEffect(() => {
     const checkNotionConnection = async () => {
@@ -86,7 +55,7 @@ const NotionImport = () => {
         }
         
         await fetchUserProjects();
-        await fetchWorkspaces();
+        await fetchNotionPages();
       } catch (err) {
         console.error("Error checking Notion connection:", err);
         toast.error("Failed to verify Notion connection");
@@ -146,32 +115,6 @@ const NotionImport = () => {
     }
   };
   
-  const fetchWorkspaces = async () => {
-    if (!user) return;
-    
-    setIsLoadingWorkspaces(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('notion-list-pages', {
-        body: { 
-          userId: user.id,
-          mode: 'workspaces'
-        }
-      });
-      
-      if (error) throw error;
-      
-      console.log("Notion workspaces:", data.workspaces);
-      setWorkspaces(data.workspaces || []);
-      setCurrentItems(data.workspaces || []);
-    } catch (err: any) {
-      console.error("Error fetching Notion workspaces:", err);
-      toast.error(`Failed to fetch Notion workspaces: ${err.message || 'Unknown error'}`);
-    } finally {
-      setIsLoadingWorkspaces(false);
-    }
-  };
-  
   const fetchNotionPages = async (reset = true) => {
     if (!user) return;
     
@@ -213,67 +156,6 @@ const NotionImport = () => {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  };
-  
-  const fetchParentItems = async (parentId: string, parentItem: any) => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('notion-list-pages', {
-        body: { 
-          userId: user.id,
-          mode: 'parent',
-          parentId: parentId
-        }
-      });
-      
-      if (error) throw error;
-      
-      console.log("Parent items:", data);
-      
-      // Add this parent to the navigation path
-      setNavigationPath(prev => [...prev, parentItem]);
-      setCurrentParent(parentItem);
-      
-      if (data.children) {
-        setCurrentItems(data.children);
-      } else if (data.items) {
-        setCurrentItems(data.items);
-      } else {
-        setCurrentItems([]);
-      }
-    } catch (err: any) {
-      console.error("Error fetching parent items:", err);
-      toast.error(`Failed to fetch items: ${err.message || 'Unknown error'}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const goBack = () => {
-    if (navigationPath.length <= 1) {
-      // Go back to workspaces
-      setNavigationPath([]);
-      setCurrentParent(null);
-      setCurrentItems(workspaces);
-    } else {
-      // Go back one level
-      const newPath = [...navigationPath];
-      newPath.pop(); // Remove current
-      const parentToNavigate = newPath[newPath.length - 1];
-      newPath.pop(); // Remove parent we'll navigate to
-      
-      setNavigationPath(newPath);
-      fetchParentItems(parentToNavigate.id, parentToNavigate);
-    }
-  };
-  
-  const navigateToRoot = () => {
-    setNavigationPath([]);
-    setCurrentParent(null);
-    setCurrentItems(workspaces);
   };
   
   const loadMorePages = () => {
@@ -338,18 +220,10 @@ const NotionImport = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const filteredItems = currentItems.filter((item: any) => {
-    return item.title.toLowerCase().includes(searchTerm.toLowerCase());
-  });
-
   const parentTypes = [...new Set(notionPages.map((page: any) => page.parent.type))];
 
-  const renderIcon = (icon: any, type = 'page') => {
-    if (!icon) {
-      return type === 'database' ? 
-        <FolderIcon className="h-4 w-4 mr-1" /> : 
-        <FileIcon className="h-4 w-4 mr-1" />;
-    }
+  const renderIcon = (icon: any) => {
+    if (!icon) return <FileIcon className="h-4 w-4 mr-1" />;
     
     if (typeof icon === 'string') {
       if (icon.length <= 2) {
@@ -359,186 +233,10 @@ const NotionImport = () => {
       }
     }
     
-    return type === 'database' ? 
-      <FolderIcon className="h-4 w-4 mr-1" /> : 
-      <FileIcon className="h-4 w-4 mr-1" />;
+    return <FileIcon className="h-4 w-4 mr-1" />;
   };
 
-  const WorkspaceView = () => {
-    if (isLoadingWorkspaces && workspaces.length === 0) {
-      return (
-        <div className="space-y-4">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-        </div>
-      );
-    }
-    
-    if (isLoading && navigationPath.length > 0) {
-      return (
-        <div className="space-y-4">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-        </div>
-      );
-    }
-    
-    if (!currentItems.length) {
-      return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">No items found in this location</p>
-          {navigationPath.length > 0 && (
-            <Button 
-              variant="outline" 
-              onClick={goBack} 
-              className="mt-4 flex items-center"
-            >
-              <ChevronLeft className="mr-2 h-4 w-4" />
-              Go Back
-            </Button>
-          )}
-        </div>
-      );
-    }
-    
-    if (filteredItems.length === 0) {
-      return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">No items match your search</p>
-          <Button 
-            variant="outline" 
-            onClick={() => setSearchTerm('')} 
-            className="mt-4"
-          >
-            Clear Search
-          </Button>
-        </div>
-      );
-    }
-    
-    return (
-      <>
-        {navigationPath.length > 0 && (
-          <div className="flex items-center mb-4 space-x-2 overflow-x-auto whitespace-nowrap py-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={navigateToRoot}
-              className="flex items-center"
-            >
-              <HomeIcon className="h-4 w-4 mr-1" />
-              Root
-            </Button>
-            
-            {navigationPath.map((item, index) => (
-              <React.Fragment key={item.id}>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex items-center"
-                  onClick={() => {
-                    // Navigate to this level
-                    const newPath = navigationPath.slice(0, index);
-                    setNavigationPath(newPath);
-                    fetchParentItems(item.id, item);
-                  }}
-                >
-                  {renderIcon(item.icon, item.type)}
-                  <span className="truncate max-w-[150px]">{item.title}</span>
-                </Button>
-              </React.Fragment>
-            ))}
-          </div>
-        )}
-      
-        <div className="space-y-2">
-          {filteredItems.map((item: any) => {
-            const isImported = recentlyImported.includes(item.id);
-            const lastEdited = item.last_edited ? new Date(item.last_edited).toLocaleDateString() : null;
-            const isCurrentlyImporting = importingPageId === item.id;
-            
-            return (
-              <Card key={item.id} className="p-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center">
-                      {renderIcon(item.icon, item.type)}
-                      <h3 className="font-medium">{item.title}</h3>
-                    </div>
-                    
-                    {lastEdited && (
-                      <div className="mt-1">
-                        <span className="text-xs text-muted-foreground">
-                          Last edited: {lastEdited}
-                        </span>
-                      </div>
-                    )}
-                    
-                    <div className="mt-1 flex flex-wrap gap-2 items-center">
-                      <Badge variant="outline" className="text-xs capitalize">
-                        {item.type}
-                      </Badge>
-                      
-                      {item.has_children && (
-                        <Badge variant="outline" className="text-xs bg-blue-50">
-                          Has nested content
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    {isImported && (
-                      <span className="text-xs text-green-600 font-medium block mt-1">
-                        Imported
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    {item.has_children && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => fetchParentItems(item.id, item)}
-                      >
-                        Browse Content
-                      </Button>
-                    )}
-                    
-                    {item.url && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(item.url, '_blank')}
-                        className="flex items-center"
-                      >
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        View
-                      </Button>
-                    )}
-                    
-                    {item.type === 'page' && (
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleImportPage(item.id, item.title)}
-                        disabled={isImporting || !selectedProject || isImported}
-                      >
-                        {isCurrentlyImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : isImported ? "Imported" : "Import"}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      </>
-    );
-  };
-
-  const PagesListView = () => {
+  const NotionPagesList = () => {
     if (isLoading && !notionPages.length) {
       return (
         <div className="space-y-4">
@@ -586,7 +284,7 @@ const NotionImport = () => {
     return (
       <>
         <div className="space-y-2">
-          {filteredPages.map((page: any) => {
+          {filteredPages.map((page: any, index: number) => {
             const isImported = recentlyImported.includes(page.id);
             const lastEdited = new Date(page.last_edited).toLocaleDateString();
             const isCurrentlyImporting = importingPageId === page.id;
@@ -649,7 +347,7 @@ const NotionImport = () => {
           })}
         </div>
         
-        {viewMode === 'pages' && hasMore && (
+        {hasMore && (
           <div className="flex justify-center mt-6">
             <Button
               variant="outline"
@@ -692,7 +390,7 @@ const NotionImport = () => {
           
           <h1 className="text-3xl font-bold tracking-tight">Import from Notion</h1>
           <p className="text-muted-foreground mt-2">
-            Browse your Notion content and import pages as notes. Nested content like toggles and dropdowns will be included.
+            Select pages from your Notion workspace to import as notes. Nested content like toggles and dropdowns will be included.
           </p>
         </div>
         
@@ -726,69 +424,46 @@ const NotionImport = () => {
         
         <div className="mb-6 space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Notion Content</h2>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => {
-                  if (viewMode === 'workspaces') {
-                    fetchWorkspaces();
-                  } else {
-                    fetchNotionPages();
-                  }
-                }}
-                disabled={isLoading}
-                className="flex items-center"
-              >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-                Refresh
-              </Button>
-            </div>
+            <h2 className="text-xl font-semibold">Your Notion Pages</h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => fetchNotionPages()}
+              disabled={isLoading}
+              className="flex items-center"
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+              Refresh
+            </Button>
           </div>
           
-          <Tabs defaultValue="workspaces" onValueChange={(value) => setViewMode(value as 'workspaces' | 'pages')}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="workspaces">Browse Workspaces</TabsTrigger>
-              <TabsTrigger value="pages">All Pages</TabsTrigger>
-            </TabsList>
-            
-            <div className="mb-4">
+          <div className="flex gap-4">
+            <div className="flex-1">
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Search pages..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full p-2 border rounded-md bg-background"
               />
             </div>
             
-            {viewMode === 'pages' && (
-              <div className="mb-4">
-                <select
-                  className="w-full p-2 border rounded-md bg-background"
-                  value={filterType || ''}
-                  onChange={(e) => setFilterType(e.target.value || null)}
-                >
-                  <option value="">All parent types</option>
-                  {parentTypes.map(type => (
-                    <option key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-            
-            <TabsContent value="workspaces">
-              <WorkspaceView />
-            </TabsContent>
-            
-            <TabsContent value="pages">
-              <PagesListView />
-            </TabsContent>
-          </Tabs>
+            <select
+              className="p-2 border rounded-md bg-background"
+              value={filterType || ''}
+              onChange={(e) => setFilterType(e.target.value || null)}
+            >
+              <option value="">All types</option>
+              {parentTypes.map(type => (
+                <option key={type} value={type}>
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+        
+        <NotionPagesList />
         
         {userProjects.length === 0 && (
           <div className="mt-8 p-4 border border-amber-200 bg-amber-50 rounded-md">
