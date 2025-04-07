@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,8 +26,8 @@ export function useDocumentUpload({ projectId, userId, onDocumentUploaded }: Use
         return false;
       }
       
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
-        toast.error(`${file.name} exceeds 10MB limit`);
+      if (file.size > 25 * 1024 * 1024) { // 25MB limit (increased from 10MB)
+        toast.error(`${file.name} exceeds 25MB limit`);
         return false;
       }
       

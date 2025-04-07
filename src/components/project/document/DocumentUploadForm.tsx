@@ -70,7 +70,7 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
               <div key={index} className="flex items-center text-sm text-muted-foreground">
                 <FileText className="mr-2 h-4 w-4" />
                 <span className="truncate max-w-[300px]">{file.name}</span>
-                <span className="ml-2">({(file.size / 1024).toFixed(1)} KB)</span>
+                <span className="ml-2">({(file.size / (1024 * 1024)).toFixed(2)} MB)</span>
               </div>
             ))}
           </div>
@@ -80,6 +80,7 @@ export const DocumentUploadForm: React.FC<DocumentUploadFormProps> = ({
               <AlertCircle className="h-4 w-4 text-amber-600" />
               <AlertDescription>
                 Click the "Upload PDF{files.length > 1 ? 's' : ''}" button below to complete the upload process.
+                <p className="text-xs mt-1">Maximum file size: 25MB per PDF</p>
               </AlertDescription>
             </Alert>
           )}
