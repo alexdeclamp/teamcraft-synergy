@@ -17,7 +17,7 @@ serve(async (req) => {
     const { userId, pageId, projectId } = await req.json();
     
     if (!userId || !pageId || !projectId) {
-      throw new Error("Missing required parameters: userId, pageId, projectId");
+      throw new Error("Missing required parameters: userId, pageId, and projectId");
     }
     
     // Initialize Supabase client
@@ -25,20 +25,21 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Get user's Notion connection
+    // Get the Notion access token from the database
     const { data: connectionData, error: connectionError } = await supabase
       .from('notion_connections')
-      .select('*')
+      .select('access_token')
       .eq('user_id', userId)
       .single();
     
     if (connectionError || !connectionData) {
-      throw new Error("Notion connection not found. Please reconnect to Notion.");
+      console.error("Error fetching Notion connection:", connectionError);
+      throw new Error("Notion connection not found");
     }
     
     const accessToken = connectionData.access_token;
     
-    // Fetch the specific page content from Notion
+    // Fetch page from Notion
     const pageResponse = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
       method: 'GET',
       headers: {
@@ -55,19 +56,7 @@ serve(async (req) => {
     
     const pageData = await pageResponse.json();
     
-    // Extract page title
-    let title = 'Untitled';
-    try {
-      if (pageData.properties && pageData.properties.title) {
-        title = pageData.properties.title.title[0]?.plain_text || 'Untitled';
-      } else if (pageData.properties && pageData.properties.Name) {
-        title = pageData.properties.Name.title[0]?.plain_text || 'Untitled';
-      }
-    } catch (e) {
-      console.warn("Error extracting page title:", e);
-    }
-    
-    // Fetch page content blocks
+    // Fetch page content (blocks) from Notion
     const blocksResponse = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
       method: 'GET',
       headers: {
@@ -84,83 +73,70 @@ serve(async (req) => {
     
     const blocksData = await blocksResponse.json();
     
-    // Process blocks to extract text content
-    let content = '';
+    // Extract title from page data
+    const pageTitle = pageData.properties.title?.title?.[0]?.plain_text || 
+                      pageData.properties.Name?.title?.[0]?.plain_text || 
+                      'Imported from Notion';
     
-    // Simple block processing - actual implementation would need to handle 
-    // various block types more comprehensively
+    // Convert Notion blocks to markdown (simplified version)
+    let content = '';
     for (const block of blocksData.results) {
       if (block.type === 'paragraph') {
-        const textContent = block.paragraph.rich_text.map((text: any) => text.plain_text).join('');
-        if (textContent) {
-          content += textContent + '\n\n';
-        }
+        const text = block.paragraph.rich_text.map((rt: any) => rt.plain_text).join('');
+        content += text + '\n\n';
       } else if (block.type === 'heading_1') {
-        const textContent = block.heading_1.rich_text.map((text: any) => text.plain_text).join('');
-        if (textContent) {
-          content += `# ${textContent}\n\n`;
-        }
+        const text = block.heading_1.rich_text.map((rt: any) => rt.plain_text).join('');
+        content += `# ${text}\n\n`;
       } else if (block.type === 'heading_2') {
-        const textContent = block.heading_2.rich_text.map((text: any) => text.plain_text).join('');
-        if (textContent) {
-          content += `## ${textContent}\n\n`;
-        }
+        const text = block.heading_2.rich_text.map((rt: any) => rt.plain_text).join('');
+        content += `## ${text}\n\n`;
       } else if (block.type === 'heading_3') {
-        const textContent = block.heading_3.rich_text.map((text: any) => text.plain_text).join('');
-        if (textContent) {
-          content += `### ${textContent}\n\n`;
-        }
+        const text = block.heading_3.rich_text.map((rt: any) => rt.plain_text).join('');
+        content += `### ${text}\n\n`;
       } else if (block.type === 'bulleted_list_item') {
-        const textContent = block.bulleted_list_item.rich_text.map((text: any) => text.plain_text).join('');
-        if (textContent) {
-          content += `- ${textContent}\n`;
-        }
+        const text = block.bulleted_list_item.rich_text.map((rt: any) => rt.plain_text).join('');
+        content += `- ${text}\n`;
       } else if (block.type === 'numbered_list_item') {
-        const textContent = block.numbered_list_item.rich_text.map((text: any) => text.plain_text).join('');
-        if (textContent) {
-          content += `1. ${textContent}\n`;
-        }
+        const text = block.numbered_list_item.rich_text.map((rt: any) => rt.plain_text).join('');
+        content += `1. ${text}\n`;
       } else if (block.type === 'to_do') {
-        const textContent = block.to_do.rich_text.map((text: any) => text.plain_text).join('');
+        const text = block.to_do.rich_text.map((rt: any) => rt.plain_text).join('');
         const checked = block.to_do.checked ? '[x]' : '[ ]';
-        if (textContent) {
-          content += `${checked} ${textContent}\n`;
-        }
+        content += `- ${checked} ${text}\n`;
       } else if (block.type === 'quote') {
-        const textContent = block.quote.rich_text.map((text: any) => text.plain_text).join('');
-        if (textContent) {
-          content += `> ${textContent}\n\n`;
-        }
+        const text = block.quote.rich_text.map((rt: any) => rt.plain_text).join('');
+        content += `> ${text}\n\n`;
       } else if (block.type === 'code') {
-        const textContent = block.code.rich_text.map((text: any) => text.plain_text).join('');
-        if (textContent) {
-          content += `\`\`\`${block.code.language || ''}\n${textContent}\n\`\`\`\n\n`;
-        }
+        const text = block.code.rich_text.map((rt: any) => rt.plain_text).join('');
+        const language = block.code.language || '';
+        content += `\`\`\`${language}\n${text}\n\`\`\`\n\n`;
+      } else if (block.type === 'divider') {
+        content += `---\n\n`;
       }
     }
     
-    // Create note in project_notes table
+    // Save as project note
     const { data: noteData, error: noteError } = await supabase
       .from('project_notes')
       .insert({
         project_id: projectId,
         user_id: userId,
-        title: title,
+        title: pageTitle,
         content: content,
-        tags: ['notion', 'imported'],
+        tags: ['notion-import'],
         source_document: {
           type: 'notion',
-          notion_page_id: pageId,
-          notion_url: pageData.url,
+          pageId: pageId,
+          url: pageData.url,
           imported_at: new Date().toISOString()
-        },
+        }
       })
       .select()
       .single();
     
     if (noteError) {
-      console.error("Error creating note:", noteError);
-      throw new Error(`Failed to create note: ${noteError.message}`);
+      console.error("Error saving note:", noteError);
+      throw new Error(`Failed to save imported note: ${noteError.message}`);
     }
     
     // Return success response

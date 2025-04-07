@@ -25,22 +25,22 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Delete the Notion connection
-    const { error: deleteError } = await supabase
+    // Delete the connection from the database
+    const { error } = await supabase
       .from('notion_connections')
       .delete()
       .eq('user_id', userId);
     
-    if (deleteError) {
-      console.error("Error deleting Notion connection:", deleteError);
-      throw new Error(`Failed to delete Notion connection: ${deleteError.message}`);
+    if (error) {
+      console.error("Supabase delete error:", error);
+      throw new Error(`Failed to delete Notion connection: ${error.message}`);
     }
     
     // Return success response
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Notion connection successfully removed",
+        message: "Notion connection deleted successfully",
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

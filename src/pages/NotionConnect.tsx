@@ -81,8 +81,8 @@ const NotionConnect = () => {
   }, [code, error, user]);
   
   const connectToNotion = () => {
-    // Notion OAuth URL - client ID will be provided by your Notion integration
-    const clientId = process.env.NOTION_CLIENT_ID || 'your-notion-client-id'; // Will set this up properly later
+    // Notion OAuth URL with your client ID
+    const clientId = '1ced872b-594c-8011-973d-0037bb560676';
     const redirectUri = encodeURIComponent(window.location.origin + '/notion-connect');
     const notionAuthUrl = `https://api.notion.com/v1/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`;
     

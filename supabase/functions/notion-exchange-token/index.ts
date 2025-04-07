@@ -25,13 +25,22 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Get Notion credentials from env
-    const notionClientId = Deno.env.get('NOTION_CLIENT_ID');
-    const notionClientSecret = Deno.env.get('NOTION_CLIENT_SECRET');
+    // Fixed Notion credentials
+    const notionClientId = '1ced872b-594c-8011-973d-0037bb560676';
+    const notionClientSecret = 'secret_8rG8VbVfc4IlB3etPPktydFKT2A8TNdAeoVLy4xpQiH';
     
     if (!notionClientId || !notionClientSecret) {
       throw new Error("Missing Notion API credentials");
     }
+    
+    // Get the redirect URI from the request origin
+    const redirectUri = `${req.headers.get('origin')}/notion-connect`;
+    
+    console.log("Exchanging code for access token with parameters:", {
+      notionClientId,
+      redirectUri,
+      code: "REDACTED"
+    });
     
     // Exchange code for access token with Notion
     const response = await fetch('https://api.notion.com/v1/oauth/token', {
@@ -43,7 +52,7 @@ serve(async (req) => {
       body: JSON.stringify({
         grant_type: 'authorization_code',
         code,
-        redirect_uri: `${req.headers.get('origin')}/notion-connect`, // Must match the redirect URI in your Notion integration
+        redirect_uri: redirectUri,
       }),
     });
     
@@ -54,6 +63,10 @@ serve(async (req) => {
     }
     
     const tokenData = await response.json();
+    console.log("Received token data:", {
+      workspace_name: tokenData.workspace_name,
+      bot_id: tokenData.bot_id
+    });
     
     // Store the access token in the database
     const { error: insertError } = await supabase
@@ -66,6 +79,7 @@ serve(async (req) => {
         workspace_name: tokenData.workspace_name,
         workspace_icon: tokenData.workspace_icon,
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id' });
     
     if (insertError) {

@@ -25,20 +25,21 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Get user's Notion connection
+    // Get the Notion access token from the database
     const { data: connectionData, error: connectionError } = await supabase
       .from('notion_connections')
-      .select('*')
+      .select('access_token')
       .eq('user_id', userId)
       .single();
     
     if (connectionError || !connectionData) {
-      throw new Error("Notion connection not found. Please reconnect to Notion.");
+      console.error("Error fetching Notion connection:", connectionError);
+      throw new Error("Notion connection not found");
     }
     
     const accessToken = connectionData.access_token;
     
-    // Fetch pages from Notion API
+    // Fetch pages from Notion
     const response = await fetch('https://api.notion.com/v1/search', {
       method: 'POST',
       headers: {
@@ -66,32 +67,18 @@ serve(async (req) => {
     
     const searchResults = await response.json();
     
-    // Process and format the pages
-    const pages = searchResults.results.map((page: any) => {
-      // Extract page title - this is a simplification, actual implementation
-      // would need to handle different page structure formats
-      let title = 'Untitled';
-      
-      try {
-        if (page.properties && page.properties.title) {
-          title = page.properties.title.title[0]?.plain_text || 'Untitled';
-        } else if (page.properties && page.properties.Name) {
-          title = page.properties.Name.title[0]?.plain_text || 'Untitled';
-        }
-      } catch (e) {
-        console.warn("Error extracting page title:", e);
-      }
-      
-      return {
-        id: page.id,
-        title,
-        type: page.object,
-        url: page.url,
-        last_edited: page.last_edited_time,
-      };
-    });
+    // Transform the results to a more manageable format
+    const pages = searchResults.results.map((page: any) => ({
+      id: page.id,
+      title: page.properties.title?.title?.[0]?.plain_text || 
+             page.properties.Name?.title?.[0]?.plain_text || 
+             'Untitled',
+      url: page.url,
+      last_edited: page.last_edited_time,
+      type: page.parent.type
+    }));
     
-    // Return pages list
+    // Return success response
     return new Response(
       JSON.stringify({
         success: true,
