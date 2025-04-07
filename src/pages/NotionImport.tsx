@@ -11,15 +11,22 @@ import { Card } from '@/components/ui/card';
 import { 
   ArrowLeft, 
   ChevronDown, 
-  ChevronLeft, 
-  ChevronRight, 
   ExternalLink, 
   FileIcon, 
   Loader2, 
-  RefreshCw 
+  RefreshCw,
+  Filter,
+  ListFilter
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const NotionImport = () => {
   const { user } = useAuth();
@@ -32,10 +39,12 @@ const NotionImport = () => {
   const [userProjects, setUserProjects] = useState<any[]>([]);
   const [recentlyImported, setRecentlyImported] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<string | null>(null);
+  const [filterParentType, setFilterParentType] = useState<string | null>(null);
+  const [filterWorkspace, setFilterWorkspace] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [importingPageId, setImportingPageId] = useState<string | null>(null);
+  const [showingFilters, setShowingFilters] = useState(false);
 
   useEffect(() => {
     const checkNotionConnection = async () => {
@@ -132,7 +141,7 @@ const NotionImport = () => {
       const { data, error } = await supabase.functions.invoke('notion-list-pages', {
         body: { 
           userId: user.id,
-          pageSize: 30,
+          pageSize: 50,
           startCursor: cursor
         }
       });
@@ -214,13 +223,22 @@ const NotionImport = () => {
     }
   };
 
+  // Get unique workspaces from pages
+  const workspaces = [...new Set(notionPages.map((page: any) => page.workspace?.name))].filter(Boolean);
+  
+  // Get unique parent types from pages
+  const parentTypes = [...new Set(notionPages.map((page: any) => page.parent?.type))].filter(Boolean);
+
   const filteredPages = notionPages.filter((page: any) => {
     const matchesSearch = page.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType ? page.parent.type === filterType : true;
-    return matchesSearch && matchesFilter;
+    const matchesParentType = filterParentType ? page.parent?.type === filterParentType : true;
+    const matchesWorkspace = filterWorkspace ? page.workspace?.name === filterWorkspace : true;
+    return matchesSearch && matchesParentType && matchesWorkspace;
   });
 
-  const parentTypes = [...new Set(notionPages.map((page: any) => page.parent.type))];
+  const toggleFilters = () => {
+    setShowingFilters(!showingFilters);
+  };
 
   const renderIcon = (icon: any) => {
     if (!icon) return <FileIcon className="h-4 w-4 mr-1" />;
@@ -266,12 +284,13 @@ const NotionImport = () => {
     if (filteredPages.length === 0) {
       return (
         <div className="text-center py-8">
-          <p className="text-muted-foreground">No pages match your search or filter</p>
+          <p className="text-muted-foreground">No pages match your search or filters</p>
           <Button 
             variant="outline" 
             onClick={() => {
               setSearchTerm('');
-              setFilterType(null);
+              setFilterParentType(null);
+              setFilterWorkspace(null);
             }} 
             className="mt-4"
           >
@@ -300,11 +319,16 @@ const NotionImport = () => {
                     
                     <div className="mt-1 flex flex-wrap gap-2 items-center">
                       <Badge variant="outline" className="text-xs capitalize">
-                        {page.parent.type}
+                        {page.parent?.type}
                       </Badge>
                       <Badge variant="secondary" className="text-xs">
-                        {page.parent.name}
+                        {page.parent?.name}
                       </Badge>
+                      {page.workspace?.name && (
+                        <Badge variant="outline" className="text-xs bg-blue-50">
+                          {page.workspace.name}
+                        </Badge>
+                      )}
                       <span className="text-xs text-muted-foreground">
                         Last edited: {lastEdited}
                       </span>
@@ -425,19 +449,30 @@ const NotionImport = () => {
         <div className="mb-6 space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Your Notion Pages</h2>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => fetchNotionPages()}
-              disabled={isLoading}
-              className="flex items-center"
-            >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-              Refresh
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={toggleFilters}
+                className="flex items-center"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                {showingFilters ? 'Hide Filters' : 'Show Filters'}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fetchNotionPages()}
+                disabled={isLoading}
+                className="flex items-center"
+              >
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                Refresh
+              </Button>
+            </div>
           </div>
           
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-4">
             <div className="flex-1">
               <input
                 type="text"
@@ -448,18 +483,53 @@ const NotionImport = () => {
               />
             </div>
             
-            <select
-              className="p-2 border rounded-md bg-background"
-              value={filterType || ''}
-              onChange={(e) => setFilterType(e.target.value || null)}
-            >
-              <option value="">All types</option>
-              {parentTypes.map(type => (
-                <option key={type} value={type}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                </option>
-              ))}
-            </select>
+            {showingFilters && (
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-2">
+                    Filter by Workspace
+                  </label>
+                  <Select
+                    value={filterWorkspace || ''}
+                    onValueChange={(value) => setFilterWorkspace(value || null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All workspaces" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All workspaces</SelectItem>
+                      {workspaces.map((workspace) => (
+                        <SelectItem key={workspace} value={workspace}>
+                          {workspace}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-2">
+                    Filter by Type
+                  </label>
+                  <Select
+                    value={filterParentType || ''}
+                    onValueChange={(value) => setFilterParentType(value || null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All types</SelectItem>
+                      {parentTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         

@@ -14,11 +14,13 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, pageSize = 30, startCursor = null } = await req.json();
+    const { userId, pageSize = 50, startCursor = null } = await req.json();
     
     if (!userId) {
       throw new Error("Missing required parameter: userId");
     }
+    
+    console.log(`Processing request for userId: ${userId}, pageSize: ${pageSize}, startCursor: ${startCursor}`);
     
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
@@ -39,7 +41,7 @@ serve(async (req) => {
     
     const accessToken = connectionData.access_token;
     
-    // First, fetch pages from Notion with pagination support
+    // Fetch pages from Notion with pagination support
     const searchParams = {
       filter: {
         value: 'page',
@@ -57,6 +59,7 @@ serve(async (req) => {
       searchParams['start_cursor'] = startCursor;
     }
     
+    console.log("Sending search request to Notion API");
     const response = await fetch('https://api.notion.com/v1/search', {
       method: 'POST',
       headers: {
@@ -74,70 +77,102 @@ serve(async (req) => {
     }
     
     const searchResults = await response.json();
+    console.log(`Retrieved ${searchResults.results?.length || 0} pages from Notion API`);
     
     // Prepare an array to hold the detailed page information
     const pagesWithDetails = [];
     
     // Process each page to get more details
     for (const page of searchResults.results) {
-      let pageTitle = '';
-      let pageIcon = null;
-      let parentName = 'Workspace';
-      
-      // Extract title from properties
-      if (page.properties?.title?.title?.length > 0) {
-        pageTitle = page.properties.title.title.map(t => t.plain_text).join('');
-      } else if (page.properties?.Name?.title?.length > 0) {
-        pageTitle = page.properties.Name.title.map(t => t.plain_text).join('');
-      } else {
-        pageTitle = 'Untitled';
-      }
-      
-      // Extract icon
-      if (page.icon) {
-        pageIcon = page.icon.type === 'emoji' ? page.icon.emoji : 
-                  (page.icon.type === 'external' ? page.icon.external.url : null);
-      }
-      
-      // Get parent information
-      if (page.parent.type === 'database_id') {
-        // Try to get the database name if it's a database item
+      try {
+        let pageTitle = '';
+        let pageIcon = null;
+        let parentName = 'Workspace';
+        let workspaceName = 'Notion';
+        
+        // Extract title from properties
+        if (page.properties?.title?.title?.length > 0) {
+          pageTitle = page.properties.title.title.map(t => t.plain_text).join('');
+        } else if (page.properties?.Name?.title?.length > 0) {
+          pageTitle = page.properties.Name.title.map(t => t.plain_text).join('');
+        } else {
+          pageTitle = 'Untitled';
+        }
+        
+        // Extract icon
+        if (page.icon) {
+          pageIcon = page.icon.type === 'emoji' ? page.icon.emoji : 
+                    (page.icon.type === 'external' ? page.icon.external.url : null);
+        }
+        
+        // Get parent information
+        if (page.parent.type === 'database_id') {
+          // Try to get the database name if it's a database item
+          try {
+            const dbResponse = await fetch(`https://api.notion.com/v1/databases/${page.parent.database_id}`, {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Notion-Version': '2022-06-28',
+              },
+            });
+            
+            if (dbResponse.ok) {
+              const dbData = await dbResponse.json();
+              parentName = dbData.title?.[0]?.plain_text || 'Database';
+            }
+          } catch (err) {
+            console.error("Error fetching database details:", err);
+            parentName = 'Database';
+          }
+        } else if (page.parent.type === 'page_id') {
+          parentName = 'Page';
+        } else if (page.parent.type === 'workspace') {
+          parentName = 'Workspace';
+        }
+        
+        // Try to get the workspace information
         try {
-          const dbResponse = await fetch(`https://api.notion.com/v1/databases/${page.parent.database_id}`, {
+          const userResponse = await fetch('https://api.notion.com/v1/users/me', {
             headers: {
               'Authorization': `Bearer ${accessToken}`,
               'Notion-Version': '2022-06-28',
             },
           });
           
-          if (dbResponse.ok) {
-            const dbData = await dbResponse.json();
-            parentName = dbData.title?.[0]?.plain_text || 'Database';
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            if (userData.workspace_name) {
+              workspaceName = userData.workspace_name;
+            }
           }
         } catch (err) {
-          console.error("Error fetching database details:", err);
-          parentName = 'Database';
+          console.error("Error fetching workspace details:", err);
         }
-      } else if (page.parent.type === 'page_id') {
-        parentName = 'Page';
-      } else if (page.parent.type === 'workspace') {
-        parentName = 'Workspace';
+        
+        pagesWithDetails.push({
+          id: page.id,
+          title: pageTitle,
+          url: page.url,
+          last_edited: page.last_edited_time,
+          icon: pageIcon,
+          parent: {
+            type: page.parent.type,
+            name: parentName,
+            id: page.parent.database_id || page.parent.page_id || 'workspace'
+          },
+          workspace: {
+            name: workspaceName
+          },
+          created_time: page.created_time,
+          has_children: page.has_children
+        });
+      } catch (error) {
+        console.error(`Error processing page ${page.id}:`, error);
+        // Continue with the next page
       }
-      
-      pagesWithDetails.push({
-        id: page.id,
-        title: pageTitle,
-        url: page.url,
-        last_edited: page.last_edited_time,
-        icon: pageIcon,
-        parent: {
-          type: page.parent.type,
-          name: parentName
-        },
-        created_time: page.created_time,
-        has_children: page.has_children
-      });
     }
+    
+    console.log(`Successfully processed ${pagesWithDetails.length} pages with details`);
     
     // Return success response with pagination data and detailed pages
     return new Response(
