@@ -16,7 +16,8 @@ import {
   Loader2, 
   RefreshCw,
   Filter,
-  ListFilter
+  Search,
+  X
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +45,10 @@ const NotionImport = () => {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const [importingPageId, setImportingPageId] = useState<string | null>(null);
-  const [showingFilters, setShowingFilters] = useState(false);
+  const [workspaces, setWorkspaces] = useState<string[]>([]);
+  const [parentTypes, setParentTypes] = useState<string[]>([]);
+  const [debounceTimeout, setDebounceTimeout] = useState<number | null>(null);
+  const [isFiltering, setIsFiltering] = useState(false);
 
   useEffect(() => {
     const checkNotionConnection = async () => {
@@ -76,6 +80,30 @@ const NotionImport = () => {
     
     checkNotionConnection();
   }, [user, navigate]);
+
+  useEffect(() => {
+    // Clear any existing timeout
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+
+    // Set a new timeout to fetch filtered pages with debounce
+    if (user && (searchTerm || filterParentType || filterWorkspace)) {
+      setIsFiltering(true);
+      const timeout = setTimeout(() => {
+        fetchNotionPages();
+      }, 500); // 500ms debounce
+      
+      setDebounceTimeout(timeout as unknown as number);
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
+    };
+  }, [searchTerm, filterParentType, filterWorkspace]);
   
   const fetchUserProjects = async () => {
     if (!user) return;
@@ -111,7 +139,6 @@ const NotionImport = () => {
         allProjects = [...allProjects, ...memberProjectsData];
       }
       
-      console.log("All user projects:", allProjects);
       setUserProjects(allProjects);
       
       // If there's only one project, auto-select it
@@ -141,14 +168,15 @@ const NotionImport = () => {
       const { data, error } = await supabase.functions.invoke('notion-list-pages', {
         body: { 
           userId: user.id,
-          pageSize: 50,
-          startCursor: cursor
+          pageSize: 20,
+          startCursor: cursor,
+          workspaceFilter: filterWorkspace,
+          parentTypeFilter: filterParentType,
+          searchQuery: searchTerm
         }
       });
       
       if (error) throw error;
-      
-      console.log("Notion pages:", data.pages);
       
       if (reset) {
         setNotionPages(data.pages || []);
@@ -158,9 +186,21 @@ const NotionImport = () => {
       
       setNextCursor(data.next_cursor);
       setHasMore(data.has_more);
+
+      // Extract unique workspaces and parent types
+      if (reset) {
+        const uniqueWorkspaces = [...new Set(data.pages.map((page: any) => page.workspace?.name))].filter(Boolean);
+        const uniqueParentTypes = [...new Set(data.pages.map((page: any) => page.parent?.type))].filter(Boolean);
+        
+        setWorkspaces(uniqueWorkspaces);
+        setParentTypes(uniqueParentTypes);
+      }
+      
+      setIsFiltering(false);
     } catch (err: any) {
       console.error("Error fetching Notion pages:", err);
       toast.error(`Failed to fetch Notion pages: ${err.message || 'Unknown error'}`);
+      setIsFiltering(false);
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
@@ -223,21 +263,11 @@ const NotionImport = () => {
     }
   };
 
-  // Get unique workspaces from pages
-  const workspaces = [...new Set(notionPages.map((page: any) => page.workspace?.name))].filter(Boolean);
-  
-  // Get unique parent types from pages
-  const parentTypes = [...new Set(notionPages.map((page: any) => page.parent?.type))].filter(Boolean);
-
-  const filteredPages = notionPages.filter((page: any) => {
-    const matchesSearch = page.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesParentType = filterParentType ? page.parent?.type === filterParentType : true;
-    const matchesWorkspace = filterWorkspace ? page.workspace?.name === filterWorkspace : true;
-    return matchesSearch && matchesParentType && matchesWorkspace;
-  });
-
-  const toggleFilters = () => {
-    setShowingFilters(!showingFilters);
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterParentType(null);
+    setFilterWorkspace(null);
+    fetchNotionPages();
   };
 
   const renderIcon = (icon: any) => {
@@ -255,7 +285,7 @@ const NotionImport = () => {
   };
 
   const NotionPagesList = () => {
-    if (isLoading && !notionPages.length) {
+    if ((isLoading && !notionPages.length) || isFiltering) {
       return (
         <div className="space-y-4">
           <Skeleton className="h-12 w-full" />
@@ -268,34 +298,26 @@ const NotionImport = () => {
     if (!notionPages.length) {
       return (
         <div className="text-center py-8">
-          <p className="text-muted-foreground">No pages found in your Notion workspace</p>
-          <Button 
-            variant="outline" 
-            onClick={() => fetchNotionPages()} 
-            className="mt-4 flex items-center"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-        </div>
-      );
-    }
-    
-    if (filteredPages.length === 0) {
-      return (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">No pages match your search or filters</p>
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              setSearchTerm('');
-              setFilterParentType(null);
-              setFilterWorkspace(null);
-            }} 
-            className="mt-4"
-          >
-            Clear Filters
-          </Button>
+          <p className="text-muted-foreground">
+            {searchTerm || filterParentType || filterWorkspace 
+              ? "No pages match your search or filters" 
+              : "No pages found in your Notion workspace"}
+          </p>
+          <div className="flex justify-center gap-3 mt-4">
+            {(searchTerm || filterParentType || filterWorkspace) && (
+              <Button variant="outline" onClick={clearFilters}>
+                Clear Filters
+              </Button>
+            )}
+            <Button 
+              variant="outline" 
+              onClick={() => fetchNotionPages()} 
+              className="flex items-center"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
         </div>
       );
     }
@@ -303,7 +325,7 @@ const NotionImport = () => {
     return (
       <>
         <div className="space-y-2">
-          {filteredPages.map((page: any, index: number) => {
+          {notionPages.map((page: any, index: number) => {
             const isImported = recentlyImported.includes(page.id);
             const lastEdited = new Date(page.last_edited).toLocaleDateString();
             const isCurrentlyImporting = importingPageId === page.id;
@@ -449,85 +471,96 @@ const NotionImport = () => {
         <div className="mb-6 space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Your Notion Pages</h2>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={toggleFilters}
-                className="flex items-center"
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                {showingFilters ? 'Hide Filters' : 'Show Filters'}
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => fetchNotionPages()}
-                disabled={isLoading}
-                className="flex items-center"
-              >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-                Refresh
-              </Button>
-            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => fetchNotionPages()}
+              disabled={isLoading}
+              className="flex items-center"
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+              Refresh
+            </Button>
           </div>
           
           <div className="flex flex-col gap-4">
-            <div className="flex-1">
+            <div className="w-full relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search pages..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-2 border rounded-md bg-background"
+                className="w-full pl-10 pr-10 py-2 border rounded-md bg-background"
               />
+              {searchTerm && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0" 
+                  onClick={() => setSearchTerm('')}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
             
-            {showingFilters && (
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium mb-2">
-                    Filter by Workspace
-                  </label>
-                  <Select
-                    value={filterWorkspace || ''}
-                    onValueChange={(value) => setFilterWorkspace(value || null)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All workspaces" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All workspaces</SelectItem>
-                      {workspaces.map((workspace) => (
-                        <SelectItem key={workspace} value={workspace}>
-                          {workspace}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="flex-1">
-                  <label className="block text-sm font-medium mb-2">
-                    Filter by Type
-                  </label>
-                  <Select
-                    value={filterParentType || ''}
-                    onValueChange={(value) => setFilterParentType(value || null)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All types" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">All types</SelectItem>
-                      {parentTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type.charAt(0).toUpperCase() + type.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium mb-2">
+                  Filter by Workspace
+                </label>
+                <Select
+                  value={filterWorkspace || ''}
+                  onValueChange={(value) => setFilterWorkspace(value || null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All workspaces" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All workspaces</SelectItem>
+                    {workspaces.map((workspace) => (
+                      <SelectItem key={workspace} value={workspace}>
+                        {workspace}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex-1">
+                <label className="block text-sm font-medium mb-2">
+                  Filter by Type
+                </label>
+                <Select
+                  value={filterParentType || ''}
+                  onValueChange={(value) => setFilterParentType(value || null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All types</SelectItem>
+                    {parentTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            {(searchTerm || filterParentType || filterWorkspace) && (
+              <div className="flex justify-end">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={clearFilters}
+                  className="text-sm"
+                >
+                  Clear all filters
+                </Button>
               </div>
             )}
           </div>

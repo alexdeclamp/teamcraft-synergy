@@ -14,13 +14,21 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, pageSize = 50, startCursor = null } = await req.json();
+    const { 
+      userId, 
+      pageSize = 50, 
+      startCursor = null,
+      workspaceFilter = null,
+      parentTypeFilter = null,
+      searchQuery = null 
+    } = await req.json();
     
     if (!userId) {
       throw new Error("Missing required parameter: userId");
     }
     
     console.log(`Processing request for userId: ${userId}, pageSize: ${pageSize}, startCursor: ${startCursor}`);
+    console.log(`Filters: workspace=${workspaceFilter}, parentType=${parentTypeFilter}, search=${searchQuery}`);
     
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
@@ -41,7 +49,27 @@ serve(async (req) => {
     
     const accessToken = connectionData.access_token;
     
-    // Fetch pages from Notion with pagination support
+    // Fetch workspace information first to get workspace name
+    let workspaceName = 'Notion';
+    try {
+      const userResponse = await fetch('https://api.notion.com/v1/users/me', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Notion-Version': '2022-06-28',
+        },
+      });
+      
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        if (userData.workspace_name) {
+          workspaceName = userData.workspace_name;
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching workspace details:", err);
+    }
+    
+    // Fetch pages from Notion with pagination and filtering support
     const searchParams = {
       filter: {
         value: 'page',
@@ -57,6 +85,11 @@ serve(async (req) => {
     // Add start_cursor for pagination if provided
     if (startCursor) {
       searchParams['start_cursor'] = startCursor;
+    }
+    
+    // Add search query if provided
+    if (searchQuery) {
+      searchParams['query'] = searchQuery;
     }
     
     console.log("Sending search request to Notion API");
@@ -88,7 +121,6 @@ serve(async (req) => {
         let pageTitle = '';
         let pageIcon = null;
         let parentName = 'Workspace';
-        let workspaceName = 'Notion';
         
         // Extract title from properties
         if (page.properties?.title?.title?.length > 0) {
@@ -97,6 +129,10 @@ serve(async (req) => {
           pageTitle = page.properties.Name.title.map(t => t.plain_text).join('');
         } else {
           pageTitle = 'Untitled';
+        }
+        
+        if (searchQuery && !pageTitle.toLowerCase().includes(searchQuery.toLowerCase())) {
+          continue; // Skip pages that don't match the search query
         }
         
         // Extract icon
@@ -129,27 +165,13 @@ serve(async (req) => {
         } else if (page.parent.type === 'workspace') {
           parentName = 'Workspace';
         }
-        
-        // Try to get the workspace information
-        try {
-          const userResponse = await fetch('https://api.notion.com/v1/users/me', {
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Notion-Version': '2022-06-28',
-            },
-          });
-          
-          if (userResponse.ok) {
-            const userData = await userResponse.json();
-            if (userData.workspace_name) {
-              workspaceName = userData.workspace_name;
-            }
-          }
-        } catch (err) {
-          console.error("Error fetching workspace details:", err);
+
+        // Apply parent type filter if needed
+        if (parentTypeFilter && page.parent.type !== parentTypeFilter) {
+          continue; // Skip pages with different parent type
         }
         
-        pagesWithDetails.push({
+        const pageData = {
           id: page.id,
           title: pageTitle,
           url: page.url,
@@ -165,14 +187,21 @@ serve(async (req) => {
           },
           created_time: page.created_time,
           has_children: page.has_children
-        });
+        };
+        
+        // Apply workspace filter if needed
+        if (workspaceFilter && pageData.workspace.name !== workspaceFilter) {
+          continue; // Skip pages from different workspaces
+        }
+        
+        pagesWithDetails.push(pageData);
       } catch (error) {
         console.error(`Error processing page ${page.id}:`, error);
         // Continue with the next page
       }
     }
     
-    console.log(`Successfully processed ${pagesWithDetails.length} pages with details`);
+    console.log(`Successfully processed ${pagesWithDetails.length} pages with details after filtering`);
     
     // Return success response with pagination data and detailed pages
     return new Response(
@@ -180,7 +209,8 @@ serve(async (req) => {
         success: true,
         pages: pagesWithDetails,
         next_cursor: searchResults.next_cursor || null,
-        has_more: searchResults.has_more || false
+        has_more: searchResults.has_more || false,
+        workspace_name: workspaceName
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
