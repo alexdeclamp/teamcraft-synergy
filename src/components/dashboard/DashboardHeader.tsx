@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Sparkles, AlertCircle } from 'lucide-react';
+import { Plus, Sparkles, AlertCircle, Book } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DashboardTutorial from '@/components/tutorial/DashboardTutorial';
 import StartOnboardingButton from '@/components/onboarding/StartOnboardingButton';
@@ -40,6 +40,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ className }) => {
         <div className={`flex items-center ${isMobile ? 'mt-4 justify-between' : 'space-x-2'} w-full sm:w-auto`}>
           {!isMobile && <StartOnboardingButton className="mr-2" />}
           {!isMobile && <DashboardTutorial className="mr-2" />}
+          <Button 
+            variant="outline"
+            onClick={() => navigate('/notion-connect')}
+            className="shadow-sm rounded-full flex-grow-0 mr-2"
+          >
+            <Book className="h-4 w-4 mr-2" />
+            Connect Notion
+          </Button>
           <Button 
             onClick={() => navigate('/new-project')}
             className="shadow-sm rounded-full flex-grow sm:flex-grow-0"
