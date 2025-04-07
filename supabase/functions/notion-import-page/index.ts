@@ -25,6 +25,22 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     const supabase = createClient(supabaseUrl, supabaseKey);
     
+    // Verify the project exists and user has access to it
+    const { data: projectAccess, error: projectError } = await supabase.rpc(
+      'is_project_member',
+      { project_id: projectId, user_id: userId }
+    );
+    
+    const { data: projectOwner, error: ownerError } = await supabase
+      .from('projects')
+      .select('owner_id')
+      .eq('id', projectId)
+      .single();
+      
+    if ((projectError && ownerError) || (!projectAccess && projectOwner?.owner_id !== userId)) {
+      throw new Error("You don't have access to this project");
+    }
+    
     // Get the Notion access token from the database
     const { data: connectionData, error: connectionError } = await supabase
       .from('notion_connections')

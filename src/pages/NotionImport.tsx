@@ -28,7 +28,7 @@ const NotionImport = () => {
       try {
         // Use query builder with explicit 'from' method to avoid type errors
         const { data, error } = await supabase
-          .from('notion_connections' as any)
+          .from('notion_connections')
           .select('*')
           .eq('user_id', user.id)
           .single();
@@ -39,18 +39,42 @@ const NotionImport = () => {
           return;
         }
         
-        // Fetch user's projects
-        const { data: projects, error: projectsError } = await supabase
+        // Fetch user's projects - include both owned projects and projects where user is a member
+        const { data: ownedProjects, error: ownedError } = await supabase
           .from('projects')
           .select('*')
-          .or(`owner_id.eq.${user.id},project_members.user_id.eq.${user.id}`);
+          .eq('owner_id', user.id);
           
-        if (projectsError) {
-          console.error("Error fetching projects:", projectsError);
+        if (ownedError) {
+          console.error("Error fetching owned projects:", ownedError);
           toast.error("Failed to load projects");
-        } else {
-          setUserProjects(projects || []);
         }
+        
+        // Fetch projects where user is a member
+        const { data: memberProjects, error: memberError } = await supabase
+          .from('project_members')
+          .select('project_id, projects:project_id(*)')
+          .eq('user_id', user.id);
+          
+        if (memberError) {
+          console.error("Error fetching member projects:", memberError);
+        }
+        
+        // Combine owned and member projects
+        let allProjects = ownedProjects || [];
+        
+        // Add member projects (avoiding duplicates)
+        if (memberProjects) {
+          const memberProjectsData = memberProjects
+            .filter(item => item.projects) // Filter out null projects
+            .map(item => item.projects)
+            .filter(project => !allProjects.some(p => p.id === project.id)); // Avoid duplicates
+            
+          allProjects = [...allProjects, ...memberProjectsData];
+        }
+        
+        console.log("All user projects:", allProjects);
+        setUserProjects(allProjects);
         
         // Then fetch Notion pages
         await fetchNotionPages();
@@ -206,6 +230,11 @@ const NotionImport = () => {
               Please select a project to import notes into
             </p>
           )}
+          {userProjects.length === 0 && (
+            <p className="text-sm text-red-500 mt-1">
+              No projects found. Please create a project first from the dashboard.
+            </p>
+          )}
         </div>
         
         <div className="mb-4 flex justify-between items-center">
@@ -223,6 +252,22 @@ const NotionImport = () => {
         </div>
         
         <NotionPagesList />
+        
+        {userProjects.length === 0 && (
+          <div className="mt-8 p-4 border border-amber-200 bg-amber-50 rounded-md">
+            <h3 className="text-amber-800 font-medium">No Projects Available</h3>
+            <p className="text-amber-700 mt-1">
+              You need to create a project first before you can import Notion pages.
+            </p>
+            <Button 
+              variant="default" 
+              onClick={() => navigate('/dashboard')}
+              className="mt-3"
+            >
+              Go to Dashboard
+            </Button>
+          </div>
+        )}
       </main>
       
       <FooterSection />
