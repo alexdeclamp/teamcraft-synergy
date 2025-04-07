@@ -19,6 +19,7 @@ const NotionImport = () => {
   const [notionPages, setNotionPages] = useState([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [userProjects, setUserProjects] = useState<any[]>([]);
+  const [recentlyImported, setRecentlyImported] = useState<string[]>([]);
 
   // Check if user is connected to Notion
   useEffect(() => {
@@ -128,7 +129,23 @@ const NotionImport = () => {
       
       if (error) throw error;
       
-      toast.success(`Imported "${pageName}" successfully`);
+      // Add this page to recently imported list
+      setRecentlyImported(prev => [...prev, pageId]);
+      
+      // Show success message with a link to view the project
+      toast.success(
+        <div>
+          <p>Imported "{pageName}" successfully</p>
+          <Button 
+            variant="link" 
+            className="p-0 h-auto text-sm underline" 
+            onClick={() => navigate(`/project/${selectedProject}`)}
+          >
+            View in Project
+          </Button>
+        </div>,
+        { duration: 5000 }
+      );
     } catch (err: any) {
       console.error("Error importing Notion page:", err);
       toast.error(`Failed to import page: ${err.message || 'Unknown error'}`);
@@ -169,21 +186,30 @@ const NotionImport = () => {
     // actual pages from the Notion API
     return (
       <div className="space-y-2">
-        {notionPages.map((page: any) => (
-          <Card key={page.id} className="p-4 flex justify-between items-center">
-            <div>
-              <h3 className="font-medium">{page.title}</h3>
-              <p className="text-sm text-muted-foreground">{page.type}</p>
-            </div>
-            <Button 
-              size="sm" 
-              onClick={() => handleImportPage(page.id, page.title)}
-              disabled={isImporting || !selectedProject}
-            >
-              {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Import"}
-            </Button>
-          </Card>
-        ))}
+        {notionPages.map((page: any) => {
+          const isImported = recentlyImported.includes(page.id);
+          
+          return (
+            <Card key={page.id} className="p-4 flex justify-between items-center">
+              <div>
+                <h3 className="font-medium">{page.title}</h3>
+                <p className="text-sm text-muted-foreground">{page.type}</p>
+                {isImported && (
+                  <span className="text-xs text-green-600 font-medium">
+                    Imported
+                  </span>
+                )}
+              </div>
+              <Button 
+                size="sm" 
+                onClick={() => handleImportPage(page.id, page.title)}
+                disabled={isImporting || !selectedProject || isImported}
+              >
+                {isImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : isImported ? "Imported" : "Import"}
+              </Button>
+            </Card>
+          );
+        })}
       </div>
     );
   };
