@@ -27,8 +27,9 @@ const NotionConnect = () => {
       if (!user) return;
       
       try {
+        // Use query builder with explicit 'from' method to avoid type errors
         const { data, error } = await supabase
-          .from('notion_connections')
+          .from('notion_connections' as any)
           .select('*')
           .eq('user_id', user.id)
           .single();

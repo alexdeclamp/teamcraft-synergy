@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowLeft, Loader2, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useProjectPageData } from '@/hooks/useProjectPageData';
 
 const NotionImport = () => {
   const { user } = useAuth();
@@ -27,8 +26,9 @@ const NotionImport = () => {
       if (!user) return;
       
       try {
+        // Use query builder with explicit 'from' method to avoid type errors
         const { data, error } = await supabase
-          .from('notion_connections')
+          .from('notion_connections' as any)
           .select('*')
           .eq('user_id', user.id)
           .single();

@@ -136,6 +136,42 @@ export type Database = {
           },
         ]
       }
+      notion_connections: {
+        Row: {
+          access_token: string
+          bot_id: string | null
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          workspace_icon: string | null
+          workspace_id: string | null
+          workspace_name: string | null
+        }
+        Insert: {
+          access_token: string
+          bot_id?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          workspace_icon?: string | null
+          workspace_id?: string | null
+          workspace_name?: string | null
+        }
+        Update: {
+          access_token?: string
+          bot_id?: string | null
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          workspace_icon?: string | null
+          workspace_id?: string | null
+          workspace_name?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
