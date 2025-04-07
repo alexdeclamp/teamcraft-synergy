@@ -19,6 +19,8 @@ import BrandAssets from "./pages/BrandAssets";
 import SummarizeDemo from "./pages/SummarizeDemo";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
+import NotionConnect from "./pages/NotionConnect";
+import NotionImport from "./pages/NotionImport";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingSidebar from "./components/onboarding/OnboardingSidebar";
 import WelcomeDialog from "./components/onboarding/WelcomeDialog";
@@ -43,6 +45,18 @@ const App = () => (
             <Route path="/summarize" element={<SummarizeDemo />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfUse />} />
+
+            {/* Notion integration routes */}
+            <Route path="/notion-connect" element={
+              <ProtectedRoute>
+                <NotionConnect />
+              </ProtectedRoute>
+            } />
+            <Route path="/notion-import" element={
+              <ProtectedRoute>
+                <NotionImport />
+              </ProtectedRoute>
+            } />
 
             {/* Protected routes with onboarding */}
             <Route path="/dashboard" element={
