@@ -194,30 +194,7 @@ serve(async (req) => {
 // Function to get workspaces and top-level pages/databases
 async function getWorkspaces(accessToken, corsHeaders) {
   try {
-    // First get databases
-    const dbResponse = await fetch('https://api.notion.com/v1/search', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Notion-Version': '2022-06-28',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        filter: {
-          value: 'database',
-          property: 'object'
-        },
-        page_size: 100
-      }),
-    });
-    
-    if (!dbResponse.ok) {
-      throw new Error(`Failed to fetch databases: ${dbResponse.statusText}`);
-    }
-    
-    const dbResults = await dbResponse.json();
-    
-    // Get top level pages (in workspace)
+    // First get top level pages (in workspace)
     const pageResponse = await fetch('https://api.notion.com/v1/search', {
       method: 'POST',
       headers: {
@@ -242,36 +219,62 @@ async function getWorkspaces(accessToken, corsHeaders) {
     
     const pageResults = await pageResponse.json();
     
+    // Then get databases at the top level
+    const dbResponse = await fetch('https://api.notion.com/v1/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        filter: {
+          value: 'database',
+          property: 'object'
+        },
+        page_size: 100
+      }),
+    });
+    
+    if (!dbResponse.ok) {
+      throw new Error(`Failed to fetch databases: ${dbResponse.statusText}`);
+    }
+    
+    const dbResults = await dbResponse.json();
+    
     const workspaceItems = [];
     
     // Process databases
     for (const db of dbResults.results) {
-      let dbTitle = '';
-      let dbIcon = null;
-      
-      if (db.title && db.title.length > 0) {
-        dbTitle = db.title.map(t => t.plain_text).join('');
-      } else {
-        dbTitle = 'Untitled Database';
+      // Check if this is a top-level database (parent is workspace)
+      if (db.parent?.type === 'workspace') {
+        let dbTitle = '';
+        let dbIcon = null;
+        
+        if (db.title && db.title.length > 0) {
+          dbTitle = db.title.map(t => t.plain_text).join('');
+        } else {
+          dbTitle = 'Untitled Database';
+        }
+        
+        if (db.icon) {
+          dbIcon = db.icon.type === 'emoji' ? db.icon.emoji : 
+                  (db.icon.type === 'external' ? db.icon.external.url : null);
+        }
+        
+        workspaceItems.push({
+          id: db.id,
+          title: dbTitle,
+          icon: dbIcon,
+          type: 'database',
+          parent: {
+            type: db.parent.type,
+            id: null
+          },
+          has_children: true,
+          last_edited: db.last_edited_time
+        });
       }
-      
-      if (db.icon) {
-        dbIcon = db.icon.type === 'emoji' ? db.icon.emoji : 
-                (db.icon.type === 'external' ? db.icon.external.url : null);
-      }
-      
-      workspaceItems.push({
-        id: db.id,
-        title: dbTitle,
-        icon: dbIcon,
-        type: 'database',
-        parent: {
-          type: db.parent.type,
-          id: db.parent.type === 'page_id' ? db.parent.page_id : null
-        },
-        has_children: true,
-        last_edited: db.last_edited_time
-      });
     }
     
     // Process pages
