@@ -206,21 +206,29 @@ const NotionImport = () => {
       setNextCursor(data.next_cursor);
       setHasMore(data.has_more);
 
-      // Extract and set parent types safely
-      const extractedParentTypes: string[] = Array.isArray(data.pages)
-        ? data.pages
-            .map((page: any) => page.parent?.type)
-            .filter((type: unknown): type is string => typeof type === 'string' && type.length > 0)
-        : [];
+      // Extract and set parent types safely using proper type assertions
+      const extractedParentTypes: string[] = [];
+      
+      if (Array.isArray(data.pages)) {
+        data.pages.forEach((page: any) => {
+          if (typeof page.parent?.type === 'string' && page.parent.type.length > 0) {
+            extractedParentTypes.push(page.parent.type);
+          }
+        });
+      }
       
       setParentTypes([...new Set(extractedParentTypes)]);
       
-      // Extract and set workspaces safely
-      const extractedWorkspaces: string[] = Array.isArray(data.pages)
-        ? data.pages
-            .map((page: any) => page.workspace?.name)
-            .filter((name: unknown): name is string => typeof name === 'string' && name.length > 0)
-        : [];
+      // Extract and set workspaces safely using proper type assertions
+      const extractedWorkspaces: string[] = [];
+      
+      if (Array.isArray(data.pages)) {
+        data.pages.forEach((page: any) => {
+          if (typeof page.workspace?.name === 'string' && page.workspace.name.length > 0) {
+            extractedWorkspaces.push(page.workspace.name);
+          }
+        });
+      }
           
       setWorkspaces([...new Set(extractedWorkspaces)]);
       
