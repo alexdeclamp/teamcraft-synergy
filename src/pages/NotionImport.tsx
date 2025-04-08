@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -205,23 +206,32 @@ const NotionImport = () => {
       setNextCursor(data.next_cursor);
       setHasMore(data.has_more);
 
-      const extractParentTypes = Array.isArray(data.pages)
+      // Extract and set parent types safely
+      const extractedParentTypes: string[] = Array.isArray(data.pages)
         ? data.pages
             .map((page: any) => page.parent?.type)
             .filter((type: unknown): type is string => typeof type === 'string' && type.length > 0)
         : [];
       
-      setParentTypes([...new Set(extractParentTypes)]);
+      setParentTypes([...new Set(extractedParentTypes)]);
       
-      const extractWorkspaces = Array.isArray(data.pages)
+      // Extract and set workspaces safely
+      const extractedWorkspaces: string[] = Array.isArray(data.pages)
         ? data.pages
             .map((page: any) => page.workspace?.name)
             .filter((name: unknown): name is string => typeof name === 'string' && name.length > 0)
         : [];
           
-      setWorkspaces([...new Set(extractWorkspaces)]);
+      setWorkspaces([...new Set(extractedWorkspaces)]);
       
       setIsFiltering(false);
+      
+      // Log page data for debugging
+      console.log("Notion pages received:", data.pages ? data.pages.length : 0);
+      if (data.pages && data.pages.length === 0) {
+        console.log("No pages returned from Notion API");
+      }
+      
     } catch (err: any) {
       console.error("Error fetching Notion pages:", err);
       toast.error(`Failed to fetch Notion pages: ${err.message || 'Unknown error'}`);

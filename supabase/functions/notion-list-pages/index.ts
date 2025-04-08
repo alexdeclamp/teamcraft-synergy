@@ -112,6 +112,10 @@ serve(async (req) => {
     const searchResults = await response.json();
     console.log(`Retrieved ${searchResults.results?.length || 0} pages from Notion API`);
     
+    if (!searchResults.results || searchResults.results.length === 0) {
+      console.log("No pages found in the search results");
+    }
+    
     // Prepare an array to hold the detailed page information
     const pagesWithDetails = [];
     
