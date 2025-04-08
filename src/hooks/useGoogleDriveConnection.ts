@@ -17,22 +17,24 @@ export const useGoogleDriveConnection = () => {
     
     setIsCheckingConnection(true);
     try {
+      // Use a raw query approach to avoid type issues
       const { data, error } = await supabase
         .from('google_drive_connections')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .limit(1);
         
-      if (!data || error) {
+      if (!data || data.length === 0 || error) {
         setIsConnected(false);
         setUserInfo(null);
         return false;
       }
       
+      const connection = data[0];
       setIsConnected(true);
       setUserInfo({
-        name: data.user_name,
-        email: data.user_email
+        name: connection.user_name,
+        email: connection.user_email
       });
       return true;
     } catch (err) {
