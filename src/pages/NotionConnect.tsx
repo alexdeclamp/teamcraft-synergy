@@ -8,7 +8,7 @@ import Navbar from '@/components/Navbar';
 import FooterSection from '@/components/landing/FooterSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, Check, ExternalLink, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ExternalLink, Loader2 } from 'lucide-react';
 
 const NotionConnect = () => {
   const { user } = useAuth();
@@ -115,7 +115,21 @@ const NotionConnect = () => {
       <Navbar />
       
       <main className="flex-1 container max-w-4xl mx-auto py-12 px-4">
-        <h1 className="text-3xl font-bold tracking-tight mb-8">Notion Integration</h1>
+        <div className="mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/integrations')}
+            className="flex items-center text-muted-foreground mb-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Integrations
+          </Button>
+          
+          <h1 className="text-3xl font-bold tracking-tight">Notion Integration</h1>
+          <p className="text-muted-foreground mt-2">
+            Connect your Notion account to import pages and databases
+          </p>
+        </div>
         
         <Card className="mb-8">
           <CardHeader>

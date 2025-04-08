@@ -21,6 +21,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import NotionConnect from "./pages/NotionConnect";
 import NotionImport from "./pages/NotionImport";
+import Integrations from "./pages/Integrations";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingSidebar from "./components/onboarding/OnboardingSidebar";
 import WelcomeDialog from "./components/onboarding/WelcomeDialog";
@@ -46,7 +47,12 @@ const App = () => (
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfUse />} />
 
-            {/* Notion integration routes */}
+            {/* Integrations routes */}
+            <Route path="/integrations" element={
+              <ProtectedRoute>
+                <Integrations />
+              </ProtectedRoute>
+            } />
             <Route path="/notion-connect" element={
               <ProtectedRoute>
                 <NotionConnect />

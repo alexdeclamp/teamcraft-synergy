@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from "@/lib/utils";
-import { User, LogOut, LayoutDashboard, Book } from "lucide-react";
+import { User, LogOut, LayoutDashboard, Link2 } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
 
 type MobileMenuProps = {
@@ -21,9 +21,9 @@ const MobileMenu = ({ isOpen, onProfileClick, onSignOutClick }: MobileMenuProps)
       icon: <LayoutDashboard className="h-4 w-4 mr-2" />
     },
     {
-      name: 'Notion Connect',
-      path: '/notion-connect',
-      icon: <Book className="h-4 w-4 mr-2" />
+      name: 'Integrations',
+      path: '/integrations',
+      icon: <Link2 className="h-4 w-4 mr-2" />
     }
   ];
 

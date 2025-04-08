@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Book } from "lucide-react";
+import { LayoutDashboard, Link2 } from "lucide-react";
 
 const NavLinks = () => {
   const location = useLocation();
@@ -14,9 +14,9 @@ const NavLinks = () => {
       icon: <LayoutDashboard className="h-4 w-4 mr-2" />
     },
     {
-      name: 'Notion',
-      path: '/notion-connect',
-      icon: <Book className="h-4 w-4 mr-2" />
+      name: 'Integrations',
+      path: '/integrations',
+      icon: <Link2 className="h-4 w-4 mr-2" />
     }
   ];
 

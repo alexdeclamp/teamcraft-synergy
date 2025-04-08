@@ -218,11 +218,11 @@ const NotionImport = () => {
         <div className="mb-6">
           <Button 
             variant="ghost" 
-            onClick={() => navigate('/notion-connect')}
+            onClick={() => navigate('/integrations')}
             className="flex items-center text-muted-foreground mb-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Connection
+            Back to Integrations
           </Button>
           
           <h1 className="text-3xl font-bold tracking-tight">Import from Notion</h1>
