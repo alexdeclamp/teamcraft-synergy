@@ -146,13 +146,15 @@ export const useNotionPages = () => {
   const handleImportPage = async (pageId: string, pageName: string, projectId: string) => {
     if (!user) {
       toast.error("You must be logged in to import pages");
-      return;
+      return false;
     }
     
     setIsImporting(true);
     setImportingPageId(pageId);
     
     try {
+      console.log(`Importing Notion page: ${pageId} to project: ${projectId}`);
+      
       const { data, error } = await supabase.functions.invoke('notion-import-page', {
         body: { 
           userId: user.id, 
@@ -163,13 +165,21 @@ export const useNotionPages = () => {
       
       if (error) throw error;
       
+      if (!data.success) {
+        throw new Error(data.error || "Unknown error during import");
+      }
+      
+      // Add the imported page ID to the recently imported list
       setRecentlyImported(prev => [...prev, pageId]);
       
       toast.success(`Imported "${pageName}" successfully`);
+      console.log(`Successfully imported Notion page: ${pageName}`);
       
+      return true;
     } catch (err: any) {
       console.error("Error importing Notion page:", err);
       toast.error(`Failed to import page: ${err.message || 'Unknown error'}`);
+      return false;
     } finally {
       setIsImporting(false);
       setImportingPageId(null);

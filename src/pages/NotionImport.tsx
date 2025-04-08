@@ -100,24 +100,27 @@ const NotionImport = () => {
       return;
     }
     
-    await handleImportPage(pageId, pageName, selectedProject);
-    fetchUserProjects();
+    const success = await handleImportPage(pageId, pageName, selectedProject);
     
-    const project = userProjects.find(p => p.id === selectedProject);
-    
-    toast.success(
-      <div>
-        <p>Imported "{pageName}" successfully</p>
-        <Button 
-          variant="link" 
-          className="p-0 h-auto text-sm underline" 
-          onClick={() => navigate(`/project/${selectedProject}`)}
-        >
-          View in Project: {project?.title || 'View Project'}
-        </Button>
-      </div>,
-      { duration: 5000 }
-    );
+    if (success) {
+      fetchUserProjects();
+      
+      const project = userProjects.find(p => p.id === selectedProject);
+      
+      toast.success(
+        <div>
+          <p>Imported "{pageName}" successfully</p>
+          <Button 
+            variant="link" 
+            className="p-0 h-auto text-sm underline" 
+            onClick={() => navigate(`/project/${selectedProject}`)}
+          >
+            View in Project: {project?.title || 'View Project'}
+          </Button>
+        </div>,
+        { duration: 5000 }
+      );
+    }
   };
 
   const handleBatchImport = async (pageIds: string[]) => {
@@ -137,6 +140,7 @@ const NotionImport = () => {
     }
     
     setIsBatchImporting(true);
+    console.log(`Starting batch import of ${pageIds.length} pages to project ${selectedProject}`);
     
     try {
       const { data, error } = await supabase.functions.invoke('notion-import-page', {
@@ -151,14 +155,24 @@ const NotionImport = () => {
         throw error;
       }
       
+      if (!data || !data.batchResults) {
+        throw new Error("Invalid response from import function");
+      }
+      
+      console.log("Batch import response:", data);
+      
       const successfulImports = data.batchResults
         .filter((result: any) => result.success)
         .map((result: any) => result.pageId);
       
-      successfulImports.forEach((pageId: string) => {
-        if (!recentlyImported.includes(pageId)) {
-          recentlyImported.push(pageId);
-        }
+      setRecentlyImported(prev => {
+        const newList = [...prev];
+        successfulImports.forEach((pageId: string) => {
+          if (!newList.includes(pageId)) {
+            newList.push(pageId);
+          }
+        });
+        return newList;
       });
       
       fetchUserProjects();
@@ -179,7 +193,7 @@ const NotionImport = () => {
         { duration: 5000 }
       );
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in batch import:", error);
       toast.error(`Failed to import pages: ${error.message || "Unknown error"}`);
     } finally {

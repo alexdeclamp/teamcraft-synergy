@@ -11,28 +11,36 @@ export async function saveNotionPageAsNote(
   pageData: any,
   pageId: string
 ) {
-  const { data: noteData, error: noteError } = await supabase
-    .from('project_notes')
-    .insert({
-      title: pageTitle,
-      content: content.trim(),
-      project_id: projectId,
-      user_id: userId,
-      tags: ['notion', 'imported', 'notion-import'],
-      source_document: {
-        type: 'notion',
-        url: pageData.url,
-        name: pageTitle,
-        id: pageId
-      }
-    })
-    .select()
-    .single();
+  console.log(`Saving Notion page "${pageTitle}" as note...`);
   
-  if (noteError) {
-    console.error("Error creating note:", noteError);
-    throw new Error(`Failed to create note: ${noteError.message}`);
+  try {
+    const { data: noteData, error: noteError } = await supabase
+      .from('project_notes')
+      .insert({
+        title: pageTitle,
+        content: content.trim(),
+        project_id: projectId,
+        user_id: userId,
+        tags: ['notion', 'imported', 'notion-import'],
+        source_document: {
+          type: 'notion',
+          url: pageData.url,
+          name: pageTitle,
+          id: pageId
+        }
+      })
+      .select()
+      .single();
+    
+    if (noteError) {
+      console.error("Error creating note:", noteError);
+      throw new Error(`Failed to create note: ${noteError.message}`);
+    }
+    
+    console.log(`Successfully created note with ID: ${noteData.id}`);
+    return noteData;
+  } catch (error) {
+    console.error("Error in saveNotionPageAsNote:", error);
+    throw error;
   }
-  
-  return noteData;
 }

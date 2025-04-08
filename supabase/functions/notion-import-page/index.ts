@@ -20,6 +20,8 @@ async function processPage(
   accessToken: string
 ) {
   try {
+    console.log(`Starting to process Notion page ${pageId}`);
+    
     // Fetch page details and blocks from Notion
     const pageData = await fetchPageDetails(pageId, accessToken);
     const blocksData = await fetchPageBlocks(pageId, accessToken);
@@ -29,6 +31,8 @@ async function processPage(
     
     // Process blocks to extract content
     const content = await processBlocksRecursively(blocksData.results, accessToken);
+    
+    console.log(`Processed content for page "${pageTitle}" (${pageId}), saving to database...`);
     
     // Save the processed page as a note
     const noteData = await saveNotionPageAsNote(
@@ -40,6 +44,8 @@ async function processPage(
       pageData,
       pageId
     );
+    
+    console.log(`Successfully saved page "${pageTitle}" as note with ID: ${noteData.id}`);
     
     return {
       success: true,
@@ -74,6 +80,8 @@ serve(async (req) => {
       throw new Error("Missing required parameters: userId, pageId(s), and projectId");
     }
     
+    console.log(`Notion import request received: userId=${userId}, projectId=${projectId}, isBatch=${isBatchImport}, pageCount=${isBatchImport ? pageIds.length : 1}`);
+    
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
@@ -87,12 +95,16 @@ serve(async (req) => {
     
     // Handle single page import (backward compatibility)
     if (!isBatchImport) {
+      console.log(`Processing single page import: ${singlePageId}`);
+      
       // Re-use existing single page import logic
       const result = await processPage(supabase, singlePageId, projectId, userId, accessToken);
       
       if (!result.success) {
         throw new Error(`Failed to import page: ${result.error}`);
       }
+      
+      console.log(`Single page import successful: ${result.title}`);
       
       // Return success response with single note data
       return createSuccessResponse({
@@ -109,13 +121,20 @@ serve(async (req) => {
     
     // Process each page sequentially to avoid rate limiting
     for (const pageId of pageIds) {
+      console.log(`Processing batch page ${pageIds.indexOf(pageId) + 1}/${pageIds.length}: ${pageId}`);
+      
       const result = await processPage(supabase, pageId, projectId, userId, accessToken);
       results.push(result);
       
       if (result.success) {
         successCount++;
+        console.log(`Batch page ${pageIds.indexOf(pageId) + 1} imported successfully: ${result.title}`);
+      } else {
+        console.error(`Failed to import batch page ${pageIds.indexOf(pageId) + 1}: ${result.error}`);
       }
     }
+    
+    console.log(`Batch import completed. Successfully imported ${successCount}/${pageIds.length} pages`);
     
     // Return success response with batch results
     return createSuccessResponse({
@@ -126,6 +145,7 @@ serve(async (req) => {
     });
     
   } catch (error) {
+    console.error("Error in notion-import-page function:", error);
     return createErrorResponse(error.message || "Unknown error occurred");
   }
 });
