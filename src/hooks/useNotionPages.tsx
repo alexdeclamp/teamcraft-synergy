@@ -22,6 +22,7 @@ export const useNotionPages = () => {
   const [parentTypes, setParentTypes] = useState<string[]>([]);
   const [debounceTimeout, setDebounceTimeout] = useState<number | null>(null);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Function to fetch workspaces
   const fetchWorkspaces = async () => {
@@ -43,12 +44,15 @@ export const useNotionPages = () => {
     } catch (err) {
       console.error("Error fetching workspaces:", err);
       toast.error("Failed to load Notion workspaces");
+      setError("Failed to load Notion workspaces");
     }
   };
   
   // Function to fetch Notion pages with filters
   const fetchNotionPages = useCallback(async (reset = true, databaseId: string | null = null) => {
     if (!user) return;
+    
+    setError(null);
     
     if (reset) {
       setIsLoading(true);
@@ -74,6 +78,10 @@ export const useNotionPages = () => {
       });
       
       if (error) throw error;
+      
+      if (!data) {
+        throw new Error("No data returned from Notion API");
+      }
       
       // Log the raw response data for debugging
       console.log("Notion API response:", data);
@@ -128,6 +136,7 @@ export const useNotionPages = () => {
     } catch (err: any) {
       console.error("Error fetching Notion pages:", err);
       toast.error(`Failed to fetch Notion pages: ${err.message || 'Unknown error'}`);
+      setError(`Failed to fetch Notion pages: ${err.message || 'Unknown error'}`);
       setIsFiltering(false);
     } finally {
       setIsLoading(false);
@@ -149,6 +158,7 @@ export const useNotionPages = () => {
       return false;
     }
     
+    setError(null);
     setIsImporting(true);
     setImportingPageId(pageId);
     
@@ -163,10 +173,15 @@ export const useNotionPages = () => {
         }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase function error:", error);
+        throw new Error(`Failed to call import function: ${error.message || "Unknown error"}`);
+      }
       
-      if (!data.success) {
-        throw new Error(data.error || "Unknown error during import");
+      if (!data || !data.success) {
+        const errorMessage = data?.error || "Unknown error during import";
+        console.error("Import function returned error:", errorMessage);
+        throw new Error(errorMessage);
       }
       
       // Add the imported page ID to the recently imported list
@@ -179,6 +194,7 @@ export const useNotionPages = () => {
     } catch (err: any) {
       console.error("Error importing Notion page:", err);
       toast.error(`Failed to import page: ${err.message || 'Unknown error'}`);
+      setError(`Failed to import page: ${err.message || 'Unknown error'}`);
       return false;
     } finally {
       setIsImporting(false);
@@ -250,6 +266,7 @@ export const useNotionPages = () => {
     importingPageId,
     workspaces,
     parentTypes,
+    error,
     fetchWorkspaces,
     fetchNotionPages,
     loadMorePages,

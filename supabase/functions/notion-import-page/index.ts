@@ -70,14 +70,36 @@ serve(async (req) => {
   }
 
   try {
-    const { userId, pageIds, projectId } = await req.json();
+    // Parse request body
+    let body;
+    try {
+      body = await req.json();
+      console.log("Request body received:", JSON.stringify(body));
+    } catch (err) {
+      console.error("Error parsing request body:", err);
+      return createErrorResponse("Invalid request body: " + err.message, 400);
+    }
+    
+    const { userId, pageId, pageIds, projectId } = body;
     
     // Check if this is a batch import or single import
     const isBatchImport = Array.isArray(pageIds) && pageIds.length > 0;
-    const singlePageId = !isBatchImport ? pageIds : null;
+    const singlePageId = !isBatchImport ? pageId : null;
     
-    if (!userId || (!isBatchImport && !singlePageId) || !projectId) {
-      throw new Error("Missing required parameters: userId, pageId(s), and projectId");
+    // Validate required parameters
+    if (!userId) {
+      console.error("Missing userId in request");
+      return createErrorResponse("Missing required parameter: userId", 400);
+    }
+    
+    if (!projectId) {
+      console.error("Missing projectId in request");
+      return createErrorResponse("Missing required parameter: projectId", 400);
+    }
+    
+    if (!isBatchImport && !singlePageId) {
+      console.error("Missing pageId or pageIds in request");
+      return createErrorResponse("Missing required parameter: pageId or pageIds", 400);
     }
     
     console.log(`Notion import request received: userId=${userId}, projectId=${projectId}, isBatch=${isBatchImport}, pageCount=${isBatchImport ? pageIds.length : 1}`);
@@ -85,13 +107,30 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Missing Supabase environment variables");
+      return createErrorResponse("Server configuration error", 500);
+    }
+    
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Verify project access
-    await verifyProjectAccess(supabase, projectId, userId);
+    try {
+      // Verify project access
+      await verifyProjectAccess(supabase, projectId, userId);
+    } catch (error) {
+      console.error("Project access verification failed:", error);
+      return createErrorResponse("Project access verification failed: " + error.message, 403);
+    }
     
-    // Get Notion access token
-    const accessToken = await getNotionAccessToken(supabase, userId);
+    let accessToken;
+    try {
+      // Get Notion access token
+      accessToken = await getNotionAccessToken(supabase, userId);
+    } catch (error) {
+      console.error("Failed to get Notion access token:", error);
+      return createErrorResponse("Failed to get Notion access token: " + error.message, 401);
+    }
     
     // Handle single page import (backward compatibility)
     if (!isBatchImport) {
@@ -101,13 +140,15 @@ serve(async (req) => {
       const result = await processPage(supabase, singlePageId, projectId, userId, accessToken);
       
       if (!result.success) {
-        throw new Error(`Failed to import page: ${result.error}`);
+        console.error(`Failed to import page: ${result.error}`);
+        return createErrorResponse(`Failed to import page: ${result.error}`, 500);
       }
       
       console.log(`Single page import successful: ${result.title}`);
       
       // Return success response with single note data
       return createSuccessResponse({
+        success: true,
         note: result,
         message: `Successfully imported "${result.title}" from Notion`,
       });
@@ -138,6 +179,7 @@ serve(async (req) => {
     
     // Return success response with batch results
     return createSuccessResponse({
+      success: true,
       batchResults: results,
       successCount: successCount,
       totalCount: pageIds.length,
@@ -145,7 +187,7 @@ serve(async (req) => {
     });
     
   } catch (error) {
-    console.error("Error in notion-import-page function:", error);
-    return createErrorResponse(error.message || "Unknown error occurred");
+    console.error("Unexpected error in notion-import-page function:", error);
+    return createErrorResponse(error.message || "Unknown error occurred", 500);
   }
 });
