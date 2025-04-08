@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -188,11 +189,18 @@ const NotionImport = () => {
 
       // Extract unique workspaces and parent types
       if (reset) {
-        const uniqueWorkspaces = [...new Set(data.pages.map((page: any) => page.workspace?.name))].filter(Boolean);
-        const uniqueParentTypes = [...new Set(data.pages.map((page: any) => page.parent?.type))].filter(Boolean);
+        // Ensure we're working with string arrays by filtering out non-string values
+        const extractWorkspaces = data.pages
+          .map((page: any) => page.workspace?.name)
+          .filter((name: any): name is string => typeof name === 'string' && name.length > 0);
+          
+        const extractParentTypes = data.pages
+          .map((page: any) => page.parent?.type)
+          .filter((type: any): type is string => typeof type === 'string' && type.length > 0);
         
-        setWorkspaces(uniqueWorkspaces);
-        setParentTypes(uniqueParentTypes);
+        // Use Set to get unique values and convert back to array
+        setWorkspaces([...new Set(extractWorkspaces)]);
+        setParentTypes([...new Set(extractParentTypes)]);
       }
       
       setIsFiltering(false);
