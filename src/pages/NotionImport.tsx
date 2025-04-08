@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -28,6 +27,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const NotionImport = () => {
   const { user } = useAuth();
@@ -49,6 +56,10 @@ const NotionImport = () => {
   const [parentTypes, setParentTypes] = useState<string[]>([]);
   const [debounceTimeout, setDebounceTimeout] = useState<number | null>(null);
   const [isFiltering, setIsFiltering] = useState(false);
+  const [showWorkspaceDialog, setShowWorkspaceDialog] = useState(true);
+  const [availableWorkspaces, setAvailableWorkspaces] = useState<string[]>([]);
+  const [loadingWorkspaces, setLoadingWorkspaces] = useState(true);
+  const [selectedInitialWorkspace, setSelectedInitialWorkspace] = useState<string | null>(null);
 
   useEffect(() => {
     const checkNotionConnection = async () => {
@@ -68,18 +79,57 @@ const NotionImport = () => {
         }
         
         await fetchUserProjects();
-        await fetchNotionPages();
+        await fetchWorkspaces();
       } catch (err) {
         console.error("Error checking Notion connection:", err);
         toast.error("Failed to verify Notion connection");
         navigate('/notion-connect');
-      } finally {
-        setIsLoading(false);
       }
     };
     
     checkNotionConnection();
   }, [user, navigate]);
+  
+  const fetchWorkspaces = async () => {
+    if (!user) return;
+    
+    setLoadingWorkspaces(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('notion-list-workspaces', {
+        body: { userId: user.id }
+      });
+      
+      if (error) throw error;
+      
+      // Make sure data.workspaces is an array of strings
+      const workspaceNames: string[] = Array.isArray(data.workspaces) 
+        ? data.workspaces.filter((name): name is string => typeof name === 'string')
+        : [];
+      
+      setAvailableWorkspaces(workspaceNames);
+      
+      // If there's only one workspace, select it automatically
+      if (workspaceNames.length === 1) {
+        setSelectedInitialWorkspace(workspaceNames[0]);
+        setFilterWorkspace(workspaceNames[0]);
+        setShowWorkspaceDialog(false);
+        await fetchNotionPages();
+      }
+    } catch (err) {
+      console.error("Error fetching workspaces:", err);
+      toast.error("Failed to load Notion workspaces");
+    } finally {
+      setLoadingWorkspaces(false);
+    }
+  };
+
+  const selectWorkspace = async (workspace: string) => {
+    setSelectedInitialWorkspace(workspace);
+    setFilterWorkspace(workspace);
+    setShowWorkspaceDialog(false);
+    await fetchNotionPages();
+  };
 
   useEffect(() => {
     // Clear any existing timeout
@@ -152,7 +202,7 @@ const NotionImport = () => {
   };
   
   const fetchNotionPages = async (reset = true) => {
-    if (!user) return;
+    if (!user || !filterWorkspace) return;
     
     if (reset) {
       setIsLoading(true);
@@ -187,19 +237,14 @@ const NotionImport = () => {
       setNextCursor(data.next_cursor);
       setHasMore(data.has_more);
 
-      // Extract unique workspaces and parent types
+      // Extract unique parent types
       if (reset) {
         // Ensure we're working with string arrays by filtering out non-string values
-        const extractWorkspaces = data.pages
-          .map((page: any) => page.workspace?.name)
-          .filter((name: any): name is string => typeof name === 'string' && name.length > 0);
-          
         const extractParentTypes = data.pages
           .map((page: any) => page.parent?.type)
           .filter((type: any): type is string => typeof type === 'string' && type.length > 0);
         
         // Use Set to get unique values and convert back to array
-        setWorkspaces([...new Set(extractWorkspaces)]);
         setParentTypes([...new Set(extractParentTypes)]);
       }
       
@@ -273,7 +318,6 @@ const NotionImport = () => {
   const clearFilters = () => {
     setSearchTerm('');
     setFilterParentType(null);
-    setFilterWorkspace(null);
     fetchNotionPages();
   };
 
@@ -426,6 +470,63 @@ const NotionImport = () => {
     );
   };
 
+  const WorkspaceSelectionDialog = () => {
+    return (
+      <Dialog open={showWorkspaceDialog} onOpenChange={setShowWorkspaceDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Notion Workspace</DialogTitle>
+            <DialogDescription>
+              Choose which Notion workspace you want to import pages from.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {loadingWorkspaces ? (
+            <div className="py-6 space-y-2">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+            </div>
+          ) : (
+            <div className="py-4 space-y-4">
+              {availableWorkspaces.length === 0 ? (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground">No workspaces found in your Notion account.</p>
+                </div>
+              ) : (
+                availableWorkspaces.map((workspace) => (
+                  <Card key={workspace} className="p-4 hover:bg-accent cursor-pointer" onClick={() => selectWorkspace(workspace)}>
+                    <div className="flex items-center justify-between">
+                      <div className="font-medium">{workspace}</div>
+                      <Button size="sm" variant="ghost">
+                        Select
+                      </Button>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          )}
+          
+          <DialogFooter className="flex justify-between items-center">
+            <Button variant="outline" onClick={() => navigate('/notion-connect')}>
+              Back to Connection
+            </Button>
+            <Button variant="default" onClick={() => {
+              if (availableWorkspaces.length > 0) {
+                selectWorkspace(availableWorkspaces[0]);
+              } else {
+                setShowWorkspaceDialog(false);
+              }
+            }}>
+              {availableWorkspaces.length > 0 ? 'Use first workspace' : 'Close'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -445,6 +546,19 @@ const NotionImport = () => {
           <p className="text-muted-foreground mt-2">
             Select pages from your Notion workspace to import as notes. Nested content like toggles and dropdowns will be included.
           </p>
+          {selectedInitialWorkspace && (
+            <Badge variant="secondary" className="mt-2 text-sm">
+              Workspace: {selectedInitialWorkspace}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-5 w-5 p-0 ml-1" 
+                onClick={() => setShowWorkspaceDialog(true)}
+              >
+                <RefreshCw className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
         </div>
         
         <div className="mb-6">
@@ -475,105 +589,96 @@ const NotionImport = () => {
           )}
         </div>
         
-        <div className="mb-6 space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Your Notion Pages</h2>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => fetchNotionPages()}
-              disabled={isLoading}
-              className="flex items-center"
-            >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-              Refresh
-            </Button>
-          </div>
-          
-          <div className="flex flex-col gap-4">
-            <div className="w-full relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search pages..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-10 py-2 border rounded-md bg-background"
-              />
-              {searchTerm && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0" 
-                  onClick={() => setSearchTerm('')}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium mb-2">
-                  Filter by Workspace
-                </label>
-                <Select
-                  value={filterWorkspace || "all_workspaces"}
-                  onValueChange={(value) => setFilterWorkspace(value === "all_workspaces" ? null : value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All workspaces" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all_workspaces">All workspaces</SelectItem>
-                    {workspaces.map((workspace) => (
-                      <SelectItem key={workspace} value={workspace}>
-                        {workspace}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex-1">
-                <label className="block text-sm font-medium mb-2">
-                  Filter by Type
-                </label>
-                <Select
-                  value={filterParentType || "all_types"}
-                  onValueChange={(value) => setFilterParentType(value === "all_types" ? null : value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="All types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all_types">All types</SelectItem>
-                    {parentTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            {(searchTerm || filterParentType || filterWorkspace) && (
-              <div className="flex justify-end">
+        {selectedInitialWorkspace && (
+          <>
+            <div className="mb-6 space-y-4">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl font-semibold">Pages in {selectedInitialWorkspace}</h2>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowWorkspaceDialog(true)}
+                    className="text-xs flex items-center"
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Change
+                  </Button>
+                </div>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={clearFilters}
-                  className="text-sm"
+                  onClick={() => fetchNotionPages()}
+                  disabled={isLoading}
+                  className="flex items-center"
                 >
-                  Clear all filters
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                  Refresh
                 </Button>
               </div>
-            )}
-          </div>
-        </div>
-        
-        <NotionPagesList />
+              
+              <div className="flex flex-col gap-4">
+                <div className="w-full relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search pages..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-10 py-2 border rounded-md bg-background"
+                  />
+                  {searchTerm && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0" 
+                      onClick={() => setSearchTerm('')}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Filter by Type
+                  </label>
+                  <Select
+                    value={filterParentType || "all_types"}
+                    onValueChange={(value) => setFilterParentType(value === "all_types" ? null : value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="All types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_types">All types</SelectItem>
+                      {parentTypes.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {(searchTerm || filterParentType) && (
+                  <div className="flex justify-end">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={clearFilters}
+                      className="text-sm"
+                    >
+                      Clear all filters
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <NotionPagesList />
+          </>
+        )}
         
         {userProjects.length === 0 && (
           <div className="mt-8 p-4 border border-amber-200 bg-amber-50 rounded-md">
@@ -592,6 +697,7 @@ const NotionImport = () => {
         )}
       </main>
       
+      <WorkspaceSelectionDialog />
       <FooterSection />
     </div>
   );
