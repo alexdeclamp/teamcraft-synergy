@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -83,7 +82,6 @@ const NotionImport = () => {
     }
   }, [selectedDatabase]);
 
-  // Debug log to check data flow
   useEffect(() => {
     console.log("NotionImport component state:", { 
       notionPagesCount: notionPages?.length || 0,
@@ -96,7 +94,6 @@ const NotionImport = () => {
     });
   }, [notionPages, databases, selectedDatabase, importMode, isLoading, isConnected, databaseError]);
   
-  // Wrapper for the handleImportPage function that includes the selectedProject
   const handleImportPageWithProject = async (pageId: string, pageName: string) => {
     if (!selectedProject) {
       toast.error("Please select a project first");
@@ -104,9 +101,8 @@ const NotionImport = () => {
     }
     
     await handleImportPage(pageId, pageName, selectedProject);
-    fetchUserProjects(); // Refresh projects after import
+    fetchUserProjects();
     
-    // Show toast with link to project
     const project = userProjects.find(p => p.id === selectedProject);
     
     toast.success(
@@ -124,7 +120,6 @@ const NotionImport = () => {
     );
   };
 
-  // Function to handle batch import
   const handleBatchImport = async (pageIds: string[]) => {
     if (!selectedProject) {
       toast.error("Please select a project first");
@@ -144,10 +139,9 @@ const NotionImport = () => {
     setIsBatchImporting(true);
     
     try {
-      // Call the edge function with multiple page IDs
       const { data, error } = await supabase.functions.invoke('notion-import-page', {
         body: {
-          userId: user.id, // Fixed: Use the actual user ID instead of a Promise
+          userId: user.id,
           pageIds: pageIds,
           projectId: selectedProject
         }
@@ -157,22 +151,18 @@ const NotionImport = () => {
         throw error;
       }
       
-      // Update the recently imported list with all successfully imported pages
       const successfulImports = data.batchResults
         .filter((result: any) => result.success)
         .map((result: any) => result.pageId);
       
-      // Add to recently imported list
       successfulImports.forEach((pageId: string) => {
         if (!recentlyImported.includes(pageId)) {
           recentlyImported.push(pageId);
         }
       });
       
-      // Refresh projects after import
       fetchUserProjects();
       
-      // Show success message
       const project = userProjects.find(p => p.id === selectedProject);
       
       toast.success(
@@ -214,7 +204,7 @@ const NotionImport = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <main className="flex-1 container max-w-4xl mx-auto py-12 px-4">
+      <main className="flex-1 container max-w-4xl mx-auto py-12 px-4 pt-32">
         <div className="mb-6">
           <Button 
             variant="ghost" 

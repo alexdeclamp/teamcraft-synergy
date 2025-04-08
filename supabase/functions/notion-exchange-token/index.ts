@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { code, userId } = await req.json();
+    const { code, userId, redirectUri } = await req.json();
     
     if (!code || !userId) {
       throw new Error("Missing required parameters: code and userId");
@@ -33,12 +33,12 @@ serve(async (req) => {
       throw new Error("Missing Notion API credentials");
     }
     
-    // Get the redirect URI from the request origin
-    const redirectUri = `${req.headers.get('origin')}/notion-connect`;
+    // Use the redirect URI passed from the frontend, or fallback to the origin
+    const finalRedirectUri = redirectUri || `${req.headers.get('origin')}/notion-connect`;
     
     console.log("Exchanging code for access token with parameters:", {
       notionClientId,
-      redirectUri,
+      redirectUri: finalRedirectUri,
       code: "REDACTED"
     });
     
@@ -52,7 +52,7 @@ serve(async (req) => {
       body: JSON.stringify({
         grant_type: 'authorization_code',
         code,
-        redirect_uri: redirectUri,
+        redirect_uri: finalRedirectUri,
       }),
     });
     

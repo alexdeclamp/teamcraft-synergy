@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -52,9 +51,16 @@ const NotionConnect = () => {
       
       setIsLoading(true);
       try {
-        // Exchange the code for access token
+        // Get the current redirect URI to pass to the backend
+        const redirectUri = window.location.origin + window.location.pathname;
+        
+        // Exchange the code for access token, passing the actual redirect URI used
         const { data, error } = await supabase.functions.invoke('notion-exchange-token', {
-          body: { code, userId: user.id }
+          body: { 
+            code, 
+            userId: user.id,
+            redirectUri
+          }
         });
         
         if (error) throw error;
@@ -81,9 +87,9 @@ const NotionConnect = () => {
   }, [code, error, user]);
   
   const connectToNotion = () => {
-    // Notion OAuth URL with your client ID
+    // Notion OAuth URL with your client ID and dynamic redirect URI
     const clientId = '1ced872b-594c-8011-973d-0037bb560676';
-    const redirectUri = encodeURIComponent(window.location.origin + '/notion-connect');
+    const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
     const notionAuthUrl = `https://api.notion.com/v1/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`;
     
     window.location.href = notionAuthUrl;
@@ -114,7 +120,7 @@ const NotionConnect = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <main className="flex-1 container max-w-4xl mx-auto py-12 px-4">
+      <main className="flex-1 container max-w-4xl mx-auto py-12 px-4 pt-32">
         <div className="mb-6">
           <Button 
             variant="ghost" 
