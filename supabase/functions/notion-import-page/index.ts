@@ -91,10 +91,67 @@ serve(async (req) => {
     
     const blocksData = await blockResponse.json();
     
-    // Get page title
-    const pageTitle = pageData.properties.title?.title?.[0]?.plain_text || 
-                      pageData.properties.Name?.title?.[0]?.plain_text || 
-                      'Untitled Notion Page';
+    // Improved page title extraction logic
+    // First try to get from the standard properties.title
+    let pageTitle = '';
+    
+    // Check if properties.title exists
+    if (pageData.properties && pageData.properties.title && 
+        pageData.properties.title.title && 
+        Array.isArray(pageData.properties.title.title) && 
+        pageData.properties.title.title.length > 0) {
+      
+      pageTitle = pageData.properties.title.title
+        .map(textObj => textObj.plain_text)
+        .join('');
+    }
+    // If not found, try properties.Name which is also common
+    else if (pageData.properties && pageData.properties.Name && 
+             pageData.properties.Name.title && 
+             Array.isArray(pageData.properties.Name.title) && 
+             pageData.properties.Name.title.length > 0) {
+             
+      pageTitle = pageData.properties.Name.title
+        .map(textObj => textObj.plain_text)
+        .join('');
+    }
+    // If still not found, look for any property that has a title type
+    else {
+      for (const propKey in pageData.properties) {
+        const prop = pageData.properties[propKey];
+        if (prop.type === 'title' && prop.title && Array.isArray(prop.title) && prop.title.length > 0) {
+          pageTitle = prop.title
+            .map(textObj => textObj.plain_text)
+            .join('');
+          break;
+        }
+      }
+    }
+    
+    // Fallback if we still couldn't find a title
+    if (!pageTitle) {
+      // Try to use the first heading or paragraph from content as a title
+      for (const block of blocksData.results || []) {
+        if (block.type === 'heading_1' && block.heading_1?.rich_text?.[0]?.plain_text) {
+          pageTitle = block.heading_1.rich_text.map(t => t.plain_text).join('');
+          break;
+        } 
+        else if (block.type === 'paragraph' && block.paragraph?.rich_text?.[0]?.plain_text) {
+          pageTitle = block.paragraph.rich_text.map(t => t.plain_text).join('');
+          if (pageTitle.length > 40) {
+            pageTitle = pageTitle.substring(0, 40) + '...';
+          }
+          break;
+        }
+      }
+      
+      // Final fallback
+      if (!pageTitle) {
+        pageTitle = `Notion Page (${new Date().toLocaleDateString()})`;
+      }
+    }
+    
+    console.log(`Extracted page title: "${pageTitle}"`);
     
     // Convert blocks to markdown-like format with expanded handling for nested content
     let content = '';
@@ -210,15 +267,49 @@ serve(async (req) => {
       
       return '';
     }
+
+    // Recursive function to process nested blocks
+    async function processBlocks(blocks, level = 0) {
+      let blockContent = '';
+      
+      for (const block of blocks) {
+        // Process the current block based on its type
+        blockContent += await processBlock(block, level);
+        
+        // Check if the block has children
+        if (block.has_children) {
+          try {
+            // Fetch the children blocks
+            const childrenResponse = await fetch(`https://api.notion.com/v1/blocks/${block.id}/children`, {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Notion-Version': '2022-06-28',
+              },
+            });
+            
+            if (childrenResponse.ok) {
+              const childrenData = await childrenResponse.json();
+              // Process the children blocks with an increased level
+              blockContent += await processBlocks(childrenData.results, level + 1);
+            }
+          } catch (err) {
+            console.error(`Error fetching children for block ${block.id}:`, err);
+            blockContent += `\n\n*[Error loading nested content]*\n\n`;
+          }
+        }
+      }
+      
+      return blockContent;
+    }
     
     // Process all the blocks recursively
-    content = await processBlocks(blocksData.results);
+    let content = await processBlocks(blocksData.results);
     
-    // Create a note with the Notion content
+    // Create a note with the Notion content, using the extracted title
     const { data: noteData, error: noteError } = await supabase
       .from('project_notes')
       .insert({
-        title: `Notion: ${pageTitle}`,
+        title: pageTitle,
         content: content.trim(),
         project_id: projectId,
         user_id: userId,
