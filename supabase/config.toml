@@ -1,1 +1,28 @@
+
+# This file lists all the Supabase Edge Functions in the project.
 project_id = "fatckypxdqeaczndclbd"
+
+[functions.ask-pdf-question]
+[functions.chat-with-pdf]
+[functions.clean-note-text]
+[functions.create-stripe-checkout]
+[functions.extract-pdf-text]
+[functions.generate-summary]
+[functions.google-drive-disconnect]
+[functions.google-drive-exchange-token]
+[functions.google-drive-import]
+[functions.notion-disconnect]
+[functions.notion-exchange-token]
+[functions.notion-import-page]
+[functions.notion-list-databases]
+[functions.notion-list-pages]
+[functions.notion-list-workspaces]
+[functions.process-stripe-webhook]
+[functions.project-chat]
+[functions.regenerate-note-metadata]
+[functions.setup-subscription-tables]
+[functions.summarize-multiple-pdfs]
+[functions.summarize-pdf]
+[functions.summarize-text]
+[functions.track-usage]
+[functions.user-statistics]

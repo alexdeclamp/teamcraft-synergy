@@ -8,6 +8,7 @@ import Integrations from './pages/Integrations';
 import NotionConnect from './pages/NotionConnect';
 import NotionImport from './pages/NotionImport';
 import GoogleDriveConnect from './pages/GoogleDriveConnect';
+import GoogleDriveImport from './pages/GoogleDriveImport';
 
 function App() {
   return (
@@ -30,6 +31,11 @@ function App() {
           <Route path="/google-drive-connect" element={
             <ProtectedRoute>
               <GoogleDriveConnect />
+            </ProtectedRoute>
+          } />
+          <Route path="/google-drive-import" element={
+            <ProtectedRoute>
+              <GoogleDriveImport />
             </ProtectedRoute>
           } />
         </Routes>
