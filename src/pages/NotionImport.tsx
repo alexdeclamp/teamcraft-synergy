@@ -17,7 +17,7 @@ import DatabaseSelector from '@/components/notion-import/DatabaseSelector';
 
 const NotionImport = () => {
   const navigate = useNavigate();
-  const { isConnected } = useNotionConnection();
+  const { isConnected, checkNotionConnection } = useNotionConnection();
   const [importMode, setImportMode] = useState<'databases' | 'pages'>('databases');
   
   const {
@@ -33,7 +33,8 @@ const NotionImport = () => {
     selectedDatabase,
     setSelectedDatabase,
     fetchDatabases,
-    renderIcon: renderDatabaseIcon
+    renderIcon: renderDatabaseIcon,
+    error: databaseError
   } = useNotionDatabases();
   
   const {
@@ -86,9 +87,10 @@ const NotionImport = () => {
       selectedDatabase,
       importMode,
       isLoading, 
-      isConnected
+      isConnected,
+      databaseError
     });
-  }, [notionPages, databases, selectedDatabase, importMode, isLoading, isConnected]);
+  }, [notionPages, databases, selectedDatabase, importMode, isLoading, isConnected, databaseError]);
   
   // Wrapper for the handleImportPage function that includes the selectedProject
   const handleImportPageWithProject = async (pageId: string, pageName: string) => {
@@ -126,6 +128,10 @@ const NotionImport = () => {
     setImportMode('databases');
     setSelectedDatabase(null);
   };
+
+  const handleRefreshDatabases = () => {
+    fetchDatabases();
+  };
   
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -161,6 +167,8 @@ const NotionImport = () => {
             selectedDatabase={selectedDatabase}
             onSelectDatabase={handleDatabaseSelect}
             renderIcon={renderDatabaseIcon}
+            error={databaseError}
+            onRefresh={handleRefreshDatabases}
           />
         ) : (
           <>

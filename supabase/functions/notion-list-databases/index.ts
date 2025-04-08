@@ -30,7 +30,7 @@ serve(async (req) => {
     // Get the Notion access token from the database
     const { data: connectionData, error: connectionError } = await supabase
       .from('notion_connections')
-      .select('access_token')
+      .select('access_token, workspace_name')
       .eq('user_id', userId)
       .single();
     
@@ -40,6 +40,7 @@ serve(async (req) => {
     }
     
     const accessToken = connectionData.access_token;
+    const workspaceName = connectionData.workspace_name || "Notion Workspace";
     
     // Fetch databases from Notion with the search API
     const searchParams = {
@@ -55,6 +56,18 @@ serve(async (req) => {
     };
     
     console.log("Fetching databases from Notion API");
+    
+    // Log the request we're about to make
+    console.log("Notion API request:", {
+      url: 'https://api.notion.com/v1/search',
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer [REDACTED]',
+        'Notion-Version': '2022-06-28',
+      },
+      body: JSON.stringify(searchParams),
+    });
+    
     const response = await fetch('https://api.notion.com/v1/search', {
       method: 'POST',
       headers: {
@@ -72,10 +85,33 @@ serve(async (req) => {
     }
     
     const searchResults = await response.json();
+    
+    // Log the raw response for debugging
+    console.log(`Notion API raw response status: ${response.status}`);
     console.log(`Retrieved ${searchResults.results?.length || 0} databases from Notion API`);
     
+    if (!searchResults.results || searchResults.results.length === 0) {
+      console.log("No databases found in Notion workspace");
+      // Try listing users to see permissions
+      try {
+        const usersResponse = await fetch('https://api.notion.com/v1/users', {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Notion-Version': '2022-06-28',
+          },
+        });
+        
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json();
+          console.log(`Found ${usersData.results?.length || 0} users in workspace`);
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    }
+    
     // Process databases to extract useful information
-    const databases = searchResults.results.map((db: any) => {
+    const databases = searchResults.results ? searchResults.results.map((db: any) => {
       // Extract database title
       let title = 'Untitled Database';
       if (db.title && Array.isArray(db.title)) {
@@ -97,12 +133,13 @@ serve(async (req) => {
         created_time: db.created_time,
         last_edited_time: db.last_edited_time,
       };
-    });
+    }) : [];
     
     return new Response(
       JSON.stringify({
         success: true,
         databases: databases,
+        workspace_name: workspaceName
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Loader2, Database, ChevronRight } from 'lucide-react';
+import { Loader2, Database, ChevronRight, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,6 +12,8 @@ interface DatabaseSelectorProps {
   selectedDatabase: string | null;
   onSelectDatabase: (databaseId: string) => void;
   renderIcon: (icon: string | null) => React.ReactNode;
+  error: string | null;
+  onRefresh: () => void;
 }
 
 const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
@@ -19,7 +21,9 @@ const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
   isLoading,
   selectedDatabase,
   onSelectDatabase,
-  renderIcon
+  renderIcon,
+  error,
+  onRefresh
 }) => {
   if (isLoading) {
     return (
@@ -34,6 +38,26 @@ const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
     );
   }
 
+  if (error) {
+    return (
+      <div className="text-center py-8 border rounded-md bg-amber-50">
+        <Database className="h-12 w-12 mx-auto text-amber-600" />
+        <h3 className="mt-4 text-lg font-medium text-amber-900">No Databases Found</h3>
+        <p className="text-amber-700 mt-2 max-w-md mx-auto">
+          {error}
+        </p>
+        <Button 
+          variant="outline" 
+          onClick={onRefresh}
+          className="mt-4 flex items-center"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
+    );
+  }
+
   if (!databases.length) {
     return (
       <div className="text-center py-8 border rounded-md">
@@ -42,6 +66,14 @@ const DatabaseSelector: React.FC<DatabaseSelectorProps> = ({
         <p className="text-muted-foreground mt-2">
           We couldn't find any databases in your Notion workspace
         </p>
+        <Button 
+          variant="outline" 
+          onClick={onRefresh}
+          className="mt-4 flex items-center"
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
     );
   }

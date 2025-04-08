@@ -19,11 +19,13 @@ export const useNotionDatabases = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [databases, setDatabases] = useState<NotionDatabase[]>([]);
   const [selectedDatabase, setSelectedDatabase] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   const fetchDatabases = async () => {
     if (!user) return;
     
     setIsLoading(true);
+    setError(null);
     
     try {
       console.log("Fetching Notion databases...");
@@ -36,15 +38,20 @@ export const useNotionDatabases = () => {
       console.log("Notion databases response:", data);
       
       if (data.databases && Array.isArray(data.databases)) {
+        if (data.databases.length === 0) {
+          setError("No databases found in your Notion workspace. Make sure you have created databases in Notion and have permission to access them.");
+        }
         setDatabases(data.databases);
       } else {
         setDatabases([]);
+        setError("No databases found. Please check your Notion connection.");
       }
       
     } catch (err) {
       console.error("Error fetching Notion databases:", err);
       toast.error("Failed to load Notion databases");
       setDatabases([]);
+      setError("An error occurred while fetching your Notion databases. Please try reconnecting to Notion.");
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +78,8 @@ export const useNotionDatabases = () => {
     selectedDatabase,
     setSelectedDatabase,
     fetchDatabases,
-    renderIcon
+    renderIcon,
+    error
   };
 };
 
