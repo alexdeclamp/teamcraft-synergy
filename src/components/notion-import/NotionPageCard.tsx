@@ -4,33 +4,48 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Loader2, FileIcon } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface NotionPageCardProps {
   page: any;
   isImported: boolean;
   isCurrentlyImporting: boolean;
+  isSelected?: boolean;
+  onToggleSelect?: () => void;
   onImport: () => void;
   isImporting: boolean;
   selectedProject: string | null;
   renderIcon: (icon: any) => React.ReactNode;
+  showCheckbox?: boolean;
 }
 
 const NotionPageCard: React.FC<NotionPageCardProps> = ({
   page,
   isImported,
   isCurrentlyImporting,
+  isSelected = false,
+  onToggleSelect,
   onImport,
   isImporting,
   selectedProject,
-  renderIcon
+  renderIcon,
+  showCheckbox = false
 }) => {
   const lastEdited = new Date(page.last_edited).toLocaleDateString();
   
   return (
-    <Card className="p-4">
+    <Card className={`p-4 ${isSelected ? 'border-primary/50 bg-muted/20' : ''}`}>
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            {showCheckbox && !isImported && (
+              <Checkbox 
+                checked={isSelected} 
+                onCheckedChange={onToggleSelect} 
+                disabled={isImporting || isImported}
+                className="mt-1"
+              />
+            )}
             {renderIcon(page.icon)}
             <h3 className="font-medium">{page.title}</h3>
           </div>

@@ -14,11 +14,13 @@ import ProjectSelector from '@/components/notion-import/ProjectSelector';
 import NotionPageFilters from '@/components/notion-import/NotionPageFilters';
 import NotionPagesList from '@/components/notion-import/NotionPagesList';
 import DatabaseSelector from '@/components/notion-import/DatabaseSelector';
+import { supabase } from '@/integrations/supabase/client';
 
 const NotionImport = () => {
   const navigate = useNavigate();
   const { isConnected, checkNotionConnection } = useNotionConnection();
   const [importMode, setImportMode] = useState<'databases' | 'pages'>('databases');
+  const [isBatchImporting, setIsBatchImporting] = useState(false);
   
   const {
     userProjects,
@@ -120,6 +122,74 @@ const NotionImport = () => {
     );
   };
 
+  // New function to handle batch import
+  const handleBatchImport = async (pageIds: string[]) => {
+    if (!selectedProject) {
+      toast.error("Please select a project first");
+      return;
+    }
+    
+    if (pageIds.length === 0) {
+      toast.error("No pages selected");
+      return;
+    }
+    
+    setIsBatchImporting(true);
+    
+    try {
+      // Call the edge function with multiple page IDs
+      const { data, error } = await supabase.functions.invoke('notion-import-page', {
+        body: {
+          userId: supabase.auth.getUser().then(res => res.data.user?.id),
+          pageIds: pageIds,
+          projectId: selectedProject
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Update the recently imported list with all successfully imported pages
+      const successfulImports = data.batchResults
+        .filter((result: any) => result.success)
+        .map((result: any) => result.pageId);
+      
+      // Add to recently imported list
+      successfulImports.forEach((pageId: string) => {
+        if (!recentlyImported.includes(pageId)) {
+          recentlyImported.push(pageId);
+        }
+      });
+      
+      // Refresh projects after import
+      fetchUserProjects();
+      
+      // Show success message
+      const project = userProjects.find(p => p.id === selectedProject);
+      
+      toast.success(
+        <div>
+          <p>Imported {data.successCount} of {pageIds.length} pages successfully</p>
+          <Button 
+            variant="link" 
+            className="p-0 h-auto text-sm underline" 
+            onClick={() => navigate(`/project/${selectedProject}`)}
+          >
+            View in Project: {project?.title || 'View Project'}
+          </Button>
+        </div>,
+        { duration: 5000 }
+      );
+      
+    } catch (error) {
+      console.error("Error in batch import:", error);
+      toast.error(`Failed to import pages: ${error.message || "Unknown error"}`);
+    } finally {
+      setIsBatchImporting(false);
+    }
+  };
+
   const handleDatabaseSelect = (databaseId: string) => {
     setSelectedDatabase(databaseId);
   };
@@ -203,7 +273,7 @@ const NotionImport = () => {
               notionPages={notionPages}
               recentlyImported={recentlyImported}
               importingPageId={importingPageId}
-              isImporting={isImporting}
+              isImporting={isImporting || isBatchImporting}
               selectedProject={selectedProject}
               hasMore={hasMore}
               isLoadingMore={isLoadingMore}
@@ -211,6 +281,7 @@ const NotionImport = () => {
               onClearFilters={clearFilters}
               onRefresh={() => fetchNotionPages(true, selectedDatabase)}
               handleImportPage={handleImportPageWithProject}
+              handleBatchImport={handleBatchImport}
               renderIcon={renderIcon}
             />
           </>
