@@ -34,7 +34,7 @@ const Integrations = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <main className="flex-1 container max-w-6xl mx-auto py-12 px-4">
+      <main className="flex-1 container max-w-6xl mx-auto py-12 px-4 pt-32">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Integrations</h1>
         <p className="text-muted-foreground mb-8">
           Connect your workspace with external services to import and sync content
