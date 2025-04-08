@@ -15,9 +15,11 @@ import NotionPageFilters from '@/components/notion-import/NotionPageFilters';
 import NotionPagesList from '@/components/notion-import/NotionPagesList';
 import DatabaseSelector from '@/components/notion-import/DatabaseSelector';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const NotionImport = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { isConnected, checkNotionConnection } = useNotionConnection();
   const [importMode, setImportMode] = useState<'databases' | 'pages'>('databases');
   const [isBatchImporting, setIsBatchImporting] = useState(false);
@@ -122,7 +124,7 @@ const NotionImport = () => {
     );
   };
 
-  // New function to handle batch import
+  // Function to handle batch import
   const handleBatchImport = async (pageIds: string[]) => {
     if (!selectedProject) {
       toast.error("Please select a project first");
@@ -134,13 +136,18 @@ const NotionImport = () => {
       return;
     }
     
+    if (!user) {
+      toast.error("You must be logged in to import pages");
+      return;
+    }
+    
     setIsBatchImporting(true);
     
     try {
       // Call the edge function with multiple page IDs
       const { data, error } = await supabase.functions.invoke('notion-import-page', {
         body: {
-          userId: supabase.auth.getUser().then(res => res.data.user?.id),
+          userId: user.id, // Fixed: Use the actual user ID instead of a Promise
           pageIds: pageIds,
           projectId: selectedProject
         }
