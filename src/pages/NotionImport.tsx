@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -47,6 +48,7 @@ const NotionImport = () => {
     isFiltering,
     notionPages,
     recentlyImported,
+    setRecentlyImported,
     searchTerm,
     setSearchTerm,
     filterParentType,
@@ -165,6 +167,7 @@ const NotionImport = () => {
         .filter((result: any) => result.success)
         .map((result: any) => result.pageId);
       
+      // Here's the fix - using setRecentlyImported from the hook
       setRecentlyImported(prev => {
         const newList = [...prev];
         successfulImports.forEach((pageId: string) => {

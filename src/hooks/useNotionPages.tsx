@@ -238,6 +238,7 @@ export const useNotionPages = () => {
     isFiltering,
     notionPages,
     recentlyImported,
+    setRecentlyImported, // Make sure to expose this function in the return object
     searchTerm,
     setSearchTerm,
     filterParentType,
