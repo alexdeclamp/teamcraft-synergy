@@ -17,9 +17,11 @@ export const useGoogleDriveConnection = () => {
     
     setIsCheckingConnection(true);
     try {
-      // Use a simpler query approach without type issues
+      // Use a direct query instead of RPC since the function doesn't exist in types
       const { data, error } = await supabase
-        .rpc('get_google_drive_connection', { user_id: user.id })
+        .from('google_drive_connections')
+        .select('*')
+        .eq('user_id', user.id)
         .maybeSingle();
         
       if (!data || error) {
