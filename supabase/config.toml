@@ -1,8 +1,1 @@
-
-project_id = "your-project-id"
-
-[functions.notion-list-pages]
-verify_jwt = true
-
-[functions.notion-list-workspaces]
-verify_jwt = true
+project_id = "fatckypxdqeaczndclbd"
