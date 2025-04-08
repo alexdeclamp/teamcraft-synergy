@@ -30,7 +30,8 @@ const GoogleDriveConnect = () => {
       setIsLoading(true);
       try {
         // Get the current redirect URI to pass to the backend
-        const redirectUri = window.location.origin + window.location.pathname;
+        // Use the exact same format that's configured in Google Cloud Console
+        const redirectUri = `${window.location.origin}/google-drive-connect`;
         
         // Exchange the code for access token, passing the actual redirect URI used
         const { data, error } = await supabase.functions.invoke('google-drive-exchange-token', {
@@ -65,9 +66,10 @@ const GoogleDriveConnect = () => {
   }, [code, error, user, checkGoogleDriveConnection]);
   
   const connectToGoogleDrive = () => {
-    // Google OAuth URL with your client ID and dynamic redirect URI
+    // Google OAuth URL with your client ID and fixed redirect URI
     const clientId = '312467123740-kapmie1lpqg4h5chlg3lh4pcs6iosfaa.apps.googleusercontent.com';
-    const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
+    // Use the exact same format that's configured in Google Cloud Console
+    const redirectUri = encodeURIComponent(`${window.location.origin}/google-drive-connect`);
     const scope = encodeURIComponent('https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.metadata.readonly');
     
     const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;

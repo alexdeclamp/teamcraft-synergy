@@ -33,7 +33,7 @@ serve(async (req) => {
       throw new Error("Missing Google Drive API credentials");
     }
     
-    // Use the redirect URI passed from the frontend, or fallback to the origin
+    // Use the redirect URI passed from the frontend, or fallback to a fixed URI format
     const finalRedirectUri = redirectUri || `${req.headers.get('origin')}/google-drive-connect`;
     
     console.log("Exchanging code for access token with parameters:", {
