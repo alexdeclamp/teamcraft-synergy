@@ -40,17 +40,14 @@ export const useNotionPages = () => {
       
       setWorkspaces(workspaceNames);
       
-      await fetchNotionPages();
-      
     } catch (err) {
       console.error("Error fetching workspaces:", err);
       toast.error("Failed to load Notion workspaces");
-      await fetchNotionPages();
     }
   };
   
   // Function to fetch Notion pages with filters
-  const fetchNotionPages = useCallback(async (reset = true) => {
+  const fetchNotionPages = useCallback(async (reset = true, databaseId: string | null = null) => {
     if (!user) return;
     
     if (reset) {
@@ -71,7 +68,8 @@ export const useNotionPages = () => {
           startCursor: cursor,
           workspaceFilter: filterWorkspace,
           parentTypeFilter: filterParentType,
-          searchQuery: searchTerm
+          searchQuery: searchTerm,
+          databaseId: databaseId
         }
       });
       
