@@ -12,8 +12,8 @@ import GoogleDriveImport from './pages/GoogleDriveImport';
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
+    <Router>
+      <AuthProvider>
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<Integrations />} />
@@ -39,8 +39,8 @@ function App() {
             </ProtectedRoute>
           } />
         </Routes>
-      </Router>
-    </AuthProvider>
+      </AuthProvider>
+    </Router>
   );
 }
 
