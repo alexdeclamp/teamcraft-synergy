@@ -38,6 +38,14 @@ const NotionPagesList: React.FC<NotionPagesListProps> = ({
   handleImportPage,
   renderIcon
 }) => {
+  // Add extra logging for debugging purposes
+  console.log("NotionPagesList rendered with:", { 
+    notionPagesCount: notionPages.length,
+    isLoading,
+    isFiltering,
+    hasData: Array.isArray(notionPages) && notionPages.length > 0 
+  });
+
   if ((isLoading && !notionPages.length) || isFiltering) {
     return (
       <div className="space-y-4">

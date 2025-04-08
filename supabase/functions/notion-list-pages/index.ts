@@ -114,6 +114,20 @@ serve(async (req) => {
     
     if (!searchResults.results || searchResults.results.length === 0) {
       console.log("No pages found in the search results");
+      // Return empty array early instead of trying to process empty results
+      return new Response(
+        JSON.stringify({
+          success: true,
+          pages: [],
+          next_cursor: null,
+          has_more: false,
+          workspace_name: workspaceName
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
     }
     
     // Prepare an array to hold the detailed page information

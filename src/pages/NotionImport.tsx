@@ -52,9 +52,20 @@ const NotionImport = () => {
   
   useEffect(() => {
     if (isConnected) {
+      console.log("Connection confirmed, fetching workspaces");
       fetchWorkspaces();
     }
   }, [isConnected]);
+
+  // Debug log to check data flow
+  useEffect(() => {
+    console.log("NotionImport component state:", { 
+      notionPagesCount: notionPages?.length || 0,
+      isLoading, 
+      isConnected,
+      workspacesCount: workspaces?.length || 0
+    });
+  }, [notionPages, isLoading, isConnected, workspaces]);
   
   // Wrapper for the handleImportPage function that includes the selectedProject
   const handleImportPageWithProject = async (pageId: string, pageName: string) => {

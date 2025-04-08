@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -76,10 +77,17 @@ export const useNotionPages = () => {
       
       if (error) throw error;
       
+      // Log the raw response data for debugging
+      console.log("Notion API response:", data);
+      
+      // Ensure data.pages is an array before setting state
+      const pages = Array.isArray(data.pages) ? data.pages : [];
+      console.log("Processed pages array:", pages);
+      
       if (reset) {
-        setNotionPages(data.pages || []);
+        setNotionPages(pages);
       } else {
-        setNotionPages(prev => [...prev, ...(data.pages || [])]);
+        setNotionPages(prev => [...prev, ...pages]);
       }
       
       setNextCursor(data.next_cursor);
@@ -88,34 +96,34 @@ export const useNotionPages = () => {
       // Extract and set parent types safely using proper type assertions
       const extractedParentTypes: string[] = [];
       
-      if (Array.isArray(data.pages)) {
-        data.pages.forEach((page: any) => {
+      if (Array.isArray(pages)) {
+        pages.forEach((page: any) => {
           if (typeof page.parent?.type === 'string' && page.parent.type.length > 0) {
             extractedParentTypes.push(page.parent.type);
           }
         });
       }
       
-      setParentTypes([...new Set(extractedParentTypes)]);
+      setParentTypes([...new Set(extractedParentTypes)] as string[]);
       
       // Extract and set workspaces safely using proper type assertions
       const extractedWorkspaces: string[] = [];
       
-      if (Array.isArray(data.pages)) {
-        data.pages.forEach((page: any) => {
+      if (Array.isArray(pages)) {
+        pages.forEach((page: any) => {
           if (typeof page.workspace?.name === 'string' && page.workspace.name.length > 0) {
             extractedWorkspaces.push(page.workspace.name);
           }
         });
       }
           
-      setWorkspaces([...new Set(extractedWorkspaces)]);
+      setWorkspaces([...new Set(extractedWorkspaces)] as string[]);
       
       setIsFiltering(false);
       
       // Log page data for debugging
-      console.log("Notion pages received:", data.pages ? data.pages.length : 0);
-      if (data.pages && data.pages.length === 0) {
+      console.log("Notion pages received:", pages.length);
+      if (pages.length === 0) {
         console.log("No pages returned from Notion API");
       }
       
