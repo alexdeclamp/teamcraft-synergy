@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -511,14 +510,14 @@ const NotionImport = () => {
                   Filter by Workspace
                 </label>
                 <Select
-                  value={filterWorkspace || ''}
-                  onValueChange={(value) => setFilterWorkspace(value || null)}
+                  value={filterWorkspace || "all_workspaces"}
+                  onValueChange={(value) => setFilterWorkspace(value === "all_workspaces" ? null : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All workspaces" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All workspaces</SelectItem>
+                    <SelectItem value="all_workspaces">All workspaces</SelectItem>
                     {workspaces.map((workspace) => (
                       <SelectItem key={workspace} value={workspace}>
                         {workspace}
@@ -533,14 +532,14 @@ const NotionImport = () => {
                   Filter by Type
                 </label>
                 <Select
-                  value={filterParentType || ''}
-                  onValueChange={(value) => setFilterParentType(value || null)}
+                  value={filterParentType || "all_types"}
+                  onValueChange={(value) => setFilterParentType(value === "all_types" ? null : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All types</SelectItem>
+                    <SelectItem value="all_types">All types</SelectItem>
                     {parentTypes.map((type) => (
                       <SelectItem key={type} value={type}>
                         {type.charAt(0).toUpperCase() + type.slice(1)}
