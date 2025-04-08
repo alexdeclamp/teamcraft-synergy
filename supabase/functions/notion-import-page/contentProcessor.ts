@@ -130,6 +130,30 @@ export async function processBlock(block: any, accessToken: string, level = 0): 
         return `${indent}> ${emoji}**Callout:** ${block.callout.rich_text.map((text: any) => text.plain_text).join('')}\n\n`;
       }
       break;
+    case 'image':
+      // Handle image blocks - extract the URL if possible
+      let imageSource = '';
+      let imageAlt = 'Image from Notion';
+      
+      // Check what type of image it is (external URL, file, etc.)
+      if (block.image.type === 'external' && block.image.external?.url) {
+        imageSource = block.image.external.url;
+      } else if (block.image.type === 'file' && block.image.file?.url) {
+        imageSource = block.image.file.url;
+      }
+      
+      // Check if there's a caption to use as alt text
+      if (block.image.caption && block.image.caption.length > 0) {
+        imageAlt = block.image.caption.map((cap: any) => cap.plain_text).join('');
+      }
+      
+      if (imageSource) {
+        // Return markdown image format
+        return `${indent}![${imageAlt}](${imageSource})\n\n`;
+      } else {
+        // If we can't get the image URL, provide a nicer message
+        return `${indent}*[Image from Notion - not imported]*\n\n`;
+      }
     case 'table':
       return `${indent}[Table content not fully supported]\n\n`;
     case 'column_list':
