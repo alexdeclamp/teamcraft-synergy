@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -79,7 +78,6 @@ const NotionImport = () => {
     checkNotionConnection();
   }, [user, navigate]);
 
-  // Fetch workspaces and immediately fetch pages
   const fetchWorkspaces = async () => {
     if (!user) return;
     
@@ -90,41 +88,35 @@ const NotionImport = () => {
       
       if (error) throw error;
       
-      // Make sure data.workspaces is an array of strings
       const workspaceNames: string[] = Array.isArray(data.workspaces) 
         ? data.workspaces.filter((name: unknown): name is string => typeof name === 'string')
         : [];
       
       setWorkspaces(workspaceNames);
       
-      // Immediately fetch all pages
       await fetchNotionPages();
       
     } catch (err) {
       console.error("Error fetching workspaces:", err);
       toast.error("Failed to load Notion workspaces");
-      // Still try to fetch pages even if workspaces failed
       await fetchNotionPages();
     }
   };
 
   useEffect(() => {
-    // Clear any existing timeout
     if (debounceTimeout) {
       clearTimeout(debounceTimeout);
     }
 
-    // Set a new timeout to fetch filtered pages with debounce
     if (user && (searchTerm || filterParentType || filterWorkspace)) {
       setIsFiltering(true);
       const timeout = setTimeout(() => {
         fetchNotionPages();
-      }, 500); // 500ms debounce
+      }, 500);
       
       setDebounceTimeout(timeout as unknown as number);
     }
 
-    // Cleanup on unmount
     return () => {
       if (debounceTimeout) {
         clearTimeout(debounceTimeout);
@@ -168,7 +160,6 @@ const NotionImport = () => {
       
       setUserProjects(allProjects);
       
-      // If there's only one project, auto-select it
       if (allProjects.length === 1 && !selectedProject) {
         setSelectedProject(allProjects[0].id);
       }
@@ -214,23 +205,21 @@ const NotionImport = () => {
       setNextCursor(data.next_cursor);
       setHasMore(data.has_more);
 
-      // Extract unique parent types and workspaces
-      if (reset && data.pages) {
-        // Ensure we're working with string arrays by filtering out non-string values
-        const extractParentTypes = data.pages
-          .map((page: any) => page.parent?.type)
-          .filter((type: any): type is string => typeof type === 'string' && type.length > 0);
-        
-        // Use Set to get unique values and convert back to array
-        setParentTypes([...new Set(extractParentTypes)]);
-        
-        // Extract unique workspaces for filtering
-        const extractWorkspaces = data.pages
-          .map((page: any) => page.workspace?.name)
-          .filter((name: any): name is string => typeof name === 'string' && name.length > 0);
+      const extractParentTypes = Array.isArray(data.pages)
+        ? data.pages
+            .map((page: any) => page.parent?.type)
+            .filter((type: unknown): type is string => typeof type === 'string' && type.length > 0)
+        : [];
+      
+      setParentTypes([...new Set(extractParentTypes)]);
+      
+      const extractWorkspaces = Array.isArray(data.pages)
+        ? data.pages
+            .map((page: any) => page.workspace?.name)
+            .filter((name: unknown): name is string => typeof name === 'string' && name.length > 0)
+        : [];
           
-        setWorkspaces([...new Set(extractWorkspaces)]);
-      }
+      setWorkspaces([...new Set(extractWorkspaces)]);
       
       setIsFiltering(false);
     } catch (err: any) {
@@ -271,7 +260,6 @@ const NotionImport = () => {
       
       setRecentlyImported(prev => [...prev, pageId]);
       
-      // Get the project details for a more helpful message
       const project = userProjects.find(p => p.id === selectedProject);
       
       toast.success(
@@ -288,7 +276,6 @@ const NotionImport = () => {
         { duration: 5000 }
       );
       
-      // Refresh projects to update any counters
       fetchUserProjects();
     } catch (err: any) {
       console.error("Error importing Notion page:", err);
