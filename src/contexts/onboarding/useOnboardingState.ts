@@ -1,7 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { OnboardingStep } from './types';
 import { initialSteps } from './steps';
 
@@ -26,8 +24,6 @@ export const useOnboardingState = () => {
     return savedCompletion ? JSON.parse(savedCompletion) : false;
   });
 
-  const navigate = useNavigate();
-
   useEffect(() => {
     localStorage.setItem('onboardingSteps', JSON.stringify(steps));
     localStorage.setItem('onboardingCurrentStep', currentStepIndex.toString());
@@ -43,7 +39,6 @@ export const useOnboardingState = () => {
     isOnboardingActive,
     setIsOnboardingActive,
     isOnboardingCompleted,
-    setIsOnboardingCompleted,
-    navigate
+    setIsOnboardingCompleted
   };
 };
