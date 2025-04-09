@@ -16,7 +16,7 @@ const NotionImport = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isConnected } = useNotionConnection({ redirectIfNotConnected: true });
-  const { projects: userProjects = [] } = useNotionProjects();
+  const { userProjects = [] } = useNotionProjects();
   
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   
