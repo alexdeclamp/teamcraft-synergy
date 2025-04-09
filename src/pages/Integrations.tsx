@@ -13,7 +13,7 @@ import useGoogleDriveConnection from '@/hooks/useGoogleDriveConnection';
 const Integrations = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isConnected: isNotionConnected } = useNotionConnection();
+  const { isConnected: isNotionConnected } = useNotionConnection({ redirectIfNotConnected: false });
   const { isConnected: isGoogleDriveConnected } = useGoogleDriveConnection();
 
   const integrations = [

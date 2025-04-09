@@ -5,7 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-export const useNotionConnection = () => {
+interface UseNotionConnectionOptions {
+  redirectIfNotConnected?: boolean;
+}
+
+export const useNotionConnection = (options: UseNotionConnectionOptions = {}) => {
+  const { redirectIfNotConnected = false } = options;
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isConnected, setIsConnected] = useState(false);
@@ -41,7 +46,7 @@ export const useNotionConnection = () => {
   useEffect(() => {
     const checkConnection = async () => {
       const connected = await checkNotionConnection();
-      if (!connected) {
+      if (!connected && redirectIfNotConnected) {
         toast.error("You need to connect to Notion first");
         navigate('/notion-connect');
       }
@@ -50,7 +55,7 @@ export const useNotionConnection = () => {
     if (user) {
       checkConnection();
     }
-  }, [user, navigate]);
+  }, [user, navigate, redirectIfNotConnected]);
   
   return {
     isConnected,
