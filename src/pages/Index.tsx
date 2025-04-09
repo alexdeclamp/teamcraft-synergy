@@ -43,7 +43,9 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <header className="w-full py-4 px-6 border-b border-border/30 sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Logo />
+          <Link to="/landing" className="flex items-center space-x-2">
+            <Logo />
+          </Link>
           
           <div className="flex gap-2">
             <Button variant="ghost" onClick={handleSignIn}>Sign In</Button>
@@ -136,6 +138,9 @@ const Index = () => {
 
       <footer className="mt-auto py-4 border-t">
         <div className="max-w-4xl mx-auto px-6 flex justify-center">
+          <Link to="/landing" className="text-sm text-muted-foreground flex items-center hover:text-foreground transition-colors mr-4">
+            Back to Home
+          </Link>
           <Link to="/sitemap" className="text-sm text-muted-foreground flex items-center hover:text-foreground transition-colors">
             <Map className="mr-1 h-3.5 w-3.5" />
             Sitemap

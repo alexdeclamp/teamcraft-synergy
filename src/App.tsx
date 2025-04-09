@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { OnboardingProvider } from './contexts/OnboardingContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -21,8 +21,9 @@ function App() {
       <AuthProvider>
         <OnboardingProvider>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Navigate to="/landing" replace />} />
             <Route path="/landing" element={<Landing />} />
+            <Route path="/index" element={<Index />} />
             <Route path="/summarize" element={<SummarizeDemo />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={

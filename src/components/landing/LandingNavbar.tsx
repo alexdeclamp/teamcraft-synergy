@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cn } from "@/lib/utils";
@@ -38,7 +39,7 @@ const LandingNavbar = () => {
       )}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2">
+        <Link to="/landing" className="flex items-center space-x-2">
           <div className="flex items-center justify-center">
             <Sparkles className="h-7 w-7 text-primary" />
           </div>
