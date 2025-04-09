@@ -14,6 +14,7 @@ import GoogleDriveImport from './pages/GoogleDriveImport';
 import Index from './pages/Index';
 import Landing from './pages/Landing';
 import SummarizeDemo from './pages/SummarizeDemo';
+import Project from './pages/Project';
 
 function App() {
   return (
@@ -54,6 +55,11 @@ function App() {
             <Route path="/google-drive-import" element={
               <ProtectedRoute>
                 <GoogleDriveImport />
+              </ProtectedRoute>
+            } />
+            <Route path="/project/:id" element={
+              <ProtectedRoute>
+                <Project />
               </ProtectedRoute>
             } />
           </Routes>
