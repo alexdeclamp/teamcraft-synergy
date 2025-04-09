@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Auth from './pages/Auth';
+import Dashboard from './pages/Dashboard';
 import Integrations from './pages/Integrations';
 import NotionConnect from './pages/NotionConnect';
 import NotionImport from './pages/NotionImport';
@@ -16,8 +17,21 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/auth" element={<Auth />} />
-          <Route path="/" element={<Integrations />} />
-          <Route path="/integrations" element={<Integrations />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/integrations" element={
+            <ProtectedRoute>
+              <Integrations />
+            </ProtectedRoute>
+          } />
           <Route path="/notion-connect" element={
             <ProtectedRoute>
               <NotionConnect />
