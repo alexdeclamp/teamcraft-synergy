@@ -12,6 +12,7 @@ import NoteInfo from './NoteInfo';
 import NoteActions from './NoteActions';
 import NoteSourceDocument from './NoteSourceDocument';
 import NotesFormatter from '../NotesFormatter';
+import { resetBodyStyles } from '@/utils/dialogUtils';
 
 interface DesktopNoteViewProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ interface DesktopNoteViewProps {
   onDelete: (id: string) => void;
   formatDate?: (dateString: string) => string;
   userId?: string;
+  onClose?: () => void;
 }
 
 const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
@@ -30,27 +32,25 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
   onEdit,
   onDelete,
   formatDate,
-  userId
+  userId,
+  onClose
 }) => {
-  // Ensure we clean up everything when dialog closes
+  // Enhanced cleanup on unmount
+  useEffect(() => {
+    return resetBodyStyles;
+  }, []);
+
+  // Enhanced open change handler
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      // Make sure to fully close the dialog
-      setIsOpen(false);
-      
-      // Reset body styles that might be causing issues
-      document.body.style.overflow = '';
-      document.body.classList.remove('dialog-open', 'sheet-open');
+      if (onClose) {
+        onClose();
+      } else {
+        setIsOpen(false);
+        resetBodyStyles();
+      }
     }
   };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      document.body.style.overflow = '';
-      document.body.classList.remove('dialog-open', 'sheet-open');
-    };
-  }, []);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -60,7 +60,6 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
             {note.title || "Untitled Note"}
           </DialogTitle>
           
-          {/* Adding a hidden description to avoid Radix UI warnings */}
           <DialogDescription className="sr-only">
             View note details and content
           </DialogDescription>

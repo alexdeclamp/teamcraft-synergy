@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Note } from '@/components/notes/types';
+import { resetBodyStyles } from '@/utils/dialogUtils';
 
 export function useNoteDialog() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -10,9 +11,7 @@ export function useNoteDialog() {
 
   // Ensure any body modifications are cleaned up when the component unmounts
   useEffect(() => {
-    return () => {
-      resetBodyStyles();
-    };
+    return resetBodyStyles;
   }, []);
 
   // Watch dialog state changes and clean up when all dialogs are closed
@@ -21,11 +20,6 @@ export function useNoteDialog() {
       resetBodyStyles();
     }
   }, [isCreateOpen, isEditOpen, isViewOpen]);
-
-  const resetBodyStyles = () => {
-    document.body.style.overflow = '';
-    document.body.classList.remove('dialog-open', 'sheet-open');
-  };
 
   const openCreateDialog = () => {
     setIsCreateOpen(true);

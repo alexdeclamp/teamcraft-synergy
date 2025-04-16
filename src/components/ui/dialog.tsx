@@ -3,6 +3,7 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { resetBodyStyles, applyDialogOpenStyles } from "@/utils/dialogUtils";
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -20,14 +21,11 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
   children,
   ...props
 }, ref) => {
-  // Remove dialog-open class from body when dialog is closed
+  // Apply dialog-open class when dialog is opened and clean up when unmounted
   React.useEffect(() => {
-    document.body.classList.add('dialog-open');
+    applyDialogOpenStyles();
     
-    return () => {
-      document.body.classList.remove('dialog-open');
-      document.body.style.overflow = '';
-    };
+    return resetBodyStyles;
   }, []);
   
   return (

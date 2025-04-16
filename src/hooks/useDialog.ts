@@ -1,38 +1,37 @@
 
 import { useState, useEffect } from 'react';
+import { resetBodyStyles } from '@/utils/dialogUtils';
 
 export function useDialog() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Clean up dialog effects when component unmounts, dialog closes, or route changes
+  // Clean up dialog effects when component unmounts or dialog state changes
   useEffect(() => {
-    const cleanupStyles = () => {
-      document.body.style.overflow = '';
-      document.body.classList.remove('dialog-open', 'sheet-open');
-    };
-
     // Clean up when dialog closes
     if (!isDialogOpen) {
-      cleanupStyles();
+      resetBodyStyles();
     }
 
-    // Reset dialog state and clean up when component unmounts or route changes
+    // Reset dialog state and clean up when component unmounts
     return () => {
       setIsDialogOpen(false);
-      cleanupStyles();
+      resetBodyStyles();
     };
   }, [isDialogOpen]);
 
   const closeDialog = () => {
     setIsDialogOpen(false);
-    document.body.style.overflow = '';
-    document.body.classList.remove('dialog-open', 'sheet-open');
+    resetBodyStyles();
+  };
+
+  const openDialog = () => {
+    setIsDialogOpen(true);
   };
 
   return {
     isDialogOpen,
     setIsDialogOpen,
     closeDialog,
-    openDialog: () => setIsDialogOpen(true)
+    openDialog
   };
 }

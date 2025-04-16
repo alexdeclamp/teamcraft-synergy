@@ -7,6 +7,7 @@ import SummaryFooter from './SummaryFooter';
 import SummaryAlert from './SummaryAlert';
 import SummaryCloseButton from './SummaryCloseButton';
 import { useSummaryDialog } from './hooks/useSummaryDialog';
+import { resetBodyStyles } from '@/utils/dialogUtils';
 
 export interface SummaryDialogProps {
   isOpen: boolean;
@@ -59,20 +60,21 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     onNoteSaved
   });
   
-  // Clean up classes when dialog closes or unmounts
+  // Enhanced cleanup when dialog closes or unmounts
   useEffect(() => {
-    return () => {
-      document.body.style.overflow = '';
-      document.body.classList.remove('dialog-open', 'sheet-open');
-    };
+    return resetBodyStyles;
   }, []);
+  
+  // Safe close handler
+  const handleSafeClose = () => {
+    onClose();
+    resetBodyStyles();
+  };
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
-        onClose();
-        document.body.style.overflow = '';
-        document.body.classList.remove('dialog-open', 'sheet-open');
+        handleSafeClose();
       }
     }}>
       <DialogContent className="sm:max-w-[750px] max-h-[90vh] flex flex-col p-0 gap-0">

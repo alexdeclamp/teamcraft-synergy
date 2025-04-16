@@ -5,6 +5,7 @@ import { X } from "lucide-react"
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
+import { resetBodyStyles, applySheetOpenStyles } from "@/utils/dialogUtils"
 
 const Sheet = SheetPrimitive.Root
 
@@ -56,14 +57,11 @@ const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
 >(({ side = "right", className, children, ...props }, ref) => {
-  // Add a clean up effect to remove sheet-open class when sheet is closed
+  // Apply sheet-open class when sheet is opened and clean up when unmounted
   React.useEffect(() => {
-    document.body.classList.add('sheet-open');
+    applySheetOpenStyles();
     
-    return () => {
-      document.body.classList.remove('sheet-open');
-      document.body.style.overflow = '';
-    };
+    return resetBodyStyles;
   }, []);
   
   return (

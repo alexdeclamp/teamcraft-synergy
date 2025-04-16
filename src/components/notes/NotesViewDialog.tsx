@@ -5,6 +5,7 @@ import { Note } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MobileNoteView from './view-dialog/MobileNoteView';
 import DesktopNoteView from './view-dialog/DesktopNoteView';
+import { resetBodyStyles } from '@/utils/dialogUtils';
 
 interface NotesViewDialogProps {
   isOpen: boolean;
@@ -30,19 +31,24 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
   const finalSetIsOpen = onOpenChange || setIsOpen;
   const isMobile = useIsMobile();
 
-  // Enforce cleanup when component unmounts or dialog state changes
+  // Enhanced cleanup when component unmounts or dialog state changes
   useEffect(() => {
-    const cleanup = () => {
-      document.body.style.overflow = '';
-      document.body.classList.remove('dialog-open', 'sheet-open');
-    };
-    
+    // Clean up when dialog closes
     if (!isOpen) {
-      cleanup();
+      resetBodyStyles();
     }
     
-    return cleanup;
+    // Clean up when component unmounts
+    return () => {
+      resetBodyStyles();
+    };
   }, [isOpen]);
+
+  // Safe close handler that ensures cleanup
+  const handleClose = () => {
+    finalSetIsOpen(false);
+    resetBodyStyles();
+  };
 
   if (!note) return null;
   
@@ -56,6 +62,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
         onDelete={onDelete}
         formatDate={formatDate}
         userId={userId}
+        onClose={handleClose}
       />
     );
   }
@@ -69,6 +76,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
       onDelete={onDelete}
       formatDate={formatDate}
       userId={userId}
+      onClose={handleClose}
     />
   );
 };

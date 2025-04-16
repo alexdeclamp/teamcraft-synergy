@@ -7,6 +7,7 @@ import SummaryDialog from './summary/SummaryDialog';
 import { useNoteSummary } from '@/hooks/useNoteSummary';
 import ImageSummaryButtonUI from './summary/ImageSummaryButtonUI';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { resetBodyStyles } from '@/utils/dialogUtils';
 
 interface NoteSummaryButtonProps {
   noteId: string;
@@ -46,8 +47,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
     return () => {
       if (isDialogOpen) {
         setIsDialogOpen(false);
-        document.body.style.overflow = '';
-        document.body.classList.remove('dialog-open', 'sheet-open');
+        resetBodyStyles();
       }
     };
   }, [location.pathname, isDialogOpen, setIsDialogOpen]);
@@ -57,11 +57,10 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
     return null;
   }
 
-  // Close handler to ensure cleanup
+  // Safe close handler
   const handleClose = () => {
     setIsDialogOpen(false);
-    document.body.style.overflow = '';
-    document.body.classList.remove('dialog-open', 'sheet-open');
+    resetBodyStyles();
   };
 
   return (

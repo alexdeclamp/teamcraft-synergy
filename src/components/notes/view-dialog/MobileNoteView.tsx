@@ -6,6 +6,7 @@ import NoteInfo from './NoteInfo';
 import NoteActions from './NoteActions';
 import NoteSourceDocument from './NoteSourceDocument';
 import NotesFormatter from '../NotesFormatter';
+import { resetBodyStyles } from '@/utils/dialogUtils';
 
 interface MobileNoteViewProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface MobileNoteViewProps {
   onDelete: (id: string) => void;
   formatDate?: (dateString: string) => string;
   userId?: string;
+  onClose?: () => void;
 }
 
 const MobileNoteView: React.FC<MobileNoteViewProps> = ({
@@ -24,29 +26,26 @@ const MobileNoteView: React.FC<MobileNoteViewProps> = ({
   onEdit,
   onDelete,
   formatDate,
-  userId
+  userId,
+  onClose
 }) => {
-  // Ensure we clean up everything when sheet closes
+  // Ensure we clean up everything when sheet closes or unmounts
+  useEffect(() => {
+    // On unmount, ensure all cleanup happens
+    return resetBodyStyles;
+  }, []);
+
+  // Enhanced open change handler
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      // Make sure to fully close the sheet
-      setIsOpen(false);
-      
-      // Reset body styles that might be causing issues
-      document.body.style.overflow = '';
-      
-      // Remove any classes that might be interfering with interaction
-      document.body.classList.remove('sheet-open', 'dialog-open');
+      if (onClose) {
+        onClose();
+      } else {
+        setIsOpen(false);
+        resetBodyStyles();
+      }
     }
   };
-  
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      document.body.style.overflow = '';
-      document.body.classList.remove('sheet-open', 'dialog-open');
-    };
-  }, []);
 
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
@@ -57,7 +56,6 @@ const MobileNoteView: React.FC<MobileNoteViewProps> = ({
               {note.title || "Untitled Note"}
             </SheetTitle>
             
-            {/* Adding a hidden description to avoid warnings */}
             <SheetDescription className="sr-only">
               View note details and content
             </SheetDescription>

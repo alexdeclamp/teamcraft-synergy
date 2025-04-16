@@ -9,6 +9,7 @@ import EmptyNotesList from './notes/EmptyNotesList';
 import NotesLoading from './notes/NotesLoading';
 import NotesToolbar from './notes/NotesToolbar';
 import NotesList from './notes/NotesList';
+import { resetBodyStyles } from '@/utils/dialogUtils';
 
 interface ProjectNotesProps {
   projectId: string;
@@ -64,24 +65,34 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 
   const { filteredNotes } = useNotesSearch(notes, searchQuery);
 
-  // Ensure cleanup when component unmounts - with empty dependency array to avoid infinite loop
+  // Ensure cleanup when component unmounts
   useEffect(() => {
     return () => {
-      // Use a try-catch block to prevent errors during cleanup
       try {
         resetForm();
-        document.body.style.overflow = '';
-        document.body.classList.remove('dialog-open', 'sheet-open');
+        resetBodyStyles();
       } catch (error) {
         console.error('Error during cleanup:', error);
       }
     };
   }, []); // Empty dependency array means this only runs on unmount
 
-  // Cleanup handler for when dialogs close
-  const handleDialogClose = () => {
-    document.body.style.overflow = '';
-    document.body.classList.remove('dialog-open', 'sheet-open');
+  // Enhanced close handlers with guaranteed cleanup
+  const handleCloseViewDialog = () => {
+    setIsViewOpen(false);
+    resetBodyStyles();
+  };
+  
+  const handleCloseCreateDialog = () => {
+    setIsCreateOpen(false);
+    resetBodyStyles();
+    resetForm();
+  };
+  
+  const handleCloseEditDialog = () => {
+    setIsEditOpen(false);
+    resetBodyStyles();
+    resetForm();
   };
 
   if (loading) {
@@ -116,14 +127,8 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 
       <NotesViewDialog
         isOpen={isViewOpen}
-        setIsOpen={(open) => {
-          setIsViewOpen(open);
-          if (!open) handleDialogClose();
-        }}
-        onOpenChange={(open) => {
-          setIsViewOpen(open);
-          if (!open) handleDialogClose();
-        }}
+        setIsOpen={setIsViewOpen}
+        onOpenChange={setIsViewOpen}
         note={currentNote}
         onEdit={openEditDialog}
         onDelete={handleDeleteNote}
@@ -134,11 +139,8 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
       <NotesDialog
         isOpen={isCreateOpen}
         onOpenChange={(open) => {
-          setIsCreateOpen(open);
-          if (!open) {
-            handleDialogClose();
-            resetForm();
-          }
+          if (!open) handleCloseCreateDialog();
+          else setIsCreateOpen(true);
         }}
         type="create"
         title={title}
@@ -164,11 +166,8 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
       <NotesDialog
         isOpen={isEditOpen}
         onOpenChange={(open) => {
-          setIsEditOpen(open);
-          if (!open) {
-            handleDialogClose();
-            resetForm();
-          }
+          if (!open) handleCloseEditDialog();
+          else setIsEditOpen(true);
         }}
         type="edit"
         title={title}
