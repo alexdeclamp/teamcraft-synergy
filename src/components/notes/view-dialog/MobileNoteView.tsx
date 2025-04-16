@@ -26,8 +26,22 @@ const MobileNoteView: React.FC<MobileNoteViewProps> = ({
   formatDate,
   userId
 }) => {
+  // Ensure we clean up everything when sheet closes
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // Make sure to fully close the sheet
+      setIsOpen(false);
+      
+      // Reset body styles that might be causing issues
+      document.body.style.overflow = '';
+      
+      // Remove any classes that might be interfering with interaction
+      document.body.classList.remove('sheet-open');
+    }
+  };
+
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetContent side="bottom" className="h-[90vh] p-4 overflow-y-auto overflow-x-hidden">
         <div className="pt-6 mb-6">
           <SheetHeader className="mb-3">

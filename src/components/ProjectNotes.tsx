@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -61,8 +61,16 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     handleEditNote,
     openEditDialog,
     openViewDialog,
-    handleOpenCreateDialog
+    handleOpenCreateDialog,
+    resetForm
   } = useNoteForm(projectId, notes, setNotes, allTags, setAllTags);
+
+  // Ensure cleanup when component unmounts
+  useEffect(() => {
+    return () => {
+      resetForm();
+    };
+  }, [resetForm]);
 
   // Filter notes based on search query
   const filteredNotes = useMemo(() => {
@@ -75,6 +83,13 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
       (note.tags && note.tags.some(tag => tag.toLowerCase().includes(query)))
     );
   }, [notes, searchQuery]);
+
+  // Cleanup handler for when dialogs close
+  const handleDialogClose = () => {
+    // Ensure body and document are reset
+    document.body.style.overflow = '';
+    document.body.classList.remove('dialog-open', 'sheet-open');
+  };
 
   const renderNotesList = () => {
     if (loading) {
@@ -140,8 +155,14 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 
       <NotesViewDialog
         isOpen={isViewOpen}
-        setIsOpen={setIsViewOpen}
-        onOpenChange={setIsViewOpen}
+        setIsOpen={(open) => {
+          setIsViewOpen(open);
+          if (!open) handleDialogClose();
+        }}
+        onOpenChange={(open) => {
+          setIsViewOpen(open);
+          if (!open) handleDialogClose();
+        }}
         note={currentNote}
         onEdit={openEditDialog}
         onDelete={handleDeleteNote}
@@ -151,7 +172,10 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
       
       <NotesDialog
         isOpen={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
+        onOpenChange={(open) => {
+          setIsCreateOpen(open);
+          if (!open) handleDialogClose();
+        }}
         type="create"
         title={title}
         content={content}
@@ -174,7 +198,10 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
       
       <NotesDialog
         isOpen={isEditOpen}
-        onOpenChange={setIsEditOpen}
+        onOpenChange={(open) => {
+          setIsEditOpen(open);
+          if (!open) handleDialogClose();
+        }}
         type="edit"
         title={title}
         content={content}

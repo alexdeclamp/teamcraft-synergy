@@ -26,7 +26,10 @@ export function useNoteDialog() {
     setIsCreateOpen(false);
     setIsEditOpen(false);
     setIsViewOpen(false);
-    setCurrentNote(null);
+    // Add a small delay before clearing the current note to prevent UI flickers
+    setTimeout(() => {
+      setCurrentNote(null);
+    }, 100);
   };
 
   return {

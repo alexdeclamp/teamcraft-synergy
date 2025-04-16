@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dispatch, SetStateAction } from 'react';
 import { Note } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -29,6 +29,21 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
 }) => {
   const finalSetIsOpen = onOpenChange || setIsOpen;
   const isMobile = useIsMobile();
+
+  // Clean up any body/document level side effects when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Remove any stuck event listeners or body classes
+      document.body.style.overflow = '';
+      document.body.classList.remove('dialog-open');
+    }
+    
+    return () => {
+      // Cleanup on unmount
+      document.body.style.overflow = '';
+      document.body.classList.remove('dialog-open');
+    };
+  }, [isOpen]);
 
   if (!note) return null;
   

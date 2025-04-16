@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Note } from '../types';
 import {
   Dialog,
@@ -31,8 +31,19 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
   formatDate,
   userId
 }) => {
+  // Ensure we clean up everything when dialog closes
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      // Make sure to fully close the dialog
+      setIsOpen(false);
+      
+      // Reset body styles that might be causing issues
+      document.body.style.overflow = '';
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
         <DialogHeader className="mb-2">
           <DialogTitle className="text-xl sm:text-2xl break-words hyphens-auto pr-8">
