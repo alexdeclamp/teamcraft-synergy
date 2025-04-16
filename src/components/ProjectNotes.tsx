@@ -70,6 +70,8 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
       // Use a try-catch block to prevent errors during cleanup
       try {
         resetForm();
+        document.body.style.overflow = '';
+        document.body.classList.remove('dialog-open', 'sheet-open');
       } catch (error) {
         console.error('Error during cleanup:', error);
       }
@@ -133,7 +135,10 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         isOpen={isCreateOpen}
         onOpenChange={(open) => {
           setIsCreateOpen(open);
-          if (!open) handleDialogClose();
+          if (!open) {
+            handleDialogClose();
+            resetForm();
+          }
         }}
         type="create"
         title={title}
@@ -160,7 +165,10 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         isOpen={isEditOpen}
         onOpenChange={(open) => {
           setIsEditOpen(open);
-          if (!open) handleDialogClose();
+          if (!open) {
+            handleDialogClose();
+            resetForm();
+          }
         }}
         type="edit"
         title={title}

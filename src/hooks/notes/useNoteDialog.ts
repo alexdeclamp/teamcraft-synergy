@@ -31,9 +31,11 @@ export function useNoteDialog() {
   };
 
   const resetDialogs = () => {
+    // First reset the state
     setIsCreateOpen(false);
     setIsEditOpen(false);
     setIsViewOpen(false);
+    
     // Add a small delay before clearing the current note to prevent UI flickers
     setTimeout(() => {
       setCurrentNote(null);

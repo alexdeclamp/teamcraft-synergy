@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import NoteInfo from './NoteInfo';
 import NoteActions from './NoteActions';
@@ -39,7 +40,7 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
       
       // Reset body styles that might be causing issues
       document.body.style.overflow = '';
-      document.body.classList.remove('dialog-open');
+      document.body.classList.remove('dialog-open', 'sheet-open');
     }
   };
 
@@ -47,7 +48,7 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
   useEffect(() => {
     return () => {
       document.body.style.overflow = '';
-      document.body.classList.remove('dialog-open');
+      document.body.classList.remove('dialog-open', 'sheet-open');
     };
   }, []);
 
@@ -58,6 +59,11 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
           <DialogTitle className="text-xl sm:text-2xl break-words hyphens-auto pr-8">
             {note.title || "Untitled Note"}
           </DialogTitle>
+          
+          {/* Adding a hidden description to avoid Radix UI warnings */}
+          <DialogDescription className="sr-only">
+            View note details and content
+          </DialogDescription>
           
           <NoteInfo 
             updatedAt={note.updated_at}

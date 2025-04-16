@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { Note } from '../types';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import NoteInfo from './NoteInfo';
 import NoteActions from './NoteActions';
 import NoteSourceDocument from './NoteSourceDocument';
@@ -56,6 +56,11 @@ const MobileNoteView: React.FC<MobileNoteViewProps> = ({
             <SheetTitle className="text-lg sm:text-xl break-words hyphens-auto pr-8 text-left">
               {note.title || "Untitled Note"}
             </SheetTitle>
+            
+            {/* Adding a hidden description to avoid warnings */}
+            <SheetDescription className="sr-only">
+              View note details and content
+            </SheetDescription>
           </SheetHeader>
         </div>
         
