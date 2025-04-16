@@ -88,30 +88,20 @@ export const formatNoteContent = (text: string) => {
   });
 };
 
-interface NoteContentDisplayProps {
+interface NotesFormatterProps {
   content: string | null;
-  isPreview?: boolean;
 }
 
-const NoteContentDisplay: React.FC<NoteContentDisplayProps> = ({ content, isPreview = false }) => {
+const NotesFormatter: React.FC<NotesFormatterProps> = ({ content }) => {
   if (!content) {
     return <div className="text-muted-foreground italic">No content provided.</div>;
   }
   
-  // For preview, show more content but with smaller font
-  let displayContent = content;
-  if (isPreview) {
-    const firstParagraph = content.split('\n')[0] || '';
-    displayContent = firstParagraph.length > 500 
-      ? firstParagraph.substring(0, 500) + '...'
-      : firstParagraph;
-  }
-  
   return (
-    <div className={`whitespace-pre-wrap prose-sm max-w-none leading-relaxed break-words hyphens-auto overflow-hidden ${isPreview ? 'line-clamp-2 text-[6px]' : ''}`} style={{overflowWrap: 'break-word', wordWrap: 'break-word'}}>
-      {formatNoteContent(displayContent)}
+    <div className="whitespace-pre-wrap prose-sm max-w-none leading-relaxed break-words hyphens-auto overflow-hidden" style={{overflowWrap: 'break-word', wordWrap: 'break-word'}}>
+      {formatNoteContent(content)}
     </div>
   );
 };
 
-export default NoteContentDisplay;
+export default NotesFormatter;

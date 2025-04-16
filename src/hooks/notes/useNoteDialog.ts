@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Note } from '@/components/notes/types';
 
 export function useNoteDialog() {
@@ -7,6 +7,14 @@ export function useNoteDialog() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
+
+  // Ensure any body modifications are cleaned up when the component unmounts
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+      document.body.classList.remove('dialog-open', 'sheet-open');
+    };
+  }, []);
 
   const openCreateDialog = () => {
     setIsCreateOpen(true);
@@ -30,6 +38,10 @@ export function useNoteDialog() {
     setTimeout(() => {
       setCurrentNote(null);
     }, 100);
+    
+    // Make sure to reset body styles
+    document.body.style.overflow = '';
+    document.body.classList.remove('dialog-open', 'sheet-open');
   };
 
   return {

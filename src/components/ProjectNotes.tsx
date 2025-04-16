@@ -64,12 +64,17 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 
   const { filteredNotes } = useNotesSearch(notes, searchQuery);
 
-  // Ensure cleanup when component unmounts
+  // Ensure cleanup when component unmounts - with empty dependency array to avoid infinite loop
   useEffect(() => {
     return () => {
-      resetForm();
+      // Use a try-catch block to prevent errors during cleanup
+      try {
+        resetForm();
+      } catch (error) {
+        console.error('Error during cleanup:', error);
+      }
     };
-  }, [resetForm]);
+  }, []); // Empty dependency array means this only runs on unmount
 
   // Cleanup handler for when dialogs close
   const handleDialogClose = () => {

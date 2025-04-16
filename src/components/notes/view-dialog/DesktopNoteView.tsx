@@ -39,8 +39,17 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
       
       // Reset body styles that might be causing issues
       document.body.style.overflow = '';
+      document.body.classList.remove('dialog-open');
     }
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+      document.body.classList.remove('dialog-open');
+    };
+  }, []);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>

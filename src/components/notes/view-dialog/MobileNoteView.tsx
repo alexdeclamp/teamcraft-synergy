@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Note } from '../types';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import NoteInfo from './NoteInfo';
@@ -36,9 +36,17 @@ const MobileNoteView: React.FC<MobileNoteViewProps> = ({
       document.body.style.overflow = '';
       
       // Remove any classes that might be interfering with interaction
-      document.body.classList.remove('sheet-open');
+      document.body.classList.remove('sheet-open', 'dialog-open');
     }
   };
+  
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+      document.body.classList.remove('sheet-open', 'dialog-open');
+    };
+  }, []);
 
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
