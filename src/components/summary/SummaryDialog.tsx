@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import SummaryDialogHeader from './SummaryDialogHeader';
 import SummaryContent from './SummaryContent';
@@ -59,9 +59,21 @@ const SummaryDialog: React.FC<SummaryDialogProps> = ({
     onNoteSaved
   });
   
+  // Clean up classes when dialog closes or unmounts
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+      document.body.classList.remove('dialog-open', 'sheet-open');
+    };
+  }, []);
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) onClose();
+      if (!open) {
+        onClose();
+        document.body.style.overflow = '';
+        document.body.classList.remove('dialog-open', 'sheet-open');
+      }
     }}>
       <DialogContent className="sm:max-w-[750px] max-h-[90vh] flex flex-col p-0 gap-0">
         <div className="p-6 pb-2 flex-shrink-0 relative">

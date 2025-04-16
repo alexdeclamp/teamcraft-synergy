@@ -30,19 +30,18 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
   const finalSetIsOpen = onOpenChange || setIsOpen;
   const isMobile = useIsMobile();
 
-  // Clean up any body/document level side effects when dialog closes
+  // Enforce cleanup when component unmounts or dialog state changes
   useEffect(() => {
-    if (!isOpen) {
-      // Remove any stuck event listeners or body classes
+    const cleanup = () => {
       document.body.style.overflow = '';
-      document.body.classList.remove('dialog-open');
+      document.body.classList.remove('dialog-open', 'sheet-open');
+    };
+    
+    if (!isOpen) {
+      cleanup();
     }
     
-    return () => {
-      // Cleanup on unmount
-      document.body.style.overflow = '';
-      document.body.classList.remove('dialog-open');
-    };
+    return cleanup;
   }, [isOpen]);
 
   if (!note) return null;

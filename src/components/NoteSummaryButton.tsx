@@ -41,10 +41,13 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
     projectId: finalProjectId
   });
   
+  // Ensure dialog is closed and DOM is cleaned up when component unmounts or route changes
   useEffect(() => {
     return () => {
       if (isDialogOpen) {
         setIsDialogOpen(false);
+        document.body.style.overflow = '';
+        document.body.classList.remove('dialog-open', 'sheet-open');
       }
     };
   }, [location.pathname, isDialogOpen, setIsDialogOpen]);
@@ -53,6 +56,13 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
   if (isMobile) {
     return null;
   }
+
+  // Close handler to ensure cleanup
+  const handleClose = () => {
+    setIsDialogOpen(false);
+    document.body.style.overflow = '';
+    document.body.classList.remove('dialog-open', 'sheet-open');
+  };
 
   return (
     <>
@@ -81,7 +91,7 @@ const NoteSummaryButton: React.FC<NoteSummaryButtonProps> = ({
 
       <SummaryDialog
         isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        onClose={handleClose}
         title={`Summary of "${noteName || 'Note'}"`}
         summary={summary}
         isLoading={isGenerating && !hasSummary}
