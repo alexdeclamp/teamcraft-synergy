@@ -1,17 +1,14 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
-import { toast } from 'sonner';
-import NotesDialog from './notes/NotesDialog';
-import NotesCard from './notes/NotesCard';
-import TagFilter from './notes/TagFilter';
-import EmptyNotesList from './notes/EmptyNotesList';
-import NotesLoading from './notes/NotesLoading';
-import NotesViewDialog from './notes/NotesViewDialog';
+import React, { useState, useEffect } from 'react';
 import { useProjectNotes } from '@/hooks/useProjectNotes';
 import { useNoteForm } from '@/hooks/useNoteForm';
-import { SearchBar } from '@/components/ui/search-bar';
+import { useNotesSearch } from '@/hooks/notes/useNotesSearch';
+import NotesDialog from './notes/NotesDialog';
+import NotesViewDialog from './notes/NotesViewDialog';
+import EmptyNotesList from './notes/EmptyNotesList';
+import NotesLoading from './notes/NotesLoading';
+import NotesToolbar from './notes/NotesToolbar';
+import NotesList from './notes/NotesList';
 
 interface ProjectNotesProps {
   projectId: string;
@@ -65,6 +62,8 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     resetForm
   } = useNoteForm(projectId, notes, setNotes, allTags, setAllTags);
 
+  const { filteredNotes } = useNotesSearch(notes, searchQuery);
+
   // Ensure cleanup when component unmounts
   useEffect(() => {
     return () => {
@@ -72,86 +71,41 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     };
   }, [resetForm]);
 
-  // Filter notes based on search query
-  const filteredNotes = useMemo(() => {
-    if (!searchQuery.trim()) return notes;
-    
-    const query = searchQuery.toLowerCase().trim();
-    return notes.filter(note => 
-      note.title.toLowerCase().includes(query) || 
-      note.content.toLowerCase().includes(query) ||
-      (note.tags && note.tags.some(tag => tag.toLowerCase().includes(query)))
-    );
-  }, [notes, searchQuery]);
-
   // Cleanup handler for when dialogs close
   const handleDialogClose = () => {
-    // Ensure body and document are reset
     document.body.style.overflow = '';
     document.body.classList.remove('dialog-open', 'sheet-open');
   };
 
-  const renderNotesList = () => {
-    if (loading) {
-      return <NotesLoading />;
-    }
-    
-    if (notes.length === 0) {
-      return <EmptyNotesList onCreateNote={handleOpenCreateDialog} />;
-    }
-    
-    return (
-      <>
-        <div className="mb-6 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <SearchBar
-              placeholder="Search notes..."
-              value={searchQuery}
-              onChange={setSearchQuery}
-              className="flex-1"
-            />
-            <Button onClick={handleOpenCreateDialog} className="flex items-center gap-1 shrink-0">
-              <PlusCircle className="h-4 w-4" />
-              New Note
-            </Button>
-          </div>
-          
-          <TagFilter 
-            allTags={allTags} 
-            activeTag={activeTag} 
-            setActiveTag={setActiveTag} 
-          />
-        </div>
+  if (loading) {
+    return <NotesLoading />;
+  }
 
-        {filteredNotes.length === 0 ? (
-          <div className="py-6 text-center">
-            <p className="text-muted-foreground">No notes match your search</p>
-          </div>
-        ) : (
-          <div className="flex flex-col bg-white rounded-md shadow-sm">
-            {filteredNotes.map((note, index) => (
-              <NotesCard
-                key={note.id}
-                note={note}
-                userId={user?.id}
-                activeTag={activeTag}
-                setActiveTag={setActiveTag}
-                onView={openViewDialog}
-                onEdit={openEditDialog}
-                onDelete={handleDeleteNote}
-                formatDate={formatDate}
-                isLast={index === filteredNotes.length - 1}
-              />
-            ))}
-          </div>
-        )}
-      </>
-    );
-  };
+  if (notes.length === 0) {
+    return <EmptyNotesList onCreateNote={handleOpenCreateDialog} />;
+  }
 
   return (
-    <div className="space-y-4">      
-      {renderNotesList()}
+    <div className="space-y-4">
+      <NotesToolbar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onCreateNote={handleOpenCreateDialog}
+        allTags={allTags}
+        activeTag={activeTag}
+        setActiveTag={setActiveTag}
+      />
+
+      <NotesList
+        notes={filteredNotes}
+        userId={user?.id}
+        activeTag={activeTag}
+        setActiveTag={setActiveTag}
+        onView={openViewDialog}
+        onEdit={openEditDialog}
+        onDelete={handleDeleteNote}
+        formatDate={formatDate}
+      />
 
       <NotesViewDialog
         isOpen={isViewOpen}
