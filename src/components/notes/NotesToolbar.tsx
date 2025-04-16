@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Tag } from 'lucide-react';
 import { SearchBar } from '@/components/ui/search-bar';
 import TagFilter from './TagFilter';
 
@@ -36,6 +36,13 @@ const NotesToolbar: React.FC<NotesToolbarProps> = ({
           New Note
         </Button>
       </div>
+      
+      {allTags.length > 0 && (
+        <div className="flex items-center gap-2 mb-1">
+          <Tag className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium text-slate-800">Project Tags</span>
+        </div>
+      )}
       
       <TagFilter 
         allTags={allTags} 

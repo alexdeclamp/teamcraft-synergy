@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
-import { Loader2, X } from 'lucide-react';
+import { Loader2, Tag, X } from 'lucide-react';
 import RegenerateMetadataButton from '../note/RegenerateMetadataButton';
 import CleanTextButton from '../note/CleanTextButton';
 import NotesFormatting from './NotesFormatting';
+import TagRecommendations from './TagRecommendations';
 
 interface NotesDialogProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ interface NotesDialogProps {
   handleRegenerateTags: (tags: string[]) => void;
   handleRegenerateBoth: (data: { title: string; tags: string[] }) => void;
   onModelChange: (model: 'claude' | 'openai') => void;
+  allProjectTags?: string[];
 }
 
 const NotesDialog: React.FC<NotesDialogProps> = ({
@@ -54,7 +56,8 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
   handleRegenerateTitle,
   handleRegenerateTags,
   handleRegenerateBoth,
-  onModelChange
+  onModelChange,
+  allProjectTags = []
 }) => {
   const dialogTitle = type === 'create' ? 'Create New Note' : 'Edit Note';
   const dialogDescription = type === 'create' 
@@ -64,6 +67,14 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
   const inputId = type === 'create' ? 'title' : 'edit-title';
   const contentId = type === 'create' ? 'content' : 'edit-content';
   const tagsId = type === 'create' ? 'tags' : 'edit-tags';
+  
+  const handleSelectRecommendedTag = (tag: string) => {
+    if (!tags.includes(tag)) {
+      removeTag(tag); // Remove in case it was already there (shouldn't happen, but just in case)
+      onTagInputChange(tag);
+      setTimeout(() => addTag(), 0);
+    }
+  };
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -119,7 +130,13 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
             </div>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor={tagsId}>Tags (comma or enter to add)</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor={tagsId} className="flex items-center gap-1">
+                <Tag className="h-3.5 w-3.5" /> 
+                Tags
+              </Label>
+              <span className="text-xs text-muted-foreground">(comma or enter to add)</span>
+            </div>
             <div className="flex items-center space-x-2">
               <Input 
                 id={tagsId} 
@@ -138,6 +155,16 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
                 Add
               </Button>
             </div>
+            
+            {/* Tag recommendations */}
+            {allProjectTags.length > 0 && (
+              <TagRecommendations
+                availableTags={allProjectTags}
+                selectedTags={tags}
+                onSelectTag={handleSelectRecommendedTag}
+              />
+            )}
+            
             {tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {tags.map(tag => (

@@ -148,6 +148,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         handleRegenerateTags={handleRegenerateTags}
         handleRegenerateBoth={handleRegenerateBoth}
         onModelChange={setAiModel}
+        allProjectTags={allTags}
       />
       
       <NotesDialog
@@ -174,6 +175,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         handleRegenerateTags={handleRegenerateTags}
         handleRegenerateBoth={handleRegenerateBoth}
         onModelChange={setAiModel}
+        allProjectTags={allTags}
       />
     </div>
   );
