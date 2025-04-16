@@ -15,6 +15,7 @@ import Index from './pages/Index';
 import Landing from './pages/Landing';
 import SummarizeDemo from './pages/SummarizeDemo';
 import Project from './pages/Project';
+import NewProject from './pages/NewProject';
 
 function App() {
   return (
@@ -30,6 +31,11 @@ function App() {
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/new-project" element={
+              <ProtectedRoute>
+                <NewProject />
               </ProtectedRoute>
             } />
             <Route path="/integrations" element={
