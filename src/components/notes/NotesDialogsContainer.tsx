@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Note } from '@/components/notes/types';
-import NotesDialog from './NotesDialog';
-import NotesViewDialog from './NotesViewDialog';
 import { useNotesDialogClose } from '@/hooks/notes/useNotesDialogClose';
-import { initializeDialogState } from '@/utils/dialogUtils';
+import { useNotesDialogHandlers } from '@/hooks/notes/useNotesDialogHandlers';
+import { NotesViewDialogContainer } from './dialogs/NotesViewDialogContainer';
+import { NotesCreateDialogContainer } from './dialogs/NotesCreateDialogContainer';
+import { NotesEditDialogContainer } from './dialogs/NotesEditDialogContainer';
 
 interface NotesDialogsContainerProps {
   isCreateOpen: boolean;
@@ -88,54 +89,20 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
     }
   });
 
-  // Improved dialog open handler with better initialization sequence
-  const handleOpenChange = async (open: boolean, dialogType: 'view' | 'create' | 'edit') => {
-    console.log(`Dialog ${dialogType} open change requested: ${open}`);
-    
-    if (open) {
-      try {
-        // Before attempting to open, first initialize dialog state
-        console.log(`Initializing ${dialogType} dialog before opening`);
-        const readyToOpen = await prepareDialogOpen(dialogType);
-        
-        if (!readyToOpen) {
-          console.log(`Failed to initialize ${dialogType} dialog`);
-          return;
-        }
-        
-        // Only proceed with opening if initialization was successful
-        // Use a small delay to ensure state is consistent
-        setTimeout(() => {
-          console.log(`Setting ${dialogType} dialog open state to true`);
-          switch (dialogType) {
-            case 'view':
-              setIsViewOpen(true);
-              break;
-            case 'create':
-              setIsCreateOpen(true);
-              break;
-            case 'edit':
-              setIsEditOpen(true);
-              break;
-          }
-        }, 50);
-      } catch (error) {
-        console.error(`Error opening ${dialogType} dialog:`, error);
-      }
-    } else {
-      // Handle close with appropriate handler
-      handleCloseDialog(dialogType);
-    }
-  };
+  const { handleOpenChange } = useNotesDialogHandlers({
+    prepareDialogOpen,
+    handleCloseDialog,
+    setIsCreateOpen,
+    setIsEditOpen,
+    setIsViewOpen
+  });
 
   return (
     <>
-      <NotesViewDialog
+      <NotesViewDialogContainer
         isOpen={isViewOpen}
         setIsOpen={setIsViewOpen}
-        onOpenChange={(open: boolean) => {
-          handleOpenChange(open, 'view');
-        }}
+        onOpenChange={(open: boolean) => handleOpenChange(open, 'view')}
         note={currentNote}
         onEdit={onEdit}
         onDelete={onDelete}
@@ -143,12 +110,9 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
         userId={userId}
       />
       
-      <NotesDialog
+      <NotesCreateDialogContainer
         isOpen={isCreateOpen}
-        onOpenChange={(open: boolean) => {
-          handleOpenChange(open, 'create');
-        }}
-        type="create"
+        onOpenChange={(open: boolean) => handleOpenChange(open, 'create')}
         title={title}
         content={content}
         tagInput={tagInput}
@@ -169,12 +133,9 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
         allProjectTags={allTags}
       />
       
-      <NotesDialog
+      <NotesEditDialogContainer
         isOpen={isEditOpen}
-        onOpenChange={(open: boolean) => {
-          handleOpenChange(open, 'edit');
-        }}
-        type="edit"
+        onOpenChange={(open: boolean) => handleOpenChange(open, 'edit')}
         title={title}
         content={content}
         tagInput={tagInput}
