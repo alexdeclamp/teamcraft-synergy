@@ -34,7 +34,7 @@ export const applyDialogOpenStyles = () => {
   setTimeout(() => {
     document.body.classList.add('dialog-open');
     console.log('Dialog open styles applied');
-  }, 50); // Increased delay for more reliable style application
+  }, 100); // Increased delay for more reliable style application
 };
 
 /**
@@ -47,7 +47,7 @@ export const applySheetOpenStyles = () => {
   setTimeout(() => {
     document.body.classList.add('sheet-open');
     console.log('Sheet open styles applied');
-  }, 50); // Increased delay for more reliable style application
+  }, 100); // Increased delay for more reliable style application
 };
 
 /**
@@ -61,7 +61,7 @@ export const createDialogCloseHandler = (closeFunction: (open: boolean) => void)
     setTimeout(() => {
       resetBodyStyles();
       console.log('Dialog close handler executed with delay');
-    }, 400); // Increased from 250ms to 400ms for more reliability
+    }, 500); // Increased from 400ms to 500ms for more reliability
   };
 };
 
@@ -97,7 +97,7 @@ export const forceFullDialogCleanup = () => {
     });
     
     console.log('Force full dialog cleanup executed');
-  }, 100); // Small delay to ensure React has finished its updates
+  }, 150); // Small delay to ensure React has finished its updates
 };
 
 /**
@@ -108,11 +108,36 @@ export const initializeDialogState = () => {
   // First ensure any lingering state is cleared
   forceFullDialogCleanup();
   
+  // Force removal of any remaining Radix portal elements
+  setTimeout(() => {
+    document.querySelectorAll('[data-radix-portal]').forEach(element => {
+      if (element.children.length === 0) {
+        try {
+          element.remove();
+        } catch (e) {
+          console.warn('Error removing empty Radix portal:', e);
+        }
+      }
+    });
+  }, 0);
+  
   // Add a small delay before allowing the dialog to open
-  return new Promise<void>((resolve) => {
+  return new Promise<boolean>((resolve) => {
     setTimeout(() => {
-      console.log('Dialog state initialized');
-      resolve();
-    }, 50);
+      try {
+        // Apply dialog styles immediately before opening
+        document.body.classList.add('dialog-pending');
+        
+        // Add another small delay to ensure styles are applied
+        setTimeout(() => {
+          document.body.classList.remove('dialog-pending');
+          console.log('Dialog state fully initialized');
+          resolve(true);
+        }, 50);
+      } catch (error) {
+        console.error('Error during dialog initialization:', error);
+        resolve(false);
+      }
+    }, 100); // Increased from 50ms to 100ms for more reliable initialization
   });
 };

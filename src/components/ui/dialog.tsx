@@ -23,11 +23,11 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
 }, ref) => {
   // Apply dialog-open class when dialog is opened and clean up when unmounted
   React.useEffect(() => {
-    // More substantial delay to ensure dialog is actually rendered before applying styles
+    // Use a useEffect cleanup function to ensure proper cleanup when dialog is closed
     const timeoutId = setTimeout(() => {
       applyDialogOpenStyles();
-      console.log('Dialog styles applied');
-    }, 50); // Increased from 20ms to 50ms for more reliability
+      console.log('Dialog styles applied on mount');
+    }, 100); // Increased to 100ms for more reliable rendering
     
     // Clean up on unmount
     return () => {
@@ -36,7 +36,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
       setTimeout(() => {
         resetBodyStyles();
         console.log('Dialog cleanup on unmount');
-      }, 250);
+      }, 300); // Keep 300ms for proper exit animation
     };
   }, []);
   

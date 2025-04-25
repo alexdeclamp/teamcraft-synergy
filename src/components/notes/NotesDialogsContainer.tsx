@@ -88,23 +88,35 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
     }
   });
 
-  // Pre-initialize dialog state when opening
+  // Enhanced dialog open handler with initialization
   const handleOpenChange = async (open: boolean, dialogType: 'view' | 'create' | 'edit') => {
+    console.log(`Dialog ${dialogType} open change requested: ${open}`);
+    
     if (open) {
-      // Initialize dialog state before opening
-      await initializeDialogState();
-      
-      // Then set the correct dialog to open
-      switch (dialogType) {
-        case 'view':
-          setIsViewOpen(true);
-          break;
-        case 'create':
-          setIsCreateOpen(true);
-          break;
-        case 'edit':
-          setIsEditOpen(true);
-          break;
+      try {
+        // Fully initialize before opening - important to prevent flash-close
+        const readyToOpen = await prepareDialogOpen(dialogType);
+        
+        if (!readyToOpen) {
+          console.log(`Failed to initialize ${dialogType} dialog`);
+          return;
+        }
+        
+        // Only proceed with opening if initialization was successful
+        console.log(`Setting ${dialogType} dialog open state to true`);
+        switch (dialogType) {
+          case 'view':
+            setIsViewOpen(true);
+            break;
+          case 'create':
+            setIsCreateOpen(true);
+            break;
+          case 'edit':
+            setIsEditOpen(true);
+            break;
+        }
+      } catch (error) {
+        console.error(`Error opening ${dialogType} dialog:`, error);
       }
     } else {
       // Handle close with appropriate handler
