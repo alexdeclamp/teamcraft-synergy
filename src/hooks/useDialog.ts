@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { resetBodyStyles } from '@/utils/dialogUtils';
 
 export function useDialog() {
@@ -9,24 +9,40 @@ export function useDialog() {
   useEffect(() => {
     // Clean up when dialog closes
     if (!isDialogOpen) {
-      resetBodyStyles();
+      try {
+        resetBodyStyles();
+      } catch (error) {
+        console.error('Error cleaning up dialog:', error);
+      }
     }
 
     // Reset dialog state and clean up when component unmounts
     return () => {
-      setIsDialogOpen(false);
-      resetBodyStyles();
+      try {
+        setIsDialogOpen(false);
+        resetBodyStyles();
+      } catch (error) {
+        console.error('Error during dialog unmount cleanup:', error);
+      }
     };
   }, [isDialogOpen]);
 
-  const closeDialog = () => {
-    setIsDialogOpen(false);
-    resetBodyStyles();
-  };
+  const closeDialog = useCallback(() => {
+    try {
+      setIsDialogOpen(false);
+      resetBodyStyles();
+    } catch (error) {
+      console.error('Error closing dialog:', error);
+    }
+  }, []);
 
-  const openDialog = () => {
-    setIsDialogOpen(true);
-  };
+  const openDialog = useCallback(() => {
+    try {
+      setIsDialogOpen(true);
+    } catch (error) {
+      console.error('Error opening dialog:', error);
+    }
+  }, []);
 
   return {
     isDialogOpen,
