@@ -37,17 +37,24 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
 }) => {
   // Enhanced cleanup on unmount
   useEffect(() => {
-    return resetBodyStyles;
+    // Ensure cleanup when component unmounts
+    return () => {
+      console.log('Desktop view unmounting, cleaning up');
+      resetBodyStyles();
+    };
   }, []);
 
-  // Enhanced open change handler
+  // Enhanced open change handler with delayed cleanup
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       if (onClose) {
         onClose();
       } else {
         setIsOpen(false);
-        resetBodyStyles();
+        // Add delay before cleanup
+        setTimeout(() => {
+          resetBodyStyles();
+        }, 250);
       }
     }
   };

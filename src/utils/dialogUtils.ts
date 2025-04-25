@@ -28,14 +28,26 @@ export const resetBodyStyles = () => {
  * Apply styles for an open dialog
  */
 export const applyDialogOpenStyles = () => {
-  document.body.classList.add('dialog-open');
+  // Ensure any previous styles are cleared first
+  resetBodyStyles();
+  // Then apply the new class
+  setTimeout(() => {
+    document.body.classList.add('dialog-open');
+    console.log('Dialog open styles applied');
+  }, 10);
 };
 
 /**
  * Apply styles for an open sheet
  */
 export const applySheetOpenStyles = () => {
-  document.body.classList.add('sheet-open');
+  // Ensure any previous styles are cleared first
+  resetBodyStyles();
+  // Then apply the new class
+  setTimeout(() => {
+    document.body.classList.add('sheet-open');
+    console.log('Sheet open styles applied');
+  }, 10);
 };
 
 /**
@@ -45,8 +57,11 @@ export const applySheetOpenStyles = () => {
 export const createDialogCloseHandler = (closeFunction: (open: boolean) => void) => {
   return () => {
     closeFunction(false);
-    resetBodyStyles();
-    console.log('Dialog close handler executed');
+    // Add delay before cleanup
+    setTimeout(() => {
+      resetBodyStyles();
+      console.log('Dialog close handler executed with delay');
+    }, 250);
   };
 };
 

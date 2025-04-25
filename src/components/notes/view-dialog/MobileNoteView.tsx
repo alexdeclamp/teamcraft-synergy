@@ -32,17 +32,23 @@ const MobileNoteView: React.FC<MobileNoteViewProps> = ({
   // Ensure we clean up everything when sheet closes or unmounts
   useEffect(() => {
     // On unmount, ensure all cleanup happens
-    return resetBodyStyles;
+    return () => {
+      console.log('Mobile view unmounting, cleaning up');
+      resetBodyStyles();
+    };
   }, []);
 
-  // Enhanced open change handler
+  // Enhanced open change handler with delayed cleanup
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       if (onClose) {
         onClose();
       } else {
         setIsOpen(false);
-        resetBodyStyles();
+        // Add delay before cleanup
+        setTimeout(() => {
+          resetBodyStyles();
+        }, 250);
       }
     }
   };

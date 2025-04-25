@@ -30,9 +30,10 @@ export function useNotesDialogClose({
         break;
     }
     
-    // Don't reset body styles immediately to prevent flashing
-    // Add a delay to ensure the dialog close animation completes
+    // Use a significantly longer delay to ensure the dialog close animation completes
+    // before any cleanup occurs - this prevents the flash-close issue
     setTimeout(() => {
+      console.log(`${dialogType} dialog cleanup executing after delay`);
       resetBodyStyles();
       forceFullDialogCleanup();
       
@@ -40,7 +41,7 @@ export function useNotesDialogClose({
       if (dialogType !== 'view') {
         resetForm();
       }
-    }, 200); // Increased timeout for more reliable closing
+    }, 300); // Increased timeout for more reliable closing
   };
 
   return {
