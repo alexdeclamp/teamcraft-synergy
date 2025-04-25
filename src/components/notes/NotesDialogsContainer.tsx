@@ -133,7 +133,7 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
       <NotesViewDialog
         isOpen={isViewOpen}
         setIsOpen={setIsViewOpen}
-        onOpenChange={(open) => {
+        onOpenChange={(open: boolean) => {
           handleOpenChange(open, 'view');
         }}
         note={currentNote}
@@ -145,7 +145,7 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
       
       <NotesDialog
         isOpen={isCreateOpen}
-        onOpenChange={(open) => {
+        onOpenChange={(open: boolean) => {
           handleOpenChange(open, 'create');
         }}
         type="create"
@@ -171,7 +171,7 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
       
       <NotesDialog
         isOpen={isEditOpen}
-        onOpenChange={(open) => {
+        onOpenChange={(open: boolean) => {
           handleOpenChange(open, 'edit');
         }}
         type="edit"
