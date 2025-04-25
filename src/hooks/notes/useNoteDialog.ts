@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Note } from '@/components/notes/types';
 import { resetBodyStyles, forceFullDialogCleanup } from '@/utils/dialogUtils';
 
@@ -9,18 +9,13 @@ export function useNoteDialog() {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
 
-  // Memoize cleanup functions to prevent unnecessary re-renders
-  const cleanup = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      console.log('useNoteDialog unmount cleanup');
-      forceFullDialogCleanup();
-    }
-  }, []);
-
   // Ensure any body modifications are cleaned up when the component unmounts
   useEffect(() => {
-    return cleanup;
-  }, [cleanup]);
+    return () => {
+      console.log('useNoteDialog unmount cleanup');
+      forceFullDialogCleanup();
+    };
+  }, []);
 
   // Watch dialog state changes and clean up when all dialogs are closed
   useEffect(() => {
@@ -30,38 +25,28 @@ export function useNoteDialog() {
     }
   }, [isCreateOpen, isEditOpen, isViewOpen]);
 
-  const openCreateDialog = useCallback(() => {
+  const openCreateDialog = () => {
     setIsCreateOpen(true);
-  }, []);
+  };
 
-  const openEditDialog = useCallback((note: Note) => {
-    if (!note) {
-      console.warn('Attempted to open edit dialog with null note');
-      return;
-    }
-    
+  const openEditDialog = (note: Note) => {
     setCurrentNote(note);
     setIsEditOpen(true);
-  }, []);
+  };
 
-  const openViewDialog = useCallback((note: Note) => {
-    if (!note) {
-      console.warn('Attempted to open view dialog with null note');
-      return;
-    }
-    
+  const openViewDialog = (note: Note) => {
     setCurrentNote(note);
     setIsViewOpen(true);
-  }, []);
+  };
 
-  const resetDialogs = useCallback(() => {
+  const resetDialogs = () => {
     // First reset the state
     setIsCreateOpen(false);
     setIsEditOpen(false);
     setIsViewOpen(false);
     
     // Add a small delay before clearing the current note to prevent UI flickers
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       setCurrentNote(null);
     }, 100);
     
@@ -69,10 +54,7 @@ export function useNoteDialog() {
     forceFullDialogCleanup();
     
     console.log('All dialogs reset and cleaned up');
-    
-    // Return a cleanup function to clear the timeout
-    return () => clearTimeout(timer);
-  }, []);
+  };
 
   return {
     isCreateOpen,

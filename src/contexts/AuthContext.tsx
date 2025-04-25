@@ -1,10 +1,9 @@
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { forceFullDialogCleanup } from '@/utils/dialogUtils';
 
 type AuthContextType = {
   session: Session | null;
@@ -14,7 +13,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
-  fetchProfile: (userId?: string) => Promise<void>;
+  fetchProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,18 +25,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Email validation
-  const validateEmail = (email: string): boolean => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setIsLoading(false);
+      }
+    });
 
-  // Password validation
-  const validatePassword = (password: string): boolean => {
-    return password.length >= 8;
-  };
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+        setIsLoading(false);
+      }
+    });
 
-  // Fetch profile function
-  const fetchProfile = useCallback(async (userId?: string) => {
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const fetchProfile = async (userId?: string) => {
     try {
       const id = userId || user?.id;
       if (!id) return;
@@ -50,6 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error fetching profile:', error);
+        setIsLoading(false);
         return;
       }
 
@@ -59,61 +77,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  };
 
-  useEffect(() => {
-    // Get initial session
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
-        setIsLoading(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [fetchProfile]);
-
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
-      if (!validateEmail(email)) {
-        toast.error('Please enter a valid email address');
-        return;
-      }
-
-      if (!password.trim()) {
-        toast.error('Password is required');
-        return;
-      }
-
       const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email,
         password,
       });
 
@@ -127,31 +96,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       toast.error(error.message || 'An unexpected error occurred');
     }
-  }, [navigate]);
+  };
 
-  const signUp = useCallback(async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      if (!validateEmail(email)) {
-        toast.error('Please enter a valid email address');
-        return;
-      }
-
-      if (!validatePassword(password)) {
-        toast.error('Password must be at least 8 characters');
-        return;
-      }
-
-      if (!fullName.trim()) {
-        toast.error('Full name is required');
-        return;
-      }
-
       const { error } = await supabase.auth.signUp({
-        email: email.trim(),
+        email,
         password,
         options: {
           data: {
-            full_name: fullName.trim(),
+            full_name: fullName,
           },
         },
       });
@@ -165,9 +119,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       toast.error(error.message || 'An unexpected error occurred');
     }
-  }, []);
+  };
 
-  const signOut = useCallback(async () => {
+  const signOut = async () => {
     try {
       console.log('Signing out...');
       
@@ -176,14 +130,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setProfile(null);
       
-      // Clean up any open dialogs to prevent security issues
-      forceFullDialogCleanup();
-      
       // Then attempt to sign out from Supabase
       const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Error during sign out:', error);
+        // Don't return early on error - we still want to navigate
       }
       
       // Always navigate to auth page
@@ -194,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Even if there's an error, we should still try to navigate away
       navigate('/auth');
     }
-  }, [navigate]);
+  };
 
   const value = {
     session,

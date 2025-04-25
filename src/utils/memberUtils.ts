@@ -4,24 +4,16 @@ import { supabase } from '@/integrations/supabase/client';
 /**
  * Find a user by their email address
  * Searches in profiles table first, then falls back to the RPC function
- * Implements security best practices
  */
 export const findUserByEmail = async (email: string): Promise<string | null> => {
-  if (!email || typeof email !== 'string') {
-    throw new Error('Invalid email format');
-  }
-  
-  // Sanitize email input
-  const sanitizedEmail = email.toLowerCase().trim();
-  
-  console.log('Looking up user by email:', sanitizedEmail);
+  console.log('Looking up user by email:', email);
   
   try {
     // First check profiles table for the email
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('id, email')
-      .ilike('email', sanitizedEmail);
+      .ilike('email', email.toLowerCase());
 
     if (profilesError) {
       console.error('Error querying profiles:', profilesError);
@@ -32,7 +24,7 @@ export const findUserByEmail = async (email: string): Promise<string | null> => 
     
     // Find the first matching profile
     const matchingProfile = profiles?.find(profile => 
-      profile.email?.toLowerCase() === sanitizedEmail
+      profile.email?.toLowerCase() === email.toLowerCase()
     );
     
     if (matchingProfile?.id) {
@@ -43,7 +35,7 @@ export const findUserByEmail = async (email: string): Promise<string | null> => 
     // If we couldn't find the user in profiles, try using our RPC function
     const { data: authProfiles, error: authError } = await supabase
       .rpc('get_user_by_email', { 
-        lookup_email: sanitizedEmail 
+        lookup_email: email.toLowerCase() 
       });
     
     if (authError) {

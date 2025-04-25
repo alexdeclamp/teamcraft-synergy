@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,25 +23,15 @@ const ProjectQuickUpdate: React.FC<ProjectQuickUpdateProps> = ({
   const [aiModel, setAiModel] = useState<'claude' | 'openai'>('claude');
   const { user } = useAuth();
   
-  // Sanitize content before submitting
-  const sanitizeContent = (content: string): string => {
-    // Basic sanitization - remove any script tags or dangerous elements
-    return content
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .trim();
-  };
-  
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const trimmedContent = updateContent.trim();
-    
-    if (!trimmedContent) {
+    if (!updateContent.trim()) {
       toast.error('Please enter an update');
       return;
     }
     
-    if (!user?.id) {
+    if (!user) {
       toast.error('You must be logged in to post an update');
       return;
     }
@@ -49,14 +39,11 @@ const ProjectQuickUpdate: React.FC<ProjectQuickUpdateProps> = ({
     try {
       setIsSubmitting(true);
       
-      // Sanitize the content before saving to the database
-      const safeContent = sanitizeContent(trimmedContent);
-      
       const { error } = await supabase
         .from('project_updates')
         .insert({
           project_id: projectId,
-          content: safeContent,
+          content: updateContent.trim(),
           user_id: user.id
         });
       
@@ -71,11 +58,11 @@ const ProjectQuickUpdate: React.FC<ProjectQuickUpdateProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [updateContent, projectId, user, onUpdateAdded]);
+  };
 
-  const handleCleanedText = useCallback((cleanedText: string) => {
+  const handleCleanedText = (cleanedText: string) => {
     setUpdateContent(cleanedText);
-  }, []);
+  };
 
   return (
     <Card>
@@ -87,7 +74,6 @@ const ProjectQuickUpdate: React.FC<ProjectQuickUpdateProps> = ({
               value={updateContent}
               onChange={(e) => setUpdateContent(e.target.value)}
               className="min-h-[120px] resize-none"
-              maxLength={5000} // Add a reasonable limit
             />
             
             <div className="flex justify-between items-center">
