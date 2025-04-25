@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -11,6 +10,7 @@ import RegenerateMetadataButton from '../note/RegenerateMetadataButton';
 import CleanTextButton from '../note/CleanTextButton';
 import NotesFormatting from './NotesFormatting';
 import TagRecommendations from './TagRecommendations';
+import { resetBodyStyles, forceFullDialogCleanup } from '@/utils/dialogUtils';
 
 interface NotesDialogProps {
   isOpen: boolean;
@@ -68,6 +68,20 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
   const contentId = type === 'create' ? 'content' : 'edit-content';
   const tagsId = type === 'create' ? 'tags' : 'edit-tags';
   
+  useEffect(() => {
+    if (!isOpen) {
+      console.log(`${type} note dialog closed, cleaning up...`);
+      setTimeout(forceFullDialogCleanup, 100);
+    }
+    
+    return () => {
+      if (isOpen) {
+        console.log(`${type} note dialog unmounting while open, forcing cleanup`);
+        forceFullDialogCleanup();
+      }
+    };
+  }, [isOpen, type]);
+  
   const handleSelectRecommendedTag = (tag: string) => {
     if (!tags.includes(tag)) {
       removeTag(tag); // Remove in case it was already there (shouldn't happen, but just in case)
@@ -76,8 +90,21 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
     }
   };
   
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      console.log(`${type} note dialog closing through open change handler`);
+      resetBodyStyles();
+      setTimeout(() => {
+        onOpenChange(open);
+        forceFullDialogCleanup();
+      }, 50);
+    } else {
+      onOpenChange(open);
+    }
+  };
+  
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[800px] md:max-w-[900px] lg:max-w-[1000px] w-[calc(100vw-3rem)]">
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>
@@ -156,7 +183,6 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
               </Button>
             </div>
             
-            {/* Tag recommendations */}
             {allProjectTags.length > 0 && (
               <TagRecommendations
                 availableTags={allProjectTags}
@@ -183,10 +209,23 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              console.log('Cancel button clicked, force cleaning up before close');
+              forceFullDialogCleanup();
+              onOpenChange(false);
+            }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={saving}>
+          <Button 
+            onClick={() => {
+              console.log('Submit button clicked');
+              handleSubmit();
+            }} 
+            disabled={saving}
+          >
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {submitButtonText}
           </Button>

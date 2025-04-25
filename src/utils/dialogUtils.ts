@@ -10,12 +10,18 @@
 export const resetBodyStyles = () => {
   // Reset scroll behavior
   document.body.style.overflow = '';
+  document.body.style.pointerEvents = '';
   
   // Remove all dialog-related classes
   document.body.classList.remove('dialog-open', 'sheet-open');
   
   // Force a small reflow to ensure styles are applied
   void document.body.offsetHeight;
+  
+  // Additional cleanup for any aria attributes
+  document.body.removeAttribute('aria-hidden');
+  
+  console.log('Dialog cleanup executed: Body styles and classes reset');
 };
 
 /**
@@ -34,10 +40,33 @@ export const applySheetOpenStyles = () => {
 
 /**
  * Create a consistent dialog cleanup handler
+ * This function returns a closure that can be used for cleanup
  */
 export const createDialogCloseHandler = (closeFunction: (open: boolean) => void) => {
   return () => {
     closeFunction(false);
     resetBodyStyles();
+    console.log('Dialog close handler executed');
   };
+};
+
+/**
+ * Force full DOM cleanup for all dialogs
+ * This is a last resort function to ensure UI remains clickable
+ */
+export const forceFullDialogCleanup = () => {
+  // Reset all dialog-related styles and classes
+  resetBodyStyles();
+  
+  // Clear any remaining backdrop elements
+  const backdropElements = document.querySelectorAll('[data-radix-portal]');
+  backdropElements.forEach(element => {
+    try {
+      element.remove();
+    } catch (e) {
+      console.warn('Error removing backdrop element:', e);
+    }
+  });
+  
+  console.log('Force full dialog cleanup executed');
 };

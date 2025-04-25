@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Note } from '@/components/notes/types';
-import { resetBodyStyles } from '@/utils/dialogUtils';
+import { resetBodyStyles, forceFullDialogCleanup } from '@/utils/dialogUtils';
 
 export function useNoteDialog() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -11,13 +11,17 @@ export function useNoteDialog() {
 
   // Ensure any body modifications are cleaned up when the component unmounts
   useEffect(() => {
-    return resetBodyStyles;
+    return () => {
+      console.log('useNoteDialog unmount cleanup');
+      forceFullDialogCleanup();
+    };
   }, []);
 
   // Watch dialog state changes and clean up when all dialogs are closed
   useEffect(() => {
     if (!isCreateOpen && !isEditOpen && !isViewOpen) {
-      resetBodyStyles();
+      console.log('All note dialogs closed, executing cleanup');
+      forceFullDialogCleanup();
     }
   }, [isCreateOpen, isEditOpen, isViewOpen]);
 
@@ -46,8 +50,10 @@ export function useNoteDialog() {
       setCurrentNote(null);
     }, 100);
     
-    // Make sure to reset body styles
-    resetBodyStyles();
+    // Force a complete cleanup
+    forceFullDialogCleanup();
+    
+    console.log('All dialogs reset and cleaned up');
   };
 
   return {
