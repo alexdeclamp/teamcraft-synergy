@@ -82,9 +82,14 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
   useEffect(() => {
     if (!isCreateOpen && !isEditOpen && !isViewOpen) {
       console.log('All dialogs closed in ProjectNotes, running cleanup');
-      setTimeout(forceFullDialogCleanup, 150);
+      setTimeout(() => {
+        forceFullDialogCleanup();
+        if (!isEditOpen && !isCreateOpen) {
+          resetForm();
+        }
+      }, 150);
     }
-  }, [isCreateOpen, isEditOpen, isViewOpen]);
+  }, [isCreateOpen, isEditOpen, isViewOpen, resetForm]);
 
   // Enhanced close handlers with guaranteed cleanup
   const handleCloseViewDialog = () => {

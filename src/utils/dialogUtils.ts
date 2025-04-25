@@ -68,5 +68,17 @@ export const forceFullDialogCleanup = () => {
     }
   });
   
+  // Also clear any aria-hidden attributes from other elements
+  document.querySelectorAll('[aria-hidden="true"]').forEach(el => {
+    if (el !== document.body) {
+      el.removeAttribute('aria-hidden');
+    }
+  });
+  
+  // Ensure pointer events are reset on all relevant elements
+  document.querySelectorAll('div[style*="pointer-events: none"]').forEach(el => {
+    (el as HTMLElement).style.pointerEvents = '';
+  });
+  
   console.log('Force full dialog cleanup executed');
 };
