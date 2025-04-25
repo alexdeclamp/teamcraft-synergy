@@ -33,21 +33,25 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
 
   // Enhanced cleanup when component unmounts or dialog state changes
   useEffect(() => {
-    // Clean up when dialog closes
+    // Only run cleanup when dialog actually closes after being open
+    // This prevents the premature cleanup that was causing the flash-close issue
     if (!isOpen) {
-      resetBodyStyles();
+      // Add small delay to ensure dialog animation completes before cleanup
+      const timeoutId = setTimeout(() => {
+        resetBodyStyles();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
-    
-    // Clean up when component unmounts
-    return () => {
-      resetBodyStyles();
-    };
   }, [isOpen]);
-
-  // Safe close handler that ensures cleanup
+  
+  // Safe close handler that ensures cleanup with proper timing
   const handleClose = () => {
     finalSetIsOpen(false);
-    resetBodyStyles();
+    // Allow dialog to start closing animation before cleanup
+    setTimeout(() => {
+      resetBodyStyles();
+    }, 100);
   };
 
   if (!note) return null;

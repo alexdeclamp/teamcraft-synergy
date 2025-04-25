@@ -16,7 +16,6 @@ export function useNotesDialogClose({
 }: UseNotesDialogCloseProps) {
   const handleCloseDialog = (dialogType: 'create' | 'edit' | 'view') => {
     console.log(`${dialogType} dialog closing through handler`);
-    resetBodyStyles();
     
     // First update the dialog state
     switch (dialogType) {
@@ -31,14 +30,17 @@ export function useNotesDialogClose({
         break;
     }
     
-    // Then clean up with a small delay
+    // Don't reset body styles immediately to prevent flashing
+    // Add a delay to ensure the dialog close animation completes
     setTimeout(() => {
+      resetBodyStyles();
       forceFullDialogCleanup();
+      
       // Only reset form for create/edit dialogs
       if (dialogType !== 'view') {
         resetForm();
       }
-    }, 50);
+    }, 150); // Increased timeout for more reliable closing
   };
 
   return {
