@@ -1,17 +1,12 @@
 
 import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from "@/components/ui/badge";
 import { Button } from '@/components/ui/button';
-import { Loader2, Tag, X } from 'lucide-react';
-import RegenerateMetadataButton from '../note/RegenerateMetadataButton';
-import CleanTextButton from '../note/CleanTextButton';
-import NotesFormatting from './NotesFormatting';
-import TagRecommendations from './TagRecommendations';
+import { Loader2 } from 'lucide-react';
 import { resetBodyStyles, forceFullDialogCleanup } from '@/utils/dialogUtils';
+import NotesDialogTitle from './dialog/NotesDialogTitle';
+import NotesDialogContent from './dialog/NotesDialogContent';
+import NotesDialogTags from './dialog/NotesDialogTags';
 
 interface NotesDialogProps {
   isOpen: boolean;
@@ -85,7 +80,7 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
   
   const handleSelectRecommendedTag = (tag: string) => {
     if (!tags.includes(tag)) {
-      removeTag(tag); // Remove in case it was already there (shouldn't happen, but just in case)
+      removeTag(tag);
       onTagInputChange(tag);
       setTimeout(() => addTag(), 0);
     }
@@ -114,100 +109,35 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <div className="flex justify-between items-center">
-              <Label htmlFor={inputId}>Title</Label>
-              <RegenerateMetadataButton 
-                noteContent={content} 
-                onRegenerateTitle={handleRegenerateTitle} 
-                onRegenerateTags={handleRegenerateTags} 
-                onRegenerateBoth={handleRegenerateBoth} 
-                model={aiModel} 
-                onModelChange={onModelChange} 
-              />
-            </div>
-            <Input 
-              id={inputId} 
-              placeholder="Enter note title" 
-              value={title} 
-              onChange={e => onTitleChange(e.target.value)} 
-            />
-          </div>
-          <div className="grid gap-2">
-            <div className="flex justify-between items-center">
-              <Label htmlFor={contentId}>Content</Label>
-              <div className="flex items-center gap-2">
-                <CleanTextButton 
-                  noteContent={content}
-                  onTextCleaned={onContentChange}
-                  model={aiModel}
-                  onModelChange={onModelChange}
-                />
-                <NotesFormatting contentId={contentId} />
-              </div>
-            </div>
-            <Textarea 
-              id={contentId} 
-              placeholder="Enter note content" 
-              value={content} 
-              onChange={e => onContentChange(e.target.value)} 
-              className="min-h-[200px] font-mono" 
-            />
-            <div className="text-xs text-muted-foreground">
-              Use **bold**, *italic*, or __underline__ to format your text.
-            </div>
-          </div>
-          <div className="grid gap-2">
-            <div className="flex items-center gap-2">
-              <Label htmlFor={tagsId} className="flex items-center gap-1">
-                <Tag className="h-3.5 w-3.5" /> 
-                Tags
-              </Label>
-              <span className="text-xs text-muted-foreground">(comma or enter to add)</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Input 
-                id={tagsId} 
-                placeholder="Add tags..." 
-                value={tagInput} 
-                onChange={e => onTagInputChange(e.target.value)} 
-                onKeyDown={onTagInputKeyDown} 
-              />
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
-                onClick={addTag} 
-                disabled={!tagInput.trim()}
-              >
-                Add
-              </Button>
-            </div>
-            
-            {allProjectTags.length > 0 && (
-              <TagRecommendations
-                availableTags={allProjectTags}
-                selectedTags={tags}
-                onSelectTag={handleSelectRecommendedTag}
-              />
-            )}
-            
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {tags.map(tag => (
-                  <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                    #{tag}
-                    <button 
-                      onClick={() => removeTag(tag)} 
-                      className="ml-1 h-3 w-3 rounded-full flex items-center justify-center hover:bg-accent"
-                    >
-                      <X className="h-2 w-2" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
+          <NotesDialogTitle
+            inputId={inputId}
+            title={title}
+            content={content}
+            onTitleChange={onTitleChange}
+            handleRegenerateTitle={handleRegenerateTitle}
+            handleRegenerateTags={handleRegenerateTags}
+            handleRegenerateBoth={handleRegenerateBoth}
+            aiModel={aiModel}
+            onModelChange={onModelChange}
+          />
+          <NotesDialogContent
+            contentId={contentId}
+            content={content}
+            onContentChange={onContentChange}
+            aiModel={aiModel}
+            onModelChange={onModelChange}
+          />
+          <NotesDialogTags
+            tagsId={tagsId}
+            tagInput={tagInput}
+            tags={tags}
+            onTagInputChange={onTagInputChange}
+            onTagInputKeyDown={onTagInputKeyDown}
+            addTag={addTag}
+            removeTag={removeTag}
+            allProjectTags={allProjectTags}
+            handleSelectRecommendedTag={handleSelectRecommendedTag}
+          />
         </div>
         <DialogFooter>
           <Button 
