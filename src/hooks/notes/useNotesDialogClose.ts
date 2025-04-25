@@ -14,13 +14,23 @@ export function useNotesDialogClose({
   setIsViewOpen,
   resetForm
 }: UseNotesDialogCloseProps) {
-  // Initialize dialog before opening to prevent flash-close
+  // Enhanced dialog initialization with proper timing
   const prepareDialogOpen = async (dialogType: 'create' | 'edit' | 'view') => {
-    // Make sure to initialize dialog state BEFORE setting any open state
-    await initializeDialogState();
-    console.log(`${dialogType} dialog state initialized and ready to open`);
+    console.log(`${dialogType} dialog initializing...`);
     
-    // Dialog initialization is complete, now it's safe to open
+    // First clean up any lingering dialog state
+    forceFullDialogCleanup();
+    
+    // Apply dialog-open class to prevent scrolling while dialog is open
+    document.body.classList.add('dialog-open');
+    
+    // Initialize dialog state with a promise
+    await initializeDialogState();
+    
+    // Add a small delay to ensure DOM is ready before opening dialog
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    console.log(`${dialogType} dialog state fully initialized and ready to open`);
     return true;
   };
 
@@ -52,7 +62,7 @@ export function useNotesDialogClose({
       if (dialogType !== 'view') {
         resetForm();
       }
-    }, 700); // Increased timeout for more reliable closing
+    }, 800); // Increased timeout for more reliable closing
   };
 
   return {

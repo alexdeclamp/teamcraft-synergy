@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
@@ -23,20 +22,17 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
 }, ref) => {
   // Apply dialog-open class when dialog is opened and clean up when unmounted
   React.useEffect(() => {
-    // Use a useEffect cleanup function to ensure proper cleanup when dialog is closed
-    const timeoutId = setTimeout(() => {
-      applyDialogOpenStyles();
-      console.log('Dialog styles applied on mount');
-    }, 100); // Increased to 100ms for more reliable rendering
+    // Apply dialog styles before the dialog is visually rendered
+    applyDialogOpenStyles();
+    console.log('Dialog styles applied immediately on mount');
     
-    // Clean up on unmount
+    // Clean up on unmount - use a longer timeout to ensure animation completes
     return () => {
-      clearTimeout(timeoutId);
-      // Allow more time for dialog to animate out before applying cleanup
+      // Adding extra timeout here to ensure the dialog has fully animated out
       setTimeout(() => {
         resetBodyStyles();
-        console.log('Dialog cleanup on unmount');
-      }, 300); // Keep 300ms for proper exit animation
+        console.log('Dialog cleanup on unmount with extended timeout');
+      }, 500); // Increased from 300ms to 500ms for more reliable cleanup
     };
   }, []);
   
