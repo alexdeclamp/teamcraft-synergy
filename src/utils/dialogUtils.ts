@@ -30,11 +30,11 @@ export const resetBodyStyles = () => {
 export const applyDialogOpenStyles = () => {
   // Ensure any previous styles are cleared first
   resetBodyStyles();
-  // Then apply the new class
+  // Then apply the new class with a small delay for reliability
   setTimeout(() => {
     document.body.classList.add('dialog-open');
     console.log('Dialog open styles applied');
-  }, 10);
+  }, 50); // Increased delay for more reliable style application
 };
 
 /**
@@ -43,11 +43,11 @@ export const applyDialogOpenStyles = () => {
 export const applySheetOpenStyles = () => {
   // Ensure any previous styles are cleared first
   resetBodyStyles();
-  // Then apply the new class
+  // Then apply the new class with a small delay for reliability
   setTimeout(() => {
     document.body.classList.add('sheet-open');
     console.log('Sheet open styles applied');
-  }, 10);
+  }, 50); // Increased delay for more reliable style application
 };
 
 /**
@@ -57,11 +57,11 @@ export const applySheetOpenStyles = () => {
 export const createDialogCloseHandler = (closeFunction: (open: boolean) => void) => {
   return () => {
     closeFunction(false);
-    // Add delay before cleanup
+    // Add significant delay before cleanup to ensure animation completes
     setTimeout(() => {
       resetBodyStyles();
       console.log('Dialog close handler executed with delay');
-    }, 250);
+    }, 400); // Increased from 250ms to 400ms for more reliability
   };
 };
 
@@ -73,27 +73,46 @@ export const forceFullDialogCleanup = () => {
   // Reset all dialog-related styles and classes
   resetBodyStyles();
   
-  // Clear any remaining backdrop elements
-  const backdropElements = document.querySelectorAll('[data-radix-portal]');
-  backdropElements.forEach(element => {
-    try {
-      element.remove();
-    } catch (e) {
-      console.warn('Error removing backdrop element:', e);
-    }
-  });
+  // Clear any remaining backdrop elements with a delay to ensure animation completes
+  setTimeout(() => {
+    const backdropElements = document.querySelectorAll('[data-radix-portal]');
+    backdropElements.forEach(element => {
+      try {
+        element.remove();
+      } catch (e) {
+        console.warn('Error removing backdrop element:', e);
+      }
+    });
+    
+    // Also clear any aria-hidden attributes from other elements
+    document.querySelectorAll('[aria-hidden="true"]').forEach(el => {
+      if (el !== document.body) {
+        el.removeAttribute('aria-hidden');
+      }
+    });
+    
+    // Ensure pointer events are reset on all relevant elements
+    document.querySelectorAll('div[style*="pointer-events: none"]').forEach(el => {
+      (el as HTMLElement).style.pointerEvents = '';
+    });
+    
+    console.log('Force full dialog cleanup executed');
+  }, 100); // Small delay to ensure React has finished its updates
+};
+
+/**
+ * Initialize dialog state - resolves flash open/close issue
+ * This ensures the dialog state is properly initialized before opening
+ */
+export const initializeDialogState = () => {
+  // First ensure any lingering state is cleared
+  forceFullDialogCleanup();
   
-  // Also clear any aria-hidden attributes from other elements
-  document.querySelectorAll('[aria-hidden="true"]').forEach(el => {
-    if (el !== document.body) {
-      el.removeAttribute('aria-hidden');
-    }
+  // Add a small delay before allowing the dialog to open
+  return new Promise<void>((resolve) => {
+    setTimeout(() => {
+      console.log('Dialog state initialized');
+      resolve();
+    }, 50);
   });
-  
-  // Ensure pointer events are reset on all relevant elements
-  document.querySelectorAll('div[style*="pointer-events: none"]').forEach(el => {
-    (el as HTMLElement).style.pointerEvents = '';
-  });
-  
-  console.log('Force full dialog cleanup executed');
 };

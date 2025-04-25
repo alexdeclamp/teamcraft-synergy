@@ -12,7 +12,7 @@ import NoteInfo from './NoteInfo';
 import NoteActions from './NoteActions';
 import NoteSourceDocument from './NoteSourceDocument';
 import NotesFormatter from '../NotesFormatter';
-import { resetBodyStyles } from '@/utils/dialogUtils';
+import { resetBodyStyles, initializeDialogState } from '@/utils/dialogUtils';
 
 interface DesktopNoteViewProps {
   isOpen: boolean;
@@ -35,14 +35,26 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
   userId,
   onClose
 }) => {
-  // Enhanced cleanup on unmount
+  // Initialize dialog state when component mounts
   useEffect(() => {
-    // Ensure cleanup when component unmounts
+    let isMounted = true;
+    
+    if (isOpen) {
+      (async () => {
+        await initializeDialogState();
+        if (isMounted) {
+          console.log('Desktop view dialog initialized');
+        }
+      })();
+    }
+    
+    // Enhanced cleanup on unmount
     return () => {
+      isMounted = false;
       console.log('Desktop view unmounting, cleaning up');
       resetBodyStyles();
     };
-  }, []);
+  }, [isOpen]);
 
   // Enhanced open change handler with delayed cleanup
   const handleOpenChange = (open: boolean) => {
@@ -51,10 +63,11 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
         onClose();
       } else {
         setIsOpen(false);
-        // Add delay before cleanup
+        // Add significant delay before cleanup
         setTimeout(() => {
           resetBodyStyles();
-        }, 250);
+          console.log('Desktop view dialog cleanup after close');
+        }, 500);
       }
     }
   };

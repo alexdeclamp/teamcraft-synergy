@@ -1,5 +1,5 @@
 
-import { resetBodyStyles, forceFullDialogCleanup } from '@/utils/dialogUtils';
+import { resetBodyStyles, forceFullDialogCleanup, initializeDialogState } from '@/utils/dialogUtils';
 
 interface UseNotesDialogCloseProps {
   setIsCreateOpen: (open: boolean) => void;
@@ -14,6 +14,12 @@ export function useNotesDialogClose({
   setIsViewOpen,
   resetForm
 }: UseNotesDialogCloseProps) {
+  // Initialize dialog before opening to prevent flash-close
+  const prepareDialogOpen = async (dialogType: 'create' | 'edit' | 'view') => {
+    await initializeDialogState();
+    console.log(`${dialogType} dialog state initialized`);
+  };
+
   const handleCloseDialog = (dialogType: 'create' | 'edit' | 'view') => {
     console.log(`${dialogType} dialog closing through handler`);
     
@@ -41,10 +47,11 @@ export function useNotesDialogClose({
       if (dialogType !== 'view') {
         resetForm();
       }
-    }, 300); // Increased timeout for more reliable closing
+    }, 500); // Increased timeout for more reliable closing
   };
 
   return {
-    handleCloseDialog
+    handleCloseDialog,
+    prepareDialogOpen
   };
 }

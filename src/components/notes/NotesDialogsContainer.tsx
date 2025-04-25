@@ -4,6 +4,7 @@ import { Note } from '@/components/notes/types';
 import NotesDialog from './NotesDialog';
 import NotesViewDialog from './NotesViewDialog';
 import { useNotesDialogClose } from '@/hooks/notes/useNotesDialogClose';
+import { initializeDialogState } from '@/utils/dialogUtils';
 
 interface NotesDialogsContainerProps {
   isCreateOpen: boolean;
@@ -76,7 +77,7 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
   handleCloseCreateDialog,
   handleCloseEditDialog
 }) => {
-  const { handleCloseDialog } = useNotesDialogClose({
+  const { handleCloseDialog, prepareDialogOpen } = useNotesDialogClose({
     setIsCreateOpen,
     setIsEditOpen,
     setIsViewOpen,
@@ -87,17 +88,37 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
     }
   });
 
+  // Pre-initialize dialog state when opening
+  const handleOpenChange = async (open: boolean, dialogType: 'view' | 'create' | 'edit') => {
+    if (open) {
+      // Initialize dialog state before opening
+      await initializeDialogState();
+      
+      // Then set the correct dialog to open
+      switch (dialogType) {
+        case 'view':
+          setIsViewOpen(true);
+          break;
+        case 'create':
+          setIsCreateOpen(true);
+          break;
+        case 'edit':
+          setIsEditOpen(true);
+          break;
+      }
+    } else {
+      // Handle close with appropriate handler
+      handleCloseDialog(dialogType);
+    }
+  };
+
   return (
     <>
       <NotesViewDialog
         isOpen={isViewOpen}
         setIsOpen={setIsViewOpen}
         onOpenChange={(open) => {
-          if (!open) {
-            handleCloseDialog('view');
-          } else {
-            setIsViewOpen(true);
-          }
+          handleOpenChange(open, 'view');
         }}
         note={currentNote}
         onEdit={onEdit}
@@ -109,11 +130,7 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
       <NotesDialog
         isOpen={isCreateOpen}
         onOpenChange={(open) => {
-          if (!open) {
-            handleCloseDialog('create');
-          } else {
-            setIsCreateOpen(true);
-          }
+          handleOpenChange(open, 'create');
         }}
         type="create"
         title={title}
@@ -139,11 +156,7 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
       <NotesDialog
         isOpen={isEditOpen}
         onOpenChange={(open) => {
-          if (!open) {
-            handleCloseDialog('edit');
-          } else {
-            setIsEditOpen(true);
-          }
+          handleOpenChange(open, 'edit');
         }}
         type="edit"
         title={title}

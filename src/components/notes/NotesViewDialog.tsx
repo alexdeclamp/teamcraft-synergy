@@ -5,7 +5,7 @@ import { Note } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MobileNoteView from './view-dialog/MobileNoteView';
 import DesktopNoteView from './view-dialog/DesktopNoteView';
-import { resetBodyStyles } from '@/utils/dialogUtils';
+import { resetBodyStyles, initializeDialogState } from '@/utils/dialogUtils';
 
 interface NotesViewDialogProps {
   isOpen: boolean;
@@ -31,18 +31,38 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
   const finalSetIsOpen = onOpenChange || setIsOpen;
   const isMobile = useIsMobile();
 
-  // Enhanced cleanup when component unmounts or dialog state changes
+  // Init dialog state when it first opens to prevent flash close
   useEffect(() => {
-    // Only run cleanup when dialog actually closes after being open
+    let isMounted = true;
+    
+    // Initialize dialog state when opening
+    if (isOpen && note) {
+      // This prevents the flash open/close issue
+      (async () => {
+        await initializeDialogState();
+        if (isMounted) {
+          console.log('Note dialog fully initialized');
+        }
+      })();
+    }
+    
+    // Enhanced cleanup when component unmounts or dialog state changes
     if (!isOpen) {
       // Add significant delay to ensure dialog animation completes before cleanup
       const timeoutId = setTimeout(() => {
-        resetBodyStyles();
-      }, 300); // Increased from 150ms to 300ms for more reliability
+        if (isMounted) {
+          resetBodyStyles();
+          console.log('Note dialog cleanup after closing');
+        }
+      }, 500); // Increased from 300ms to 500ms for more reliability
       
       return () => clearTimeout(timeoutId);
     }
-  }, [isOpen]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, note]);
   
   // Safe close handler that ensures cleanup with proper timing
   const handleClose = () => {
@@ -50,7 +70,8 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
     // Allow dialog to start closing animation before cleanup
     setTimeout(() => {
       resetBodyStyles();
-    }, 300); // Increased from 150ms to 300ms for more reliability
+      console.log('Note dialog manual close cleanup');
+    }, 500); // Increased from 300ms to 500ms for more reliability
   };
 
   if (!note) return null;
