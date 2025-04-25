@@ -3,6 +3,7 @@ import React from 'react';
 import { Note } from '@/components/notes/types';
 import NotesDialog from './NotesDialog';
 import NotesViewDialog from './NotesViewDialog';
+import { useNotesDialogClose } from '@/hooks/notes/useNotesDialogClose';
 
 interface NotesDialogsContainerProps {
   isCreateOpen: boolean;
@@ -75,6 +76,17 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
   handleCloseCreateDialog,
   handleCloseEditDialog
 }) => {
+  const { handleCloseDialog } = useNotesDialogClose({
+    setIsCreateOpen,
+    setIsEditOpen,
+    setIsViewOpen,
+    resetForm: () => {
+      if (handleCloseCreateDialog) handleCloseCreateDialog();
+      if (handleCloseEditDialog) handleCloseEditDialog();
+      if (handleCloseViewDialog) handleCloseViewDialog();
+    }
+  });
+
   return (
     <>
       <NotesViewDialog
@@ -82,8 +94,7 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
         setIsOpen={setIsViewOpen}
         onOpenChange={(open) => {
           if (!open) {
-            console.log('View dialog closing through onOpenChange');
-            handleCloseViewDialog();
+            handleCloseDialog('view');
           } else {
             setIsViewOpen(true);
           }
@@ -99,8 +110,7 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
         isOpen={isCreateOpen}
         onOpenChange={(open) => {
           if (!open) {
-            console.log('Create dialog closing through onOpenChange');
-            handleCloseCreateDialog();
+            handleCloseDialog('create');
           } else {
             setIsCreateOpen(true);
           }
@@ -130,8 +140,7 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
         isOpen={isEditOpen}
         onOpenChange={(open) => {
           if (!open) {
-            console.log('Edit dialog closing through onOpenChange');
-            handleCloseEditDialog();
+            handleCloseDialog('edit');
           } else {
             setIsEditOpen(true);
           }
