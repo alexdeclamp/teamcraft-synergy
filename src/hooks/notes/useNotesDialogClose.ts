@@ -40,7 +40,7 @@ export function useNotesDialogClose({
       if (dialogType !== 'view') {
         resetForm();
       }
-    }, 150); // Increased timeout for more reliable closing
+    }, 200); // Increased timeout for more reliable closing
   };
 
   return {

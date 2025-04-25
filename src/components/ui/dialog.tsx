@@ -26,13 +26,13 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
     // Small delay to ensure dialog is actually rendered before applying styles
     const timeoutId = setTimeout(() => {
       applyDialogOpenStyles();
-    }, 10);
+    }, 20); // Increased from 10ms to 20ms for more reliability
     
     // Clean up on unmount
     return () => {
       clearTimeout(timeoutId);
       // Allow time for dialog to animate out before applying cleanup
-      setTimeout(resetBodyStyles, 100);
+      setTimeout(resetBodyStyles, 150);
     };
   }, []);
   

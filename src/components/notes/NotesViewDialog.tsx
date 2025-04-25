@@ -39,7 +39,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
       // Add small delay to ensure dialog animation completes before cleanup
       const timeoutId = setTimeout(() => {
         resetBodyStyles();
-      }, 100);
+      }, 150); // Increased from 100ms to 150ms
       
       return () => clearTimeout(timeoutId);
     }
@@ -51,7 +51,7 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
     // Allow dialog to start closing animation before cleanup
     setTimeout(() => {
       resetBodyStyles();
-    }, 100);
+    }, 150); // Increased from 100ms to 150ms
   };
 
   if (!note) return null;
