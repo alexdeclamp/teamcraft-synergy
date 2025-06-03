@@ -1,121 +1,104 @@
-
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import ProjectCardActions from './ProjectCardActions';
-import { toast } from 'sonner';
-
-// Mock dependencies
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => vi.fn()
-  };
-});
-
-vi.mock('sonner', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn()
-  }
-}));
-
-// Mock Supabase client
-const mockSupabase = {
-  from: vi.fn(() => ({
-    update: vi.fn(() => ({
-      eq: vi.fn().mockReturnValue({ error: null })
-    }))
-  }))
-};
-
-vi.mock('@/integrations/supabase/client', () => ({
-  supabase: mockSupabase
-}));
+import { ProjectCardActions } from './ProjectCardActions';
 
 describe('ProjectCardActions', () => {
-  const defaultProps = {
+  const mockProject = {
     id: '123',
-    isOwner: true,
-    isFavorite: false,
-    setFavorite: vi.fn()
+    title: 'Test Project',
+    description: 'A test project',
+    owner_id: 'user123',
+    created_at: '2024-01-01T00:00:00.000Z',
+    updated_at: '2024-01-01T00:00:00.000Z',
+    is_favorite: false,
+    is_archived: false,
   };
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  const mockUser = {
+    id: 'user123',
+    email: 'test@example.com',
+    full_name: 'Test User',
+    avatar_url: null,
+    created_at: '2024-01-01T00:00:00.000Z',
+    updated_at: '2024-01-01T00:00:00.000Z',
+  };
 
-  it('renders favorite button correctly', () => {
+  const mockOnEdit = jest.fn();
+  const mockOnDelete = jest.fn();
+  const mockOnToggleFavorite = jest.fn();
+  const mockOnArchive = jest.fn();
+
+  it('renders without errors', () => {
     render(
-      <BrowserRouter>
-        <ProjectCardActions {...defaultProps} />
-      </BrowserRouter>
+      <ProjectCardActions
+        project={mockProject}
+        user={mockUser}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        onToggleFavorite={mockOnToggleFavorite}
+        onArchive={mockOnArchive}
+      />
     );
-    
-    // Star icon should be rendered
-    const favoriteButton = screen.getByLabelText('Add to favorites');
-    expect(favoriteButton).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit project' })).toBeInTheDocument();
   });
 
-  it('renders menu button correctly', () => {
+  it('calls onEdit when the edit button is clicked', () => {
     render(
-      <BrowserRouter>
-        <ProjectCardActions {...defaultProps} />
-      </BrowserRouter>
+      <ProjectCardActions
+        project={mockProject}
+        user={mockUser}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        onToggleFavorite={mockOnToggleFavorite}
+        onArchive={mockOnArchive}
+      />
     );
-    
-    const menuButton = screen.getByLabelText('Open menu');
-    expect(menuButton).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit project' }));
+    expect(mockOnEdit).toHaveBeenCalledWith(mockProject);
   });
 
-  it('toggles favorite status on click', async () => {
+  it('calls onDelete when the delete button is clicked', () => {
     render(
-      <BrowserRouter>
-        <ProjectCardActions {...defaultProps} />
-      </BrowserRouter>
+      <ProjectCardActions
+        project={mockProject}
+        user={mockUser}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        onToggleFavorite={mockOnToggleFavorite}
+        onArchive={mockOnArchive}
+      />
     );
-    
-    const favoriteButton = screen.getByLabelText('Add to favorites');
-    fireEvent.click(favoriteButton);
-    
-    // Check if Supabase was called
-    expect(mockSupabase.from).toHaveBeenCalledWith('projects');
-    
-    // Check if setFavorite was called with the new status
-    expect(defaultProps.setFavorite).toHaveBeenCalledWith(true);
-    
-    // Check if success toast was shown
-    expect(toast.success).toHaveBeenCalledWith('Added to favorites');
+    fireEvent.click(screen.getByRole('button', { name: 'Delete project' }));
+    expect(mockOnDelete).toHaveBeenCalledWith(mockProject.id);
   });
 
-  it('renders archive option only for owners', () => {
-    const { rerender } = render(
-      <BrowserRouter>
-        <ProjectCardActions {...defaultProps} />
-      </BrowserRouter>
+  it('calls onToggleFavorite when the favorite button is clicked', () => {
+    render(
+      <ProjectCardActions
+        project={mockProject}
+        user={mockUser}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        onToggleFavorite={mockOnToggleFavorite}
+        onArchive={mockOnArchive}
+      />
     );
-    
-    // Open the dropdown menu
-    const menuButton = screen.getByLabelText('Open menu');
-    fireEvent.click(menuButton);
-    
-    // Archive option should be visible for owners
-    const archiveOption = screen.getByText('Archive brain');
-    expect(archiveOption).toBeInTheDocument();
-    
-    // Re-render with non-owner
-    rerender(
-      <BrowserRouter>
-        <ProjectCardActions {...defaultProps} isOwner={false} />
-      </BrowserRouter>
+    fireEvent.click(screen.getByRole('button', { name: 'Add to favorites' }));
+    expect(mockOnToggleFavorite).toHaveBeenCalledWith(mockProject.id, !mockProject.is_favorite);
+  });
+
+  it('calls onArchive when the archive button is clicked', () => {
+    render(
+      <ProjectCardActions
+        project={mockProject}
+        user={mockUser}
+        onEdit={mockOnEdit}
+        onDelete={mockOnDelete}
+        onToggleFavorite={mockOnToggleFavorite}
+        onArchive={mockOnArchive}
+      />
     );
-    
-    // Open the dropdown menu again
-    fireEvent.click(menuButton);
-    
-    // Archive option should not be visible for non-owners
-    expect(screen.queryByText('Archive brain')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Archive project' }));
+    expect(mockOnArchive).toHaveBeenCalledWith(mockProject.id, !mockProject.is_archived);
   });
 });

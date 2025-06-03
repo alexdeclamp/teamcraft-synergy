@@ -1,14 +1,18 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useProjectNotes } from '@/hooks/useProjectNotes';
 import { useNoteForm } from '@/hooks/useNoteForm';
 import { useNotesSearch } from '@/hooks/notes/useNotesSearch';
 import { useNotesDialogCleanup } from '@/hooks/notes/useNotesDialogCleanup';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EmptyNotesList from './notes/EmptyNotesList';
 import NotesLoading from './notes/NotesLoading';
 import NotesToolbar from './notes/NotesToolbar';
 import NotesList from './notes/NotesList';
 import NotesDialogsContainer from './notes/NotesDialogsContainer';
+import SemanticSearch from './notes/SemanticSearch';
+import EmbeddingManager from './notes/EmbeddingManager';
+import SimilarNotes from './notes/SimilarNotes';
 
 interface ProjectNotesProps {
   projectId: string;
@@ -16,6 +20,7 @@ interface ProjectNotesProps {
 
 const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [selectedNote, setSelectedNote] = useState(null);
   
   const {
     notes,
@@ -75,6 +80,11 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     resetForm
   });
 
+  const handleNoteSelect = (note) => {
+    setSelectedNote(note);
+    openViewDialog(note);
+  };
+
   if (loading) {
     return <NotesLoading />;
   }
@@ -85,25 +95,60 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
 
   return (
     <div className="space-y-4">
-      <NotesToolbar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onCreateNote={handleOpenCreateDialog}
-        allTags={allTags}
-        activeTag={activeTag}
-        setActiveTag={setActiveTag}
-      />
+      <Tabs defaultValue="notes" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="search">Semantic Search</TabsTrigger>
+          <TabsTrigger value="settings">Vector Settings</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="notes" className="space-y-4">
+          <NotesToolbar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onCreateNote={handleOpenCreateDialog}
+            allTags={allTags}
+            activeTag={activeTag}
+            setActiveTag={setActiveTag}
+          />
 
-      <NotesList
-        notes={filteredNotes}
-        userId={user?.id}
-        activeTag={activeTag}
-        setActiveTag={setActiveTag}
-        onView={openViewDialog}
-        onEdit={openEditDialog}
-        onDelete={handleDeleteNote}
-        formatDate={formatDate}
-      />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
+              <NotesList
+                notes={filteredNotes}
+                userId={user?.id}
+                activeTag={activeTag}
+                setActiveTag={setActiveTag}
+                onView={handleNoteSelect}
+                onEdit={openEditDialog}
+                onDelete={handleDeleteNote}
+                formatDate={formatDate}
+              />
+            </div>
+            
+            <div className="space-y-4">
+              <SimilarNotes 
+                currentNote={selectedNote}
+                onNoteSelect={handleNoteSelect}
+              />
+            </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="search">
+          <SemanticSearch 
+            projectId={projectId}
+            onNoteSelect={handleNoteSelect}
+          />
+        </TabsContent>
+        
+        <TabsContent value="settings">
+          <EmbeddingManager 
+            notes={notes}
+            projectId={projectId}
+          />
+        </TabsContent>
+      </Tabs>
 
       <NotesDialogsContainer
         isCreateOpen={isCreateOpen}

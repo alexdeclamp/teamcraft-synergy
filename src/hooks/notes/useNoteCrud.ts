@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Note } from '@/components/notes/types';
+import { useNoteEmbeddings } from './useNoteEmbeddings';
 
 export function useNoteCrud(
   projectId: string,
@@ -14,6 +15,7 @@ export function useNoteCrud(
 ) {
   const { user } = useAuth();
   const [saving, setSaving] = useState(false);
+  const { generateEmbedding } = useNoteEmbeddings();
 
   const handleCreateNote = async (title: string, content: string, tags: string[]) => {
     if (!title.trim() || !projectId || !user) {
@@ -54,6 +56,12 @@ export function useNoteCrud(
       const newTags = tags.filter(tag => !allTags.includes(tag));
       if (newTags.length > 0) {
         setAllTags([...allTags, ...newTags]);
+      }
+      
+      // Generate embedding for the new note
+      const embedText = `${title} ${content || ''}`.trim();
+      if (embedText) {
+        generateEmbedding(data.id, embedText);
       }
       
       return true;
@@ -106,6 +114,12 @@ export function useNoteCrud(
       const newTags = tags.filter(tag => !allTags.includes(tag));
       if (newTags.length > 0) {
         setAllTags([...allTags, ...newTags]);
+      }
+      
+      // Update embedding for the edited note
+      const embedText = `${title} ${content || ''}`.trim();
+      if (embedText) {
+        generateEmbedding(noteId, embedText);
       }
       
       return true;

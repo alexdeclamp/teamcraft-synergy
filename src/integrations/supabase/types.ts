@@ -336,6 +336,7 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string
+          embedding: string | null
           id: string
           is_archived: boolean
           is_favorite: boolean
@@ -350,6 +351,7 @@ export type Database = {
         Insert: {
           content?: string | null
           created_at?: string
+          embedding?: string | null
           id?: string
           is_archived?: boolean
           is_favorite?: boolean
@@ -364,6 +366,7 @@ export type Database = {
         Update: {
           content?: string | null
           created_at?: string
+          embedding?: string | null
           id?: string
           is_archived?: boolean
           is_favorite?: boolean
@@ -602,9 +605,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      binary_quantize: {
+        Args: { "": string } | { "": unknown }
+        Returns: unknown
+      }
       create_user_subscription: {
         Args: { p_user_id: string; p_plan_type: string }
         Returns: string
+      }
+      find_similar_notes: {
+        Args: {
+          query_embedding: string
+          match_threshold?: number
+          match_count?: number
+          project_filter?: string
+        }
+        Returns: {
+          id: string
+          title: string
+          content: string
+          similarity: number
+        }[]
       }
       get_user_by_email: {
         Args: { lookup_email: string }
@@ -626,9 +647,113 @@ export type Database = {
           updated_at: string
         }[]
       }
+      halfvec_avg: {
+        Args: { "": number[] }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      hnsw_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hybrid_search_notes: {
+        Args: {
+          query_embedding: string
+          search_text?: string
+          project_filter?: string
+          match_threshold?: number
+          match_count?: number
+        }
+        Returns: {
+          id: string
+          title: string
+          content: string
+          similarity: number
+          text_rank: number
+        }[]
+      }
       is_project_member: {
         Args: { project_id: string; user_id: string }
         Returns: boolean
+      }
+      ivfflat_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      l2_norm: {
+        Args: { "": unknown } | { "": unknown }
+        Returns: number
+      }
+      l2_normalize: {
+        Args: { "": string } | { "": unknown } | { "": unknown }
+        Returns: string
+      }
+      sparsevec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
+      vector_avg: {
+        Args: { "": number[] }
+        Returns: string
+      }
+      vector_dims: {
+        Args: { "": string } | { "": unknown }
+        Returns: number
+      }
+      vector_norm: {
+        Args: { "": string }
+        Returns: number
+      }
+      vector_out: {
+        Args: { "": string }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: { "": string }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
       }
     }
     Enums: {
