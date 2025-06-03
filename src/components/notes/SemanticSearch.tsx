@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +19,7 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
   const [hasSearched, setHasSearched] = useState(false);
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [threshold, setThreshold] = useState(0.3);
   
   const { searchNotes } = useVectorSearch();
 
@@ -32,10 +32,18 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
     "data analysis techniques"
   ];
 
+  const getThresholdLabel = (value: number) => {
+    if (value >= 0.7) return { label: 'Very strict', color: 'bg-red-100 text-red-800' };
+    if (value >= 0.5) return { label: 'Strict', color: 'bg-orange-100 text-orange-800' };
+    if (value >= 0.3) return { label: 'Balanced', color: 'bg-blue-100 text-blue-800' };
+    if (value >= 0.2) return { label: 'Relaxed', color: 'bg-green-100 text-green-800' };
+    return { label: 'Very relaxed', color: 'bg-gray-100 text-gray-800' };
+  };
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     
-    console.log('🔍 Starting semantic search:', { searchQuery, projectId });
+    console.log('🔍 Starting semantic search:', { searchQuery, projectId, threshold });
     setIsSearching(true);
     setHasSearched(true);
     setErrorMessage('');
@@ -53,20 +61,26 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
       console.log('✅ Search completed:', { 
         results, 
         resultCount: results?.length || 0, 
-        duration: `${duration}ms` 
+        duration: `${duration}ms`,
+        threshold
       });
       
-      setLocalResults(results || []);
+      // Filter results by threshold
+      const filteredResults = results?.filter(result => result.similarity >= threshold) || [];
+      setLocalResults(filteredResults);
+      
       setDebugInfo({
         query: searchQuery,
         projectId,
-        resultCount: results?.length || 0,
+        resultCount: filteredResults.length,
+        totalResults: results?.length || 0,
         duration,
+        threshold,
         timestamp: new Date().toISOString()
       });
       
-      if (!results || results.length === 0) {
-        console.log('⚠️ No results returned from search');
+      if (filteredResults.length === 0) {
+        console.log('⚠️ No results above threshold:', threshold);
       }
     } catch (error) {
       console.error('❌ Search error:', error);
@@ -74,6 +88,7 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
       setDebugInfo({
         query: searchQuery,
         projectId,
+        threshold,
         error: error instanceof Error ? error.message : 'Unknown error',
         timestamp: new Date().toISOString()
       });
@@ -85,6 +100,7 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
   const handleTestSearch = async () => {
     console.log('🧪 Running test search...');
     setSearchQuery('test search functionality');
+    setThreshold(0.1); // Use very low threshold for testing
     setTimeout(() => {
       handleSearch();
     }, 100);
@@ -98,6 +114,14 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
 
   const handleSuggestionClick = (suggestion: string) => {
     setSearchQuery(suggestion);
+  };
+
+  const handleQuickThreshold = (newThreshold: number) => {
+    setThreshold(newThreshold);
+    if (searchQuery.trim() && hasSearched) {
+      // Auto-search with new threshold if we already have a query
+      setTimeout(() => handleSearch(), 100);
+    }
   };
 
   const convertToNote = (result: any): Note => {
@@ -123,6 +147,8 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
     if (similarity >= 0.7) return 'Good match';
     return 'Weak match';
   };
+
+  const thresholdInfo = getThresholdLabel(threshold);
 
   return (
     <Card className="w-full">
@@ -165,6 +191,60 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
           </Button>
         </div>
 
+        {/* Threshold Controls - Always Visible */}
+        <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Threshold:</span>
+            <Badge variant="outline" className={`${thresholdInfo.color} font-mono`}>
+              {threshold.toFixed(2)}
+            </Badge>
+            <Badge variant="secondary" className="text-xs">
+              {thresholdInfo.label}
+            </Badge>
+          </div>
+          
+          {hasSearched && (
+            <Badge variant="outline" className="text-xs">
+              {localResults.length} results
+            </Badge>
+          )}
+
+          <div className="flex gap-1 ml-auto">
+            <Button
+              variant={threshold === 0.1 ? "default" : "outline"}
+              size="sm"
+              className="text-xs px-2 py-1 h-7"
+              onClick={() => handleQuickThreshold(0.1)}
+            >
+              0.1
+            </Button>
+            <Button
+              variant={threshold === 0.3 ? "default" : "outline"}
+              size="sm"
+              className="text-xs px-2 py-1 h-7"
+              onClick={() => handleQuickThreshold(0.3)}
+            >
+              0.3
+            </Button>
+            <Button
+              variant={threshold === 0.5 ? "default" : "outline"}
+              size="sm"
+              className="text-xs px-2 py-1 h-7"
+              onClick={() => handleQuickThreshold(0.5)}
+            >
+              0.5
+            </Button>
+            <Button
+              variant={threshold === 0.7 ? "default" : "outline"}
+              size="sm"
+              className="text-xs px-2 py-1 h-7"
+              onClick={() => handleQuickThreshold(0.7)}
+            >
+              0.7
+            </Button>
+          </div>
+        </div>
+
         {isSearching && (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -198,8 +278,8 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
             <div className="flex items-center gap-2 text-muted-foreground p-4 bg-muted/30 rounded-lg">
               <AlertCircle className="h-5 w-5" />
               <div>
-                <p className="font-medium">No matching notes found</p>
-                <p className="text-sm">Try rephrasing your search or using different keywords.</p>
+                <p className="font-medium">No matching notes found above threshold {threshold.toFixed(2)}</p>
+                <p className="text-sm">Try lowering the threshold or rephrasing your search.</p>
               </div>
             </div>
             
