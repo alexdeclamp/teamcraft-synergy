@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ExternalLink, Loader2 } from 'lucide-react';
+import { Sparkles, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
 import { useVectorSearch } from '@/hooks/notes/useVectorSearch';
 import { Note } from './types';
 
@@ -14,13 +15,18 @@ interface SimilarNotesProps {
 const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect }) => {
   const [similarNotes, setSimilarNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const { findSimilarNotes } = useVectorSearch();
 
   useEffect(() => {
     const loadSimilarNotes = async () => {
-      if (!currentNote?.id) return;
+      if (!currentNote?.id) {
+        setHasSearched(false);
+        return;
+      }
       
       setLoading(true);
+      setHasSearched(true);
       try {
         const results = await findSimilarNotes(currentNote.id, currentNote.project_id, 5);
         // Filter out the current note from results
@@ -35,6 +41,18 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect }
 
     loadSimilarNotes();
   }, [currentNote?.id, currentNote?.project_id]);
+
+  const getScoreColor = (similarity: number) => {
+    if (similarity >= 0.8) return 'bg-green-100 text-green-800';
+    if (similarity >= 0.7) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-red-100 text-red-800';
+  };
+
+  const getScoreLabel = (similarity: number) => {
+    if (similarity >= 0.8) return 'High';
+    if (similarity >= 0.7) return 'Good';
+    return 'Weak';
+  };
 
   if (!currentNote || loading) {
     return (
@@ -59,7 +77,7 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect }
     );
   }
 
-  if (similarNotes.length === 0) {
+  if (hasSearched && similarNotes.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -69,7 +87,13 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect }
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">No similar notes found</p>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <AlertCircle className="h-4 w-4" />
+            <div>
+              <p className="text-sm font-medium">No similar notes found</p>
+              <p className="text-xs">This note appears to be unique in your project.</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
@@ -83,7 +107,7 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect }
           <CardTitle className="text-sm">Similar Notes</CardTitle>
         </div>
         <CardDescription className="text-xs">
-          Notes with related content based on semantic similarity
+          Found {similarNotes.length} notes with related content
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -102,9 +126,15 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect }
                   </p>
                 )}
               </div>
-              <div className="flex items-center gap-2 ml-2">
+              <div className="flex flex-col items-end gap-1 ml-2">
                 <Badge variant="outline" className="text-xs">
                   {Math.round(note.similarity * 100)}%
+                </Badge>
+                <Badge 
+                  variant="outline" 
+                  className={`text-xs ${getScoreColor(note.similarity)}`}
+                >
+                  {getScoreLabel(note.similarity)}
                 </Badge>
                 <ExternalLink className="h-3 w-3 text-muted-foreground" />
               </div>
