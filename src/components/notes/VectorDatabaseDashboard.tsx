@@ -15,16 +15,29 @@ const VectorDatabaseDashboard: React.FC<VectorDatabaseDashboardProps> = ({ proje
   const { notes, loading, fetchNotes } = useVectorNotes(projectId);
 
   useEffect(() => {
-    fetchVectorStats();
-    fetchNotes();
+    const loadData = async () => {
+      try {
+        await fetchVectorStats();
+        await fetchNotes();
+      } catch (error) {
+        console.error('Error loading vector database data:', error);
+      }
+    };
+
+    loadData();
   }, [fetchVectorStats, fetchNotes]);
 
   const handleRefresh = async () => {
-    await fetchVectorStats();
-    await fetchNotes();
+    try {
+      await fetchVectorStats();
+      await fetchNotes();
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    }
   };
 
-  if (loading && !stats) {
+  // Show loading state only if both are loading and we have no data
+  if (loading && !stats && notes.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin" />

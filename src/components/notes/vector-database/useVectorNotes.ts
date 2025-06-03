@@ -11,6 +11,7 @@ export function useVectorNotes(projectId?: string) {
   const fetchNotes = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('Fetching notes for projectId:', projectId);
       
       let query = supabase
         .from('project_notes')
@@ -33,7 +34,12 @@ export function useVectorNotes(projectId?: string) {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching notes:', error);
+        throw error;
+      }
+
+      console.log('Fetched notes:', data);
 
       // Transform the data to match our Note type with projects info
       const transformedNotes: NoteWithProject[] = (data || []).map(note => ({
@@ -52,6 +58,7 @@ export function useVectorNotes(projectId?: string) {
     } catch (error) {
       console.error('Error fetching notes:', error);
       toast.error('Failed to fetch notes');
+      setNotes([]); // Set empty array on error
     } finally {
       setLoading(false);
     }

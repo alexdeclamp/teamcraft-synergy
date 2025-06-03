@@ -9,6 +9,8 @@ export function useVectorStats(projectId?: string) {
 
   const fetchVectorStats = useCallback(async () => {
     try {
+      console.log('Fetching vector stats for projectId:', projectId);
+      
       let query = supabase
         .from('project_notes')
         .select(`
@@ -24,12 +26,24 @@ export function useVectorStats(projectId?: string) {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching vector stats:', error);
+        throw error;
+      }
+
+      console.log('Fetched notes data:', data);
 
       const totalNotes = data?.length || 0;
-      const embeddedNotes = data?.filter(note => 
-        note.embedding != null && note.embedding !== ''
-      ).length || 0;
+      const embeddedNotes = data?.filter(note => {
+        if (!note.embedding) return false;
+        if (typeof note.embedding === 'string') {
+          return note.embedding.trim() !== '';
+        }
+        if (Array.isArray(note.embedding)) {
+          return note.embedding.length > 0;
+        }
+        return false;
+      }).length || 0;
 
       // Group by project
       const projectMap = new Map();
@@ -50,7 +64,13 @@ export function useVectorStats(projectId?: string) {
         const project = projectMap.get(projectId);
         project.totalNotes++;
         
-        if (note.embedding != null && note.embedding !== '') {
+        const hasEmbedding = note.embedding && (
+          typeof note.embedding === 'string' 
+            ? note.embedding.trim() !== '' 
+            : Array.isArray(note.embedding) && note.embedding.length > 0
+        );
+        
+        if (hasEmbedding) {
           project.embeddedNotes++;
         }
         
@@ -59,15 +79,25 @@ export function useVectorStats(projectId?: string) {
           : 0;
       });
 
-      setStats({
+      const newStats = {
         totalNotes,
         embeddedNotes,
         embeddingPercentage: totalNotes > 0 ? Math.round((embeddedNotes / totalNotes) * 100) : 0,
         projectBreakdown: Array.from(projectMap.values())
-      });
+      };
+
+      console.log('Calculated stats:', newStats);
+      setStats(newStats);
     } catch (error) {
       console.error('Error fetching vector stats:', error);
       toast.error('Failed to fetch vector statistics');
+      // Set empty stats on error to prevent white screen
+      setStats({
+        totalNotes: 0,
+        embeddedNotes: 0,
+        embeddingPercentage: 0,
+        projectBreakdown: []
+      });
     }
   }, [projectId]);
 
