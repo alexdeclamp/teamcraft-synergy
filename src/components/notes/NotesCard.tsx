@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Note } from './types';
 import { formatDistanceToNow } from 'date-fns';
 import { useNoteDateFormat } from '@/hooks/notes/useNoteDateFormat';
-import { CalendarClock, MoreVertical, Pencil, Trash2, Copy, User } from 'lucide-react';
+import { CalendarClock, MoreVertical, Pencil, Trash2, Copy, User, Database } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Dispatch, SetStateAction } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -67,6 +67,11 @@ const NotesCard: React.FC<NotesCardProps> = ({
     ? formatDistanceToNow(new Date(note.updated_at), { addSuffix: true })
     : '';
 
+  // Check if note has embedding
+  const hasEmbedding = note.embedding && 
+    (Array.isArray(note.embedding) ? note.embedding.length > 0 : 
+     typeof note.embedding === 'string' ? note.embedding.trim() !== '' : true);
+
   return (
     <div className="group">
       <div 
@@ -93,28 +98,37 @@ const NotesCard: React.FC<NotesCardProps> = ({
               <span>{formattedDate}</span>
             </div>
             
-            {note.tags && note.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 ml-2">
-                {note.tags.slice(0, 3).map(tag => (
-                  <Badge 
-                    key={tag} 
-                    variant="secondary" 
-                    className="text-xs px-1.5 py-0 h-5"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveTag && setActiveTag(tag);
-                    }}
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-                {note.tags.length > 3 && (
-                  <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
-                    +{note.tags.length - 3}
-                  </Badge>
-                )}
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {hasEmbedding && (
+                <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5 bg-green-100 text-green-700">
+                  <Database className="h-3 w-3 mr-1" />
+                  Embedded
+                </Badge>
+              )}
+              
+              {note.tags && note.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {note.tags.slice(0, 3).map(tag => (
+                    <Badge 
+                      key={tag} 
+                      variant="secondary" 
+                      className="text-xs px-1.5 py-0 h-5"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveTag && setActiveTag(tag);
+                      }}
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                  {note.tags.length > 3 && (
+                    <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
+                      +{note.tags.length - 3}
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </div>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
