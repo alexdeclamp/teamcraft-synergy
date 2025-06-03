@@ -39,6 +39,8 @@ const CleanTextButton: React.FC<CleanTextButtonProps> = ({
   } = useCleanNoteText({ model });
 
   const handleFormatText = async () => {
+    console.log('🔧 Format text requested');
+    setIsDropdownOpen(false);
     const cleanedText = await formatText(noteContent);
     if (cleanedText) {
       onTextCleaned(cleanedText);
@@ -46,6 +48,8 @@ const CleanTextButton: React.FC<CleanTextButtonProps> = ({
   };
 
   const handleSummarizeText = async () => {
+    console.log('📝 Summarize text requested');
+    setIsDropdownOpen(false);
     const cleanedText = await summarizeText(noteContent);
     if (cleanedText) {
       onTextCleaned(cleanedText);
@@ -53,11 +57,15 @@ const CleanTextButton: React.FC<CleanTextButtonProps> = ({
   };
 
   const handleEnhanceText = async () => {
+    console.log('✨ Enhance text requested');
+    setIsDropdownOpen(false);
     const cleanedText = await enhanceText(noteContent);
     if (cleanedText) {
       onTextCleaned(cleanedText);
     }
   };
+
+  const hasContent = noteContent && noteContent.trim().length > 0;
 
   return (
     <div className="flex items-center gap-2">
@@ -88,7 +96,7 @@ const CleanTextButton: React.FC<CleanTextButtonProps> = ({
                   variant="outline" 
                   size="icon" 
                   className="h-8 w-8"
-                  disabled={isCleaning || !noteContent}
+                  disabled={isCleaning || !hasContent}
                 >
                   {isCleaning ? 
                     <Loader2 className="h-4 w-4 animate-spin" /> : 
@@ -96,18 +104,29 @@ const CleanTextButton: React.FC<CleanTextButtonProps> = ({
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
-            <TooltipContent>Clean Text</TooltipContent>
+            <TooltipContent>
+              {!hasContent ? 'Add content to clean text' : 'Clean Text with AI'}
+            </TooltipContent>
           </Tooltip>
         </TooltipProvider>
         
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handleFormatText} disabled={isCleaning || !noteContent}>
+          <DropdownMenuItem 
+            onClick={handleFormatText} 
+            disabled={isCleaning || !hasContent}
+          >
             Format Text (Keep All Content)
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleSummarizeText} disabled={isCleaning || !noteContent}>
+          <DropdownMenuItem 
+            onClick={handleSummarizeText} 
+            disabled={isCleaning || !hasContent}
+          >
             Summarize Text
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleEnhanceText} disabled={isCleaning || !noteContent}>
+          <DropdownMenuItem 
+            onClick={handleEnhanceText} 
+            disabled={isCleaning || !hasContent}
+          >
             Enhance Text
           </DropdownMenuItem>
         </DropdownMenuContent>
