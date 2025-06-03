@@ -18,7 +18,11 @@ const EmbeddingManager: React.FC<EmbeddingManagerProps> = ({ notes, projectId })
   const [completed, setCompleted] = useState(false);
   const { batchGenerateEmbeddings } = useNoteEmbeddings();
 
-  const notesWithoutEmbeddings = notes.filter(note => !note.embedding);
+  const notesWithoutEmbeddings = notes.filter(note => 
+    !note.embedding || 
+    (typeof note.embedding === 'string' && !note.embedding.trim()) ||
+    (Array.isArray(note.embedding) && note.embedding.length === 0)
+  );
   const hasUnprocessedNotes = notesWithoutEmbeddings.length > 0;
 
   const handleGenerateEmbeddings = async () => {

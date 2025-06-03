@@ -47,7 +47,8 @@ export function useNoteCrud(
           type: (data.source_document as any).type,
           url: (data.source_document as any).url,
           name: (data.source_document as any).name
-        } : null
+        } : null,
+        embedding: data.embedding // Keep as-is from database
       };
       
       setNotes([newNote, ...notes]);
@@ -105,7 +106,8 @@ export function useNoteCrud(
           type: (data.source_document as any).type,
           url: (data.source_document as any).url,
           name: (data.source_document as any).name
-        } : null
+        } : null,
+        embedding: data.embedding // Keep as-is from database
       };
       
       setNotes(notes.map(note => note.id === updatedNote.id ? updatedNote : note));

@@ -64,7 +64,8 @@ export function useFetchNotes(projectId: string, userId: string | undefined, act
           ...note,
           creator_name: creator?.full_name || 'Unknown User',
           creator_avatar: creator?.avatar_url,
-          source_document: typedSourceDocument
+          source_document: typedSourceDocument,
+          embedding: note.embedding // Keep as-is from database (could be string or number[])
         };
       });
       

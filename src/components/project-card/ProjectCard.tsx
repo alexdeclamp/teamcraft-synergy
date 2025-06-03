@@ -62,7 +62,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       <CardHeader className="relative pb-4">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
-            <ProjectCardBadge status={cardStatus} />
+            <ProjectCardBadge text={cardStatus} />
             <CardTitle className="text-xl font-semibold">{title}</CardTitle>
             <CardDescription className="text-sm text-muted-foreground line-clamp-2">
               {description}
