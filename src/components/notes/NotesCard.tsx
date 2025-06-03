@@ -67,10 +67,8 @@ const NotesCard: React.FC<NotesCardProps> = ({
     ? formatDistanceToNow(new Date(note.updated_at), { addSuffix: true })
     : '';
 
-  // Check if note has embedding
-  const hasEmbedding = note.embedding && 
-    (Array.isArray(note.embedding) ? note.embedding.length > 0 : 
-     typeof note.embedding === 'string' ? note.embedding.trim() !== '' : true);
+  // Simplified check for PostgreSQL vector embeddings
+  const hasEmbedding = note.embedding != null && note.embedding !== '';
 
   return (
     <div className="group">
