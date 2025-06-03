@@ -70,11 +70,15 @@ export function useVectorStats(projectId?: string) {
         
         // Fix type checking for embeddings in project breakdown
         const embedding = note.embedding;
-        const hasEmbedding = embedding && (
-          typeof embedding === 'string' 
-            ? embedding.trim() !== '' 
-            : Array.isArray(embedding) && embedding.length > 0
-        );
+        let hasEmbedding = false;
+        
+        if (embedding) {
+          if (typeof embedding === 'string') {
+            hasEmbedding = embedding.trim() !== '';
+          } else if (Array.isArray(embedding)) {
+            hasEmbedding = embedding.length > 0;
+          }
+        }
         
         if (hasEmbedding) {
           project.embeddedNotes++;
