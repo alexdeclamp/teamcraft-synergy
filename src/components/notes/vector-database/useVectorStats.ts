@@ -34,13 +34,17 @@ export function useVectorStats(projectId?: string) {
       console.log('Fetched notes data:', data);
 
       const totalNotes = data?.length || 0;
+      
+      // Fix type checking for embeddings
       const embeddedNotes = data?.filter(note => {
-        if (!note.embedding) return false;
-        if (typeof note.embedding === 'string') {
-          return note.embedding.trim() !== '';
+        const embedding = note.embedding as string | number[] | null;
+        if (!embedding) return false;
+        
+        if (typeof embedding === 'string') {
+          return embedding.trim() !== '';
         }
-        if (Array.isArray(note.embedding)) {
-          return note.embedding.length > 0;
+        if (Array.isArray(embedding)) {
+          return embedding.length > 0;
         }
         return false;
       }).length || 0;
@@ -64,10 +68,12 @@ export function useVectorStats(projectId?: string) {
         const project = projectMap.get(projectId);
         project.totalNotes++;
         
-        const hasEmbedding = note.embedding && (
-          typeof note.embedding === 'string' 
-            ? note.embedding.trim() !== '' 
-            : Array.isArray(note.embedding) && note.embedding.length > 0
+        // Fix type checking for embeddings in project breakdown
+        const embedding = note.embedding as string | number[] | null;
+        const hasEmbedding = embedding && (
+          typeof embedding === 'string' 
+            ? embedding.trim() !== '' 
+            : Array.isArray(embedding) && embedding.length > 0
         );
         
         if (hasEmbedding) {
