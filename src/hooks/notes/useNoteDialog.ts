@@ -1,13 +1,44 @@
 
-import { useState, useEffect } from 'react';
-import { Note } from '@/components/notes/types';
-import { resetBodyStyles, forceFullDialogCleanup } from '@/utils/dialogUtils';
+import { useEffect } from 'react';
+import { forceFullDialogCleanup } from '@/utils/dialogUtils';
+import { useNotesDialogState } from './useNotesDialogState';
+import { useNotesCurrentNote } from './useNotesCurrentNote';
+import { useNotesDialogActions } from './useNotesDialogActions';
+import { useNotesDialogReset } from './useNotesDialogReset';
 
 export function useNoteDialog() {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isViewOpen, setIsViewOpen] = useState(false);
-  const [currentNote, setCurrentNote] = useState<Note | null>(null);
+  const {
+    isCreateOpen,
+    setIsCreateOpen,
+    isEditOpen,
+    setIsEditOpen,
+    isViewOpen,
+    setIsViewOpen
+  } = useNotesDialogState();
+
+  const {
+    currentNote,
+    setCurrentNote,
+    clearCurrentNote
+  } = useNotesCurrentNote();
+
+  const {
+    openCreateDialog,
+    openEditDialog,
+    openViewDialog
+  } = useNotesDialogActions({
+    setIsCreateOpen,
+    setIsEditOpen,
+    setIsViewOpen,
+    setCurrentNote
+  });
+
+  const { resetDialogs } = useNotesDialogReset({
+    setIsCreateOpen,
+    setIsEditOpen,
+    setIsViewOpen,
+    clearCurrentNote
+  });
 
   // Ensure any body modifications are cleaned up when the component unmounts
   useEffect(() => {
@@ -16,45 +47,6 @@ export function useNoteDialog() {
       forceFullDialogCleanup();
     };
   }, []);
-
-  // Watch dialog state changes and clean up when all dialogs are closed
-  useEffect(() => {
-    if (!isCreateOpen && !isEditOpen && !isViewOpen) {
-      console.log('All note dialogs closed, executing cleanup');
-      forceFullDialogCleanup();
-    }
-  }, [isCreateOpen, isEditOpen, isViewOpen]);
-
-  const openCreateDialog = () => {
-    setIsCreateOpen(true);
-  };
-
-  const openEditDialog = (note: Note) => {
-    setCurrentNote(note);
-    setIsEditOpen(true);
-  };
-
-  const openViewDialog = (note: Note) => {
-    setCurrentNote(note);
-    setIsViewOpen(true);
-  };
-
-  const resetDialogs = () => {
-    // First reset the state
-    setIsCreateOpen(false);
-    setIsEditOpen(false);
-    setIsViewOpen(false);
-    
-    // Add a small delay before clearing the current note to prevent UI flickers
-    setTimeout(() => {
-      setCurrentNote(null);
-    }, 100);
-    
-    // Force a complete cleanup
-    forceFullDialogCleanup();
-    
-    console.log('All dialogs reset and cleaned up');
-  };
 
   return {
     isCreateOpen,
