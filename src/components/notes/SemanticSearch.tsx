@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Sparkles, Loader2, AlertCircle, Lightbulb } from 'lucide-react';
+import { Search, Sparkles, Loader2, AlertCircle, Lightbulb, Bug } from 'lucide-react';
 import { useVectorSearch } from '@/hooks/notes/useVectorSearch';
 import { Note } from './types';
 
@@ -18,6 +18,8 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
   const [isSearching, setIsSearching] = useState(false);
   const [localResults, setLocalResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   
   const { searchNotes } = useVectorSearch();
 
@@ -33,16 +35,59 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     
+    console.log('🔍 Starting semantic search:', { searchQuery, projectId });
     setIsSearching(true);
     setHasSearched(true);
+    setErrorMessage('');
+    setDebugInfo(null);
+    
     try {
+      console.log('📡 Calling searchNotes function...');
+      const startTime = Date.now();
+      
       const results = await searchNotes(searchQuery, projectId, 'semantic');
-      setLocalResults(results);
+      
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      
+      console.log('✅ Search completed:', { 
+        results, 
+        resultCount: results?.length || 0, 
+        duration: `${duration}ms` 
+      });
+      
+      setLocalResults(results || []);
+      setDebugInfo({
+        query: searchQuery,
+        projectId,
+        resultCount: results?.length || 0,
+        duration,
+        timestamp: new Date().toISOString()
+      });
+      
+      if (!results || results.length === 0) {
+        console.log('⚠️ No results returned from search');
+      }
     } catch (error) {
-      console.error('Search error:', error);
+      console.error('❌ Search error:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'Unknown search error');
+      setDebugInfo({
+        query: searchQuery,
+        projectId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleTestSearch = async () => {
+    console.log('🧪 Running test search...');
+    setSearchQuery('test search functionality');
+    setTimeout(() => {
+      handleSearch();
+    }, 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -110,6 +155,14 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
               <Search className="h-4 w-4" />
             )}
           </Button>
+          <Button 
+            onClick={handleTestSearch} 
+            disabled={isSearching}
+            variant="outline"
+            size="sm"
+          >
+            <Bug className="h-4 w-4" />
+          </Button>
         </div>
 
         {isSearching && (
@@ -119,7 +172,28 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
           </div>
         )}
 
-        {hasSearched && !isSearching && localResults.length === 0 && (
+        {errorMessage && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2 text-red-800">
+              <AlertCircle className="h-5 w-5" />
+              <div>
+                <p className="font-medium">Search Error</p>
+                <p className="text-sm">{errorMessage}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {debugInfo && (
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs">
+            <p className="font-medium text-blue-800">Debug Info:</p>
+            <pre className="text-blue-700 whitespace-pre-wrap">
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
+          </div>
+        )}
+
+        {hasSearched && !isSearching && !errorMessage && localResults.length === 0 && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-muted-foreground p-4 bg-muted/30 rounded-lg">
               <AlertCircle className="h-5 w-5" />

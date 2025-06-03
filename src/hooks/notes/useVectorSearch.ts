@@ -30,6 +30,14 @@ export function useVectorSearch() {
     try {
       setSearching(true);
       
+      console.log('🚀 Invoking vector-search-notes function:', {
+        query,
+        projectId,
+        searchType,
+        textQuery,
+        limit
+      });
+      
       const { data, error } = await supabase.functions.invoke('vector-search-notes', {
         body: { 
           query, 
@@ -40,22 +48,31 @@ export function useVectorSearch() {
         }
       });
 
-      if (error) throw error;
+      console.log('📡 Function response:', { data, error });
+
+      if (error) {
+        console.error('❌ Function error:', error);
+        throw error;
+      }
       
       const results = data?.results || [];
+      console.log('✅ Search results:', results);
+      
       setSearchResults(results);
       return results;
     } catch (error: any) {
-      console.error('Error searching notes:', error);
-      toast.error('Failed to search notes');
+      console.error('❌ Error searching notes:', error);
+      toast.error(`Failed to search notes: ${error.message}`);
       return [];
     } finally {
       setSearching(false);
     }
-  }, []); // No dependencies - this function should be stable
+  }, []);
 
   const findSimilarNotes = useCallback(async (noteId: string, projectId?: string, limit: number = 5) => {
     try {
+      console.log('🔗 Finding similar notes for:', { noteId, projectId, limit });
+      
       // First get the current note content to use as query
       const { data: note, error: noteError } = await supabase
         .from('project_notes')
@@ -63,10 +80,18 @@ export function useVectorSearch() {
         .eq('id', noteId)
         .single();
 
-      if (noteError) throw noteError;
+      if (noteError) {
+        console.error('❌ Error fetching note:', noteError);
+        throw noteError;
+      }
 
       const query = `${note.title} ${note.content || ''}`.trim();
-      if (!query) return [];
+      if (!query) {
+        console.log('⚠️ No query text found for note');
+        return [];
+      }
+      
+      console.log('🔍 Similar notes query:', query);
       
       // Call searchNotes directly instead of through the hook reference
       try {
@@ -80,19 +105,24 @@ export function useVectorSearch() {
           }
         });
 
-        if (error) throw error;
+        console.log('📡 Similar notes response:', { data, error });
+
+        if (error) {
+          console.error('❌ Similar notes error:', error);
+          throw error;
+        }
         
         return data?.results || [];
       } catch (error: any) {
-        console.error('Error in vector search:', error);
+        console.error('❌ Error in vector search:', error);
         return [];
       }
     } catch (error: any) {
-      console.error('Error finding similar notes:', error);
-      toast.error('Failed to find similar notes');
+      console.error('❌ Error finding similar notes:', error);
+      toast.error(`Failed to find similar notes: ${error.message}`);
       return [];
     }
-  }, []); // No dependencies - this function should be stable
+  }, []);
 
   return {
     searching,
