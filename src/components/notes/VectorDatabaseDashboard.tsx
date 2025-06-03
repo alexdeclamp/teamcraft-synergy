@@ -11,14 +11,19 @@ import VectorToolsTab from './vector-database/VectorToolsTab';
 import { VectorDatabaseDashboardProps } from './vector-database/types';
 
 const VectorDatabaseDashboard: React.FC<VectorDatabaseDashboardProps> = ({ projectId }) => {
+  console.log('VectorDatabaseDashboard rendering with projectId:', projectId);
+  
   const { stats, fetchVectorStats } = useVectorStats(projectId);
   const { notes, loading, fetchNotes } = useVectorNotes(projectId);
 
   useEffect(() => {
+    console.log('VectorDatabaseDashboard useEffect triggered');
     const loadData = async () => {
       try {
+        console.log('Starting to load vector database data...');
         await fetchVectorStats();
         await fetchNotes();
+        console.log('Finished loading vector database data');
       } catch (error) {
         console.error('Error loading vector database data:', error);
       }
@@ -29,6 +34,7 @@ const VectorDatabaseDashboard: React.FC<VectorDatabaseDashboardProps> = ({ proje
 
   const handleRefresh = async () => {
     try {
+      console.log('Refreshing vector database data...');
       await fetchVectorStats();
       await fetchNotes();
     } catch (error) {
@@ -36,8 +42,11 @@ const VectorDatabaseDashboard: React.FC<VectorDatabaseDashboardProps> = ({ proje
     }
   };
 
-  // Show loading state only if both are loading and we have no data
+  console.log('Current state - stats:', stats, 'notes:', notes.length, 'loading:', loading);
+
+  // Show loading state initially
   if (loading && !stats && notes.length === 0) {
+    console.log('Showing loading state');
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -45,6 +54,8 @@ const VectorDatabaseDashboard: React.FC<VectorDatabaseDashboardProps> = ({ proje
       </div>
     );
   }
+
+  console.log('Rendering main dashboard content');
 
   return (
     <div className="space-y-6">
