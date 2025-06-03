@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,13 +38,19 @@ interface VectorStats {
   }>;
 }
 
+interface NoteWithProject extends Note {
+  projects?: {
+    title: string;
+  };
+}
+
 interface VectorDatabaseDashboardProps {
   projectId?: string;
 }
 
 const VectorDatabaseDashboard: React.FC<VectorDatabaseDashboardProps> = ({ projectId }) => {
   const [stats, setStats] = useState<VectorStats | null>(null);
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<NoteWithProject[]>([]);
   const [selectedNotes, setSelectedNotes] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -138,6 +143,7 @@ const VectorDatabaseDashboard: React.FC<VectorDatabaseDashboardProps> = ({ proje
           created_at,
           updated_at,
           project_id,
+          user_id,
           projects!inner(title)
         `)
         .order('updated_at', { ascending: false });
@@ -150,7 +156,20 @@ const VectorDatabaseDashboard: React.FC<VectorDatabaseDashboardProps> = ({ proje
 
       if (error) throw error;
 
-      setNotes(data || []);
+      // Transform the data to match our Note type with projects info
+      const transformedNotes: NoteWithProject[] = (data || []).map(note => ({
+        id: note.id,
+        title: note.title,
+        content: note.content,
+        embedding: note.embedding,
+        created_at: note.created_at,
+        updated_at: note.updated_at,
+        project_id: note.project_id,
+        user_id: note.user_id,
+        projects: note.projects
+      }));
+
+      setNotes(transformedNotes);
     } catch (error) {
       console.error('Error fetching notes:', error);
       toast.error('Failed to fetch notes');
@@ -220,7 +239,6 @@ const VectorDatabaseDashboard: React.FC<VectorDatabaseDashboardProps> = ({ proje
 
   const handleRegenerateEmbedding = async (noteId: string, title: string, content: string) => {
     try {
-      const { batchGenerateEmbeddings } = useNoteEmbeddings();
       await batchGenerateEmbeddings([{ id: noteId, title, content: content || '' }]);
       await fetchVectorStats();
       await fetchNotes();
