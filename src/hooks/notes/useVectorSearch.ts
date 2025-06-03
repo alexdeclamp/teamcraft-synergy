@@ -66,13 +66,15 @@ export function useVectorSearch() {
       if (noteError) throw noteError;
 
       const query = `${note.title} ${note.content || ''}`.trim();
+      if (!query) return [];
+      
       return await searchNotes(query, projectId, 'semantic', '', limit);
     } catch (error: any) {
       console.error('Error finding similar notes:', error);
       toast.error('Failed to find similar notes');
       return [];
     }
-  }, [searchNotes]);
+  }, []); // Removed searchNotes dependency to prevent recreation
 
   return {
     searching,

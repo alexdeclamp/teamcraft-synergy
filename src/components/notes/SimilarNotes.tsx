@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +34,7 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect }
     };
 
     loadSimilarNotes();
-  }, [currentNote?.id, currentNote?.project_id, findSimilarNotes]);
+  }, [currentNote?.id, currentNote?.project_id]);
 
   if (!currentNote || loading) {
     return (
