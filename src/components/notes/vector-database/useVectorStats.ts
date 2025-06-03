@@ -37,7 +37,7 @@ export function useVectorStats(projectId?: string) {
       
       // Fix type checking for embeddings
       const embeddedNotes = data?.filter(note => {
-        const embedding = note.embedding as string | number[] | null;
+        const embedding = note.embedding;
         if (!embedding) return false;
         
         if (typeof embedding === 'string') {
@@ -69,7 +69,7 @@ export function useVectorStats(projectId?: string) {
         project.totalNotes++;
         
         // Fix type checking for embeddings in project breakdown
-        const embedding = note.embedding as string | number[] | null;
+        const embedding = note.embedding;
         const hasEmbedding = embedding && (
           typeof embedding === 'string' 
             ? embedding.trim() !== '' 
