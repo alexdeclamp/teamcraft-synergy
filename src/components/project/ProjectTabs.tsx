@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { Tabs } from "@/components/ui/tabs";
-import ProjectTabsNavigation from './tabs/ProjectTabsNavigation';
 import ProjectTabsContent from './tabs/ProjectTabsContent';
 
 interface ProjectMember {
@@ -63,34 +61,26 @@ const ProjectTabs: React.FC<ProjectTabsProps> = ({
   setActiveTab
 }) => {
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-      <ProjectTabsNavigation 
-        activeTab={activeTab} 
-        userRole={userRole} 
-        onTabChange={setActiveTab} 
-      />
-      
-      <ProjectTabsContent
-        activeTab={activeTab}
-        projectId={projectId}
-        project={project}
-        members={members}
-        setMembers={setMembers}
-        userRole={userRole}
-        projectImages={projectImages}
-        recentImages={recentImages}
-        isImagesLoading={isImagesLoading}
-        daysSinceCreation={daysSinceCreation}
-        activityPercentage={activityPercentage}
-        noteCount={noteCount}
-        documentCount={documentCount}
-        recentUpdatesCount={recentUpdatesCount}
-        formatFileSize={formatFileSize}
-        handleImagesUpdated={handleImagesUpdated}
-        handleAddMember={handleAddMember}
-        setActiveTab={setActiveTab}
-      />
-    </Tabs>
+    <ProjectTabsContent
+      activeTab={activeTab}
+      projectId={projectId}
+      project={project}
+      members={members}
+      setMembers={setMembers}
+      userRole={userRole}
+      projectImages={projectImages}
+      recentImages={recentImages}
+      isImagesLoading={isImagesLoading}
+      daysSinceCreation={daysSinceCreation}
+      activityPercentage={activityPercentage}
+      noteCount={noteCount}
+      documentCount={documentCount}
+      recentUpdatesCount={recentUpdatesCount}
+      formatFileSize={formatFileSize}
+      handleImagesUpdated={handleImagesUpdated}
+      handleAddMember={handleAddMember}
+      setActiveTab={setActiveTab}
+    />
   );
 };
 

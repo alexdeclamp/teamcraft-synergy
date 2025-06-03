@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import ProjectHeader from '@/components/project/ProjectHeader';
-import ProjectTabs from '@/components/project/ProjectTabs';
+import ProjectSidebar from '@/components/project/ProjectSidebar';
+import ProjectTabsContent from '@/components/project/tabs/ProjectTabsContent';
 import FloatingChatButton from '@/components/project/chat/FloatingChatButton';
 import ProjectChatFullscreen from '@/components/project/chat/ProjectChatFullscreen';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -80,49 +82,48 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background pb-12 animate-fade-in">
-      <Navbar />
-      
-      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-16 sm:pt-20">
-        <ProjectHeader
-          project={project}
-          userRole={userRole}
-          membersCount={members.length}
-          imagesCount={projectImages.length}
-          daysSinceCreation={daysSinceCreation()}
-          onAddMember={handleAddMember}
-          showInviteDialog={showInviteDialog}
-          setShowInviteDialog={setShowInviteDialog}
-        />
+  // On mobile, keep the original tab-based layout
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-background pb-12 animate-fade-in">
+        <Navbar />
         
-        <ProjectTabs
-          projectId={project.id}
-          project={project}
-          members={members}
-          setMembers={setMembers}
-          userRole={userRole}
-          projectImages={projectImages}
-          recentImages={recentImages}
-          isImagesLoading={isImagesLoading}
-          daysSinceCreation={daysSinceCreation}
-          activityPercentage={activityPercentage}
-          noteCount={noteCount}
-          documentCount={documentCount}
-          recentUpdatesCount={recentUpdatesCount}
-          formatFileSize={formatFileSize}
-          handleImagesUpdated={handleImagesUpdated}
-          handleAddMember={handleAddMember}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-        />
-      </main>
+        <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-16 sm:pt-20">
+          <ProjectHeader
+            project={project}
+            userRole={userRole}
+            membersCount={members.length}
+            imagesCount={projectImages.length}
+            daysSinceCreation={daysSinceCreation()}
+            onAddMember={handleAddMember}
+            showInviteDialog={showInviteDialog}
+            setShowInviteDialog={setShowInviteDialog}
+          />
+          
+          <ProjectTabsContent
+            activeTab={activeTab}
+            projectId={project.id}
+            project={project}
+            members={members}
+            setMembers={setMembers}
+            userRole={userRole}
+            projectImages={projectImages}
+            recentImages={recentImages}
+            isImagesLoading={isImagesLoading}
+            daysSinceCreation={daysSinceCreation}
+            activityPercentage={activityPercentage}
+            noteCount={noteCount}
+            documentCount={documentCount}
+            recentUpdatesCount={recentUpdatesCount}
+            formatFileSize={formatFileSize}
+            handleImagesUpdated={handleImagesUpdated}
+            handleAddMember={handleAddMember}
+            setActiveTab={setActiveTab}
+          />
+        </main>
 
-      {isMobile && (
         <div className="pb-16"></div>
-      )}
 
-      {isMobile && (
         <div className="fixed bottom-0 left-0 right-0 z-40 flex bg-background border-t">
           <div className="flex-1">
             <MobileBottomNav 
@@ -139,7 +140,81 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
             />
           </div>
         </div>
-      )}
+
+        <FloatingChatButton 
+          onClick={() => setIsChatOpen(true)} 
+          className="shadow-xl" 
+          isMobile={isMobile}
+        />
+
+        <ProjectChatFullscreen 
+          projectId={project.id}
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+        />
+      </div>
+    );
+  }
+
+  // Desktop layout with sidebar
+  return (
+    <div className="min-h-screen bg-background animate-fade-in">
+      <Navbar />
+      
+      <SidebarProvider>
+        <div className="flex w-full pt-16">
+          <ProjectSidebar 
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            userRole={userRole}
+            projectTitle={project.title}
+          />
+          
+          <SidebarInset className="flex-1">
+            <div className="p-4">
+              <div className="flex items-center gap-2 mb-6">
+                <SidebarTrigger />
+                <div className="border-l h-4 mx-2" />
+                <h1 className="text-2xl font-bold">{project.title}</h1>
+              </div>
+              
+              <ProjectHeader
+                project={project}
+                userRole={userRole}
+                membersCount={members.length}
+                imagesCount={projectImages.length}
+                daysSinceCreation={daysSinceCreation()}
+                onAddMember={handleAddMember}
+                showInviteDialog={showInviteDialog}
+                setShowInviteDialog={setShowInviteDialog}
+              />
+              
+              <div className="mt-6">
+                <ProjectTabsContent
+                  activeTab={activeTab}
+                  projectId={project.id}
+                  project={project}
+                  members={members}
+                  setMembers={setMembers}
+                  userRole={userRole}
+                  projectImages={projectImages}
+                  recentImages={recentImages}
+                  isImagesLoading={isImagesLoading}
+                  daysSinceCreation={daysSinceCreation}
+                  activityPercentage={activityPercentage}
+                  noteCount={noteCount}
+                  documentCount={documentCount}
+                  recentUpdatesCount={recentUpdatesCount}
+                  formatFileSize={formatFileSize}
+                  handleImagesUpdated={handleImagesUpdated}
+                  handleAddMember={handleAddMember}
+                  setActiveTab={setActiveTab}
+                />
+              </div>
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
 
       <FloatingChatButton 
         onClick={() => setIsChatOpen(true)} 
