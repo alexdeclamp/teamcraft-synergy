@@ -28,6 +28,18 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
     }
   };
 
+  const convertToNote = (result: any): Note => {
+    return {
+      id: result.id,
+      title: result.title,
+      content: result.content,
+      created_at: new Date().toISOString(), // Default values for missing properties
+      updated_at: new Date().toISOString(),
+      user_id: '',
+      project_id: projectId,
+    };
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -70,7 +82,7 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
               <Card 
                 key={result.id} 
                 className="cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => onNoteSelect(result as Note)}
+                onClick={() => onNoteSelect(convertToNote(result))}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
