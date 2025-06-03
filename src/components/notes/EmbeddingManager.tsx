@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Database, Sparkles, Loader2, CheckCircle, RefreshCw, FileText } from 'lucide-react';
+import { Database, Sparkles, Loader2, CheckCircle, RefreshCw, FileText, AlertCircle } from 'lucide-react';
 import { useNoteEmbeddings } from '@/hooks/notes/useNoteEmbeddings';
 import { Note } from './types';
 import { toast } from 'sonner';
@@ -19,6 +19,8 @@ const EmbeddingManager: React.FC<EmbeddingManagerProps> = ({ notes, projectId })
   const [isProcessing, setIsProcessing] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [processingNoteId, setProcessingNoteId] = useState<string | null>(null);
+  const [lastRegeneratedNoteId, setLastRegeneratedNoteId] = useState<string | null>(null);
+  const [regenerateSuccess, setRegenerateSuccess] = useState<{ [key: string]: boolean }>({});
   const { generateEmbedding, batchGenerateEmbeddings } = useNoteEmbeddings();
 
   const notesWithoutEmbeddings = notes.filter(note => 
@@ -61,8 +63,10 @@ const EmbeddingManager: React.FC<EmbeddingManagerProps> = ({ notes, projectId })
       }
 
       setCompleted(true);
+      toast.success('All embeddings generated successfully!');
     } catch (error) {
       console.error('Error generating embeddings:', error);
+      toast.error('Failed to generate some embeddings');
     } finally {
       setIsProcessing(false);
     }
@@ -70,18 +74,55 @@ const EmbeddingManager: React.FC<EmbeddingManagerProps> = ({ notes, projectId })
 
   const handleRegenerateEmbedding = async (note: Note) => {
     setProcessingNoteId(note.id);
+    setLastRegeneratedNoteId(note.id);
+    setRegenerateSuccess(prev => ({ ...prev, [note.id]: false }));
+    
     try {
       const text = `${note.title} ${note.content || ''}`.trim();
       const success = await generateEmbedding(note.id, text);
+      
       if (success) {
-        toast.success('Embedding regenerated successfully');
+        setRegenerateSuccess(prev => ({ ...prev, [note.id]: true }));
+        toast.success(`Embedding regenerated for "${note.title}"`);
+        
+        // Clear success state after 3 seconds
+        setTimeout(() => {
+          setRegenerateSuccess(prev => ({ ...prev, [note.id]: false }));
+          if (lastRegeneratedNoteId === note.id) {
+            setLastRegeneratedNoteId(null);
+          }
+        }, 3000);
+      } else {
+        setRegenerateSuccess(prev => ({ ...prev, [note.id]: false }));
+        toast.error(`Failed to regenerate embedding for "${note.title}"`);
       }
     } catch (error) {
       console.error('Error regenerating embedding:', error);
-      toast.error('Failed to regenerate embedding');
+      setRegenerateSuccess(prev => ({ ...prev, [note.id]: false }));
+      toast.error(`Failed to regenerate embedding for "${note.title}"`);
     } finally {
       setProcessingNoteId(null);
     }
+  };
+
+  const getRegenerateButtonContent = (note: Note) => {
+    const isProcessingThis = processingNoteId === note.id;
+    const wasSuccessful = regenerateSuccess[note.id];
+    
+    if (isProcessingThis) {
+      return <Loader2 className="h-4 w-4 animate-spin" />;
+    }
+    
+    if (wasSuccessful) {
+      return <CheckCircle className="h-4 w-4 text-green-600" />;
+    }
+    
+    return <RefreshCw className="h-4 w-4" />;
+  };
+
+  const getRegenerateButtonVariant = (note: Note) => {
+    const wasSuccessful = regenerateSuccess[note.id];
+    return wasSuccessful ? "default" : "outline";
   };
 
   return (
@@ -187,6 +228,11 @@ const EmbeddingManager: React.FC<EmbeddingManagerProps> = ({ notes, projectId })
                       >
                         {hasEmbedding(note) ? "Embedded" : "No Embedding"}
                       </Badge>
+                      {regenerateSuccess[note.id] && (
+                        <Badge variant="outline" className="text-xs text-green-600 border-green-600">
+                          Updated
+                        </Badge>
+                      )}
                     </div>
                     {note.content && (
                       <p className="text-sm text-muted-foreground truncate">
@@ -197,18 +243,18 @@ const EmbeddingManager: React.FC<EmbeddingManagerProps> = ({ notes, projectId })
                   </div>
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant={getRegenerateButtonVariant(note)}
                     onClick={() => handleRegenerateEmbedding(note)}
                     disabled={processingNoteId === note.id}
                     className="ml-2 flex-shrink-0"
                   >
-                    {processingNoteId === note.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4" />
-                    )}
+                    {getRegenerateButtonContent(note)}
                     <span className="ml-1 hidden sm:inline">
-                      {hasEmbedding(note) ? "Regenerate" : "Generate"}
+                      {regenerateSuccess[note.id] 
+                        ? "Updated" 
+                        : hasEmbedding(note) 
+                          ? "Regenerate" 
+                          : "Generate"}
                     </span>
                   </Button>
                 </div>
