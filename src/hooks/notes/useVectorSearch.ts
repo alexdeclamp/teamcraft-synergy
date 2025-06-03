@@ -52,7 +52,7 @@ export function useVectorSearch() {
     } finally {
       setSearching(false);
     }
-  }, []);
+  }, []); // No dependencies - this function should be stable
 
   const findSimilarNotes = useCallback(async (noteId: string, projectId?: string, limit: number = 5) => {
     try {
@@ -68,13 +68,31 @@ export function useVectorSearch() {
       const query = `${note.title} ${note.content || ''}`.trim();
       if (!query) return [];
       
-      return await searchNotes(query, projectId, 'semantic', '', limit);
+      // Call searchNotes directly instead of through the hook reference
+      try {
+        const { data, error } = await supabase.functions.invoke('vector-search-notes', {
+          body: { 
+            query, 
+            projectId, 
+            searchType: 'semantic',
+            textQuery: '',
+            limit 
+          }
+        });
+
+        if (error) throw error;
+        
+        return data?.results || [];
+      } catch (error: any) {
+        console.error('Error in vector search:', error);
+        return [];
+      }
     } catch (error: any) {
       console.error('Error finding similar notes:', error);
       toast.error('Failed to find similar notes');
       return [];
     }
-  }, []); // Removed searchNotes dependency to prevent recreation
+  }, []); // No dependencies - this function should be stable
 
   return {
     searching,
