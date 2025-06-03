@@ -35,7 +35,7 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect }
     };
 
     loadSimilarNotes();
-  }, [currentNote?.id, findSimilarNotes]);
+  }, [currentNote?.id, currentNote?.project_id, findSimilarNotes]);
 
   if (!currentNote || loading) {
     return (

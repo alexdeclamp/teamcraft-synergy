@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -15,7 +15,7 @@ export function useVectorSearch() {
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<VectorSearchResult[]>([]);
 
-  const searchNotes = async (
+  const searchNotes = useCallback(async (
     query: string, 
     projectId?: string, 
     searchType: 'semantic' | 'hybrid' = 'semantic',
@@ -52,9 +52,9 @@ export function useVectorSearch() {
     } finally {
       setSearching(false);
     }
-  };
+  }, []);
 
-  const findSimilarNotes = async (noteId: string, projectId?: string, limit: number = 5) => {
+  const findSimilarNotes = useCallback(async (noteId: string, projectId?: string, limit: number = 5) => {
     try {
       // First get the current note content to use as query
       const { data: note, error: noteError } = await supabase
@@ -72,7 +72,7 @@ export function useVectorSearch() {
       toast.error('Failed to find similar notes');
       return [];
     }
-  };
+  }, [searchNotes]);
 
   return {
     searching,
