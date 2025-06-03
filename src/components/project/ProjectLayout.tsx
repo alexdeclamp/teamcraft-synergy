@@ -156,7 +156,7 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
     );
   }
 
-  // Desktop layout with sidebar
+  // Desktop layout with sidebar - simplified header
   return (
     <div className="min-h-screen bg-background animate-fade-in">
       <Navbar />
@@ -171,46 +171,46 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
           />
           
           <SidebarInset className="flex-1">
-            <div className="p-4">
+            <div className="p-6">
               <div className="flex items-center gap-2 mb-6">
                 <SidebarTrigger />
                 <div className="border-l h-4 mx-2" />
-                <h1 className="text-2xl font-bold">{project.title}</h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold">{project.title}</h1>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{members.length} Members</span>
+                    <span>•</span>
+                    <span>{projectImages.length} Images</span>
+                    <span>•</span>
+                    <span>Created {new Date(project.created_at).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}</span>
+                  </div>
+                </div>
               </div>
               
-              <ProjectHeader
+              <ProjectTabsContent
+                activeTab={activeTab}
+                projectId={project.id}
                 project={project}
+                members={members}
+                setMembers={setMembers}
                 userRole={userRole}
-                membersCount={members.length}
-                imagesCount={projectImages.length}
-                daysSinceCreation={daysSinceCreation()}
-                onAddMember={handleAddMember}
-                showInviteDialog={showInviteDialog}
-                setShowInviteDialog={setShowInviteDialog}
+                projectImages={projectImages}
+                recentImages={recentImages}
+                isImagesLoading={isImagesLoading}
+                daysSinceCreation={daysSinceCreation}
+                activityPercentage={activityPercentage}
+                noteCount={noteCount}
+                documentCount={documentCount}
+                recentUpdatesCount={recentUpdatesCount}
+                formatFileSize={formatFileSize}
+                handleImagesUpdated={handleImagesUpdated}
+                handleAddMember={handleAddMember}
+                setActiveTab={setActiveTab}
               />
-              
-              <div className="mt-6">
-                <ProjectTabsContent
-                  activeTab={activeTab}
-                  projectId={project.id}
-                  project={project}
-                  members={members}
-                  setMembers={setMembers}
-                  userRole={userRole}
-                  projectImages={projectImages}
-                  recentImages={recentImages}
-                  isImagesLoading={isImagesLoading}
-                  daysSinceCreation={daysSinceCreation}
-                  activityPercentage={activityPercentage}
-                  noteCount={noteCount}
-                  documentCount={documentCount}
-                  recentUpdatesCount={recentUpdatesCount}
-                  formatFileSize={formatFileSize}
-                  handleImagesUpdated={handleImagesUpdated}
-                  handleAddMember={handleAddMember}
-                  setActiveTab={setActiveTab}
-                />
-              </div>
             </div>
           </SidebarInset>
         </div>
