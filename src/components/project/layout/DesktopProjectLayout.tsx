@@ -54,45 +54,47 @@ const DesktopProjectLayout: React.FC<DesktopProjectLayoutProps> = ({
     <div className="min-h-screen bg-background animate-fade-in">
       <Navbar />
       
-      <SidebarProvider>
-        <div className="flex w-full pt-16">
-          <ProjectSidebar 
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            userRole={userRole}
-            projectTitle={project.title}
-          />
-          
-          <SidebarInset className="flex-1">
-            <div className="p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <SidebarTrigger />
+      <div className="pt-16">
+        <SidebarProvider>
+          <div className="flex w-full min-h-[calc(100vh-4rem)]">
+            <ProjectSidebar 
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              userRole={userRole}
+              projectTitle={project.title}
+            />
+            
+            <SidebarInset className="flex-1">
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <SidebarTrigger />
+                </div>
+                
+                <ProjectTabsContent
+                  activeTab={activeTab}
+                  projectId={project.id}
+                  project={project}
+                  members={members}
+                  setMembers={setMembers}
+                  userRole={userRole}
+                  projectImages={projectImages}
+                  recentImages={recentImages}
+                  isImagesLoading={isImagesLoading}
+                  daysSinceCreation={daysSinceCreation}
+                  activityPercentage={activityPercentage}
+                  noteCount={noteCount}
+                  documentCount={documentCount}
+                  recentUpdatesCount={recentUpdatesCount}
+                  formatFileSize={formatFileSize}
+                  handleImagesUpdated={handleImagesUpdated}
+                  handleAddMember={handleAddMember}
+                  setActiveTab={setActiveTab}
+                />
               </div>
-              
-              <ProjectTabsContent
-                activeTab={activeTab}
-                projectId={project.id}
-                project={project}
-                members={members}
-                setMembers={setMembers}
-                userRole={userRole}
-                projectImages={projectImages}
-                recentImages={recentImages}
-                isImagesLoading={isImagesLoading}
-                daysSinceCreation={daysSinceCreation}
-                activityPercentage={activityPercentage}
-                noteCount={noteCount}
-                documentCount={documentCount}
-                recentUpdatesCount={recentUpdatesCount}
-                formatFileSize={formatFileSize}
-                handleImagesUpdated={handleImagesUpdated}
-                handleAddMember={handleAddMember}
-                setActiveTab={setActiveTab}
-              />
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
+      </div>
 
       <FloatingChatButton 
         onClick={() => setIsChatOpen(true)} 
