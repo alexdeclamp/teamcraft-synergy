@@ -57,12 +57,14 @@ const DesktopProjectLayout: React.FC<DesktopProjectLayoutProps> = ({
       <div className="pt-16">
         <SidebarProvider>
           <div className="flex w-full min-h-[calc(100vh-4rem)]">
-            <ProjectSidebar 
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              userRole={userRole}
-              projectTitle={project.title}
-            />
+            <div className="relative">
+              <ProjectSidebar 
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                userRole={userRole}
+                projectTitle={project.title}
+              />
+            </div>
             
             <SidebarInset className="flex-1">
               <div className="p-6">

@@ -84,7 +84,7 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
   };
 
   return (
-    <Sidebar>
+    <Sidebar variant="sidebar" collapsible="offcanvas">
       <SidebarContent>
         <div className="p-4 border-b">
           <Button
