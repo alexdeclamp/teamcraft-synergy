@@ -32,7 +32,9 @@ const VectorDocumentsTab: React.FC<VectorDocumentsTabProps> = ({ notes, onRefres
     const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          note.content.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const hasEmbedding = note.embedding && note.embedding.trim() !== '';
+    const hasEmbedding = note.embedding && (
+      typeof note.embedding === 'string' ? note.embedding.trim() !== '' : note.embedding.length > 0
+    );
     const matchesFilter = embeddingFilter === 'all' || 
                          (embeddingFilter === 'embedded' && hasEmbedding) ||
                          (embeddingFilter === 'missing' && !hasEmbedding);
@@ -194,7 +196,9 @@ const VectorDocumentsTab: React.FC<VectorDocumentsTabProps> = ({ notes, onRefres
               </div>
             ) : (
               filteredNotes.map((note) => {
-                const hasEmbedding = note.embedding && note.embedding.trim() !== '';
+                const hasEmbedding = note.embedding && (
+                  typeof note.embedding === 'string' ? note.embedding.trim() !== '' : note.embedding.length > 0
+                );
                 return (
                   <div key={note.id} className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-muted/50">
                     <Checkbox
