@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,12 +17,29 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [localResults, setLocalResults] = useState<any[]>([]);
+  const [allResults, setAllResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [threshold, setThreshold] = useState(0.3);
   
   const { searchNotes } = useVectorSearch();
+
+  // Auto-filter results when threshold changes
+  useEffect(() => {
+    if (allResults.length > 0) {
+      const filteredResults = allResults.filter(result => result.similarity >= threshold);
+      setLocalResults(filteredResults);
+      
+      // Update debug info with new filter
+      setDebugInfo(prev => prev ? {
+        ...prev,
+        threshold,
+        resultCount: filteredResults.length,
+        totalResults: allResults.length
+      } : null);
+    }
+  }, [threshold, allResults]);
 
   const searchSuggestions = [
     "project planning strategies",
@@ -65,15 +83,17 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
         threshold
       });
       
-      // Filter results by threshold
-      const filteredResults = results?.filter(result => result.similarity >= threshold) || [];
+      // Store all results and filter by threshold
+      const allSearchResults = results || [];
+      setAllResults(allSearchResults);
+      const filteredResults = allSearchResults.filter(result => result.similarity >= threshold);
       setLocalResults(filteredResults);
       
       setDebugInfo({
         query: searchQuery,
         projectId,
         resultCount: filteredResults.length,
-        totalResults: results?.length || 0,
+        totalResults: allSearchResults.length,
         duration,
         threshold,
         timestamp: new Date().toISOString()
@@ -118,10 +138,7 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
 
   const handleQuickThreshold = (newThreshold: number) => {
     setThreshold(newThreshold);
-    if (searchQuery.trim() && hasSearched) {
-      // Auto-search with new threshold if we already have a query
-      setTimeout(() => handleSearch(), 100);
-    }
+    // No need to trigger search here - useEffect will handle filtering
   };
 
   const convertToNote = (result: any): Note => {
@@ -280,6 +297,9 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
               <div>
                 <p className="font-medium">No matching notes found above threshold {threshold.toFixed(2)}</p>
                 <p className="text-sm">Try lowering the threshold or rephrasing your search.</p>
+                {allResults.length > 0 && (
+                  <p className="text-sm">Found {allResults.length} total results, but none above your threshold.</p>
+                )}
               </div>
             </div>
             
@@ -309,6 +329,9 @@ const SemanticSearch: React.FC<SemanticSearchProps> = ({ projectId, onNoteSelect
           <div className="space-y-3 max-h-96 overflow-y-auto">
             <div className="text-sm text-muted-foreground">
               Found {localResults.length} semantically similar notes
+              {allResults.length !== localResults.length && (
+                <span> (filtered from {allResults.length} total results)</span>
+              )}
             </div>
             {localResults.map((result) => (
               <Card 
