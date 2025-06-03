@@ -12,6 +12,7 @@ import NotesList from './notes/NotesList';
 import NotesDialogsContainer from './notes/NotesDialogsContainer';
 import SemanticSearch from './notes/SemanticSearch';
 import EmbeddingManager from './notes/EmbeddingManager';
+import VectorDatabaseDashboard from './notes/VectorDatabaseDashboard';
 import SimilarNotes from './notes/SimilarNotes';
 
 interface ProjectNotesProps {
@@ -96,10 +97,11 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
   return (
     <div className="space-y-4">
       <Tabs defaultValue="notes" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="search">Semantic Search</TabsTrigger>
-          <TabsTrigger value="settings">Vector Settings</TabsTrigger>
+          <TabsTrigger value="database">Vector Database</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
         
         <TabsContent value="notes" className="space-y-4">
@@ -140,6 +142,10 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
             projectId={projectId}
             onNoteSelect={handleNoteSelect}
           />
+        </TabsContent>
+
+        <TabsContent value="database">
+          <VectorDatabaseDashboard projectId={projectId} />
         </TabsContent>
         
         <TabsContent value="settings">
