@@ -9,9 +9,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarInset
 } from "@/components/ui/sidebar";
 import { 
   LayoutDashboard, 
@@ -82,6 +79,10 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
     });
   }
 
+  const handleBackToDashboard = () => {
+    navigate('/dashboard');
+  };
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -89,8 +90,8 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate('/dashboard')}
-            className="mb-2 text-muted-foreground hover:text-foreground"
+            onClick={handleBackToDashboard}
+            className="mb-2 text-muted-foreground hover:text-foreground w-full justify-start"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
@@ -106,14 +107,11 @@ const ProjectSidebar: React.FC<ProjectSidebarProps> = ({
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.value}>
                   <SidebarMenuButton 
-                    asChild
                     isActive={activeTab === item.value}
                     onClick={() => onTabChange(item.value)}
                   >
-                    <button className="w-full">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </button>
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
