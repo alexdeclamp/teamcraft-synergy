@@ -11,6 +11,7 @@ interface NotesViewDialogContainerProps {
   onDelete: (id: string) => void;
   formatDate?: (dateString: string) => string;
   userId?: string;
+  onViewSimilar?: (note: Note) => void;
 }
 
 export const NotesViewDialogContainer: React.FC<NotesViewDialogContainerProps> = ({
@@ -20,7 +21,8 @@ export const NotesViewDialogContainer: React.FC<NotesViewDialogContainerProps> =
   onEdit,
   onDelete,
   formatDate,
-  userId
+  userId,
+  onViewSimilar
 }) => {
   return (
     <NotesViewDialog
@@ -31,6 +33,7 @@ export const NotesViewDialogContainer: React.FC<NotesViewDialogContainerProps> =
       onDelete={onDelete}
       formatDate={formatDate}
       userId={userId}
+      onViewSimilar={onViewSimilar}
     />
   );
 };

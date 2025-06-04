@@ -2,7 +2,7 @@
 import React from 'react';
 import { Note } from './types';
 import NotesDialog from './NotesDialog';
-import NotesViewDialog from './NotesViewDialog';
+import { NotesViewDialogContainer } from './dialogs/NotesViewDialogContainer';
 
 interface NotesDialogsContainerProps {
   isCreateOpen: boolean;
@@ -130,18 +130,16 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
       />
 
       {/* View Note Dialog */}
-      {currentNote && (
-        <NotesViewDialog
-          isOpen={isViewOpen}
-          setIsOpen={setIsViewOpen}
-          note={currentNote}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          formatDate={formatDate}
-          userId={userId}
-          onViewSimilar={onViewSimilar}
-        />
-      )}
+      <NotesViewDialogContainer
+        isOpen={isViewOpen}
+        setIsOpen={setIsViewOpen}
+        note={currentNote}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        formatDate={formatDate}
+        userId={userId}
+        onViewSimilar={onViewSimilar}
+      />
     </>
   );
 };
