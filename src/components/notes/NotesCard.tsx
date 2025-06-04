@@ -195,18 +195,6 @@ const NotesCard: React.FC<NotesCardProps> = ({
                 <Sparkles className="h-3.5 w-3.5 mr-1.5" /> Similar Notes
               </Button>
             )}
-
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(note);
-              }}
-              className="h-8"
-            >
-              <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
-            </Button>
           </div>
         </div>
       </div>
