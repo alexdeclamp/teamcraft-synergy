@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
+
+import React from 'react';
 import { Note } from '../types';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import NoteInfo from './NoteInfo';
 import NoteActions from './NoteActions';
 import NoteSourceDocument from './NoteSourceDocument';
 import NotesFormatter from '../NotesFormatter';
-import { resetBodyStyles, initializeDialogState } from '@/utils/dialogUtils';
 
 interface MobileNoteViewProps {
   isOpen: boolean;
@@ -30,39 +30,12 @@ const MobileNoteView: React.FC<MobileNoteViewProps> = ({
   onViewSimilar,
   onClose
 }) => {
-  // Initialize dialog state when component mounts
-  useEffect(() => {
-    let isMounted = true;
-    
-    if (isOpen) {
-      (async () => {
-        await initializeDialogState();
-        if (isMounted) {
-          console.log('Mobile view sheet initialized');
-        }
-      })();
-    }
-    
-    // Ensure we clean up everything when sheet closes or unmounts
-    return () => {
-      isMounted = false;
-      console.log('Mobile view unmounting, cleaning up');
-      resetBodyStyles();
-    };
-  }, [isOpen]);
-
-  // Enhanced open change handler with delayed cleanup
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       if (onClose) {
         onClose();
       } else {
         setIsOpen(false);
-        // Add significant delay before cleanup
-        setTimeout(() => {
-          resetBodyStyles();
-          console.log('Mobile view sheet cleanup after close');
-        }, 500);
       }
     }
   };

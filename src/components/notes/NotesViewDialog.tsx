@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
+
+import React from 'react';
 import { Dispatch, SetStateAction } from 'react';
 import { Note } from './types';
 import { useIsMobile } from '@/hooks/use-mobile';
 import MobileNoteView from './view-dialog/MobileNoteView';
 import DesktopNoteView from './view-dialog/DesktopNoteView';
-import { resetBodyStyles, initializeDialogState } from '@/utils/dialogUtils';
 
 interface NotesViewDialogProps {
   isOpen: boolean;
@@ -33,48 +33,9 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
 }) => {
   const finalSetIsOpen = onOpenChange || setIsOpen;
   const isMobile = useIsMobile();
-
-  // Init dialog state when it first opens to prevent flash close
-  useEffect(() => {
-    let isMounted = true;
-    
-    // Initialize dialog state when opening
-    if (isOpen && note) {
-      // This prevents the flash open/close issue
-      (async () => {
-        await initializeDialogState();
-        if (isMounted) {
-          console.log('Note dialog fully initialized');
-        }
-      })();
-    }
-    
-    // Enhanced cleanup when component unmounts or dialog state changes
-    if (!isOpen) {
-      // Add significant delay to ensure dialog animation completes before cleanup
-      const timeoutId = setTimeout(() => {
-        if (isMounted) {
-          resetBodyStyles();
-          console.log('Note dialog cleanup after closing');
-        }
-      }, 500); // Increased from 300ms to 500ms for more reliability
-      
-      return () => clearTimeout(timeoutId);
-    }
-    
-    return () => {
-      isMounted = false;
-    };
-  }, [isOpen, note]);
   
-  // Safe close handler that ensures cleanup with proper timing
   const handleClose = () => {
     finalSetIsOpen(false);
-    // Allow dialog to start closing animation before cleanup
-    setTimeout(() => {
-      resetBodyStyles();
-      console.log('Note dialog manual close cleanup');
-    }, 500); // Increased from 300ms to 500ms for more reliability
   };
 
   if (!note) return null;
