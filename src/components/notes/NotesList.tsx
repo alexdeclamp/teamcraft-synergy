@@ -11,6 +11,7 @@ interface NotesListProps {
   onView: (note: Note) => void;
   onEdit: (note: Note) => void;
   onDelete: (id: string) => void;
+  onViewSimilar?: (note: Note) => void;
   formatDate?: (dateString: string) => string;
 }
 
@@ -22,6 +23,7 @@ const NotesList: React.FC<NotesListProps> = ({
   onView,
   onEdit,
   onDelete,
+  onViewSimilar,
   formatDate
 }) => {
   if (notes.length === 0) {
@@ -44,6 +46,7 @@ const NotesList: React.FC<NotesListProps> = ({
           onView={onView}
           onEdit={onEdit}
           onDelete={onDelete}
+          onViewSimilar={onViewSimilar}
           formatDate={formatDate}
           isLast={index === notes.length - 1}
         />

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Note } from '../types';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -94,7 +93,6 @@ const MobileNoteView: React.FC<MobileNoteViewProps> = ({
           note={note}
           onEdit={onEdit}
           onDelete={onDelete}
-          onViewSimilar={onViewSimilar}
           isMobile={true}
         />
         

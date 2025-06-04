@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Note } from '../types';
 import {
@@ -99,7 +98,6 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
             note={note}
             onEdit={onEdit}
             onDelete={onDelete}
-            onViewSimilar={onViewSimilar}
             isMobile={false}
           />
           

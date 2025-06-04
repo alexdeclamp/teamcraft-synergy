@@ -127,6 +127,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
                 onView={handleNoteSelect}
                 onEdit={openEditDialog}
                 onDelete={handleDeleteNote}
+                onViewSimilar={handleViewSimilar}
                 formatDate={formatDate}
               />
             </div>
