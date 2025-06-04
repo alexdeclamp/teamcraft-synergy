@@ -6,7 +6,6 @@ import NotesViewDialog from '../NotesViewDialog';
 interface NotesViewDialogContainerProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  onOpenChange: (open: boolean) => void;
   note: Note | null;
   onEdit: (note: Note) => void;
   onDelete: (id: string) => void;
@@ -17,7 +16,6 @@ interface NotesViewDialogContainerProps {
 export const NotesViewDialogContainer: React.FC<NotesViewDialogContainerProps> = ({
   isOpen,
   setIsOpen,
-  onOpenChange,
   note,
   onEdit,
   onDelete,
@@ -28,7 +26,6 @@ export const NotesViewDialogContainer: React.FC<NotesViewDialogContainerProps> =
     <NotesViewDialog
       isOpen={isOpen}
       setIsOpen={setIsOpen}
-      onOpenChange={onOpenChange}
       note={note}
       onEdit={onEdit}
       onDelete={onDelete}
