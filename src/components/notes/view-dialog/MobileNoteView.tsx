@@ -16,7 +16,6 @@ interface MobileNoteViewProps {
   formatDate?: (dateString: string) => string;
   userId?: string;
   onViewSimilar?: (note: Note) => void;
-  onClose?: () => void;
 }
 
 const MobileNoteView: React.FC<MobileNoteViewProps> = ({
@@ -27,21 +26,10 @@ const MobileNoteView: React.FC<MobileNoteViewProps> = ({
   onDelete,
   formatDate,
   userId,
-  onViewSimilar,
-  onClose
+  onViewSimilar
 }) => {
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      if (onClose) {
-        onClose();
-      } else {
-        setIsOpen(false);
-      }
-    }
-  };
-
   return (
-    <Sheet open={isOpen} onOpenChange={handleOpenChange}>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent side="bottom" className="h-[90vh] p-4 overflow-y-auto overflow-x-hidden">
         <div className="pt-6 mb-6">
           <SheetHeader className="mb-3">

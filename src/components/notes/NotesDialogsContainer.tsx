@@ -82,7 +82,7 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
       {/* Create Note Dialog */}
       <NotesDialog
         isOpen={isCreateOpen}
-        onOpenChange={handleCloseCreateDialog}
+        onOpenChange={setIsCreateOpen}
         type="create"
         title={title}
         content={content}
@@ -107,7 +107,7 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
       {/* Edit Note Dialog */}
       <NotesDialog
         isOpen={isEditOpen}
-        onOpenChange={handleCloseEditDialog}
+        onOpenChange={setIsEditOpen}
         type="edit"
         title={title}
         content={content}
@@ -140,7 +140,6 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
           formatDate={formatDate}
           userId={userId}
           onViewSimilar={onViewSimilar}
-          onClose={handleCloseViewDialog}
         />
       )}
     </>

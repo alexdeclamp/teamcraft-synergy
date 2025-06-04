@@ -22,7 +22,6 @@ interface DesktopNoteViewProps {
   formatDate?: (dateString: string) => string;
   userId?: string;
   onViewSimilar?: (note: Note) => void;
-  onClose?: () => void;
 }
 
 const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
@@ -33,21 +32,10 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
   onDelete,
   formatDate,
   userId,
-  onViewSimilar,
-  onClose
+  onViewSimilar
 }) => {
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      if (onClose) {
-        onClose();
-      } else {
-        setIsOpen(false);
-      }
-    }
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="w-[95vw] max-w-6xl h-[90vh] max-h-[900px] min-h-[600px] flex flex-col p-0 gap-0">
         <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b">
           <DialogTitle className="text-xl sm:text-2xl break-words hyphens-auto pr-8">
