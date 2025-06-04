@@ -101,7 +101,7 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[900px] md:max-w-[1000px] lg:max-w-[1200px] w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] max-h-[95vh] flex flex-col p-0 gap-0">
+      <DialogContent className="sm:max-w-[900px] md:max-w-[1000px] lg:max-w-[1200px] xl:max-w-[1400px] w-[calc(100vw-1rem)] h-[calc(100vh-1rem)] max-h-[98vh] flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b">
           <DialogTitle className="text-xl font-semibold">{dialogTitle}</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground mt-1">
@@ -109,20 +109,22 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex-1 overflow-hidden flex flex-col p-6 gap-6 min-h-0">
-          <NotesDialogTitle
-            inputId={inputId}
-            title={title}
-            content={content}
-            onTitleChange={onTitleChange}
-            handleRegenerateTitle={handleRegenerateTitle}
-            handleRegenerateTags={handleRegenerateTags}
-            handleRegenerateBoth={handleRegenerateBoth}
-            aiModel={aiModel}
-            onModelChange={onModelChange}
-          />
+        <div className="flex-1 overflow-hidden flex flex-col p-6 gap-4 min-h-0">
+          <div className="flex-shrink-0">
+            <NotesDialogTitle
+              inputId={inputId}
+              title={title}
+              content={content}
+              onTitleChange={onTitleChange}
+              handleRegenerateTitle={handleRegenerateTitle}
+              handleRegenerateTags={handleRegenerateTags}
+              handleRegenerateBoth={handleRegenerateBoth}
+              aiModel={aiModel}
+              onModelChange={onModelChange}
+            />
+          </div>
           
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 overflow-hidden">
             <NotesDialogContent
               contentId={contentId}
               content={content}
@@ -132,17 +134,19 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
             />
           </div>
           
-          <NotesDialogTags
-            tagsId={tagsId}
-            tagInput={tagInput}
-            tags={tags}
-            onTagInputChange={onTagInputChange}
-            onTagInputKeyDown={onTagInputKeyDown}
-            addTag={addTag}
-            removeTag={removeTag}
-            allProjectTags={allProjectTags}
-            handleSelectRecommendedTag={handleSelectRecommendedTag}
-          />
+          <div className="flex-shrink-0">
+            <NotesDialogTags
+              tagsId={tagsId}
+              tagInput={tagInput}
+              tags={tags}
+              onTagInputChange={onTagInputChange}
+              onTagInputKeyDown={onTagInputKeyDown}
+              addTag={addTag}
+              removeTag={removeTag}
+              allProjectTags={allProjectTags}
+              handleSelectRecommendedTag={handleSelectRecommendedTag}
+            />
+          </div>
         </div>
         
         <DialogFooter className="flex-shrink-0 p-6 pt-4 border-t">

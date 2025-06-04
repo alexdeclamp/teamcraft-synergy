@@ -35,13 +35,18 @@ const NotesDialogContent: React.FC<NotesDialogContentProps> = ({
         </div>
       </div>
       
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <Textarea 
           id={contentId} 
           placeholder="Enter note content..." 
           value={content} 
           onChange={e => onContentChange(e.target.value)} 
-          className="h-full min-h-[300px] resize-none font-mono text-sm leading-relaxed"
+          className="h-full w-full min-h-[400px] resize-none font-mono text-sm leading-relaxed border-2 focus:border-primary"
+          style={{
+            height: '100%',
+            maxHeight: '100%',
+            overflow: 'auto'
+          }}
         />
       </div>
       
