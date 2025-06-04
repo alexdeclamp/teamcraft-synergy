@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Note } from '../types';
 import {
@@ -73,8 +74,8 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto overflow-x-hidden">
-        <DialogHeader className="mb-2">
+      <DialogContent className="w-[95vw] max-w-6xl h-[90vh] max-h-[900px] min-h-[600px] flex flex-col p-0 gap-0">
+        <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b">
           <DialogTitle className="text-xl sm:text-2xl break-words hyphens-auto pr-8">
             {note.title || "Untitled Note"}
           </DialogTitle>
@@ -91,17 +92,21 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
           />
         </DialogHeader>
         
-        <NoteActions
-          note={note}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          isMobile={false}
-        />
+        <div className="flex-shrink-0 p-6 pb-4 border-b">
+          <NoteActions
+            note={note}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            isMobile={false}
+          />
+          
+          <NoteSourceDocument sourceDocument={note.source_document} />
+        </div>
         
-        <NoteSourceDocument sourceDocument={note.source_document} />
-        
-        <div className="prose prose-sm sm:prose prose-slate max-w-none mt-2 text-xs sm:text-sm overflow-x-hidden break-words hyphens-auto">
-          <NotesFormatter content={note.content} />
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6">
+          <div className="prose prose-sm sm:prose prose-slate max-w-none text-xs sm:text-sm break-words hyphens-auto">
+            <NotesFormatter content={note.content} />
+          </div>
         </div>
       </DialogContent>
     </Dialog>
