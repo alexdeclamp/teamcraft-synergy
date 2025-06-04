@@ -22,6 +22,7 @@ interface DesktopNoteViewProps {
   onDelete: (id: string) => void;
   formatDate?: (dateString: string) => string;
   userId?: string;
+  onViewSimilar?: (note: Note) => void;
   onClose?: () => void;
 }
 
@@ -33,6 +34,7 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
   onDelete,
   formatDate,
   userId,
+  onViewSimilar,
   onClose
 }) => {
   // Initialize dialog state when component mounts
@@ -97,6 +99,7 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
             note={note}
             onEdit={onEdit}
             onDelete={onDelete}
+            onViewSimilar={onViewSimilar}
             isMobile={false}
           />
           

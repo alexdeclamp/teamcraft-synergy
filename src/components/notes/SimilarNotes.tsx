@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
+import { Sparkles, ExternalLink, Loader2, AlertCircle, X } from 'lucide-react';
 import { useVectorSearch } from '@/hooks/notes/useVectorSearch';
 import { Note } from './types';
 
@@ -21,7 +21,7 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect, 
 
   useEffect(() => {
     const loadSimilarNotes = async () => {
-      // Only load similar notes when the view dialog is open and we have a current note
+      // Only load similar notes when we have a current note and isViewDialogOpen is true
       if (!currentNote?.id || !isViewDialogOpen) {
         setSimilarNotes([]);
         setHasSearched(false);
@@ -57,8 +57,13 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect, 
     return 'Weak';
   };
 
-  // Don't show anything if the view dialog is not open
-  if (!isViewDialogOpen) {
+  const handleClose = () => {
+    setSimilarNotes([]);
+    setHasSearched(false);
+  };
+
+  // Don't show anything if we don't have a current note or not in view mode
+  if (!currentNote || !isViewDialogOpen) {
     return (
       <Card>
         <CardHeader>
@@ -68,30 +73,31 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect, 
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">Open a note to see similar content</p>
+          <p className="text-sm text-muted-foreground">Click "Similar Notes" on any note to see related content</p>
         </CardContent>
       </Card>
     );
   }
 
-  if (!currentNote || loading) {
+  if (loading) {
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-purple-500" />
-            <CardTitle className="text-sm">Similar Notes</CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-purple-500" />
+              <CardTitle className="text-sm">Similar Notes</CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleClose}>
+              <X className="h-3 w-3" />
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-sm text-muted-foreground">Finding similar notes...</span>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No note selected</p>
-          )}
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Finding similar notes...</span>
+          </div>
         </CardContent>
       </Card>
     );
@@ -101,9 +107,14 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect, 
     return (
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-purple-500" />
-            <CardTitle className="text-sm">Similar Notes</CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-purple-500" />
+              <CardTitle className="text-sm">Similar Notes</CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleClose}>
+              <X className="h-3 w-3" />
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -122,12 +133,17 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect, 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-purple-500" />
-          <CardTitle className="text-sm">Similar Notes</CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-purple-500" />
+            <CardTitle className="text-sm">Similar Notes</CardTitle>
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleClose}>
+            <X className="h-3 w-3" />
+          </Button>
         </div>
         <CardDescription className="text-xs">
-          Found {similarNotes.length} notes with related content
+          Found {similarNotes.length} notes with related content to "{currentNote.title}"
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">

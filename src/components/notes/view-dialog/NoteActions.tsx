@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, Copy } from 'lucide-react';
+import { Pencil, Trash2, Copy, Sparkles } from 'lucide-react';
 import { Note } from '../types';
 
 interface NoteActionsProps {
@@ -9,6 +9,7 @@ interface NoteActionsProps {
   onEdit: (note: Note) => void;
   onDelete: (id: string) => void;
   onDuplicate?: (note: Note) => void;
+  onViewSimilar?: (note: Note) => void;
   isMobile: boolean;
 }
 
@@ -17,6 +18,7 @@ const NoteActions: React.FC<NoteActionsProps> = ({
   onEdit, 
   onDelete,
   onDuplicate,
+  onViewSimilar,
   isMobile
 }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -65,6 +67,17 @@ const NoteActions: React.FC<NoteActionsProps> = ({
       >
         <Copy className="h-3.5 w-3.5 mr-1.5" /> Duplicate
       </Button>
+
+      {onViewSimilar && (
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => onViewSimilar(note)}
+          className="h-8"
+        >
+          <Sparkles className="h-3.5 w-3.5 mr-1.5" /> Similar Notes
+        </Button>
+      )}
       
       <Button 
         variant={isConfirmingDelete ? "destructive" : "outline"} 

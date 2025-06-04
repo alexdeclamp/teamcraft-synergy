@@ -1,11 +1,8 @@
 
 import React from 'react';
-import { Note } from '@/components/notes/types';
-import { useNotesDialogClose } from '@/hooks/notes/useNotesDialogClose';
-import { useNotesDialogHandlers } from '@/hooks/notes/useNotesDialogHandlers';
-import { NotesViewDialogContainer } from './dialogs/NotesViewDialogContainer';
-import { NotesCreateDialogContainer } from './dialogs/NotesCreateDialogContainer';
-import { NotesEditDialogContainer } from './dialogs/NotesEditDialogContainer';
+import { Note } from './types';
+import NotesDialog from './NotesDialog';
+import NotesViewDialog from './NotesViewDialog';
 
 interface NotesDialogsContainerProps {
   isCreateOpen: boolean;
@@ -41,6 +38,7 @@ interface NotesDialogsContainerProps {
   handleCloseViewDialog: () => void;
   handleCloseCreateDialog: () => void;
   handleCloseEditDialog: () => void;
+  onViewSimilar?: (note: Note) => void;
 }
 
 const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
@@ -76,43 +74,16 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
   userId,
   handleCloseViewDialog,
   handleCloseCreateDialog,
-  handleCloseEditDialog
+  handleCloseEditDialog,
+  onViewSimilar
 }) => {
-  const { handleCloseDialog, prepareDialogOpen } = useNotesDialogClose({
-    setIsCreateOpen,
-    setIsEditOpen,
-    setIsViewOpen,
-    resetForm: () => {
-      if (handleCloseCreateDialog) handleCloseCreateDialog();
-      if (handleCloseEditDialog) handleCloseEditDialog();
-      if (handleCloseViewDialog) handleCloseViewDialog();
-    }
-  });
-
-  const { handleOpenChange } = useNotesDialogHandlers({
-    prepareDialogOpen,
-    handleCloseDialog,
-    setIsCreateOpen,
-    setIsEditOpen,
-    setIsViewOpen
-  });
-
   return (
     <>
-      <NotesViewDialogContainer
-        isOpen={isViewOpen}
-        setIsOpen={setIsViewOpen}
-        onOpenChange={(open: boolean) => handleOpenChange(open, 'view')}
-        note={currentNote}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        formatDate={formatDate}
-        userId={userId}
-      />
-      
-      <NotesCreateDialogContainer
+      {/* Create Note Dialog */}
+      <NotesDialog
         isOpen={isCreateOpen}
-        onOpenChange={(open: boolean) => handleOpenChange(open, 'create')}
+        onOpenChange={handleCloseCreateDialog}
+        type="create"
         title={title}
         content={content}
         tagInput={tagInput}
@@ -132,10 +103,12 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
         onModelChange={setAiModel}
         allProjectTags={allTags}
       />
-      
-      <NotesEditDialogContainer
+
+      {/* Edit Note Dialog */}
+      <NotesDialog
         isOpen={isEditOpen}
-        onOpenChange={(open: boolean) => handleOpenChange(open, 'edit')}
+        onOpenChange={handleCloseEditDialog}
+        type="edit"
         title={title}
         content={content}
         tagInput={tagInput}
@@ -155,6 +128,21 @@ const NotesDialogsContainer: React.FC<NotesDialogsContainerProps> = ({
         onModelChange={setAiModel}
         allProjectTags={allTags}
       />
+
+      {/* View Note Dialog */}
+      {currentNote && (
+        <NotesViewDialog
+          isOpen={isViewOpen}
+          setIsOpen={setIsViewOpen}
+          note={currentNote}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          formatDate={formatDate}
+          userId={userId}
+          onViewSimilar={onViewSimilar}
+          onClose={handleCloseViewDialog}
+        />
+      )}
     </>
   );
 };

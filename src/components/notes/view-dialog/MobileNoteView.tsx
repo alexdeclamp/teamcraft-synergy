@@ -16,6 +16,7 @@ interface MobileNoteViewProps {
   onDelete: (id: string) => void;
   formatDate?: (dateString: string) => string;
   userId?: string;
+  onViewSimilar?: (note: Note) => void;
   onClose?: () => void;
 }
 
@@ -27,6 +28,7 @@ const MobileNoteView: React.FC<MobileNoteViewProps> = ({
   onDelete,
   formatDate,
   userId,
+  onViewSimilar,
   onClose
 }) => {
   // Initialize dialog state when component mounts
@@ -92,6 +94,7 @@ const MobileNoteView: React.FC<MobileNoteViewProps> = ({
           note={note}
           onEdit={onEdit}
           onDelete={onDelete}
+          onViewSimilar={onViewSimilar}
           isMobile={true}
         />
         

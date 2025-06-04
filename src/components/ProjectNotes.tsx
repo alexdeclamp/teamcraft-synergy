@@ -20,6 +20,7 @@ interface ProjectNotesProps {
 
 const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [showSimilarFor, setShowSimilarFor] = useState(null);
   
   const {
     notes,
@@ -84,6 +85,11 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     openViewDialog(note);
   };
 
+  // Handle showing similar notes for a specific note
+  const handleViewSimilar = (note) => {
+    setShowSimilarFor(note);
+  };
+
   if (loading) {
     return <NotesLoading />;
   }
@@ -127,9 +133,9 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
             
             <div className="space-y-4">
               <SimilarNotes 
-                currentNote={currentNote}
+                currentNote={showSimilarFor}
                 onNoteSelect={handleNoteSelect}
-                isViewDialogOpen={isViewOpen}
+                isViewDialogOpen={!!showSimilarFor}
               />
             </div>
           </div>
@@ -184,6 +190,7 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
         handleCloseViewDialog={handleCloseViewDialog}
         handleCloseCreateDialog={handleCloseCreateDialog}
         handleCloseEditDialog={handleCloseEditDialog}
+        onViewSimilar={handleViewSimilar}
       />
     </div>
   );

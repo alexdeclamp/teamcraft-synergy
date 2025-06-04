@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Dispatch, SetStateAction } from 'react';
 import { Note } from './types';
@@ -16,6 +15,8 @@ interface NotesViewDialogProps {
   onDelete: (id: string) => void;
   formatDate?: (dateString: string) => string;
   userId?: string;
+  onViewSimilar?: (note: Note) => void;
+  onClose?: () => void;
 }
 
 const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
@@ -26,7 +27,9 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
   onEdit,
   onDelete,
   formatDate,
-  userId
+  userId,
+  onViewSimilar,
+  onClose
 }) => {
   const finalSetIsOpen = onOpenChange || setIsOpen;
   const isMobile = useIsMobile();
@@ -86,7 +89,8 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
         onDelete={onDelete}
         formatDate={formatDate}
         userId={userId}
-        onClose={handleClose}
+        onViewSimilar={onViewSimilar}
+        onClose={onClose || handleClose}
       />
     );
   }
@@ -100,7 +104,8 @@ const NotesViewDialog: React.FC<NotesViewDialogProps> = ({
       onDelete={onDelete}
       formatDate={formatDate}
       userId={userId}
-      onClose={handleClose}
+      onViewSimilar={onViewSimilar}
+      onClose={onClose || handleClose}
     />
   );
 };
