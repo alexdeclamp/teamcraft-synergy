@@ -101,14 +101,15 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[800px] md:max-w-[900px] lg:max-w-[1000px] w-[calc(100vw-3rem)]">
-        <DialogHeader>
-          <DialogTitle>{dialogTitle}</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[900px] md:max-w-[1000px] lg:max-w-[1200px] w-[calc(100vw-2rem)] h-[calc(100vh-2rem)] max-h-[95vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b">
+          <DialogTitle className="text-xl font-semibold">{dialogTitle}</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground mt-1">
             {dialogDescription}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        
+        <div className="flex-1 overflow-hidden flex flex-col p-6 gap-6 min-h-0">
           <NotesDialogTitle
             inputId={inputId}
             title={title}
@@ -120,13 +121,17 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
             aiModel={aiModel}
             onModelChange={onModelChange}
           />
-          <NotesDialogContent
-            contentId={contentId}
-            content={content}
-            onContentChange={onContentChange}
-            aiModel={aiModel}
-            onModelChange={onModelChange}
-          />
+          
+          <div className="flex-1 min-h-0">
+            <NotesDialogContent
+              contentId={contentId}
+              content={content}
+              onContentChange={onContentChange}
+              aiModel={aiModel}
+              onModelChange={onModelChange}
+            />
+          </div>
+          
           <NotesDialogTags
             tagsId={tagsId}
             tagInput={tagInput}
@@ -139,7 +144,8 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
             handleSelectRecommendedTag={handleSelectRecommendedTag}
           />
         </div>
-        <DialogFooter>
+        
+        <DialogFooter className="flex-shrink-0 p-6 pt-4 border-t">
           <Button 
             variant="outline" 
             onClick={() => {
