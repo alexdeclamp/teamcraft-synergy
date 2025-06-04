@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import ProjectLayoutLoading from './layout/ProjectLayoutLoading';
 import ProjectLayoutError from './layout/ProjectLayoutError';
-import ChatCentricLayout from './layout/ChatCentricLayout';
+import MobileProjectLayout from './layout/MobileProjectLayout';
+import DesktopProjectLayout from './layout/DesktopProjectLayout';
 
 interface ProjectLayoutProps {
   loading: boolean;
@@ -50,6 +51,9 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
   showInviteDialog,
   setShowInviteDialog
 }) => {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const isMobile = useIsMobile();
+
   if (loading) {
     return <ProjectLayoutLoading />;
   }
@@ -58,27 +62,39 @@ const ProjectLayout: React.FC<ProjectLayoutProps> = ({
     return <ProjectLayoutError />;
   }
 
-  return (
-    <ChatCentricLayout
-      project={project}
-      members={members}
-      setMembers={setMembers}
-      userRole={userRole}
-      projectImages={projectImages}
-      recentImages={recentImages}
-      isImagesLoading={isImagesLoading}
-      daysSinceCreation={daysSinceCreation}
-      activityPercentage={activityPercentage}
-      noteCount={noteCount}
-      documentCount={documentCount}
-      recentUpdatesCount={recentUpdatesCount}
-      formatFileSize={formatFileSize}
-      handleImagesUpdated={handleImagesUpdated}
-      handleAddMember={handleAddMember}
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-    />
-  );
+  const layoutProps = {
+    project,
+    members,
+    setMembers,
+    userRole,
+    projectImages,
+    recentImages,
+    isImagesLoading,
+    daysSinceCreation,
+    activityPercentage,
+    noteCount,
+    documentCount,
+    recentUpdatesCount,
+    formatFileSize,
+    handleImagesUpdated,
+    handleAddMember,
+    activeTab,
+    setActiveTab,
+    isChatOpen,
+    setIsChatOpen
+  };
+
+  if (isMobile) {
+    return (
+      <MobileProjectLayout
+        {...layoutProps}
+        showInviteDialog={showInviteDialog}
+        setShowInviteDialog={setShowInviteDialog}
+      />
+    );
+  }
+
+  return <DesktopProjectLayout {...layoutProps} />;
 };
 
 export default ProjectLayout;
