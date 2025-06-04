@@ -41,12 +41,7 @@ const NotesDialogContent: React.FC<NotesDialogContentProps> = ({
           placeholder="Enter note content..." 
           value={content} 
           onChange={e => onContentChange(e.target.value)} 
-          className="h-full w-full min-h-[400px] resize-none font-mono text-sm leading-relaxed border-2 focus:border-primary"
-          style={{
-            height: '100%',
-            maxHeight: '100%',
-            overflow: 'auto'
-          }}
+          className="h-full w-full resize-none font-mono text-sm leading-relaxed border-2 focus:border-primary overflow-y-auto"
         />
       </div>
       
