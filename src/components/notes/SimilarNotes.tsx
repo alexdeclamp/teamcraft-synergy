@@ -8,11 +8,12 @@ import { useVectorSearch } from '@/hooks/notes/useVectorSearch';
 import { Note } from './types';
 
 interface SimilarNotesProps {
-  currentNote: Note;
+  currentNote: Note | null;
   onNoteSelect: (note: Note) => void;
+  isViewDialogOpen?: boolean;
 }
 
-const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect }) => {
+const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect, isViewDialogOpen = false }) => {
   const [similarNotes, setSimilarNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -20,7 +21,9 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect }
 
   useEffect(() => {
     const loadSimilarNotes = async () => {
-      if (!currentNote?.id) {
+      // Only load similar notes when the view dialog is open and we have a current note
+      if (!currentNote?.id || !isViewDialogOpen) {
+        setSimilarNotes([]);
         setHasSearched(false);
         return;
       }
@@ -40,7 +43,7 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect }
     };
 
     loadSimilarNotes();
-  }, [currentNote?.id, currentNote?.project_id]);
+  }, [currentNote?.id, currentNote?.project_id, isViewDialogOpen]);
 
   const getScoreColor = (similarity: number) => {
     if (similarity >= 0.8) return 'bg-green-100 text-green-800';
@@ -53,6 +56,23 @@ const SimilarNotes: React.FC<SimilarNotesProps> = ({ currentNote, onNoteSelect }
     if (similarity >= 0.7) return 'Good';
     return 'Weak';
   };
+
+  // Don't show anything if the view dialog is not open
+  if (!isViewDialogOpen) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-purple-500" />
+            <CardTitle className="text-sm">Similar Notes</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">Open a note to see similar content</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (!currentNote || loading) {
     return (

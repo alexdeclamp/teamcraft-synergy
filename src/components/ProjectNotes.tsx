@@ -20,7 +20,6 @@ interface ProjectNotesProps {
 
 const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [selectedNote, setSelectedNote] = useState(null);
   
   const {
     notes,
@@ -80,8 +79,8 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
     resetForm
   });
 
+  // Direct note selection that opens the view dialog immediately
   const handleNoteSelect = (note) => {
-    setSelectedNote(note);
     openViewDialog(note);
   };
 
@@ -128,8 +127,9 @@ const ProjectNotes: React.FC<ProjectNotesProps> = ({ projectId }) => {
             
             <div className="space-y-4">
               <SimilarNotes 
-                currentNote={selectedNote}
+                currentNote={currentNote}
                 onNoteSelect={handleNoteSelect}
+                isViewDialogOpen={isViewOpen}
               />
             </div>
           </div>
