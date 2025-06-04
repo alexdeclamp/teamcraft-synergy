@@ -21,10 +21,10 @@ const NotesDialogContent: React.FC<NotesDialogContentProps> = ({
   onModelChange
 }) => {
   return (
-    <div className="flex flex-col gap-3 h-full">
+    <div className="flex flex-col gap-3 h-full w-full">
       <div className="flex justify-between items-center flex-shrink-0">
         <Label htmlFor={contentId} className="text-sm font-medium">Content</Label>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <CleanTextButton 
             noteContent={content}
             onTextCleaned={onContentChange}
@@ -35,7 +35,7 @@ const NotesDialogContent: React.FC<NotesDialogContentProps> = ({
         </div>
       </div>
       
-      <div className="flex-1 min-h-0 overflow-hidden">
+      <div className="flex-1 min-h-0 w-full">
         <Textarea 
           id={contentId} 
           placeholder="Enter note content..." 

@@ -101,17 +101,7 @@ const NotesDialog: React.FC<NotesDialogProps> = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent 
-        className="fixed inset-4 w-auto h-auto max-w-none max-h-none flex flex-col p-0 gap-0 overflow-hidden z-50"
-        style={{
-          left: '2rem',
-          right: '2rem', 
-          top: '2rem',
-          bottom: '2rem',
-          width: 'calc(100vw - 4rem)',
-          height: 'calc(100vh - 4rem)'
-        }}
-      >
+      <DialogContent className="w-[95vw] h-[95vh] max-w-7xl max-h-none flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="flex-shrink-0 p-6 pb-4 border-b">
           <DialogTitle className="text-xl font-semibold">{dialogTitle}</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground mt-1">
