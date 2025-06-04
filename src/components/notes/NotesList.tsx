@@ -35,7 +35,7 @@ const NotesList: React.FC<NotesListProps> = ({
   }
 
   return (
-    <div className="flex flex-col bg-white rounded-md shadow-sm">
+    <div className="flex flex-col bg-white rounded-md shadow-sm pt-2">
       {notes.map((note, index) => (
         <NotesCard
           key={note.id}
