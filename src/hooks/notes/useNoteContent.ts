@@ -13,7 +13,8 @@ export function useNoteContent(initialNote: Note | null = null) {
   };
 
   const loadNoteContent = (note: Note) => {
-    setTitle(note.title);
+    console.log('Loading note content:', { title: note.title, content: note.content });
+    setTitle(note.title || '');
     setContent(note.content || '');
   };
 

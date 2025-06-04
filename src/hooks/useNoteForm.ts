@@ -68,6 +68,7 @@ export function useNoteForm(
   };
 
   const openEditDialog = (note: Note) => {
+    console.log('Opening edit dialog for note:', note);
     setCurrentNote(note);
     loadNoteContent(note);
     setTags(note.tags || []);
