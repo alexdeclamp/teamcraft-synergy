@@ -84,8 +84,26 @@ export function useProjectChat(projectId: string) {
     }));
 
     try {
-      // Get system prompt from centralized prompts
-      const systemPrompt = chatPrompts.system(state.projectData.description, state.projectData.aiPersona);
+      // Système prompt plus casual et conversationnel
+      const casualSystemPrompt = `Tu es l'assistant IA de ce projet, mais avec un style décontracté et friendly. 
+      Tu tutoyé toujours l'utilisateur et tu es là pour l'aider à naviguer dans son projet de manière naturelle.
+      
+      Voici les infos sur le projet "${state.projectData.description || 'sans description'}" :
+      
+      Style de réponse :
+      - Ton casual et amical (tutoiement)
+      - Réponses courtes mais utiles
+      - Emojis bienvenus 
+      - Suggestions proactives
+      - Navigation naturelle ("va voir tes notes", "check tes images", etc.)
+      
+      Fonctionnalités spéciales :
+      - Quand l'user demande d'explorer une section, suggère-lui d'y aller
+      - Fais des liens entre les différents éléments du projet
+      - Priorise les éléments favoris et importants
+      - Sois proactif dans tes suggestions
+      
+      Réponds de manière conversationnelle, comme si tu étais un collègue sympa qui connaît bien le projet.`;
       
       // Call the Supabase edge function
       const response = await supabase.functions.invoke('project-chat', {
@@ -95,7 +113,7 @@ export function useProjectChat(projectId: string) {
           userId: user.id,
           description: state.projectData.description,
           aiPersona: state.projectData.aiPersona,
-          systemPrompt
+          systemPrompt: casualSystemPrompt
         }
       });
 
@@ -141,15 +159,16 @@ export function useProjectChat(projectId: string) {
     }
   };
 
-  // Predefined questions that are relevant for any project
+  // Questions prédéfinies plus casual
   const predefinedQuestions = [
-    "What's the latest update on this project?",
-    "Summarize the project notes",
-    "What are the key documents in this project?",
-    "Show me recent activity",
-    "What's the project status?",
-    "What are the important items in this project?",
-    "Show me my favorite documents"
+    "Quoi de neuf sur ce projet ? 🚀",
+    "Résume-moi l'essentiel",
+    "Mes notes importantes du moment",
+    "Qu'est-ce qui mérite mon attention ?",
+    "Dernière activité de l'équipe",
+    "Mes documents favoris",
+    "Comment ça avance globalement ?",
+    "Points bloquants actuels ?"
   ];
 
   return {

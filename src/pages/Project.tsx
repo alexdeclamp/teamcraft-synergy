@@ -6,6 +6,7 @@ import ProjectLayout from '@/components/project/ProjectLayout';
 
 const Project = () => {
   const { id } = useParams<{ id: string }>();
+  // Par défaut, on arrive sur le chat (overview devient chat-centric)
   const [activeTab, setActiveTab] = useState('overview');
   const [members, setMembers] = useState<any[]>([]);
   
@@ -45,13 +46,11 @@ const Project = () => {
     }
   }, [project, id, fetchProjectImages]);
 
-  // Handle tab change - ensure we're at the top of the tab content
+  // Handle tab change - le chat reste toujours la base
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
-    // Reset scroll position when changing tabs
-    window.scrollTo(0, 0);
     
-    // Refresh project statistics when returning to overview tab
+    // Refresh project statistics when returning to overview/chat
     if (newTab === 'overview') {
       refreshProjectStats();
     }
