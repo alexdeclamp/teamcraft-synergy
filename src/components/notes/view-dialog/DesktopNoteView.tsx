@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Note } from '../types';
 import {
@@ -74,7 +73,7 @@ const DesktopNoteView: React.FC<DesktopNoteViewProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <DialogContent className="w-[90vw] h-[50.625vw] max-w-[1400px] max-h-[787px] min-w-[800px] min-h-[450px] overflow-y-auto overflow-x-hidden">
         <DialogHeader className="mb-2">
           <DialogTitle className="text-xl sm:text-2xl break-words hyphens-auto pr-8">
             {note.title || "Untitled Note"}
