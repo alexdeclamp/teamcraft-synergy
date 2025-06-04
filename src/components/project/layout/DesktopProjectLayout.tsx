@@ -57,7 +57,7 @@ const DesktopProjectLayout: React.FC<DesktopProjectLayoutProps> = ({
       <div className="pt-16">
         <SidebarProvider>
           <div className="flex w-full min-h-[calc(100vh-4rem)]">
-            <div className="relative">
+            <div className="relative pt-0">
               <ProjectSidebar 
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
